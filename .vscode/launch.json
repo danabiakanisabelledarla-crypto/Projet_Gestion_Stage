@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-GestionStagesApplication<gestion-stages>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.gestionstages.gestion_stages.GestionStagesApplication",
+            "projectName": "gestion-stages",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
