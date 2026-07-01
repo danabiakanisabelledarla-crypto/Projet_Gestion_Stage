@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - Administrateur</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+
+<div class="contenu-principal">
+
+    <div class="en-tete-page">
+        <h1>Tableau de bord</h1>
+        <span class="utilisateur-connecte">Admin</span>
+    </div>
+
+    <div class="grille-cartes-stats">
+        <div class="carte-stat bleu">
+            <div class="libelle">Demandes</div>
+            <div class="valeur" th:text="${nombreDemandes}">0</div>
+        </div>
+        <div class="carte-stat vert">
+            <div class="libelle">En cours</div>
+            <div class="valeur" th:text="${stagesEnCours}">0</div>
+        </div>
+        <div class="carte-stat orange">
+            <div class="libelle">Termines</div>
+            <div class="valeur" th:text="${stagesTermines}">0</div>
+        </div>
+        <div class="carte-stat violet">
+            <div class="libelle">Taches</div>
+            <div class="valeur" th:text="${nombreTaches}">0</div>
+        </div>
+    </div>
+
+    <div class="grille-blocs">
+        <div class="bloc-blanc">
+            <h3>Stages par statut</h3>
+            <p style="color:#777; font-size: 14px;">
+                <span th:text="${stagesEnCours}">0</span> en cours,
+                <span th:text="${stagesTermines}">0</span> termines
+            </p>
+        </div>
+
+        <div class="bloc-blanc">
+            <h3>Actions rapides</h3>
+            <a th:href="@{/admin/demandes}" class="bouton-action">Nouvelle demande</a>
+            <a th:href="@{/admin/encadreurs}" class="bouton-action">Ajouter encadreur</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

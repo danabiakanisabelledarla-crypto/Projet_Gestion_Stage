@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar" class="barre-laterale">
+    <h2 class="logo-app">Encadreur</h2>
+    <nav>
+        <a th:href="@{/encadreur/dashboard}">Tableau de bord</a>
+        <a th:href="@{/encadreur/objectifs}">Objectifs</a>
+        <a th:href="@{/encadreur/taches}">Taches</a>
+        <a th:href="@{/encadreur/livrables}">Livrables</a>
+        <a th:href="@{/encadreur/evaluations}">Evaluations</a>
+    </nav>
+</div>
+
+</body>
+</html>

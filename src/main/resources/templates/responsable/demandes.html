@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Demandes de stage</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Demandes de stage</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div class="barre-recherche">
+        <input type="text" placeholder="Rechercher un candidat...">
+        <button type="button">Filtrer</button>
+    </div>
+
+    <table class="tableau-demandes">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Niveau</th>
+                <th>Filiere</th>
+                <th>Statut</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="demande : ${demandes}">
+                <td th:text="${demande.prenom + ' ' + demande.nom}">-</td>
+                <td th:text="${demande.niveau}">-</td>
+                <td th:text="${demande.filiere}">-</td>
+                <td>
+                    <span th:class="'badge ' + ${demande.statut.name().replace('_', '-')}"
+                          th:text="${demande.statut}">-</span>
+                </td>
+                <td>
+                    <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}"
+                       class="btn-accepter">Accepter</a>
+                    <a th:href="@{/responsable/demandes/refuser/{id}(id=${demande.id})}"
+                       class="btn-refuser">Refuser</a>
+                    <a th:href="@{/responsable/demandes/attente/{id}(id=${demande.id})}"
+                       class="btn-attente">En attente</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(demandes)}">
+                <td colspan="5" style="text-align:center; color:#777; padding: 30px;">
+                    Aucune demande pour le moment.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

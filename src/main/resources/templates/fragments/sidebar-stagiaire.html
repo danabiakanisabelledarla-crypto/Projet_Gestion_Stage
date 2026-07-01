@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar" class="barre-laterale">
+    <h2 class="logo-app">Stagiaire</h2>
+    <nav>
+        <a th:href="@{/stagiaire/dashboard}">Tableau de bord</a>
+        <a th:href="@{/stagiaire/taches}">Mes taches</a>
+        <a th:href="@{/stagiaire/journal}">Journal</a>
+        <a th:href="@{/stagiaire/livrables}">Livrables</a>
+        <a th:href="@{/stagiaire/rapport}">Rapport final</a>
+    </nav>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Deposer une demande de stage</title>
+    <link rel="stylesheet" th:href="@{/css/candidat.css}">
+</head>
+<body>
+
+<div class="formulaire-demande">
+    <h1>Demande de stage</h1>
+    <p class="sous-titre">Remplissez ce formulaire pour soumettre votre candidature.</p>
+
+    <div th:if="${succes}" class="message-succes">
+        Votre demande a bien ete envoyee ! Vous serez contacte prochainement.
+    </div>
+
+    <form th:action="@{/candidat/demande}" method="post"
+          enctype="multipart/form-data">
+
+        <div class="grille-2">
+            <div class="groupe-champ">
+                <label>Nom</label>
+                <input type="text" name="nom" placeholder="Votre nom" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Prenom</label>
+                <input type="text" name="prenom" placeholder="Votre prenom" required>
+            </div>
+        </div>
+
+        <div class="groupe-champ">
+            <label>Ecole / Universite</label>
+            <input type="text" name="ecole" placeholder="Nom de votre etablissement" required>
+        </div>
+
+        <div class="grille-2">
+            <div class="groupe-champ">
+                <label>Filiere</label>
+                <input type="text" name="filiere" placeholder="Ex: Genie Logiciel" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Niveau</label>
+                <select name="niveau" required>
+                    <option value="">-- Choisir --</option>
+                    <option value="BTS 1">BTS 1</option>
+                    <option value="BTS 2">BTS 2</option>
+                    <option value="Licence 1">Licence 1</option>
+                    <option value="Licence 2">Licence 2</option>
+                    <option value="Licence 3">Licence 3</option>
+                    <option value="Master 1">Master 1</option>
+                    <option value="Master 2">Master 2</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="groupe-champ">
+            <label>Duree souhaitee</label>
+            <select name="dureeSouhaitee" required>
+                <option value="">-- Choisir --</option>
+                <option value="1 mois">1 mois</option>
+                <option value="2 mois">2 mois</option>
+                <option value="3 mois">3 mois</option>
+                <option value="4 mois">4 mois</option>
+                <option value="6 mois">6 mois</option>
+            </select>
+        </div>
+
+        <div class="groupe-champ">
+            <label>CV (PDF)</label>
+            <input type="file" name="cv" accept=".pdf">
+        </div>
+
+        <div class="groupe-champ">
+            <label>Lettre de motivation (PDF)</label>
+            <input type="file" name="lettreMotivation" accept=".pdf">
+        </div>
+
+        <button type="submit" class="bouton-soumettre">Envoyer ma demande</button>
+    </form>
+</div>
+
+</body>
+</html>

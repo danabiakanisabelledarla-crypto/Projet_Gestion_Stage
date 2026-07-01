@@ -1,0 +1,100 @@
+.barre-recherche {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    align-items: center;
+}
+
+.barre-recherche input {
+    padding: 10px 14px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 280px;
+}
+
+.barre-recherche button {
+    padding: 10px 20px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    width: auto;
+}
+
+.tableau-demandes {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.tableau-demandes thead {
+    background-color: #f8f9fa;
+}
+
+.tableau-demandes th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 14px;
+    color: #555;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.tableau-demandes td {
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.tableau-demandes tr:last-child td { border-bottom: none; }
+.tableau-demandes tr:hover { background-color: #fafbff; }
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.badge.en-attente { background-color: #fff3e0; color: #e65100; }
+.badge.acceptee { background-color: #e6f7ec; color: #2e7d32; }
+.badge.refusee { background-color: #fde8e8; color: #c0392b; }
+
+.btn-accepter {
+    padding: 6px 12px;
+    background-color: #e6f7ec;
+    color: #2e7d32;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 4px;
+    text-decoration: none;
+}
+.btn-refuser {
+    padding: 6px 12px;
+    background-color: #fde8e8;
+    color: #c0392b;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 4px;
+    text-decoration: none;
+}
+.btn-attente {
+    padding: 6px 12px;
+    background-color: #fff3e0;
+    color: #e65100;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+}

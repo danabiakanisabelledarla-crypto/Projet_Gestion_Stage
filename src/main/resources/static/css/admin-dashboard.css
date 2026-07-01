@@ -1,0 +1,48 @@
+.grille-cartes-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.carte-stat {
+    border-radius: 10px;
+    padding: 20px;
+}
+.carte-stat .libelle { font-size: 14px; color: #555; margin-bottom: 8px; }
+.carte-stat .valeur { font-size: 28px; font-weight: bold; color: #1a2236; }
+
+.carte-stat.bleu { background-color: #e8f0fe; }
+.carte-stat.vert { background-color: #e6f7ec; }
+.carte-stat.orange { background-color: #fff3e0; }
+.carte-stat.violet { background-color: #f1e9fb; }
+
+.grille-blocs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.bloc-blanc {
+    background-color: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.bloc-blanc h3 { margin-bottom: 18px; color: #1a2236; }
+
+.bouton-action {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    background-color: #eaf0fe;
+    color: #2563eb;
+    border: none;
+    border-radius: 6px;
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.bouton-action:hover { background-color: #dbe6fd; }

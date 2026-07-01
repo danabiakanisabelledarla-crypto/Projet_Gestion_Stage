@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Tableau de bord</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div class="grille-cartes-stats">
+        <div class="carte-stat bleu">
+            <div class="libelle">Demandes en attente</div>
+            <div class="valeur" th:text="${demandesEnAttente}">0</div>
+        </div>
+        <div class="carte-stat vert">
+            <div class="libelle">Stagiaires</div>
+            <div class="valeur" th:text="${totalStagiaires}">0</div>
+        </div>
+        <div class="carte-stat orange">
+            <div class="libelle">Stages</div>
+            <div class="valeur" th:text="${totalStages}">0</div>
+        </div>
+    </div>
+
+    <div class="grille-blocs">
+        <div class="bloc-blanc">
+            <h3>Actions rapides</h3>
+            <a th:href="@{/responsable/demandes}" class="bouton-action">Consulter les demandes</a>
+            <a th:href="@{/responsable/admissions}" class="bouton-action">Gerer les admissions</a>
+            <a th:href="@{/responsable/affectations}" class="bouton-action">Gerer les affectations</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
