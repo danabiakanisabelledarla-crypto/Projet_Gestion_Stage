@@ -1,0 +1,98 @@
+.contenu-fiche {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.bloc-fiche {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.bloc-fiche h2 {
+    font-size: 18px;
+    color: #1a2236;
+    margin-bottom: 18px;
+}
+
+.info-ligne {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #444;
+}
+
+.info-ligne strong {
+    display: block;
+    color: #1a2236;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.badge-admis {
+    display: inline-block;
+    padding: 5px 14px;
+    background-color: #e6f7ec;
+    color: #2e7d32;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.groupe-champ {
+    margin-bottom: 16px;
+}
+
+.groupe-champ label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.groupe-champ input,
+.groupe-champ select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #f8f9fa;
+}
+
+.bouton-enregistrer {
+    width: 100%;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.bouton-enregistrer:hover { background-color: #1d4ed8; }
+
+.message-succes {
+    background-color: #e6f7ec;
+    color: #2e7d32;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.message-erreur {
+    background-color: #fde8e8;
+    color: #c0392b;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

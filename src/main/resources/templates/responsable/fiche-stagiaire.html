@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche stagiaire</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-fiche.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Fiche stagiaire</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes">
+        Le stagiaire a ete admis et son compte a ete cree avec succes.
+    </div>
+    <div th:if="${erreur}" class="message-erreur" th:text="${erreur}"></div>
+
+    <div class="contenu-fiche">
+
+        <!-- Informations du candidat -->
+        <div class="bloc-fiche">
+            <h2 th:text="${demande.prenom + ' ' + demande.nom}">Nom Prenom</h2>
+            <div class="info-ligne">
+                <strong>Matricule</strong>
+                <span th:text="${matricule}">STG-2026-001</span>
+            </div>
+            <div class="info-ligne">
+                <strong>Ecole</strong>
+                <span th:text="${demande.ecole}">-</span>
+            </div>
+            <div class="info-ligne">
+                <strong>Filiere</strong>
+                <span th:text="${demande.filiere}">-</span>
+            </div>
+            <div class="info-ligne">
+                <strong>Niveau</strong>
+                <span th:text="${demande.niveau}">-</span>
+            </div>
+            <span class="badge-admis">Admis</span>
+        </div>
+
+        <!-- Formulaire d'affectation -->
+        <div class="bloc-fiche">
+            <h2>Affectation</h2>
+
+            <form th:action="@{/responsable/admissions/admettre/{id}(id=${demande.id})}"
+                  method="post">
+
+                <div class="groupe-champ">
+                    <label>Encadreur</label>
+                    <select name="encadreurId" required>
+                        <option value="">-- Choisir un encadreur --</option>
+                        <option th:each="enc : ${encadreurs}"
+                                th:value="${enc.id}"
+                                th:text="${enc.utilisateur.prenom + ' ' + enc.utilisateur.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Service</label>
+                    <select name="serviceId" required>
+                        <option value="">-- Choisir un service --</option>
+                        <option th:each="svc : ${services}"
+                                th:value="${svc.id}"
+                                th:text="${svc.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Projet (optionnel)</label>
+                    <select name="projetId">
+                        <option value="">-- Aucun projet --</option>
+                        <option th:each="proj : ${projets}"
+                                th:value="${proj.id}"
+                                th:text="${proj.titre}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Date de debut</label>
+                    <input type="date" name="dateDebut" required>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Date de fin</label>
+                    <input type="date" name="dateFin" required>
+                </div>
+
+                <button type="submit" class="bouton-enregistrer">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
