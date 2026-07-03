@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport final</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Rapport final</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
+    </div>
+
+    <div th:if="${stage == null}" class="bloc-module">
+        <p style="color:#777;">Vous n'avez pas encore de stage affecte.</p>
+    </div>
+
+    <div th:if="${stage != null}" class="bloc-module">
+        <h2>Deposer votre rapport final</h2>
+        <p style="color:#777; margin-bottom:20px; font-size:14px;">
+            Deposez votre rapport final en PDF une fois votre stage termine.
+        </p>
+        <form th:action="@{/stagiaire/rapport/deposer}" method="post"
+              enctype="multipart/form-data">
+            <div class="groupe-champ">
+                <label>Titre du rapport</label>
+                <input type="text" name="titre"
+                       placeholder="Ex: Rapport de stage - Gestion des stages" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Fichier (PDF)</label>
+                <input type="file" name="fichier" accept=".pdf" required>
+            </div>
+            <button type="submit" class="bouton-principal">Deposer le rapport</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

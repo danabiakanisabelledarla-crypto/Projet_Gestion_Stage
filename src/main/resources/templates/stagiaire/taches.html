@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes taches</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Mes taches</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
+    </div>
+    <div class="bloc-module">
+        <ul class="liste-taches">
+            <li th:each="tache : ${taches}">
+                <div>
+                    <div th:text="${tache.titre}" style="font-weight:bold;"></div>
+                    <div th:text="'Echeance : ' + ${tache.dateLimite}"
+                         style="font-size:12px; color:#777; margin-top:3px;"></div>
+                </div>
+                <span th:class="'badge-statut ' + ${tache.statut.name()}"
+                      th:text="${tache.statut}"></span>
+            </li>
+            <li th:if="${#lists.isEmpty(taches)}"
+                style="color:#777; justify-content:center;">
+                Aucune tache assignee pour le moment.
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

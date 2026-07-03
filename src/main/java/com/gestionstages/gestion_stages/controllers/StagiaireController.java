@@ -141,4 +141,57 @@ public String deposerLivrable(@AuthenticationPrincipal CustomUserDetails userDet
     }
     return "redirect:/stagiaire/journal?succes=Livrable depose avec succes.";
 }
+
+@GetMapping("/taches")
+public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              Model model) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    List<Tache> taches = new ArrayList<>();
+
+    if (stageOpt.isPresent()) {
+        taches = tacheRepository.findByStageId(stageOpt.get().getId());
+    }
+    model.addAttribute("taches", taches);
+    return "stagiaire/taches";
+}
+
+@GetMapping("/livrables")
+public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                 Model model) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    List<Livrable> livrables = new ArrayList<>();
+
+    if (stageOpt.isPresent()) {
+        List<Tache> taches = tacheRepository.findByStageId(stageOpt.get().getId());
+        for (Tache t : taches) {
+            livrables.addAll(livrableRepository.findByTacheId(t.getId()));
+        }
+    }
+    model.addAttribute("livrables", livrables);
+    return "stagiaire/livrables";
+}
+
+@GetMapping("/rapport")
+public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               Model model) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    model.addAttribute("stage", stageOpt.orElse(null));
+    return "stagiaire/rapport";
+}
+@PostMapping("/rapport/deposer")
+public String deposerRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @RequestParam String titre,
+                              @RequestParam MultipartFile fichier) {
+    try {
+        Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
+        String nomFichier = "rapport_" + userDetails.getUtilisateur().getId()
+                + "_" + fichier.getOriginalFilename();
+        Path chemin = Paths.get(DOSSIER_UPLOAD + nomFichier);
+        Files.write(chemin, fichier.getBytes());
+        System.out.println(">>> Rapport depose : " + chemin);
+    } catch (IOException e) {
+        System.err.println("Erreur upload rapport : " + e.getMessage());
+    }
+    return "redirect:/stagiaire/rapport?succes=Rapport depose avec succes.";
+}
 }

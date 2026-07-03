@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes livrables</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Mes livrables</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
+    </div>
+    <div class="bloc-module">
+        <ul class="liste-fichiers">
+            <li th:each="livrable : ${livrables}">
+                <div style="font-weight:bold;" th:text="${livrable.titre}"></div>
+                <div style="font-size:12px; color:#777; margin-top:3px;"
+                     th:text="'Statut : ' + ${livrable.statut}"></div>
+                <div style="font-size:12px; color:#777;"
+                     th:text="'Depose le : ' + ${livrable.dateDepot}"></div>
+            </li>
+            <li th:if="${#lists.isEmpty(livrables)}"
+                style="color:#777;">
+                Aucun livrable depose pour le moment.
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
