@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Journal de bord</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Journal de bord</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
+
+    <div th:if="${stage == null}" class="bloc-module">
+        <p style="color:#777;">Vous n'avez pas encore de stage affecte.</p>
+    </div>
+
+    <div th:if="${stage != null}" class="grille-modules">
+
+        <!-- Journal de bord -->
+        <div class="bloc-module">
+            <h2>Journal de bord</h2>
+            <form th:action="@{/stagiaire/journal/ajouter}" method="post">
+
+                <div class="groupe-champ">
+                    <label>Date</label>
+                    <input type="date" name="dateActivite"
+                           th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"
+                           required>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Travaux realises</label>
+                    <textarea name="travauxRealises"
+                              placeholder="Decrivez vos activites du jour..."
+                              required></textarea>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Difficultes rencontrees</label>
+                    <textarea name="difficultes"
+                              placeholder="Optionnel..."></textarea>
+                </div>
+
+                <button type="submit" class="bouton-principal">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- Depot de livrables -->
+        <div class="bloc-module">
+            <h2>Depot de livrables</h2>
+
+            <!-- Liste des livrables deja deposes -->
+            <ul class="liste-fichiers">
+                <li th:each="livrable : ${livrables}"
+                    th:text="${livrable.nomFichier}">fichier.pdf</li>
+                <li th:if="${#lists.isEmpty(livrables)}"
+                    style="color:#777;">Aucun livrable depose.</li>
+            </ul>
+
+            <!-- Formulaire depot -->
+            <form th:action="@{/stagiaire/livrables/deposer}" method="post"
+                  enctype="multipart/form-data">
+
+                <div class="groupe-champ">
+                    <label>Tache concernee</label>
+                    <select name="tacheId" required>
+                        <option value="">-- Choisir une tache --</option>
+                        <option th:each="tache : ${taches}"
+                                th:value="${tache.id}"
+                                th:text="${tache.titre}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Titre du livrable</label>
+                    <input type="text" name="titre"
+                           placeholder="Ex: diagrammes_uml.pdf" required>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Fichier</label>
+                    <input type="file" name="fichier" required>
+                </div>
+
+                <button type="submit" class="bouton-principal">Deposer fichier</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

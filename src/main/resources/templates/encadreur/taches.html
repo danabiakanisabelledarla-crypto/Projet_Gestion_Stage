@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des taches</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Gestion des taches</h1>
+        <span class="utilisateur-connecte">Encadreur</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes">Tache creee avec succes.</div>
+
+    <div class="grille-modules">
+
+        <!-- Formulaire creation tache -->
+        <div class="bloc-module">
+            <h2>Nouvelle tache</h2>
+            <form th:action="@{/encadreur/taches/creer}" method="post">
+
+                <div class="groupe-champ">
+                    <label>Stagiaire</label>
+                    <select name="stageId" required>
+                        <option value="">-- Choisir un stagiaire --</option>
+                        <option th:each="stage : ${mesStages}"
+                                th:value="${stage.id}"
+                                th:text="${stage.stagiaire.utilisateur.prenom
+                                        + ' ' + stage.stagiaire.utilisateur.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Titre de la tache</label>
+                    <input type="text" name="titre"
+                           placeholder="Ex: Creer le diagramme de classes" required>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Description</label>
+                    <textarea name="description"
+                              placeholder="Decrivez la tache en detail..."></textarea>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Date limite</label>
+                    <input type="date" name="dateLimite" required>
+                </div>
+
+                <button type="submit" class="bouton-principal">Creer la tache</button>
+            </form>
+        </div>
+
+        <!-- Liste des taches -->
+        <div class="bloc-module">
+            <h2>Taches en cours</h2>
+            <ul class="liste-taches">
+                <li th:each="tache : ${toutesLesTaches}">
+                    <div>
+                        <div th:text="${tache.titre}" style="font-weight:bold;"></div>
+                        <div th:text="'Echeance : ' + ${tache.dateLimite}"
+                             style="font-size:12px; color:#777; margin-top:3px;"></div>
+                    </div>
+                    <span th:class="'badge-statut ' + ${tache.statut.name()}"
+                          th:text="${tache.statut}"></span>
+                </li>
+                <li th:if="${#lists.isEmpty(toutesLesTaches)}"
+                    style="color:#777; justify-content:center;">
+                    Aucune tache pour le moment.
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

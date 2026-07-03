@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .system { fill: #ffffff; stroke: #2f3a4a; stroke-width: 2.5; rx: 14; }
+      .title { font-family: Arial, sans-serif; font-size: 28px; font-weight: 700; fill: #182230; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 18px; fill: #475467; }
+      .actor-label { font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; fill: #182230; text-anchor: middle; }
+      .usecase { fill: #eef6ff; stroke: #2563eb; stroke-width: 2; }
+      .usecase-alt { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+      .usecase-warn { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
+      .usecase-text { font-family: Arial, sans-serif; font-size: 15px; fill: #182230; text-anchor: middle; dominant-baseline: middle; }
+      .section { font-family: Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #344054; text-anchor: middle; }
+      .line { stroke: #667085; stroke-width: 2; fill: none; }
+      .dash { stroke: #98a2b3; stroke-width: 1.8; fill: none; stroke-dasharray: 8 6; }
+      .dash-text { font-family: Arial, sans-serif; font-size: 13px; fill: #667085; text-anchor: middle; }
+      .stick { stroke: #111827; stroke-width: 3; fill: none; stroke-linecap: round; }
+      .head { fill: #ffffff; stroke: #111827; stroke-width: 3; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1050"/>
+  <text class="title" x="800" y="46" text-anchor="middle">Diagramme de cas d'utilisation</text>
+  <text class="subtitle" x="800" y="76" text-anchor="middle">Plateforme numerique de gestion et de suivi des stages</text>
+
+  <rect class="system" x="300" y="110" width="1000" height="870"/>
+  <text class="section" x="800" y="145">Systeme</text>
+
+  <!-- Actors -->
+  <g id="candidat" transform="translate(130 170)">
+    <circle class="head" cx="0" cy="0" r="22"/>
+    <path class="stick" d="M0 22 L0 88 M-38 48 L38 48 M0 88 L-34 136 M0 88 L34 136"/>
+    <text class="actor-label" x="0" y="168">Candidat</text>
+  </g>
+
+  <g id="responsable" transform="translate(130 475)">
+    <circle class="head" cx="0" cy="0" r="22"/>
+    <path class="stick" d="M0 22 L0 88 M-38 48 L38 48 M0 88 L-34 136 M0 88 L34 136"/>
+    <text class="actor-label" x="0" y="168">Responsable</text>
+    <text class="actor-label" x="0" y="190">des stages</text>
+  </g>
+
+  <g id="admin" transform="translate(130 790)">
+    <circle class="head" cx="0" cy="0" r="22"/>
+    <path class="stick" d="M0 22 L0 88 M-38 48 L38 48 M0 88 L-34 136 M0 88 L34 136"/>
+    <text class="actor-label" x="0" y="168">Administrateur</text>
+  </g>
+
+  <g id="encadreur" transform="translate(1470 260)">
+    <circle class="head" cx="0" cy="0" r="22"/>
+    <path class="stick" d="M0 22 L0 88 M-38 48 L38 48 M0 88 L-34 136 M0 88 L34 136"/>
+    <text class="actor-label" x="0" y="168">Encadreur</text>
+  </g>
+
+  <g id="stagiaire" transform="translate(1470 700)">
+    <circle class="head" cx="0" cy="0" r="22"/>
+    <path class="stick" d="M0 22 L0 88 M-38 48 L38 48 M0 88 L-34 136 M0 88 L34 136"/>
+    <text class="actor-label" x="0" y="168">Stagiaire</text>
+  </g>
+
+  <!-- Use cases: candidate -->
+  <ellipse class="usecase" cx="510" cy="210" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="210">Soumettre demande</text>
+  <ellipse class="usecase" cx="510" cy="285" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="285">Joindre CV</text>
+  <ellipse class="usecase" cx="510" cy="360" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="360">Joindre lettre motivation</text>
+  <ellipse class="usecase" cx="510" cy="435" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="435">Consulter etat demande</text>
+
+  <!-- Use cases: responsible -->
+  <ellipse class="usecase-warn" cx="790" cy="210" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="210">Traiter demandes</text>
+  <ellipse class="usecase-warn" cx="790" cy="285" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="285">Accepter / refuser</text>
+  <ellipse class="usecase-warn" cx="790" cy="360" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="360">Creer compte stagiaire</text>
+  <ellipse class="usecase-warn" cx="790" cy="435" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="435">Affecter stage</text>
+  <ellipse class="usecase-warn" cx="790" cy="510" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="510">Cloturer stage</text>
+
+  <!-- Use cases: admin -->
+  <ellipse class="usecase" cx="510" cy="610" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="610">Gerer utilisateurs</text>
+  <ellipse class="usecase" cx="510" cy="685" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="685">Gerer roles</text>
+  <ellipse class="usecase" cx="510" cy="760" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="760">Gerer stagiaires</text>
+  <ellipse class="usecase" cx="510" cy="835" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="835">Consulter statistiques</text>
+  <ellipse class="usecase" cx="510" cy="910" rx="150" ry="34"/>
+  <text class="usecase-text" x="510" y="910">Archiver stages</text>
+
+  <!-- Use cases: supervisor -->
+  <ellipse class="usecase-alt" cx="1080" cy="210" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="210">Definir objectifs</text>
+  <ellipse class="usecase-alt" cx="1080" cy="285" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="285">Creer / modifier taches</text>
+  <ellipse class="usecase-alt" cx="1080" cy="360" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="360">Suivre avancement</text>
+  <ellipse class="usecase-alt" cx="1080" cy="435" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="435">Consulter journal</text>
+  <ellipse class="usecase-alt" cx="1080" cy="510" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="510">Valider livrables</text>
+  <ellipse class="usecase-alt" cx="1080" cy="585" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="585">Evaluer le stagiaire</text>
+
+  <!-- Use cases: intern -->
+  <ellipse class="usecase-warn" cx="1080" cy="685" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="685">Consulter taches</text>
+  <ellipse class="usecase-warn" cx="1080" cy="760" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="760">Remplir journal</text>
+  <ellipse class="usecase-warn" cx="1080" cy="835" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="835">Deposer livrables</text>
+  <ellipse class="usecase-warn" cx="1080" cy="910" rx="160" ry="34"/>
+  <text class="usecase-text" x="1080" y="910">Deposer rapport final</text>
+
+  <ellipse class="usecase" cx="790" cy="835" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="835">Se connecter</text>
+  <ellipse class="usecase" cx="790" cy="910" rx="150" ry="34"/>
+  <text class="usecase-text" x="790" y="910">Consulter evaluations</text>
+
+  <!-- Associations -->
+  <path class="line" d="M168 218 C250 218 315 210 360 210"/>
+  <path class="line" d="M168 218 C245 250 315 285 360 285"/>
+  <path class="line" d="M168 218 C245 285 315 360 360 360"/>
+  <path class="line" d="M168 218 C245 330 315 435 360 435"/>
+
+  <path class="line" d="M168 540 C350 430 590 255 640 210"/>
+  <path class="line" d="M168 540 C360 470 590 315 640 285"/>
+  <path class="line" d="M168 540 C360 515 590 380 640 360"/>
+  <path class="line" d="M168 540 C365 560 590 445 640 435"/>
+  <path class="line" d="M168 540 C380 600 590 520 640 510"/>
+  <path class="line" d="M168 540 C380 690 630 800 670 835"/>
+
+  <path class="line" d="M168 855 C260 770 315 630 360 610"/>
+  <path class="line" d="M168 855 C260 800 315 695 360 685"/>
+  <path class="line" d="M168 855 C260 830 315 765 360 760"/>
+  <path class="line" d="M168 855 C260 860 315 835 360 835"/>
+  <path class="line" d="M168 855 C260 900 315 910 360 910"/>
+  <path class="line" d="M168 855 C410 855 600 835 640 835"/>
+
+  <path class="line" d="M1432 328 C1340 260 1280 220 1240 210"/>
+  <path class="line" d="M1432 328 C1340 285 1280 285 1240 285"/>
+  <path class="line" d="M1432 328 C1340 330 1280 355 1240 360"/>
+  <path class="line" d="M1432 328 C1340 375 1280 425 1240 435"/>
+  <path class="line" d="M1432 328 C1340 425 1280 500 1240 510"/>
+  <path class="line" d="M1432 328 C1340 480 1280 575 1240 585"/>
+  <path class="line" d="M1432 328 C1260 520 980 805 940 835"/>
+
+  <path class="line" d="M1432 768 C1355 725 1280 690 1240 685"/>
+  <path class="line" d="M1432 768 C1350 755 1280 760 1240 760"/>
+  <path class="line" d="M1432 768 C1350 800 1280 830 1240 835"/>
+  <path class="line" d="M1432 768 C1350 850 1280 900 1240 910"/>
+  <path class="line" d="M1432 768 C1260 790 985 825 940 835"/>
+  <path class="line" d="M1432 768 C1260 840 985 900 940 910"/>
+
+  <!-- Include / extension notes -->
+  <path class="dash" d="M620 232 C665 245 700 260 745 276"/>
+  <text class="dash-text" x="690" y="246">inclut</text>
+  <path class="dash" d="M820 316 C820 326 820 338 820 350"/>
+  <text class="dash-text" x="855" y="335">apres admission</text>
+  <path class="dash" d="M940 510 C975 510 1005 510 1040 510"/>
+  <text class="dash-text" x="990" y="495">controle</text>
+  <path class="dash" d="M815 542 C835 640 840 745 812 805"/>
+  <text class="dash-text" x="875" y="675">fin stage</text>
+</svg>

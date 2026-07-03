@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2400" viewBox="0 0 1800 2400">
+  <defs>
+    <style>
+      .bg { fill: #f5f7fb; }
+      .title { font-family: Arial, sans-serif; font-size: 34px; font-weight: 700; fill: #182230; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 18px; fill: #475467; }
+      .page { fill: #ffffff; stroke: #d0d5dd; stroke-width: 2; rx: 18; }
+      .browser { fill: #eef2f7; stroke: #d0d5dd; stroke-width: 1; }
+      .dot-red { fill: #f97066; }
+      .dot-yellow { fill: #fdb022; }
+      .dot-green { fill: #32d583; }
+      .nav { fill: #1f2937; }
+      .nav2 { fill: #283548; }
+      .top { fill: #ffffff; stroke: #eaecf0; stroke-width: 1; }
+      .card { fill: #ffffff; stroke: #d0d5dd; stroke-width: 1.5; rx: 8; }
+      .soft { fill: #f8fafc; stroke: #e4e7ec; stroke-width: 1; rx: 8; }
+      .blue { fill: #eaf2ff; stroke: #84adff; stroke-width: 1; rx: 8; }
+      .green { fill: #eafaf0; stroke: #75e0a7; stroke-width: 1; rx: 8; }
+      .orange { fill: #fff4e6; stroke: #fdb022; stroke-width: 1; rx: 8; }
+      .purple { fill: #f2edff; stroke: #bdb4fe; stroke-width: 1; rx: 8; }
+      .danger { fill: #fff1f3; stroke: #fda29b; stroke-width: 1; rx: 8; }
+      .dark-text { font-family: Arial, sans-serif; fill: #182230; }
+      .muted { font-family: Arial, sans-serif; fill: #667085; }
+      .white { font-family: Arial, sans-serif; fill: #ffffff; }
+      .h1 { font-size: 21px; font-weight: 700; }
+      .h2 { font-size: 16px; font-weight: 700; }
+      .small { font-size: 12px; }
+      .xs { font-size: 10px; }
+      .label { font-size: 12px; font-weight: 700; }
+      .btn { fill: #2563eb; rx: 7; }
+      .btn2 { fill: #16a34a; rx: 7; }
+      .btn3 { fill: #ea580c; rx: 7; }
+      .btnLight { fill: #eef4ff; stroke: #84adff; stroke-width: 1; rx: 7; }
+      .input { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.2; rx: 7; }
+      .line { stroke: #e4e7ec; stroke-width: 1.4; }
+      .progress-bg { fill: #e4e7ec; rx: 5; }
+      .progress-blue { fill: #2563eb; rx: 5; }
+      .progress-green { fill: #16a34a; rx: 5; }
+      .progress-orange { fill: #ea580c; rx: 5; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="2400"/>
+  <text class="title" x="900" y="52" text-anchor="middle">Maquettes des pages principales</text>
+  <text class="subtitle" x="900" y="84" text-anchor="middle">Plateforme numerique de gestion et de suivi des stages</text>
+
+  <!-- Page frame helper repeated manually -->
+
+  <!-- 1 Login -->
+  <g transform="translate(70 130)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">01 - Page de connexion</text>
+    <rect class="nav" x="0" y="34" width="330" height="416" rx="0"/>
+    <text class="white h1" x="42" y="115">Gestion des stages</text>
+    <text class="white small" x="42" y="148">Suivi complet du stage, du depot de</text>
+    <text class="white small" x="42" y="170">candidature jusqu'a l'archivage.</text>
+    <rect class="blue" x="42" y="220" width="220" height="82"/>
+    <text class="dark-text h2" x="62" y="252">Cycle du stage</text>
+    <text class="muted small" x="62" y="278">Demande, affectation, suivi,</text>
+    <text class="muted small" x="62" y="298">evaluation et cloture.</text>
+    <text class="dark-text h1" x="430" y="125">Connexion</text>
+    <text class="muted small" x="430" y="153">Acces securise selon le role utilisateur</text>
+    <text class="dark-text label" x="430" y="204">Email</text>
+    <rect class="input" x="430" y="215" width="290" height="42"/>
+    <text class="muted small" x="445" y="241">utilisateur@email.com</text>
+    <text class="dark-text label" x="430" y="285">Mot de passe</text>
+    <rect class="input" x="430" y="296" width="290" height="42"/>
+    <text class="muted small" x="445" y="322">********</text>
+    <rect class="btn" x="430" y="365" width="290" height="44"/>
+    <text class="white label" x="575" y="392" text-anchor="middle">Se connecter</text>
+  </g>
+
+  <!-- 2 Admin dashboard -->
+  <g transform="translate(930 130)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">02 - Tableau de bord administrateur</text>
+    <rect class="nav" x="0" y="34" width="170" height="416"/>
+    <text class="white h2" x="22" y="78">Stages</text>
+    <text class="white small" x="22" y="125">Tableau de bord</text>
+    <text class="white small" x="22" y="160">Demandes</text>
+    <text class="white small" x="22" y="195">Stagiaires</text>
+    <text class="white small" x="22" y="230">Encadreurs</text>
+    <text class="white small" x="22" y="265">Statistiques</text>
+    <rect class="top" x="170" y="34" width="630" height="62"/>
+    <text class="dark-text h1" x="198" y="74">Tableau de bord</text>
+    <text class="muted small" x="665" y="74">Admin</text>
+    <rect class="blue" x="198" y="124" width="130" height="92"/>
+    <text class="muted small" x="216" y="152">Demandes</text><text class="dark-text h1" x="216" y="188">24</text>
+    <rect class="green" x="350" y="124" width="130" height="92"/>
+    <text class="muted small" x="368" y="152">En cours</text><text class="dark-text h1" x="368" y="188">18</text>
+    <rect class="orange" x="502" y="124" width="130" height="92"/>
+    <text class="muted small" x="520" y="152">Termines</text><text class="dark-text h1" x="520" y="188">31</text>
+    <rect class="purple" x="654" y="124" width="110" height="92"/>
+    <text class="muted small" x="672" y="152">Taches</text><text class="dark-text h1" x="672" y="188">76</text>
+    <rect class="card" x="198" y="245" width="352" height="160"/>
+    <text class="dark-text h2" x="218" y="276">Stages par statut</text>
+    <rect class="progress-bg" x="218" y="310" width="290" height="12"/><rect class="progress-blue" x="218" y="310" width="190" height="12"/>
+    <rect class="progress-bg" x="218" y="345" width="290" height="12"/><rect class="progress-green" x="218" y="345" width="235" height="12"/>
+    <rect class="progress-bg" x="218" y="380" width="290" height="12"/><rect class="progress-orange" x="218" y="380" width="120" height="12"/>
+    <rect class="card" x="575" y="245" width="190" height="160"/>
+    <text class="dark-text h2" x="595" y="276">Actions rapides</text>
+    <rect class="btnLight" x="595" y="300" width="145" height="34"/><text class="dark-text small" x="668" y="322" text-anchor="middle">Nouvelle demande</text>
+    <rect class="btnLight" x="595" y="345" width="145" height="34"/><text class="dark-text small" x="668" y="367" text-anchor="middle">Ajouter encadreur</text>
+  </g>
+
+  <!-- 3 Applications -->
+  <g transform="translate(70 640)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">03 - Gestion des demandes de stage</text>
+    <rect class="nav2" x="0" y="34" width="160" height="416"/>
+    <text class="white h2" x="20" y="78">Responsable</text>
+    <text class="white small" x="20" y="130">Demandes</text>
+    <text class="white small" x="20" y="165">Admissions</text>
+    <text class="white small" x="20" y="200">Affectations</text>
+    <rect class="top" x="160" y="34" width="640" height="62"/>
+    <text class="dark-text h1" x="188" y="74">Demandes de stage</text>
+    <rect class="input" x="188" y="120" width="260" height="38"/><text class="muted small" x="205" y="144">Rechercher un candidat</text>
+    <rect class="btnLight" x="465" y="120" width="90" height="38"/><text class="dark-text small" x="510" y="144" text-anchor="middle">Filtrer</text>
+    <rect class="card" x="188" y="180" width="560" height="210"/>
+    <text class="muted label" x="210" y="212">Nom</text><text class="muted label" x="350" y="212">Niveau</text><text class="muted label" x="470" y="212">Filiere</text><text class="muted label" x="635" y="212">Action</text>
+    <line class="line" x1="200" y1="225" x2="728" y2="225"/>
+    <text class="dark-text small" x="210" y="255">Darla M.</text><text class="dark-text small" x="350" y="255">Licence 3</text><text class="dark-text small" x="470" y="255">Dev Web</text>
+    <rect class="btn2" x="620" y="238" width="58" height="26"/><text class="white xs" x="649" y="255" text-anchor="middle">Accepter</text>
+    <rect class="btn3" x="685" y="238" width="50" height="26"/><text class="white xs" x="710" y="255" text-anchor="middle">Refuser</text>
+    <line class="line" x1="200" y1="278" x2="728" y2="278"/>
+    <text class="dark-text small" x="210" y="308">Eric B.</text><text class="dark-text small" x="350" y="308">Master 1</text><text class="dark-text small" x="470" y="308">Reseaux</text>
+    <rect class="orange" x="620" y="291" width="90" height="26"/><text class="dark-text xs" x="665" y="308" text-anchor="middle">En attente</text>
+    <line class="line" x1="200" y1="331" x2="728" y2="331"/>
+    <text class="dark-text small" x="210" y="361">Nadia K.</text><text class="dark-text small" x="350" y="361">BTS 2</text><text class="dark-text small" x="470" y="361">Gestion</text>
+    <rect class="btn2" x="620" y="344" width="58" height="26"/><text class="white xs" x="649" y="361" text-anchor="middle">Accepter</text>
+  </g>
+
+  <!-- 4 Intern record -->
+  <g transform="translate(930 640)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">04 - Fiche stagiaire et affectation</text>
+    <rect class="top" x="0" y="34" width="800" height="62"/>
+    <text class="dark-text h1" x="35" y="74">Fiche stagiaire</text>
+    <rect class="card" x="35" y="125" width="300" height="250"/>
+    <text class="dark-text h2" x="60" y="160">Darla Mebale</text>
+    <text class="muted small" x="60" y="190">Matricule : STG-2026-001</text>
+    <text class="muted small" x="60" y="215">Ecole : Institut Superieur</text>
+    <text class="muted small" x="60" y="240">Filiere : Developpement Web</text>
+    <text class="muted small" x="60" y="265">Niveau : Licence 3</text>
+    <rect class="green" x="60" y="300" width="120" height="30"/><text class="dark-text small" x="120" y="320" text-anchor="middle">Admis</text>
+    <rect class="card" x="365" y="125" width="390" height="250"/>
+    <text class="dark-text h2" x="390" y="160">Affectation</text>
+    <text class="dark-text label" x="390" y="198">Encadreur</text>
+    <rect class="input" x="390" y="210" width="315" height="36"/><text class="muted small" x="405" y="233">M. Nkoa</text>
+    <text class="dark-text label" x="390" y="268">Service</text>
+    <rect class="input" x="390" y="280" width="315" height="36"/><text class="muted small" x="405" y="303">Developpement logiciel</text>
+    <text class="dark-text label" x="390" y="338">Projet</text>
+    <rect class="input" x="390" y="350" width="315" height="36"/><text class="muted small" x="405" y="373">Plateforme de gestion des stages</text>
+    <rect class="btn" x="575" y="402" width="130" height="34"/><text class="white small" x="640" y="424" text-anchor="middle">Enregistrer</text>
+  </g>
+
+  <!-- 5 Supervisor -->
+  <g transform="translate(70 1150)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">05 - Espace encadreur</text>
+    <rect class="nav" x="0" y="34" width="165" height="416"/>
+    <text class="white h2" x="22" y="80">Encadreur</text>
+    <text class="white small" x="22" y="130">Objectifs</text>
+    <text class="white small" x="22" y="165">Taches</text>
+    <text class="white small" x="22" y="200">Livrables</text>
+    <text class="white small" x="22" y="235">Evaluations</text>
+    <rect class="top" x="165" y="34" width="635" height="62"/>
+    <text class="dark-text h1" x="195" y="74">Suivi du stagiaire</text>
+    <rect class="card" x="195" y="125" width="240" height="280"/>
+    <text class="dark-text h2" x="215" y="160">Objectifs</text>
+    <rect class="green" x="215" y="185" width="180" height="34"/><text class="dark-text small" x="305" y="207" text-anchor="middle">Decouverte entreprise</text>
+    <rect class="blue" x="215" y="230" width="180" height="34"/><text class="dark-text small" x="305" y="252" text-anchor="middle">Analyse des besoins</text>
+    <rect class="orange" x="215" y="275" width="180" height="34"/><text class="dark-text small" x="305" y="297" text-anchor="middle">Conception UML</text>
+    <rect class="soft" x="215" y="320" width="180" height="34"/><text class="dark-text small" x="305" y="342" text-anchor="middle">Developpement</text>
+    <rect class="card" x="465" y="125" width="285" height="280"/>
+    <text class="dark-text h2" x="485" y="160">Taches</text>
+    <text class="dark-text small" x="485" y="205">Creer diagramme de classes</text>
+    <text class="muted xs" x="485" y="225">Echeance : 10 juillet</text>
+    <line class="line" x1="485" y1="245" x2="720" y2="245"/>
+    <text class="dark-text small" x="485" y="280">Creer la base de donnees</text>
+    <text class="muted xs" x="485" y="300">Echeance : 15 juillet</text>
+    <rect class="btn" x="585" y="348" width="135" height="34"/><text class="white small" x="652" y="370" text-anchor="middle">Nouvelle tache</text>
+  </g>
+
+  <!-- 6 Intern space -->
+  <g transform="translate(930 1150)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">06 - Espace stagiaire</text>
+    <rect class="nav2" x="0" y="34" width="165" height="416"/>
+    <text class="white h2" x="22" y="80">Stagiaire</text>
+    <text class="white small" x="22" y="130">Mes taches</text>
+    <text class="white small" x="22" y="165">Journal</text>
+    <text class="white small" x="22" y="200">Livrables</text>
+    <text class="white small" x="22" y="235">Rapport final</text>
+    <rect class="top" x="165" y="34" width="635" height="62"/>
+    <text class="dark-text h1" x="195" y="74">Bienvenue Darla</text>
+    <rect class="card" x="195" y="125" width="555" height="90"/>
+    <text class="dark-text h2" x="220" y="160">Plateforme de gestion des stages</text>
+    <text class="muted small" x="220" y="188">Encadreur : M. Nkoa | Service : Developpement logiciel</text>
+    <rect class="blue" x="195" y="245" width="165" height="115"/>
+    <text class="dark-text h2" x="215" y="280">Taches</text><text class="dark-text h1" x="215" y="320">2</text><text class="muted xs" x="215" y="342">en cours</text>
+    <rect class="green" x="390" y="245" width="165" height="115"/>
+    <text class="dark-text h2" x="410" y="280">Livrables</text><text class="dark-text h1" x="410" y="320">3</text><text class="muted xs" x="410" y="342">deposes</text>
+    <rect class="orange" x="585" y="245" width="165" height="115"/>
+    <text class="dark-text h2" x="605" y="280">Journal</text><text class="dark-text h1" x="605" y="320">12</text><text class="muted xs" x="605" y="342">jours saisis</text>
+  </g>
+
+  <!-- 7 Journal and deliverables -->
+  <g transform="translate(70 1660)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">07 - Journal de bord et livrables</text>
+    <rect class="top" x="0" y="34" width="800" height="62"/>
+    <text class="dark-text h1" x="35" y="74">Journal de bord</text>
+    <rect class="card" x="35" y="125" width="350" height="280"/>
+    <text class="dark-text label" x="60" y="160">Date</text>
+    <rect class="input" x="60" y="172" width="280" height="36"/><text class="muted small" x="75" y="195">05/07/2026</text>
+    <text class="dark-text label" x="60" y="235">Travaux realises</text>
+    <rect class="input" x="60" y="247" width="280" height="72"/><text class="muted small" x="75" y="272">Diagramme de cas d'utilisation</text><text class="muted small" x="75" y="294">Diagramme de classes</text>
+    <text class="dark-text label" x="60" y="345">Difficultes</text>
+    <rect class="input" x="60" y="357" width="280" height="36"/><text class="muted small" x="75" y="380">Comprehension de JPA</text>
+    <rect class="card" x="420" y="125" width="340" height="280"/>
+    <text class="dark-text h2" x="445" y="160">Depot de livrables</text>
+    <rect class="soft" x="445" y="190" width="270" height="42"/><text class="dark-text small" x="465" y="216">diagrammes_uml.pdf</text>
+    <rect class="soft" x="445" y="245" width="270" height="42"/><text class="dark-text small" x="465" y="271">base_donnees.sql</text>
+    <rect class="soft" x="445" y="300" width="270" height="42"/><text class="dark-text small" x="465" y="326">rapport_hebdomadaire.pdf</text>
+    <rect class="btn" x="565" y="365" width="150" height="34"/><text class="white small" x="640" y="387" text-anchor="middle">Deposer fichier</text>
+  </g>
+
+  <!-- 8 Evaluation -->
+  <g transform="translate(930 1660)">
+    <rect class="page" width="800" height="450"/>
+    <rect class="browser" width="800" height="34" rx="18"/>
+    <circle class="dot-red" cx="24" cy="17" r="6"/><circle class="dot-yellow" cx="45" cy="17" r="6"/><circle class="dot-green" cx="66" cy="17" r="6"/>
+    <text class="muted small" x="400" y="23" text-anchor="middle">08 - Evaluation et cloture</text>
+    <rect class="top" x="0" y="34" width="800" height="62"/>
+    <text class="dark-text h1" x="35" y="74">Evaluation finale</text>
+    <rect class="card" x="35" y="125" width="360" height="260"/>
+    <text class="muted label" x="60" y="160">Critere</text><text class="muted label" x="300" y="160">Note</text>
+    <line class="line" x1="55" y1="174" x2="360" y2="174"/>
+    <text class="dark-text small" x="60" y="205">Technique</text><rect class="input" x="285" y="185" width="55" height="32"/><text class="dark-text small" x="312" y="206" text-anchor="middle">17</text>
+    <text class="dark-text small" x="60" y="255">Autonomie</text><rect class="input" x="285" y="235" width="55" height="32"/><text class="dark-text small" x="312" y="256" text-anchor="middle">16</text>
+    <text class="dark-text small" x="60" y="305">Communication</text><rect class="input" x="285" y="285" width="55" height="32"/><text class="dark-text small" x="312" y="306" text-anchor="middle">15</text>
+    <rect class="card" x="430" y="125" width="330" height="260"/>
+    <text class="dark-text h2" x="455" y="160">Cloture du stage</text>
+    <rect class="green" x="455" y="190" width="250" height="40"/><text class="dark-text small" x="580" y="215" text-anchor="middle">Rapport final depose</text>
+    <rect class="blue" x="455" y="245" width="250" height="40"/><text class="dark-text small" x="580" y="270" text-anchor="middle">Evaluations conservees</text>
+    <rect class="orange" x="455" y="300" width="250" height="40"/><text class="dark-text small" x="580" y="325" text-anchor="middle">Documents archives</text>
+    <rect class="btn2" x="555" y="365" width="150" height="34"/><text class="white small" x="630" y="387" text-anchor="middle">Cloturer</text>
+  </g>
+
+  <text class="muted small" x="900" y="2245" text-anchor="middle">Ces maquettes representent les pages essentielles avant le developpement de l'application.</text>
+</svg>

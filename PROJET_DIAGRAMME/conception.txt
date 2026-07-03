@@ -1,0 +1,35 @@
+La suite, c’est l’architecture technique du projet.
+On a déjà fait la partie conception fonctionnelle et visuelle :
+cahier des charges ;
+cas d’utilisation ;
+diagramme de classes ;
+modèle relationnel MySQL ;
+maquettes des interfaces.
+Maintenant il faut décider comment l’application sera construite.
+Je te propose cette architecture simple et solide :
+Backend
+Java avec Spring Boot
+Base de données
+MySQL
+Frontend
+HTML, CSS, Bootstrap, Thymeleaf
+Sécurité
+Spring Security avec rôles :
+ADMINISTRATEUR
+RESPONSABLE_STAGE
+ENCADREUR
+STAGIAIRE
+Structure du projet
+entities : classes Java liées aux tables MySQL ;
+repositories : accès à la base de données ;
+services : logique métier ;
+controllers : gestion des pages et actions ;
+templates : pages HTML ;
+static : CSS, images, JavaScript.
+Après ça, on pourra commencer le vrai développement dans cet ordre :
+créer le projet Spring Boot ;
+connecter MySQL ;
+créer les entités Java ;
+créer l’authentification ;
+développer les modules un par un.
+Donc la prochaine étape concrète est : préparer le document d’architecture technique, puis démarrer le projet.

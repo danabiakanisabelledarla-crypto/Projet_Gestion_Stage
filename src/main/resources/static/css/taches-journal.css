@@ -1,0 +1,113 @@
+.grille-modules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.bloc-module {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.bloc-module h2 {
+    font-size: 18px;
+    color: #1a2236;
+    margin-bottom: 20px;
+}
+
+.groupe-champ {
+    margin-bottom: 16px;
+}
+
+.groupe-champ label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.groupe-champ input,
+.groupe-champ select,
+.groupe-champ textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+}
+
+.groupe-champ textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.bouton-principal {
+    width: 100%;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.bouton-principal:hover { background-color: #1d4ed8; }
+
+.liste-taches {
+    list-style: none;
+    margin-top: 15px;
+}
+
+.liste-taches li {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.liste-taches li:last-child { border-bottom: none; }
+
+.badge-statut {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-statut.a_faire { background: #e8f0fe; color: #2563eb; }
+.badge-statut.en_cours { background: #fff3e0; color: #e65100; }
+.badge-statut.terminee { background: #e6f7ec; color: #2e7d32; }
+.badge-statut.en_retard { background: #fde8e8; color: #c0392b; }
+
+.liste-fichiers {
+    list-style: none;
+    margin-bottom: 15px;
+}
+
+.liste-fichiers li {
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.message-succes {
+    background-color: #e6f7ec;
+    color: #2e7d32;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}

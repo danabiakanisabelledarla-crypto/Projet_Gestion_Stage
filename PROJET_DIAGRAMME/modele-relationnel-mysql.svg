@@ -1,0 +1,239 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1300" viewBox="0 0 1800 1300">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .title { font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; fill: #182230; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 18px; fill: #475467; }
+      .table { fill: #ffffff; stroke: #344054; stroke-width: 2; rx: 8; }
+      .head { fill: #eaf2ff; stroke: #344054; stroke-width: 2; }
+      .head2 { fill: #fff4e6; stroke: #344054; stroke-width: 2; }
+      .head3 { fill: #eafaf0; stroke: #344054; stroke-width: 2; }
+      .name { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; fill: #182230; text-anchor: middle; }
+      .field { font-family: Arial, sans-serif; font-size: 12px; fill: #344054; }
+      .pk { font-weight: 700; fill: #0f766e; }
+      .fk { fill: #b45309; }
+      .rel { stroke: #667085; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .legend { font-family: Arial, sans-serif; font-size: 14px; fill: #344054; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1800" height="1300"/>
+  <text class="title" x="900" y="45" text-anchor="middle">Modele relationnel MySQL</text>
+  <text class="subtitle" x="900" y="75" text-anchor="middle">Plateforme de gestion et de suivi des stages</text>
+
+  <g transform="translate(60 120)">
+    <rect class="table" width="230" height="110"/>
+    <rect class="head" width="230" height="34"/>
+    <text class="name" x="115" y="23">roles</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field" x="12" y="78">libelle</text>
+    <text class="field" x="12" y="98">description</text>
+  </g>
+
+  <g transform="translate(380 105)">
+    <rect class="table" width="260" height="170"/>
+    <rect class="head" width="260" height="34"/>
+    <text class="name" x="130" y="23">utilisateurs</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK role_id</text>
+    <text class="field" x="12" y="98">nom, prenom</text>
+    <text class="field" x="12" y="118">email, mot_de_passe</text>
+    <text class="field" x="12" y="138">telephone, statut</text>
+    <text class="field" x="12" y="158">date_creation</text>
+  </g>
+
+  <g transform="translate(730 100)">
+    <rect class="table" width="270" height="190"/>
+    <rect class="head2" width="270" height="34"/>
+    <text class="name" x="135" y="23">demandes_stage</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field" x="12" y="78">nom, prenom</text>
+    <text class="field" x="12" y="98">ecole, filiere, niveau</text>
+    <text class="field" x="12" y="118">duree_souhaitee</text>
+    <text class="field" x="12" y="138">statut</text>
+    <text class="field" x="12" y="158">commentaire</text>
+    <text class="field" x="12" y="178">date_demande</text>
+  </g>
+
+  <g transform="translate(1100 105)">
+    <rect class="table" width="265" height="170"/>
+    <rect class="head3" width="265" height="34"/>
+    <text class="name" x="132" y="23">documents</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK demande_stage_id</text>
+    <text class="field fk" x="12" y="98">FK stage_id</text>
+    <text class="field" x="12" y="118">nom_fichier</text>
+    <text class="field" x="12" y="138">type_document</text>
+    <text class="field" x="12" y="158">chemin_fichier</text>
+  </g>
+
+  <g transform="translate(60 390)">
+    <rect class="table" width="245" height="130"/>
+    <rect class="head3" width="245" height="34"/>
+    <text class="name" x="122" y="23">encadreurs</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK utilisateur_id</text>
+    <text class="field" x="12" y="98">specialite</text>
+    <text class="field" x="12" y="118">fonction</text>
+  </g>
+
+  <g transform="translate(390 380)">
+    <rect class="table" width="255" height="150"/>
+    <rect class="head3" width="255" height="34"/>
+    <text class="name" x="127" y="23">stagiaires</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK utilisateur_id</text>
+    <text class="field fk" x="12" y="98">FK demande_stage_id</text>
+    <text class="field" x="12" y="118">matricule</text>
+    <text class="field" x="12" y="138">date_admission, statut</text>
+  </g>
+
+  <g transform="translate(755 370)">
+    <rect class="table" width="285" height="190"/>
+    <rect class="head2" width="285" height="34"/>
+    <text class="name" x="142" y="23">stages</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stagiaire_id</text>
+    <text class="field fk" x="12" y="98">FK encadreur_id</text>
+    <text class="field fk" x="12" y="118">FK service_id</text>
+    <text class="field fk" x="12" y="138">FK projet_id</text>
+    <text class="field" x="12" y="158">numero_stage, dates</text>
+    <text class="field" x="12" y="178">duree, statut</text>
+  </g>
+
+  <g transform="translate(1130 390)">
+    <rect class="table" width="235" height="110"/>
+    <rect class="head" width="235" height="34"/>
+    <text class="name" x="117" y="23">services</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field" x="12" y="78">nom</text>
+    <text class="field" x="12" y="98">description</text>
+  </g>
+
+  <g transform="translate(1470 370)">
+    <rect class="table" width="260" height="150"/>
+    <rect class="head" width="260" height="34"/>
+    <text class="name" x="130" y="23">projets</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field" x="12" y="78">titre</text>
+    <text class="field" x="12" y="98">description</text>
+    <text class="field" x="12" y="118">date_debut</text>
+    <text class="field" x="12" y="138">date_fin</text>
+  </g>
+
+  <g transform="translate(60 690)">
+    <rect class="table" width="255" height="150"/>
+    <rect class="head" width="255" height="34"/>
+    <text class="name" x="127" y="23">objectifs</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stage_id</text>
+    <text class="field" x="12" y="98">libelle</text>
+    <text class="field" x="12" y="118">description, ordre</text>
+    <text class="field" x="12" y="138">statut</text>
+  </g>
+
+  <g transform="translate(390 680)">
+    <rect class="table" width="260" height="170"/>
+    <rect class="head" width="260" height="34"/>
+    <text class="name" x="130" y="23">taches</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stage_id</text>
+    <text class="field" x="12" y="98">titre</text>
+    <text class="field" x="12" y="118">description</text>
+    <text class="field" x="12" y="138">date_creation</text>
+    <text class="field" x="12" y="158">date_limite, statut</text>
+  </g>
+
+  <g transform="translate(755 680)">
+    <rect class="table" width="285" height="150"/>
+    <rect class="head3" width="285" height="34"/>
+    <text class="name" x="142" y="23">journaux_bord</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stage_id</text>
+    <text class="field" x="12" y="98">date_activite</text>
+    <text class="field" x="12" y="118">travaux_realises</text>
+    <text class="field" x="12" y="138">difficultes, observations</text>
+  </g>
+
+  <g transform="translate(1130 660)">
+    <rect class="table" width="275" height="190"/>
+    <rect class="head3" width="275" height="34"/>
+    <text class="name" x="137" y="23">livrables</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK tache_id</text>
+    <text class="field" x="12" y="98">titre, description</text>
+    <text class="field" x="12" y="118">fichier</text>
+    <text class="field" x="12" y="138">date_depot</text>
+    <text class="field" x="12" y="158">statut</text>
+    <text class="field" x="12" y="178">commentaire_encadreur</text>
+  </g>
+
+  <g transform="translate(1470 690)">
+    <rect class="table" width="260" height="120"/>
+    <rect class="head2" width="260" height="34"/>
+    <text class="name" x="130" y="23">archives</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stage_id</text>
+    <text class="field" x="12" y="98">date_archivage, motif</text>
+  </g>
+
+  <g transform="translate(390 1010)">
+    <rect class="table" width="275" height="130"/>
+    <rect class="head2" width="275" height="34"/>
+    <text class="name" x="137" y="23">evaluations</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK stage_id</text>
+    <text class="field" x="12" y="98">type_evaluation</text>
+    <text class="field" x="12" y="118">date_evaluation, appreciation</text>
+  </g>
+
+  <g transform="translate(780 1010)">
+    <rect class="table" width="275" height="130"/>
+    <rect class="head" width="275" height="34"/>
+    <text class="name" x="137" y="23">notes_evaluation</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field fk" x="12" y="78">FK evaluation_id</text>
+    <text class="field fk" x="12" y="98">FK critere_id</text>
+    <text class="field" x="12" y="118">note, commentaire</text>
+  </g>
+
+  <g transform="translate(1180 1010)">
+    <rect class="table" width="275" height="110"/>
+    <rect class="head" width="275" height="34"/>
+    <text class="name" x="137" y="23">criteres_evaluation</text>
+    <text class="field pk" x="12" y="58">PK id</text>
+    <text class="field" x="12" y="78">libelle</text>
+    <text class="field" x="12" y="98">description</text>
+  </g>
+
+  <!-- Relations -->
+  <path class="rel" d="M290 175 L380 175"/>
+  <path class="rel" d="M510 275 L510 380"/>
+  <path class="rel" d="M460 275 C330 310 230 350 180 390"/>
+  <path class="rel" d="M1000 190 L1100 190"/>
+  <path class="rel" d="M865 290 L520 380"/>
+  <path class="rel" d="M645 455 L755 455"/>
+  <path class="rel" d="M305 455 L755 475"/>
+  <path class="rel" d="M1040 455 L1130 455"/>
+  <path class="rel" d="M1040 455 C1200 390 1350 420 1470 445"/>
+  <path class="rel" d="M900 560 C760 610 590 650 520 680"/>
+  <path class="rel" d="M870 560 C610 610 370 650 190 690"/>
+  <path class="rel" d="M900 560 L900 680"/>
+  <path class="rel" d="M650 765 L1130 755"/>
+  <path class="rel" d="M1040 520 C1270 580 1450 640 1540 690"/>
+  <path class="rel" d="M830 560 C720 750 600 910 520 1010"/>
+  <path class="rel" d="M665 1075 L780 1075"/>
+  <path class="rel" d="M1055 1075 L1180 1075"/>
+  <path class="rel" d="M1040 470 C1120 360 1140 300 1160 275"/>
+
+  <rect x="60" y="1200" width="26" height="18" fill="#eaf2ff" stroke="#344054"/>
+  <text class="legend" x="96" y="1214">Tables de reference et securite</text>
+  <rect x="330" y="1200" width="26" height="18" fill="#fff4e6" stroke="#344054"/>
+  <text class="legend" x="366" y="1214">Tables centrales du cycle de stage</text>
+  <rect x="650" y="1200" width="26" height="18" fill="#eafaf0" stroke="#344054"/>
+  <text class="legend" x="686" y="1214">Suivi, documents et acteurs</text>
+  <text class="legend" x="980" y="1214"><tspan class="pk">PK</tspan> = cle primaire, <tspan class="fk">FK</tspan> = cle etrangere</text>
+</svg>
