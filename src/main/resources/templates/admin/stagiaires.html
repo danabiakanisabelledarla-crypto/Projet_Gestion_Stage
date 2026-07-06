@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Stagiaires - Administrateur</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Stagiaires</h1>
+        <span class="utilisateur-connecte">Admin</span>
+    </div>
+
+    <table class="tableau-demandes">
+        <thead>
+            <tr>
+                <th>Matricule</th>
+                <th>Nom complet</th>
+                <th>Email</th>
+                <th>Date admission</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="stagiaire : ${stagiaires}">
+                <td th:text="${stagiaire.matricule}">STG-2026-001</td>
+                <td th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">
+                    Nom stagiaire
+                </td>
+                <td th:text="${stagiaire.utilisateur.email}">email</td>
+                <td th:text="${stagiaire.dateAdmission}">date</td>
+                <td>
+                    <span class="badge acceptee" th:text="${stagiaire.statut}">actif</span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(stagiaires)}">
+                <td colspan="5" style="text-align:center; color:#777; padding: 30px;">
+                    Aucun stagiaire trouve.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

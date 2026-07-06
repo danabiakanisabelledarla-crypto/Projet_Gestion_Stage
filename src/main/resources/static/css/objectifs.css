@@ -1,0 +1,18 @@
+.objectif-titre {
+    font-weight: bold;
+}
+
+.objectif-detail {
+    font-size: 12px;
+    color: #777;
+    margin-top: 3px;
+}
+
+.objectif-vide {
+    color: #777;
+    justify-content: center;
+}
+
+.texte-test {
+    color: red;
+}

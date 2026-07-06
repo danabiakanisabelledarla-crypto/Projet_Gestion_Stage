@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Demandes - Administrateur</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Demandes de stage</h1>
+        <span class="utilisateur-connecte">Admin</span>
+    </div>
+
+    <table class="tableau-demandes">
+        <thead>
+            <tr>
+                <th>Candidat</th>
+                <th>Niveau</th>
+                <th>Filiere</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="demande : ${demandes}">
+                <td th:text="${demande.prenom + ' ' + demande.nom}">Nom candidat</td>
+                <td th:text="${demande.niveau}">Niveau</td>
+                <td th:text="${demande.filiere}">Filiere</td>
+                <td>
+                    <span th:class="'badge ' + ${demande.statut.name().replace('_', '-')}"
+                          th:text="${demande.statut}">
+                        Statut
+                    </span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(demandes)}">
+                <td colspan="4" style="text-align:center; color:#777; padding: 30px;">
+                    Aucune demande trouvee.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

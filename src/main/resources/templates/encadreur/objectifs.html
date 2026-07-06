@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Objectifs - Encadreur</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+    <link rel="stylesheet" th:href="@{/css/objectifs.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Objectifs</h1>
+        <span class="utilisateur-connecte">Encadreur</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes">
+        Objectif cree avec succes.
+    </div>
+
+    <div class="grille-modules">
+
+        <div class="bloc-module">
+            <h2>Nouvel objectif</h2>
+
+            <form th:action="@{/encadreur/objectifs/creer}" method="post">
+
+    <div class="groupe-champ">
+        <label>Stagiaire</label>
+        <select name="stageId" required>
+            <option value="">-- Choisir un stagiaire --</option>
+            <option th:each="stage : ${mesStages}"
+                    th:value="${stage.id}"
+                    th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">
+            </option>
+        </select>
+    </div>
+
+    <div class="groupe-champ">
+        <label>Libelle</label>
+        <input type="text"
+               name="libelle"
+               placeholder="Ex: Comprendre le fonctionnement du module admission"
+               required>
+    </div>
+
+    <div class="groupe-champ">
+        <label>Description</label>
+        <textarea name="description" placeholder="Detail de l'objectif..."></textarea>
+    </div>
+
+    <div class="groupe-champ">
+        <label>Ordre</label>
+        <input type="number" name="ordre" min="1" value="1" required>
+    </div>
+
+    <button type="submit" class="bouton-principal">
+        Creer l'objectif
+    </button>
+
+</form>
+                </div>
+
+        <div class="bloc-module">
+            <h2>Objectifs assignes</h2>
+
+            <ul class="liste-taches">
+                <li th:each="objectif : ${objectifs}">
+                    <div>
+                        <div class="objectif-titre" th:text="${objectif.libelle}">
+    Libelle objectif
+</div>
+
+                        <div class="objectif-detail"
+                             th:text="${objectif.stage.stagiaire.utilisateur.prenom + ' ' + objectif.stage.stagiaire.utilisateur.nom}">
+                            Stagiaire
+                        </div>
+
+                        <div class="objectif-detail"
+     th:text="'Ordre : ' + ${objectif.ordre}">
+    Ordre
+</div>
+                    </div>
+
+                    <span th:class="'badge-statut ' + ${objectif.statut.name()}"
+                          th:text="${objectif.statut}">
+                        Statut
+                    </span>
+                </li>
+
+                <li th:if="${#lists.isEmpty(objectifs)}"class="objectif-vide">
+                    Aucun objectif pour le moment.
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
