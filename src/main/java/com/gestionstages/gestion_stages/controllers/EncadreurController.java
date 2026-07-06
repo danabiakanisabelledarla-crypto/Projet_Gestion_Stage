@@ -1,4 +1,13 @@
 package com.gestionstages.gestion_stages.controllers;
+import com.gestionstages.gestion_stages.entities.CritereEvaluation;
+import com.gestionstages.gestion_stages.entities.Evaluation;
+import com.gestionstages.gestion_stages.entities.NoteEvaluation;
+import com.gestionstages.gestion_stages.repositories.CritereEvaluationRepository;
+import com.gestionstages.gestion_stages.repositories.EvaluationRepository;
+import com.gestionstages.gestion_stages.repositories.NoteEvaluationRepository;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
@@ -21,16 +30,25 @@ public class EncadreurController {
     private final StageRepository stageRepository;
     private final TacheRepository tacheRepository;
     private final LivrableRepository livrableRepository;
+    private final CritereEvaluationRepository critereRepository;
+    private final EvaluationRepository evaluationRepository;
+    private final NoteEvaluationRepository noteRepository;
 
     public EncadreurController(EncadreurRepository encadreurRepository,
-                                StageRepository stageRepository,
-                                TacheRepository tacheRepository,
-                                LivrableRepository livrableRepository) {
-        this.encadreurRepository = encadreurRepository;
-        this.stageRepository = stageRepository;
-        this.tacheRepository = tacheRepository;
-        this.livrableRepository = livrableRepository;
-    }
+                            StageRepository stageRepository,
+                            TacheRepository tacheRepository,
+                            LivrableRepository livrableRepository,
+                            CritereEvaluationRepository critereRepository,
+                            EvaluationRepository evaluationRepository,
+                            NoteEvaluationRepository noteRepository) {
+            this.encadreurRepository = encadreurRepository;
+            this.stageRepository = stageRepository;
+            this.tacheRepository = tacheRepository;
+            this.livrableRepository = livrableRepository;
+            this.critereRepository = critereRepository;
+            this.evaluationRepository = evaluationRepository;
+            this.noteRepository = noteRepository;
+}
 
     private Encadreur getEncadreur(CustomUserDetails userDetails) {
         return encadreurRepository
@@ -96,4 +114,61 @@ public class EncadreurController {
         });
         return "redirect:/encadreur/taches?succes=true";
     }
+    @GetMapping("/evaluations")
+public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                   Model model,
+                                   @RequestParam(required = false) String succes) {
+    Encadreur encadreur = getEncadreur(userDetails);
+    List<Stage> mesStages = new ArrayList<>();
+    List<Evaluation> evaluations = new ArrayList<>();
+
+    if (encadreur != null) {
+        mesStages = stageRepository.findByEncadreurId(encadreur.getId());
+        for (Stage stage : mesStages) {
+            evaluations.addAll(evaluationRepository.findByStageId(stage.getId()));
+        }
+    }
+
+    model.addAttribute("mesStages", mesStages);
+    model.addAttribute("criteres", critereRepository.findAll());
+    model.addAttribute("evaluations", evaluations);
+    if (succes != null) model.addAttribute("succes", succes);
+
+    return "encadreur/evaluations";
+}
+
+@PostMapping("/evaluations/creer")
+public String creerEvaluation(@RequestParam Integer stageId,
+                               @RequestParam String typeEvaluation,
+                               @RequestParam String dateEvaluation,
+                               @RequestParam(required = false) String appreciation,
+                               @RequestParam Map<String, String> allParams) {
+    stageRepository.findById(stageId).ifPresent(stage -> {
+        Evaluation evaluation = new Evaluation(
+                stage,
+                Evaluation.TypeEvaluation.valueOf(typeEvaluation),
+                LocalDate.parse(dateEvaluation));
+        evaluation.setAppreciation(appreciation);
+        evaluationRepository.save(evaluation);
+
+        // Enregistrer les notes par critere
+        for (Map.Entry<String, String> entry : allParams.entrySet()) {
+            if (entry.getKey().startsWith("note_") && !entry.getValue().isEmpty()) {
+                try {
+                    Integer critereId = Integer.parseInt(
+                            entry.getKey().replace("note_", ""));
+                    BigDecimal note = new BigDecimal(entry.getValue());
+
+                    critereRepository.findById(critereId).ifPresent(critere -> {
+                        NoteEvaluation noteEval = new NoteEvaluation(
+                                evaluation, critere, note);
+                        noteRepository.save(noteEval);
+                    });
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+    });
+
+    return "redirect:/encadreur/evaluations?succes=true";
+}
 }

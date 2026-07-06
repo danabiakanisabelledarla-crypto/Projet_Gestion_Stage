@@ -60,7 +60,7 @@
             <!-- Liste des livrables deja deposes -->
             <ul class="liste-fichiers">
                 <li th:each="livrable : ${livrables}"
-                    th:text="${livrable.nomFichier}">fichier.pdf</li>
+                    th:text="${livrable.titre}">fichier.pdf</li>
                 <li th:if="${#lists.isEmpty(livrables)}"
                     style="color:#777;">Aucun livrable depose.</li>
             </ul>

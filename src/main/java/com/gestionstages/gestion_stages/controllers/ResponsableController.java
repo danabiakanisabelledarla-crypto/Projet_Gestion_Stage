@@ -26,25 +26,36 @@ public class ResponsableController {
     private final ProjetRepository projetRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final ArchiveRepository archiveRepository;
+private final DocumentRepository documentRepository;
+private final EvaluationRepository evaluationRepository;
+    
+
     public ResponsableController(DemandeStageRepository demandeStageRepository,
-                                  StagiaireRepository stagiaireRepository,
-                                  StageRepository stageRepository,
-                                  UtilisateurRepository utilisateurRepository,
-                                  RoleRepository roleRepository,
-                                  EncadreurRepository encadreurRepository,
-                                  ServiceEntrepriseRepository serviceRepository,
-                                  ProjetRepository projetRepository,
-                                  PasswordEncoder passwordEncoder) {
-        this.demandeStageRepository = demandeStageRepository;
-        this.stagiaireRepository = stagiaireRepository;
-        this.stageRepository = stageRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.roleRepository = roleRepository;
-        this.encadreurRepository = encadreurRepository;
-        this.serviceRepository = serviceRepository;
-        this.projetRepository = projetRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+                              StagiaireRepository stagiaireRepository,
+                              StageRepository stageRepository,
+                              UtilisateurRepository utilisateurRepository,
+                              RoleRepository roleRepository,
+                              EncadreurRepository encadreurRepository,
+                              ServiceEntrepriseRepository serviceRepository,
+                              ProjetRepository projetRepository,
+                              PasswordEncoder passwordEncoder,
+                              ArchiveRepository archiveRepository,
+                              DocumentRepository documentRepository,
+                              EvaluationRepository evaluationRepository) {
+    this.demandeStageRepository = demandeStageRepository;
+    this.stagiaireRepository = stagiaireRepository;
+    this.stageRepository = stageRepository;
+    this.utilisateurRepository = utilisateurRepository;
+    this.roleRepository = roleRepository;
+    this.encadreurRepository = encadreurRepository;
+    this.serviceRepository = serviceRepository;
+    this.projetRepository = projetRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.archiveRepository = archiveRepository;
+    this.documentRepository = documentRepository;
+    this.evaluationRepository = evaluationRepository;
+}
 
     @GetMapping("/dashboard")
     public String afficherDashboard(Model model) {
@@ -196,4 +207,43 @@ public class ResponsableController {
             return "responsable/fiche-stagiaire";
         }
     }
+    @GetMapping("/cloture")
+public String afficherCloture(Model model,
+                               @RequestParam(required = false) String succes) {
+    List<Stage> stagesEnCours = stageRepository
+            .findByStatut(Stage.StatutStage.en_cours);
+    model.addAttribute("stagesEnCours", stagesEnCours);
+    if (succes != null) model.addAttribute("succes", succes);
+    return "responsable/cloture";
+}
+
+@GetMapping("/cloture/detail/{id}")
+public String afficherDetailCloture(@PathVariable Integer id, Model model) {
+    Optional<Stage> stageOpt = stageRepository.findById(id);
+    if (stageOpt.isEmpty()) return "redirect:/responsable/cloture";
+
+    Stage stage = stageOpt.get();
+    boolean rapportDepose = !documentRepository
+            .findByStageId(stage.getId()).isEmpty();
+    boolean evaluationsPresentes = !evaluationRepository
+            .findByStageId(stage.getId()).isEmpty();
+    boolean documentsPresents = rapportDepose;
+
+    model.addAttribute("stage", stage);
+    model.addAttribute("rapportDepose", rapportDepose);
+    model.addAttribute("evaluationsPresentes", evaluationsPresentes);
+    model.addAttribute("documentsPresents", documentsPresents);
+    return "responsable/cloture-detail";
+}
+
+@PostMapping("/cloture/cloturer/{id}")
+public String cloturer(@PathVariable Integer id) {
+    stageRepository.findById(id).ifPresent(stage -> {
+        stage.setStatut(Stage.StatutStage.termine);
+        stageRepository.save(stage);
+        Archive archive = new Archive(stage, "Cloture normale du stage");
+        archiveRepository.save(archive);
+    });
+    return "redirect:/responsable/cloture?succes=Stage cloture et archive avec succes.";
+}
 }

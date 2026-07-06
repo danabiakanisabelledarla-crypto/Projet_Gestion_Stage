@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluations</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/evaluation.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Evaluation finale</h1>
+        <span class="utilisateur-connecte">Encadreur</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes">Evaluation enregistree avec succes.</div>
+
+    <div class="grille-evaluation">
+
+        <!-- Formulaire evaluation -->
+        <div class="bloc-evaluation">
+            <h2>Nouvelle evaluation</h2>
+            <form th:action="@{/encadreur/evaluations/creer}" method="post">
+
+                <div class="groupe-champ">
+                    <label>Stagiaire</label>
+                    <select name="stageId" required>
+                        <option value="">-- Choisir un stagiaire --</option>
+                        <option th:each="stage : ${mesStages}"
+                                th:value="${stage.id}"
+                                th:text="${stage.stagiaire.utilisateur.prenom
+                                        + ' ' + stage.stagiaire.utilisateur.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Type d'evaluation</label>
+                    <select name="typeEvaluation" required>
+                        <option value="continue_">Evaluation continue</option>
+                        <option value="finale">Evaluation finale</option>
+                    </select>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Date</label>
+                    <input type="date" name="dateEvaluation"
+                           style="width:100%; padding:10px 14px; border:1px solid #d7dce3; border-radius:6px; font-size:14px;"
+                           required>
+                </div>
+
+                <table class="tableau-criteres">
+                    <thead>
+                        <tr>
+                            <th>Critere</th>
+                            <th>Note (/20)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="critere : ${criteres}">
+                            <td th:text="${critere.libelle}">-</td>
+                            <td>
+                                <input type="number" min="0" max="20" step="0.5"
+                                       th:name="'note_' + ${critere.id}"
+                                       placeholder="0">
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(criteres)}">
+                            <td colspan="2" style="color:#777;">
+                                Aucun critere defini. Ajoutez des criteres d'abord.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="groupe-champ">
+                    <label>Appreciation generale</label>
+                    <textarea name="appreciation"
+                              placeholder="Commentaire global sur le stagiaire..."></textarea>
+                </div>
+
+                <button type="submit" class="bouton-evaluer">Enregistrer l'evaluation</button>
+            </form>
+        </div>
+
+        <!-- Liste des evaluations existantes -->
+        <div class="bloc-evaluation">
+            <h2>Evaluations enregistrees</h2>
+            <ul class="liste-evaluations">
+                <li th:each="eval : ${evaluations}">
+                    <div style="font-weight:bold;"
+                         th:text="${eval.typeEvaluation + ' - ' + eval.dateEvaluation}"></div>
+                    <div style="color:#777; font-size:13px; margin-top:4px;"
+                         th:text="${eval.appreciation != null ? eval.appreciation : 'Pas d appreciation'}"></div>
+                </li>
+                <li th:if="${#lists.isEmpty(evaluations)}"
+                    style="color:#777;">
+                    Aucune evaluation pour le moment.
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+.grille-evaluation {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.bloc-evaluation {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.bloc-evaluation h2 {
+    font-size: 18px;
+    color: #1a2236;
+    margin-bottom: 20px;
+}
+
+.tableau-criteres {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.tableau-criteres th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #555;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.tableau-criteres td {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.tableau-criteres input[type="number"] {
+    width: 80px;
+    padding: 6px 10px;
+    border: 1px solid #d7dce3;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.groupe-champ {
+    margin-bottom: 16px;
+}
+
+.groupe-champ label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.groupe-champ select,
+.groupe-champ textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+}
+
+.groupe-champ textarea { min-height: 80px; resize: vertical; }
+
+.bouton-evaluer {
+    width: 100%;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.bouton-evaluer:hover { background-color: #1d4ed8; }
+
+.indicateur-cloture {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 14px;
+}
+
+.indicateur-cloture:last-of-type { border-bottom: none; }
+
+.badge-ok {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: #e6f7ec;
+    color: #2e7d32;
+}
+
+.badge-non {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: #fde8e8;
+    color: #c0392b;
+}
+
+.bouton-cloturer {
+    width: 100%;
+    padding: 13px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.bouton-cloturer:hover { background-color: #1b5e20; }
+
+.message-succes {
+    background-color: #e6f7ec;
+    color: #2e7d32;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.liste-evaluations {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.liste-evaluations li {
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}

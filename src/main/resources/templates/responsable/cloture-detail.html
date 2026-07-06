@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail cloture</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/evaluation.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Cloture du stage</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
+
+    <div class="grille-evaluation">
+
+        <!-- Indicateurs -->
+        <div class="bloc-evaluation">
+            <h2 th:text="${stage.stagiaire.utilisateur.prenom
+                         + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</h2>
+
+            <div class="indicateur-cloture">
+                <span>Rapport final depose</span>
+                <span th:class="${rapportDepose ? 'badge-ok' : 'badge-non'}"
+                      th:text="${rapportDepose ? 'Oui' : 'Non'}"></span>
+            </div>
+            <div class="indicateur-cloture">
+                <span>Evaluations conservees</span>
+                <span th:class="${evaluationsPresentes ? 'badge-ok' : 'badge-non'}"
+                      th:text="${evaluationsPresentes ? 'Oui' : 'Non'}"></span>
+            </div>
+            <div class="indicateur-cloture">
+                <span>Documents archives</span>
+                <span th:class="${documentsPresents ? 'badge-ok' : 'badge-non'}"
+                      th:text="${documentsPresents ? 'Oui' : 'Non'}"></span>
+            </div>
+
+            <form th:action="@{/responsable/cloture/cloturer/{id}(id=${stage.id})}"
+                  method="post">
+                <button type="submit" class="bouton-cloturer">Cloturer le stage</button>
+            </form>
+        </div>
+
+        <!-- Resume -->
+        <div class="bloc-evaluation">
+            <h2>Resume du stage</h2>
+            <div style="font-size:14px; color:#444; line-height:1.8;">
+                <div><strong>Matricule :</strong>
+                    <span th:text="${stage.stagiaire.matricule}"></span></div>
+                <div><strong>Encadreur :</strong>
+                    <span th:text="${stage.encadreur.utilisateur.prenom
+                                  + ' ' + stage.encadreur.utilisateur.nom}"></span></div>
+                <div><strong>Service :</strong>
+                    <span th:text="${stage.service.nom}"></span></div>
+                <div><strong>Debut :</strong>
+                    <span th:text="${stage.dateDebut}"></span></div>
+                <div><strong>Fin :</strong>
+                    <span th:text="${stage.dateFin}"></span></div>
+                <div><strong>Duree :</strong>
+                    <span th:text="${stage.duree}"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

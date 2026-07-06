@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cloture du stage</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/evaluation.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Cloture du stage</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
+
+    <div class="grille-evaluation">
+
+        <!-- Liste des stages a cloturer -->
+        <div class="bloc-evaluation">
+            <h2>Stages en cours</h2>
+            <ul class="liste-evaluations">
+                <li th:each="stage : ${stagesEnCours}">
+                    <div style="font-weight:bold;"
+                         th:text="${stage.stagiaire.utilisateur.prenom
+                                 + ' ' + stage.stagiaire.utilisateur.nom}"></div>
+                    <div style="color:#777; font-size:13px; margin-top:4px;"
+                         th:text="'Matricule : ' + ${stage.stagiaire.matricule}"></div>
+                    <div style="margin-top:10px;">
+                        <a th:href="@{/responsable/cloture/detail/{id}(id=${stage.id})}"
+                           class="bouton-evaluer"
+                           style="display:inline-block; width:auto; padding:8px 16px; text-decoration:none;">
+                            Voir et cloturer
+                        </a>
+                    </div>
+                </li>
+                <li th:if="${#lists.isEmpty(stagesEnCours)}"
+                    style="color:#777;">
+                    Aucun stage en cours.
+                </li>
+            </ul>
+        </div>
+
+        <!-- Infos -->
+        <div class="bloc-evaluation">
+            <h2>A propos de la cloture</h2>
+            <p style="color:#777; font-size:14px; line-height:1.6;">
+                La cloture d'un stage marque la fin officielle du stage.
+                Elle archive automatiquement tous les documents, evaluations
+                et journaux de bord associes au stagiaire.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

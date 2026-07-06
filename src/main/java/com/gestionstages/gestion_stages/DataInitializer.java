@@ -16,21 +16,24 @@ public class DataInitializer implements CommandLineRunner {
     private final EncadreurRepository encadreurRepository;
     private final ServiceEntrepriseRepository serviceRepository;
     private final ProjetRepository projetRepository;
+   private final CritereEvaluationRepository critereRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(RoleRepository roleRepository,
-                            UtilisateurRepository utilisateurRepository,
-                            EncadreurRepository encadreurRepository,
-                            ServiceEntrepriseRepository serviceRepository,
-                            ProjetRepository projetRepository,
-                            PasswordEncoder passwordEncoder) {
-        this.roleRepository = roleRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.encadreurRepository = encadreurRepository;
-        this.serviceRepository = serviceRepository;
-        this.projetRepository = projetRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+   public DataInitializer(RoleRepository roleRepository,
+                        UtilisateurRepository utilisateurRepository,
+                        EncadreurRepository encadreurRepository,
+                        ServiceEntrepriseRepository serviceRepository,
+                        ProjetRepository projetRepository,
+                        CritereEvaluationRepository critereRepository,
+                        PasswordEncoder passwordEncoder) {
+    this.roleRepository = roleRepository;
+    this.utilisateurRepository = utilisateurRepository;
+    this.encadreurRepository = encadreurRepository;
+    this.serviceRepository = serviceRepository;
+    this.projetRepository = projetRepository;
+    this.critereRepository = critereRepository;
+    this.passwordEncoder = passwordEncoder;
+}
 
     @Override
     public void run(String... args) {
@@ -79,8 +82,15 @@ public class DataInitializer implements CommandLineRunner {
         creerProjetSiAbsent("Application mobile RH",
                 "Developpement d'une app mobile pour la gestion RH",
                 LocalDate.of(2026, 3, 1), LocalDate.of(2026, 9, 30));
+        // 6. Criteres d'evaluation
+        creerCritereSiAbsent("Technique", "Maitrise des outils et technologies");
+        creerCritereSiAbsent("Autonomie", "Capacite a travailler de facon independante");
+        creerCritereSiAbsent("Communication", "Qualite de la communication orale et ecrite");
+        creerCritereSiAbsent("Ponctualite", "Respect des horaires et des delais");
+        creerCritereSiAbsent("Initiative", "Prise d initiative et propositions");        
     }
 
+   
     private void creerRoleSiAbsent(String libelle, String description) {
         if (roleRepository.findByLibelle(libelle).isEmpty()) {
             roleRepository.save(new Role(libelle, description));
@@ -115,6 +125,14 @@ public class DataInitializer implements CommandLineRunner {
                 .noneMatch(p -> p.getTitre().equals(titre))) {
             projetRepository.save(new Projet(titre, description, debut, fin));
             System.out.println(">>> Projet cree : " + titre);
+        }
+    }
+
+    private void creerCritereSiAbsent(String libelle, String description) {
+        if (critereRepository.findAll().stream()
+                .noneMatch(c -> c.getLibelle().equals(libelle))) {
+            critereRepository.save(new CritereEvaluation(libelle, description));
+            System.out.println(">>> Critere cree : " + libelle);
         }
     }
 }
