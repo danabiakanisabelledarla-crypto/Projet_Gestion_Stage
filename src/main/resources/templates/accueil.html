@@ -7,86 +7,158 @@
 </head>
 <body>
 
-<!-- Barre de navigation -->
 <nav class="navbar">
     <div class="logo">Gestion des Stages</div>
     <div class="liens-nav">
         <a th:href="@{/candidat/demande}">Deposer une candidature</a>
         <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
+        <button class="btn-theme" id="btnTheme" onclick="basculerTheme()">🌙</button>
         <a th:href="@{/login}" class="btn-connexion">Connexion</a>
     </div>
 </nav>
 
-<!-- Section hero -->
-<section class="hero">
-    <h1>Plateforme de Gestion<br>et de Suivi des Stages</h1>
-    <p>Deposez votre candidature en ligne, suivez l'etat de votre demande
-       et effectuez votre stage dans les meilleures conditions.</p>
-    <a th:href="@{/candidat/demande}" class="btn-candidature">
-        Deposer ma candidature
-    </a>
-    <a th:href="@{/candidat/suivi}" class="btn-suivi">
-        Suivre ma demande
-    </a>
-</section>
+<section class="hero-slider">
+    <div class="hero-left">
+        <div class="slide active">
+            <span class="badge">Bienvenue</span>
+            <h1>Plateforme de Gestion et de Suivi des Stages</h1>
+            <p>
+                Deposez votre candidature en ligne, suivez l'etat de votre demande
+                et effectuez votre stage dans les meilleures conditions.
+            </p>
+            <div class="hero-actions">
+                <a th:href="@{/candidat/demande}" class="btn-principal">Deposer ma candidature</a>
+                <a th:href="@{/candidat/suivi}" class="btn-secondaire">Suivre ma demande</a>
+            </div>
+        </div>
 
-<!-- Section etapes -->
-<section class="section-infos">
-    <h2>Comment ca fonctionne ?</h2>
-    <p class="sous-titre">Un processus simple en 4 etapes</p>
+        <div class="slide">
+            <span class="badge">Comment ca fonctionne ?</span>
+            <h1>Un processus simple en 4 etapes</h1>
+            <div class="steps">
+                <div class="step">
+                    <span>1</span>
+                    <div>
+                        <h3>Deposez votre dossier</h3>
+                        <button class="voir-plus" type="button">Voir plus</button>
+                        <p class="detail">Remplissez le formulaire en ligne et joignez vos documents requis.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span>2</span>
+                    <div>
+                        <h3>Traitement de la demande</h3>
+                        <button class="voir-plus" type="button">Voir plus</button>
+                        <p class="detail">Le responsable des stages etudie votre dossier et vous informe de la decision.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span>3</span>
+                    <div>
+                        <h3>Affectation</h3>
+                        <button class="voir-plus" type="button">Voir plus</button>
+                        <p class="detail">En cas d'acceptation, vous etes affecte a un encadreur et a un service.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span>4</span>
+                    <div>
+                        <h3>Suivi du stage</h3>
+                        <button class="voir-plus" type="button">Voir plus</button>
+                        <p class="detail">Vous accedez a votre espace personnel pour suivre vos taches et deposer vos livrables.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="grille-etapes">
-        <div class="carte-etape">
-            <div class="numero">1</div>
-            <h3>Deposez votre dossier</h3>
-            <p>Remplissez le formulaire en ligne et joignez vos documents requis.</p>
+        <div class="slide">
+            <span class="badge">Documents requis</span>
+            <h1>Preparez ces documents avant de commencer votre demande</h1>
+            <div class="documents">
+                <div class="document">
+                    <strong>🪪 Carte Nationale d'Identite</strong>
+                    <p>Copie numerique de votre CNI en cours de validite, au format PDF ou image.</p>
+                </div>
+                <div class="document">
+                    <strong>📄 Lettre de stage</strong>
+                    <p>Lettre officielle de votre ecole adressee au Directeur General de l'entreprise.</p>
+                </div>
+                <div class="document">
+                    <strong>📋 Curriculum Vitae</strong>
+                    <p>Votre CV a jour presentant votre parcours academique et vos competences.</p>
+                </div>
+            </div>
         </div>
-        <div class="carte-etape">
-            <div class="numero">2</div>
-            <h3>Traitement de la demande</h3>
-            <p>Le responsable des stages etudie votre dossier et vous informe de la decision.</p>
+
+        <div class="slider-dots">
+            <button class="dot active" type="button"></button>
+            <button class="dot" type="button"></button>
+            <button class="dot" type="button"></button>
         </div>
-        <div class="carte-etape">
-            <div class="numero">3</div>
-            <h3>Affectation</h3>
-            <p>En cas d'acceptation, vous etes affecte a un encadreur et a un service.</p>
-        </div>
-        <div class="carte-etape">
-            <div class="numero">4</div>
-            <h3>Suivi du stage</h3>
-            <p>Vous accedez a votre espace personnel pour suivre vos taches et deposer vos livrables.</p>
-        </div>
+    </div>
+
+    <div class="hero-right">
+        <img th:src="@{/images/stage-hero.PNG}" alt="Etudiants en stage">
     </div>
 </section>
 
-<!-- Section documents requis -->
-<section class="section-documents">
-    <h2>Documents requis</h2>
-    <p class="sous-titre">Preparez ces documents avant de commencer votre demande</p>
-
-    <div class="grille-documents">
-        <div class="carte-document">
-            <div class="icone">🪪</div>
-            <h3>Carte Nationale d'Identite</h3>
-            <p>Copie numerique de votre CNI en cours de validite (PDF ou image).</p>
-        </div>
-        <div class="carte-document">
-            <div class="icone">📄</div>
-            <h3>Lettre de stage</h3>
-            <p>Lettre officielle de votre ecole adressee au Directeur General de l'entreprise.</p>
-        </div>
-        <div class="carte-document">
-            <div class="icone">📋</div>
-            <h3>Curriculum Vitae</h3>
-            <p>Votre CV a jour presentant votre parcours academique et vos competences.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Footer -->
 <footer class="footer-accueil">
-    <p>Plateforme de Gestion des Stages &copy; 2026 — Tous droits reserves</p>
+    <p>Plateforme de Gestion des Stages &copy; 2026 - Tous droits reserves</p>
 </footer>
+
+<script>
+    // Slider
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        slides[currentSlide].classList.remove('active');
+        dots[currentSlide].classList.remove('active');
+        currentSlide = index;
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active');
+    }
+
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => showSlide(index));
+    });
+
+    setInterval(() => {
+        showSlide((currentSlide + 1) % slides.length);
+    }, 6000);
+
+    // Voir plus
+    document.querySelectorAll('.voir-plus').forEach(button => {
+        button.addEventListener('click', () => {
+            const detail = button.nextElementSibling;
+            detail.classList.toggle('visible');
+            button.textContent = detail.classList.contains('visible')
+                ? 'Voir moins' : 'Voir plus';
+        });
+    });
+
+    // Mode sombre/clair
+    function basculerTheme() {
+        const body = document.body;
+        const btn = document.getElementById('btnTheme');
+        body.classList.toggle('sombre');
+
+        if (body.classList.contains('sombre')) {
+            btn.textContent = '☀️';
+            localStorage.setItem('theme', 'sombre');
+        } else {
+            btn.textContent = '🌙';
+            localStorage.setItem('theme', 'clair');
+        }
+    }
+
+    // Restaurer le theme au chargement
+    if (localStorage.getItem('theme') === 'sombre') {
+        document.body.classList.add('sombre');
+        document.getElementById('btnTheme').textContent = '☀️';
+    }
+</script>
 
 </body>
 </html>
