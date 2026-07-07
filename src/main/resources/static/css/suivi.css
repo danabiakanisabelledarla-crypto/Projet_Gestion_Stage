@@ -1,0 +1,116 @@
+.conteneur-suivi {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.carte-suivi {
+    background: white;
+    border-radius: 10px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+.carte-suivi h1 {
+    font-size: 24px;
+    color: #1a2236;
+    margin-bottom: 8px;
+}
+
+.carte-suivi .sous-titre {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.groupe-champ {
+    margin-bottom: 20px;
+}
+
+.groupe-champ label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.groupe-champ input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d7dce3;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.bouton-chercher {
+    width: 100%;
+    padding: 13px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.bouton-chercher:hover { background-color: #1d4ed8; }
+
+.resultat-demande {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.resultat-demande h2 {
+    font-size: 20px;
+    color: #1a2236;
+    margin-bottom: 20px;
+}
+
+.ligne-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 14px;
+}
+
+.ligne-info:last-child { border-bottom: none; }
+
+.ligne-info .libelle { color: #777; }
+.ligne-info .valeur { font-weight: bold; color: #1a2236; }
+
+.statut-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.statut-en_attente { background-color: #fff3e0; color: #e65100; }
+.statut-acceptee { background-color: #e6f7ec; color: #2e7d32; }
+.statut-refusee { background-color: #fde8e8; color: #c0392b; }
+
+.message-erreur {
+    background-color: #fde8e8;
+    color: #c0392b;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.message-info {
+    background-color: #e8f4fd;
+    color: #1d6fa5;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

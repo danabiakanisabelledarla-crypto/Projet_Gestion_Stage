@@ -2,17 +2,28 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Deposer une demande de stage</title>
+    <title>Deposer une candidature</title>
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
     <link rel="stylesheet" th:href="@{/css/candidat.css}">
 </head>
 <body>
 
+<nav class="navbar">
+    <div class="logo">Gestion des Stages</div>
+    <div class="liens-nav">
+        <a th:href="@{/}">Accueil</a>
+        <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
+        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
+    </div>
+</nav>
+
 <div class="formulaire-demande">
-    <h1>Demande de stage</h1>
-    <p class="sous-titre">Remplissez ce formulaire pour soumettre votre candidature.</p>
+    <h1>Deposer une candidature</h1>
+    <p class="sous-titre">Remplissez ce formulaire et joignez les documents requis.</p>
 
     <div th:if="${succes}" class="message-succes">
         Votre demande a bien ete envoyee ! Vous serez contacte prochainement.
+        Notez bien votre email pour suivre l'etat de votre demande.
     </div>
 
     <form th:action="@{/candidat/demande}" method="post"
@@ -20,27 +31,35 @@
 
         <div class="grille-2">
             <div class="groupe-champ">
-                <label>Nom</label>
+                <label>Nom *</label>
                 <input type="text" name="nom" placeholder="Votre nom" required>
             </div>
             <div class="groupe-champ">
-                <label>Prenom</label>
+                <label>Prenom *</label>
                 <input type="text" name="prenom" placeholder="Votre prenom" required>
             </div>
         </div>
 
         <div class="groupe-champ">
-            <label>Ecole / Universite</label>
-            <input type="text" name="ecole" placeholder="Nom de votre etablissement" required>
+            <label>Email *</label>
+            <input type="email" name="email"
+                   placeholder="votre.email@exemple.com" required>
+        </div>
+
+        <div class="groupe-champ">
+            <label>Ecole / Universite *</label>
+            <input type="text" name="ecole"
+                   placeholder="Nom de votre etablissement" required>
         </div>
 
         <div class="grille-2">
             <div class="groupe-champ">
-                <label>Filiere</label>
-                <input type="text" name="filiere" placeholder="Ex: Genie Logiciel" required>
+                <label>Filiere *</label>
+                <input type="text" name="filiere"
+                       placeholder="Ex: Genie Logiciel" required>
             </div>
             <div class="groupe-champ">
-                <label>Niveau</label>
+                <label>Niveau *</label>
                 <select name="niveau" required>
                     <option value="">-- Choisir --</option>
                     <option value="BTS 1">BTS 1</option>
@@ -55,7 +74,7 @@
         </div>
 
         <div class="groupe-champ">
-            <label>Duree souhaitee</label>
+            <label>Duree souhaitee *</label>
             <select name="dureeSouhaitee" required>
                 <option value="">-- Choisir --</option>
                 <option value="1 mois">1 mois</option>
@@ -66,17 +85,45 @@
             </select>
         </div>
 
-        <div class="groupe-champ">
-            <label>CV (PDF)</label>
-            <input type="file" name="cv" accept=".pdf">
+        <!-- Separateur documents -->
+        <div style="border-top: 2px solid #e8f0fe; margin: 25px 0; padding-top: 20px;">
+            <h3 style="color: #1a2236; margin-bottom: 5px;">Documents requis</h3>
+            <p style="color: #777; font-size: 13px; margin-bottom: 20px;">
+                Joignez les 3 documents ci-dessous. La CNI peut etre une image (JPG, PNG) ou un PDF.
+                La lettre de stage et le CV doivent etre en PDF.
+            </p>
         </div>
 
         <div class="groupe-champ">
-            <label>Lettre de motivation (PDF)</label>
-            <input type="file" name="lettreMotivation" accept=".pdf">
+            <label>🪪 Carte Nationale d'Identite (CNI) *</label>
+            <input type="file" name="cni"
+                   accept=".pdf,.jpg,.jpeg,.png" required>
+            <small style="color:#777; font-size:12px;">
+                Formats acceptes : PDF, JPG, PNG — Taille max : 10 MB
+            </small>
         </div>
 
-        <button type="submit" class="bouton-soumettre">Envoyer ma demande</button>
+        <div class="groupe-champ">
+            <label>📄 Lettre de stage de votre ecole *</label>
+            <input type="file" name="lettreStage"
+                   accept=".pdf" required>
+            <small style="color:#777; font-size:12px;">
+                Lettre officielle adressee au Directeur General — Format PDF uniquement
+            </small>
+        </div>
+
+        <div class="groupe-champ">
+            <label>📋 Curriculum Vitae (CV) *</label>
+            <input type="file" name="cv"
+                   accept=".pdf" required>
+            <small style="color:#777; font-size:12px;">
+                Format PDF uniquement — Taille max : 10 MB
+            </small>
+        </div>
+
+        <button type="submit" class="bouton-soumettre">
+            Envoyer ma candidature
+        </button>
     </form>
 </div>
 

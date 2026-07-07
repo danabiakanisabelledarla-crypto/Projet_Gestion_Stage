@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Suivre ma demande</title>
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/suivi.css}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">Gestion des Stages</div>
+    <div class="liens-nav">
+        <a th:href="@{/}">Accueil</a>
+        <a th:href="@{/candidat/demande}">Deposer une candidature</a>
+        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
+    </div>
+</nav>
+
+<div class="conteneur-suivi">
+
+    <div class="carte-suivi">
+        <h1>Suivre ma demande</h1>
+        <p class="sous-titre">
+            Entrez l'email que vous avez utilise lors de votre candidature
+            pour consulter l'etat de votre demande.
+        </p>
+
+        <div th:if="${erreur}" class="message-erreur" th:text="${erreur}"></div>
+        <div th:if="${info}" class="message-info" th:text="${info}"></div>
+
+        <form th:action="@{/candidat/suivi}" method="post">
+            <div class="groupe-champ">
+                <label>Votre email</label>
+                <input type="email" name="email"
+                       placeholder="votre.email@exemple.com"
+                       required autofocus>
+            </div>
+            <button type="submit" class="bouton-chercher">
+                Rechercher ma demande
+            </button>
+        </form>
+    </div>
+
+    <!-- Resultat si demande trouvee -->
+    <div th:if="${demande}" class="resultat-demande">
+        <h2>Etat de votre demande</h2>
+
+        <div class="ligne-info">
+            <span class="libelle">Nom complet</span>
+            <span class="valeur"
+                  th:text="${demande.prenom + ' ' + demande.nom}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Ecole</span>
+            <span class="valeur" th:text="${demande.ecole}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Filiere</span>
+            <span class="valeur" th:text="${demande.filiere}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Niveau</span>
+            <span class="valeur" th:text="${demande.niveau}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Duree souhaitee</span>
+            <span class="valeur" th:text="${demande.dureeSouhaitee}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Date de depot</span>
+            <span class="valeur" th:text="${demande.dateDemande}">-</span>
+        </div>
+        <div class="ligne-info">
+            <span class="libelle">Statut</span>
+            <span th:class="'statut-badge statut-' + ${demande.statut.name()}"
+                  th:text="${demande.statut}">-</span>
+        </div>
+
+        <div th:if="${demande.commentaire != null and !demande.commentaire.isEmpty()
+                     and !demande.commentaire.startsWith('Email candidat')}"
+             class="ligne-info">
+            <span class="libelle">Commentaire</span>
+            <span class="valeur" th:text="${demande.commentaire}">-</span>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

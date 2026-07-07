@@ -24,7 +24,6 @@ public class CandidatController {
     private final DemandeStageRepository demandeStageRepository;
     private final DocumentRepository documentRepository;
 
-    // Dossier où les fichiers seront stockés
     private static final String DOSSIER_UPLOAD = "uploads/";
 
     public CandidatController(DemandeStageRepository demandeStageRepository,
@@ -32,6 +31,11 @@ public class CandidatController {
         this.demandeStageRepository = demandeStageRepository;
         this.documentRepository = documentRepository;
     }
+
+    //@GetMapping("/")
+    //public String afficherAccueil() {
+     //   return "accueil";
+    //}
 
     @GetMapping("/demande")
     public String afficherFormulaire() {
@@ -42,47 +46,70 @@ public class CandidatController {
     public String soumettreFormulaire(
             @RequestParam String nom,
             @RequestParam String prenom,
+            @RequestParam String email,
             @RequestParam String ecole,
             @RequestParam String filiere,
             @RequestParam String niveau,
             @RequestParam String dureeSouhaitee,
+            @RequestParam(required = false) MultipartFile cni,
+            @RequestParam(required = false) MultipartFile lettreStage,
             @RequestParam(required = false) MultipartFile cv,
-            @RequestParam(required = false) MultipartFile lettreMotivation,
             Model model) {
 
         // 1. Sauvegarder la demande
-        DemandeStage demande = new DemandeStage(nom, prenom, ecole, filiere, niveau, dureeSouhaitee);
+        DemandeStage demande = new DemandeStage(nom, prenom, ecole,
+                filiere, niveau, dureeSouhaitee);
+        demande.setCommentaire("Email candidat : " + email);
         demandeStageRepository.save(demande);
 
-        // 2. Sauvegarder les fichiers si fournis
+        // 2. Sauvegarder les fichiers
         try {
             Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
 
-            if (cv != null && !cv.isEmpty()) {
-                String nomFichierCv = "cv_" + demande.getId() + "_" + cv.getOriginalFilename();
-                Path cheminCv = Paths.get(DOSSIER_UPLOAD + nomFichierCv);
-                Files.write(cheminCv, cv.getBytes());
+            sauvegarderDocument(cni, "CNI", demande);
+            sauvegarderDocument(lettreStage, "LETTRE_STAGE", demande);
+            sauvegarderDocument(cv, "CV", demande);
 
-                Document docCv = new Document(cv.getOriginalFilename(), "CV", cheminCv.toString());
-                docCv.setDemandeStage(demande);
-                documentRepository.save(docCv);
-            }
-
-            if (lettreMotivation != null && !lettreMotivation.isEmpty()) {
-                String nomFichierLm = "lm_" + demande.getId() + "_" + lettreMotivation.getOriginalFilename();
-                Path cheminLm = Paths.get(DOSSIER_UPLOAD + nomFichierLm);
-                Files.write(cheminLm, lettreMotivation.getBytes());
-
-                Document docLm = new Document(lettreMotivation.getOriginalFilename(),
-                        "LETTRE_MOTIVATION", cheminLm.toString());
-                docLm.setDemandeStage(demande);
-                documentRepository.save(docLm);
-            }
         } catch (IOException e) {
-            System.err.println("Erreur upload fichier : " + e.getMessage());
+            System.err.println("Erreur upload : " + e.getMessage());
         }
 
         model.addAttribute("succes", true);
         return "candidat/demande";
     }
+
+    private void sauvegarderDocument(MultipartFile fichier, String typeDocument,
+                                      DemandeStage demande) throws IOException {
+        if (fichier != null && !fichier.isEmpty()) {
+            String nomFichier = typeDocument.toLowerCase() + "_"
+                    + demande.getId() + "_" + fichier.getOriginalFilename();
+            Path chemin = Paths.get(DOSSIER_UPLOAD + nomFichier);
+            Files.write(chemin, fichier.getBytes());
+
+            Document doc = new Document(fichier.getOriginalFilename(),
+                    typeDocument, chemin.toString());
+            doc.setDemandeStage(demande);
+            documentRepository.save(doc);
+        }
+    }
+    @GetMapping("/suivi")
+        public String afficherSuivi() {
+            return "candidat/suivi";
+        }
+
+        @PostMapping("/suivi")
+        public String rechercherDemande(@RequestParam String email, Model model) {
+            // On cherche la demande par l'email stocké dans le commentaire
+            demandeStageRepository.findAll().stream()
+                    .filter(d -> d.getCommentaire() != null
+                            && d.getCommentaire().equals("Email candidat : " + email))
+                    .findFirst()
+                    .ifPresentOrElse(
+                            demande -> model.addAttribute("demande", demande),
+                            () -> model.addAttribute("erreur",
+                                    "Aucune demande trouvee pour cet email. "
+                                + "Verifiez l'email utilise lors de votre candidature.")
+                    );
+            return "candidat/suivi";
+        }
 }

@@ -30,4 +30,8 @@ public class AuthController {
                 return "redirect:/login?error=true";
         }
     }
+    @GetMapping("/")
+    public String afficherAccueil() {
+    return "accueil";
+}
 }

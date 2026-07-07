@@ -246,4 +246,9 @@ public String cloturer(@PathVariable Integer id) {
     });
     return "redirect:/responsable/cloture?succes=Stage cloture et archive avec succes.";
 }
+@GetMapping("/affectations")
+public String afficherAffectations(Model model) {
+    model.addAttribute("stages", stageRepository.findAll());
+    return "responsable/affectations";
+}
 }

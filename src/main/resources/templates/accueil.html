@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Plateforme de Gestion des Stages</title>
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+</head>
+<body>
+
+<!-- Barre de navigation -->
+<nav class="navbar">
+    <div class="logo">Gestion des Stages</div>
+    <div class="liens-nav">
+        <a th:href="@{/candidat/demande}">Deposer une candidature</a>
+        <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
+        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
+    </div>
+</nav>
+
+<!-- Section hero -->
+<section class="hero">
+    <h1>Plateforme de Gestion<br>et de Suivi des Stages</h1>
+    <p>Deposez votre candidature en ligne, suivez l'etat de votre demande
+       et effectuez votre stage dans les meilleures conditions.</p>
+    <a th:href="@{/candidat/demande}" class="btn-candidature">
+        Deposer ma candidature
+    </a>
+    <a th:href="@{/candidat/suivi}" class="btn-suivi">
+        Suivre ma demande
+    </a>
+</section>
+
+<!-- Section etapes -->
+<section class="section-infos">
+    <h2>Comment ca fonctionne ?</h2>
+    <p class="sous-titre">Un processus simple en 4 etapes</p>
+
+    <div class="grille-etapes">
+        <div class="carte-etape">
+            <div class="numero">1</div>
+            <h3>Deposez votre dossier</h3>
+            <p>Remplissez le formulaire en ligne et joignez vos documents requis.</p>
+        </div>
+        <div class="carte-etape">
+            <div class="numero">2</div>
+            <h3>Traitement de la demande</h3>
+            <p>Le responsable des stages etudie votre dossier et vous informe de la decision.</p>
+        </div>
+        <div class="carte-etape">
+            <div class="numero">3</div>
+            <h3>Affectation</h3>
+            <p>En cas d'acceptation, vous etes affecte a un encadreur et a un service.</p>
+        </div>
+        <div class="carte-etape">
+            <div class="numero">4</div>
+            <h3>Suivi du stage</h3>
+            <p>Vous accedez a votre espace personnel pour suivre vos taches et deposer vos livrables.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Section documents requis -->
+<section class="section-documents">
+    <h2>Documents requis</h2>
+    <p class="sous-titre">Preparez ces documents avant de commencer votre demande</p>
+
+    <div class="grille-documents">
+        <div class="carte-document">
+            <div class="icone">🪪</div>
+            <h3>Carte Nationale d'Identite</h3>
+            <p>Copie numerique de votre CNI en cours de validite (PDF ou image).</p>
+        </div>
+        <div class="carte-document">
+            <div class="icone">📄</div>
+            <h3>Lettre de stage</h3>
+            <p>Lettre officielle de votre ecole adressee au Directeur General de l'entreprise.</p>
+        </div>
+        <div class="carte-document">
+            <div class="icone">📋</div>
+            <h3>Curriculum Vitae</h3>
+            <p>Votre CV a jour presentant votre parcours academique et vos competences.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-accueil">
+    <p>Plateforme de Gestion des Stages &copy; 2026 — Tous droits reserves</p>
+</footer>
+
+</body>
+</html>

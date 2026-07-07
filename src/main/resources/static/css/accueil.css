@@ -1,0 +1,209 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+body { background-color: #f4f6f9; }
+
+.navbar {
+    background-color: #1a2236;
+    padding: 15px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar .logo {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.navbar .liens-nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.navbar .liens-nav a {
+    color: #c3c9d6;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.navbar .liens-nav a:hover { color: white; }
+
+.btn-connexion {
+    padding: 8px 20px;
+    background-color: #2563eb;
+    color: white !important;
+    border-radius: 6px;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.btn-connexion:hover { background-color: #1d4ed8 !important; }
+
+.hero {
+    background: linear-gradient(135deg, #1a2236 0%, #2a3650 100%);
+    color: white;
+    padding: 80px 60px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 42px;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 18px;
+    color: #b0b8c9;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-candidature {
+    display: inline-block;
+    padding: 15px 40px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    margin-right: 15px;
+}
+
+.btn-candidature:hover { background-color: #1d4ed8; }
+
+.btn-suivi {
+    display: inline-block;
+    padding: 15px 40px;
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.btn-suivi:hover { background-color: rgba(255,255,255,0.1); }
+
+.section-infos {
+    padding: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.section-infos h2 {
+    font-size: 28px;
+    color: #1a2236;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.section-infos .sous-titre {
+    color: #777;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 15px;
+}
+
+.grille-etapes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.carte-etape {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.carte-etape .numero {
+    width: 45px;
+    height: 45px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 auto 15px auto;
+}
+
+.carte-etape h3 {
+    font-size: 16px;
+    color: #1a2236;
+    margin-bottom: 8px;
+}
+
+.carte-etape p {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.section-documents {
+    background: white;
+    padding: 60px;
+}
+
+.section-documents h2 {
+    font-size: 28px;
+    color: #1a2236;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.section-documents .sous-titre {
+    color: #777;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 15px;
+}
+
+.grille-documents {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.carte-document {
+    border: 2px solid #e8f0fe;
+    border-radius: 10px;
+    padding: 25px;
+    text-align: center;
+}
+
+.carte-document .icone {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.carte-document h3 {
+    font-size: 15px;
+    color: #1a2236;
+    margin-bottom: 8px;
+}
+
+.carte-document p {
+    font-size: 13px;
+    color: #777;
+}
+
+.footer-accueil {
+    background-color: #1a2236;
+    color: #b0b8c9;
+    text-align: center;
+    padding: 25px;
+    font-size: 13px;
+}

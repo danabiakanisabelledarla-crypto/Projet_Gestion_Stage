@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Livrables - Encadreur</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Livrables</h1>
+        <span class="utilisateur-connecte">Encadreur</span>
+    </div>
+
+    <table class="tableau-demandes">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Stagiaire</th>
+                <th>Tache</th>
+                <th>Date depot</th>
+                <th>Statut</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="livrable : ${livrables}">
+                <td th:text="${livrable.titre}">-</td>
+                <td th:text="${livrable.tache.stage.stagiaire.utilisateur.prenom
+                             + ' ' + livrable.tache.stage.stagiaire.utilisateur.nom}">-</td>
+                <td th:text="${livrable.tache.titre}">-</td>
+                <td th:text="${livrable.dateDepot}">-</td>
+                <td>
+                    <span th:class="'badge ' + ${livrable.statut.name()}"
+                          th:text="${livrable.statut}">-</span>
+                </td>
+                <td>
+                    <a th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}"
+                       class="btn-accepter">Valider</a>
+                    <a th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}"
+                       class="btn-refuser">Rejeter</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(livrables)}">
+                <td colspan="6" style="text-align:center; color:#777; padding:30px;">
+                    Aucun livrable depose pour le moment.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

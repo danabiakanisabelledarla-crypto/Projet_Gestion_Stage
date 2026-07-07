@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.processing.Generated;
+
 @Controller
 @RequestMapping("/encadreur")
 public class EncadreurController {
@@ -221,4 +223,24 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
     model.addAttribute("livrables", livrables);
     return "encadreur/livrables";
 }
+
+
+@GetMapping("/livrables/valider/{id}")
+public String validerLivrable(@PathVariable Integer id) {
+    livrableRepository.findById(id).ifPresent(livrable -> {
+        livrable.setStatut(Livrable.StatutLivrable.valide);
+        livrableRepository.save(livrable);
+    });
+    return "redirect:/encadreur/livrables";
+}
+
+@GetMapping("/livrables/rejeter/{id}")
+public String rejeterLivrable(@PathVariable Integer id) {
+    livrableRepository.findById(id).ifPresent(livrable -> {
+        livrable.setStatut(Livrable.StatutLivrable.rejete);
+        livrableRepository.save(livrable);
+    });
+    return "redirect:/encadreur/livrables";
+}
+
 }
