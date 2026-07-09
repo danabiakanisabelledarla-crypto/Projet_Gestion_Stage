@@ -3,60 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <title>Demandes de stage</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-demandes.css}">
 </head>
 <body>
 
-<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Demandes de stage</h1>
-        <span class="utilisateur-connecte">Responsable</span>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div>
+        <div class="sidebar-logo">
+            <div class="logo-titre">DTA</div>
+            <div class="logo-sous">Alliance</div>
+        </div>
+        <div class="sidebar-role">Responsable</div>
+        <nav class="sidebar-menu">
+            <a th:href="@{/responsable/dashboard}" class="menu-item">
+                <span class="menu-icone">🏠</span> Tableau de bord
+            </a>
+            <a th:href="@{/responsable/demandes}" class="menu-item actif">
+                <span class="menu-icone">📄</span> Demandes
+            </a>
+            <a th:href="@{/responsable/admissions}" class="menu-item">
+                <span class="menu-icone">👤</span> Admissions
+            </a>
+            <a th:href="@{/responsable/affectations}" class="menu-item">
+                <span class="menu-icone">📦</span> Affectations
+            </a>
+            <a th:href="@{/responsable/cloture}" class="menu-item">
+                <span class="menu-icone">📁</span> Cloture
+            </a>
+        </nav>
     </div>
 
-    <div class="barre-recherche">
-        <input type="text" placeholder="Rechercher un candidat...">
-        <button type="button">Filtrer</button>
+    <div>
+        <div class="sidebar-profil">
+            <div class="profil-avatar">R</div>
+            <div class="profil-info">
+                <div class="profil-nom">Responsable</div>
+                <div class="profil-email">responsable@gestion-stages.com</div>
+            </div>
+            <span class="profil-fleche">▼</span>
+        </div>
     </div>
+</aside>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Niveau</th>
-                <th>Filiere</th>
-                <th>Statut</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="demande : ${demandes}">
-                <td th:text="${demande.prenom + ' ' + demande.nom}">-</td>
-                <td th:text="${demande.niveau}">-</td>
-                <td th:text="${demande.filiere}">-</td>
-                <td>
-                    <span th:class="'badge ' + ${demande.statut.name().replace('_', '-')}"
-                          th:text="${demande.statut}">-</span>
-                </td>
-                <td>
-                    <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}"
-                       class="btn-accepter">Accepter</a>
-                    <a th:href="@{/responsable/demandes/refuser/{id}(id=${demande.id})}"
-                       class="btn-refuser">Refuser</a>
-                    <a th:href="@{/responsable/demandes/attente/{id}(id=${demande.id})}"
-                       class="btn-attente">En attente</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(demandes)}">
-                <td colspan="5" style="text-align:center; color:#777; padding: 30px;">
+<!-- ========== MAIN ========== -->
+<div class="main">
+
+    <!-- HEADER -->
+    <header class="header">
+    <div class="header-titre">
+        <h1 class="page-titre">Demandes de stage</h1>
+        <p class="page-sous-titre">
+            Consultez, analysez et traitez les candidatures reçues.
+        </p>
+    </div>
+</header>
+
+    <!-- CONTENU -->
+    <div class="contenu">
+
+        
+
+        <!-- CARTES STATS -->
+        <div class="grille-stats">
+            <div class="carte-stat">
+                <div class="stat-icone bleu">📋</div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${totalDemandes}">0</div>
+                    <div class="stat-label">Total demandes</div>
+                    <div class="stat-evolution">Ce mois</div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone orange">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${enAttente}">0</div>
+                    <div class="stat-label">En attente</div>
+                    <div class="stat-evolution" style="color:#F59E0B;">A traiter</div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone vert">✅</div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${acceptees}">0</div>
+                    <div class="stat-label">Acceptees</div>
+                    <div class="stat-evolution">Admis</div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone rouge">❌</div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${refusees}">0</div>
+                    <div class="stat-label">Refusees</div>
+                    <div class="stat-evolution" style="color:#EF4444;">Non retenus</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BARRE FILTRES -->
+        <div class="barre-filtres">
+            <input class="filtre-input" type="text"
+                   id="filtreNom" placeholder="Rechercher par nom..."
+                   oninput="filtrerTableau()">
+            <select class="filtre-select" id="filtreNiveau"
+                    onchange="filtrerTableau()">
+                <option value="">Niveau ▼</option>
+                <option>BTS 1</option><option>BTS 2</option>
+                <option>Licence 1</option><option>Licence 2</option>
+                <option>Licence 3</option>
+                <option>Master 1</option><option>Master 2</option>
+            </select>
+            <input class="filtre-input" type="text"
+                   id="filtreFiliere" placeholder="Filiere"
+                   oninput="filtrerTableau()">
+            <select class="filtre-select" id="filtreStatut"
+                    onchange="filtrerTableau()">
+                <option value="">Statut ▼</option>
+                <option value="en_attente">En attente</option>
+                <option value="acceptee">Acceptee</option>
+                <option value="refusee">Refusee</option>
+            </select>
+            <button class="btn-reinit" onclick="reinitFiltres()">
+                Reinitialiser
+            </button>
+            <button class="btn-filtrer" onclick="filtrerTableau()">
+                Filtrer
+            </button>
+        </div>
+
+        <!-- TABLEAU -->
+        <div class="tableau-wrapper">
+            <div class="tableau-header">
+                <div class="col-header">Candidat</div>
+                <div class="col-header">Niveau</div>
+                <div class="col-header">Filiere</div>
+                <div class="col-header">Date</div>
+                <div class="col-header">Statut</div>
+                <div class="col-header">Actions</div>
+            </div>
+
+            <div id="corps-tableau">
+                <div th:each="demande, iter : ${demandes}"
+                     th:data-nom="${demande.prenom + ' ' + demande.nom}"
+                     th:data-niveau="${demande.niveau}"
+                     th:data-filiere="${demande.filiere}"
+                     th:data-statut="${demande.statut.name()}"
+                     class="tableau-ligne">
+
+                    <!-- Candidat -->
+                    <div class="candidat-cell">
+                        <div class="candidat-avatar"
+                             th:style="${iter.index % 4 == 0 ? 'background:#2563EB' :
+                                        iter.index % 4 == 1 ? 'background:#7C3AED' :
+                                        iter.index % 4 == 2 ? 'background:#DB2777' :
+                                        'background:#059669'}"
+                             th:text="${#strings.substring(demande.prenom,0,1)}">
+                        </div>
+                        <div>
+                            <div class="candidat-nom"
+                                 th:text="${demande.prenom + ' ' + demande.nom}">-</div>
+                            <div class="candidat-email"
+                                 th:text="${demande.commentaire != null
+                                    and demande.commentaire.startsWith('Email candidat : ')
+                                    ? demande.commentaire.replace('Email candidat : ','')
+                                    : '—'}">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Niveau -->
+                    <div class="col-text" th:text="${demande.niveau}">-</div>
+
+                    <!-- Filière -->
+                    <div class="col-text" th:text="${demande.filiere}">-</div>
+
+                    <!-- Date -->
+                    <div class="col-date"
+                         th:text="${#temporals.format(demande.dateDemande,'dd/MM/yyyy')}">-</div>
+
+                    <!-- Statut -->
+                    <div>
+                        <span th:class="'badge-statut badge-' + ${demande.statut.name()}">
+                            <span class="point"></span>
+                            <span th:text="${demande.statut}">-</span>
+                        </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="actions-cell">
+                        <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}"
+                           class="btn-action btn-accepter" title="Accepter">✓</a>
+                        <a th:href="@{/responsable/demandes/refuser/{id}(id=${demande.id})}"
+                           class="btn-action btn-refuser" title="Refuser">✕</a>
+                        <a th:href="@{/responsable/demandes/attente/{id}(id=${demande.id})}"
+                           class="btn-action btn-attente" title="En attente">⏸</a>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(demandes)}" class="tableau-vide">
                     Aucune demande pour le moment.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="pagination">
+            <button class="page-btn prev-next">◀ Precedent</button>
+            <button class="page-btn actif">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <span style="color:#64748B;">...</span>
+            <button class="page-btn prev-next">Suivant ▶</button>
+        </div>
+
+    </div>
 </div>
+
+<script>
+    function filtrerTableau() {
+        const nom = document.getElementById('filtreNom').value.toLowerCase();
+        const niveau = document.getElementById('filtreNiveau').value.toLowerCase();
+        const filiere = document.getElementById('filtreFiliere').value.toLowerCase();
+        const statut = document.getElementById('filtreStatut').value.toLowerCase();
+
+        document.querySelectorAll('#corps-tableau .tableau-ligne').forEach(ligne => {
+            const lNom = (ligne.dataset.nom || '').toLowerCase();
+            const lNiveau = (ligne.dataset.niveau || '').toLowerCase();
+            const lFiliere = (ligne.dataset.filiere || '').toLowerCase();
+            const lStatut = (ligne.dataset.statut || '').toLowerCase();
+
+            const ok = (!nom || lNom.includes(nom))
+                    && (!niveau || lNiveau.includes(niveau))
+                    && (!filiere || lFiliere.includes(filiere))
+                    && (!statut || lStatut === statut);
+
+            ligne.style.display = ok ? '' : 'none';
+        });
+    }
+
+    function reinitFiltres() {
+        document.getElementById('filtreNom').value = '';
+        document.getElementById('filtreNiveau').value = '';
+        document.getElementById('filtreFiliere').value = '';
+        document.getElementById('filtreStatut').value = '';
+        filtrerTableau();
+    }
+</script>
 
 </body>
 </html>

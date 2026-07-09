@@ -9,123 +9,345 @@
 <body>
 
 <nav class="navbar">
-    <div class="logo">Gestion des Stages</div>
-    <div class="liens-nav">
-        <a th:href="@{/}">Accueil</a>
-        <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
-        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
+    <div class="brand">
+        <div class="brand-mark">DTA</div>
+        <div class="brand-text">
+            <strong>DTA</strong>
+            <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a class="nav-link active" href="/">
+            <i class="fa-solid fa-house"></i> Accueil</a>
+        <a th:href="@{/candidat/suivi}" class="nav-link">
+            <i class="fa-solid fa-binoculars"></i> Suivre ma demande
+        </a>
+        <a class="btn-login" href="/login">Connexion</a>
     </div>
 </nav>
 
-<div class="formulaire-demande">
+<div class="page-demande">
     <h1>Deposer une candidature</h1>
     <p class="sous-titre">Remplissez ce formulaire et joignez les documents requis.</p>
 
-    <div th:if="${succes}" class="message-succes">
-        Votre demande a bien ete envoyee ! Vous serez contacte prochainement.
-        Notez bien votre email pour suivre l'etat de votre demande.
+    <div class="stepper" id="stepper">
+        <div class="step-item actif" id="step-item-1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Identite</div>
+        </div>
+        <div class="step-ligne" id="ligne-1"></div>
+        <div class="step-item" id="step-item-2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Cursus</div>
+        </div>
+        <div class="step-ligne" id="ligne-2"></div>
+        <div class="step-item" id="step-item-3">
+            <div class="step-circle">3</div>
+            <div class="step-label">Pieces</div>
+        </div>
     </div>
 
-    <form th:action="@{/candidat/demande}" method="post"
-          enctype="multipart/form-data">
+    <form id="formCandidature" th:action="@{/candidat/demande}"
+          method="post" enctype="multipart/form-data">
 
-        <div class="grille-2">
-            <div class="groupe-champ">
-                <label>Nom *</label>
-                <input type="text" name="nom" placeholder="Votre nom" required>
+        <!-- ETAPE 1 -->
+        <div id="etape-1">
+            <div class="carte-etape-form">
+                <div class="entete-etape">
+                    <div class="icone-etape">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="white" stroke-width="2.5">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <h2>Identite</h2>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Nom</label>
+                    <input type="text" id="nom" name="nom" placeholder="Votre nom">
+                    <div class="msg-erreur-champ" id="err-nom">Le nom est obligatoire.</div>
+                </div>
+                <div class="groupe-champ">
+                    <label>Prenom</label>
+                    <input type="text" id="prenom" name="prenom" placeholder="Votre prenom">
+                    <div class="msg-erreur-champ" id="err-prenom">Le prenom est obligatoire.</div>
+                </div>
+                <div class="groupe-champ">
+                    <label>Email</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="votre.email@exemple.com">
+                    <div class="msg-erreur-champ" id="err-email">
+                        Veuillez entrer un email valide.
+                    </div>
+                </div>
             </div>
-            <div class="groupe-champ">
-                <label>Prenom *</label>
-                <input type="text" name="prenom" placeholder="Votre prenom" required>
+            <button type="button" class="btn-continuer" onclick="allerEtape2()">
+                Continuer →
+            </button>
+        </div>
+
+        <!-- ETAPE 2 -->
+        <div id="etape-2" style="display:none;">
+            <div class="carte-etape-form">
+                <div class="entete-etape">
+                    <div class="icone-etape">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="white" stroke-width="2.5">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
+                    </div>
+                    <h2>Cursus</h2>
+                </div>
+
+                <div class="groupe-champ">
+                    <label>Ecole / Universite</label>
+                    <input type="text" id="ecole" name="ecole"
+                           placeholder="Nom de votre etablissement">
+                    <div class="msg-erreur-champ" id="err-ecole">L'ecole est obligatoire.</div>
+                </div>
+                <div class="groupe-champ">
+                    <label>Filiere</label>
+                    <input type="text" id="filiere" name="filiere"
+                           placeholder="Ex: Genie Logiciel">
+                    <div class="msg-erreur-champ" id="err-filiere">La filiere est obligatoire.</div>
+                </div>
+                <div class="groupe-champ">
+                    <label>Niveau</label>
+                    <select id="niveau" name="niveau">
+                        <option value="">-- Choisir --</option>
+                        <option>BTS 1</option><option>BTS 2</option>
+                        <option>Licence 1</option><option>Licence 2</option>
+                        <option>Licence 3</option>
+                        <option>Master 1</option><option>Master 2</option>
+                    </select>
+                    <div class="msg-erreur-champ" id="err-niveau">Choisissez un niveau.</div>
+                </div>
+                <div class="groupe-champ">
+                    <label>Duree souhaitee</label>
+                    <select id="duree" name="dureeSouhaitee">
+                        <option value="">-- Choisir --</option>
+                        <option>1 mois</option><option>2 mois</option>
+                        <option>3 mois</option><option>4 mois</option>
+                        <option>6 mois</option>
+                    </select>
+                    <div class="msg-erreur-champ" id="err-duree">Choisissez une duree.</div>
+                </div>
+            </div>
+            <button type="button" class="btn-continuer" onclick="allerEtape3()">
+                Continuer →
+            </button>
+            <button type="button" class="btn-retour" onclick="allerEtape(1)">
+                ← Retour
+            </button>
+        </div>
+
+        <!-- ETAPE 3 -->
+        <div id="etape-3" style="display:none;">
+            <div class="carte-etape-form">
+                <div class="entete-etape">
+                    <div class="icone-etape">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="white" stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
+                                     a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <h2>Pieces justificatives</h2>
+                </div>
+
+                <p class="note-fichiers">
+                    Joignez les 3 documents ci-dessous.
+                    La CNI peut etre une image (JPG, PNG) ou un PDF.
+                    La lettre de stage et le CV doivent etre en PDF.
+                </p>
+
+                <!-- CNI -->
+                <div class="groupe-champ">
+                    <label>Carte Nationale d'Identite</label>
+                    <div class="zone-fichier"
+                         onclick="document.getElementById('cni').click()">
+                        <div class="icone-doc">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                 stroke="white" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                <circle cx="8" cy="12" r="2"/>
+                                <path d="M14 10h4M14 14h2"/>
+                            </svg>
+                        </div>
+                        <div class="label-fichier">
+                            Selectionner votre CNI
+                        </div>
+                        <div class="formats">PDF, JPG ou PNG</div>
+                        <div class="fichier-selectionne" id="nom-cni"></div>
+                    </div>
+                    <input type="file" id="cni" name="cni"
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           onchange="afficherNomFichier('cni','nom-cni')">
+                    <div class="msg-erreur-champ" id="err-cni">
+                        La CNI est obligatoire.
+                    </div>
+                </div>
+
+                <!-- LETTRE -->
+                <div class="groupe-champ">
+                    <label>Lettre de stage de votre ecole</label>
+                    <div class="zone-fichier"
+                         onclick="document.getElementById('lettreStage').click()">
+                        <div class="icone-doc">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                 stroke="white" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
+                                         a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="8" y1="13" x2="16" y2="13"/>
+                                <line x1="8" y1="17" x2="12" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="label-fichier">
+                            Selectionner la lettre de stage
+                        </div>
+                        <div class="formats">
+                            PDF — adressee au Directeur General
+                        </div>
+                        <div class="fichier-selectionne" id="nom-lettre"></div>
+                    </div>
+                    <input type="file" id="lettreStage" name="lettreStage"
+                           accept=".pdf"
+                           onchange="afficherNomFichier('lettreStage','nom-lettre')">
+                    <div class="msg-erreur-champ" id="err-lettre">
+                        La lettre de stage est obligatoire.
+                    </div>
+                </div>
+
+                <!-- CV -->
+                <div class="groupe-champ">
+                    <label>Curriculum Vitae</label>
+                    <div class="zone-fichier"
+                         onclick="document.getElementById('cv').click()">
+                        <div class="icone-doc">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                 stroke="white" stroke-width="2">
+                                <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16
+                                         a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                            </svg>
+                        </div>
+                        <div class="label-fichier">Selectionner votre CV</div>
+                        <div class="formats">PDF uniquement</div>
+                        <div class="fichier-selectionne" id="nom-cv"></div>
+                    </div>
+                    <input type="file" id="cv" name="cv"
+                           accept=".pdf"
+                           onchange="afficherNomFichier('cv','nom-cv')">
+                    <div class="msg-erreur-champ" id="err-cv">
+                        Le CV est obligatoire.
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-continuer"
+                    onclick="return validerEtape3()">
+                Envoyer ma candidature
+            </button>
+            <button type="button" class="btn-retour" onclick="allerEtape(2)">
+                ← Retour
+            </button>
+        </div>
+
+        <!-- SUCCES -->
+        <div id="etape-succes" style="display:none;">
+            <div class="message-succes">
+                <div class="icone-succes">✓</div>
+                <h2>Candidature envoyee</h2>
+                <p>
+                    Votre dossier a bien ete recu. Conservez votre email
+                    pour suivre l'etat de votre demande.
+                </p>
+                <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
             </div>
         </div>
 
-        <div class="groupe-champ">
-            <label>Email *</label>
-            <input type="email" name="email"
-                   placeholder="votre.email@exemple.com" required>
-        </div>
-
-        <div class="groupe-champ">
-            <label>Ecole / Universite *</label>
-            <input type="text" name="ecole"
-                   placeholder="Nom de votre etablissement" required>
-        </div>
-
-        <div class="grille-2">
-            <div class="groupe-champ">
-                <label>Filiere *</label>
-                <input type="text" name="filiere"
-                       placeholder="Ex: Genie Logiciel" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Niveau *</label>
-                <select name="niveau" required>
-                    <option value="">-- Choisir --</option>
-                    <option value="BTS 1">BTS 1</option>
-                    <option value="BTS 2">BTS 2</option>
-                    <option value="Licence 1">Licence 1</option>
-                    <option value="Licence 2">Licence 2</option>
-                    <option value="Licence 3">Licence 3</option>
-                    <option value="Master 1">Master 1</option>
-                    <option value="Master 2">Master 2</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="groupe-champ">
-            <label>Duree souhaitee *</label>
-            <select name="dureeSouhaitee" required>
-                <option value="">-- Choisir --</option>
-                <option value="1 mois">1 mois</option>
-                <option value="2 mois">2 mois</option>
-                <option value="3 mois">3 mois</option>
-                <option value="4 mois">4 mois</option>
-                <option value="6 mois">6 mois</option>
-            </select>
-        </div>
-
-        <!-- Separateur documents -->
-        <div style="border-top: 2px solid #e8f0fe; margin: 25px 0; padding-top: 20px;">
-            <h3 style="color: #1a2236; margin-bottom: 5px;">Documents requis</h3>
-            <p style="color: #777; font-size: 13px; margin-bottom: 20px;">
-                Joignez les 3 documents ci-dessous. La CNI peut etre une image (JPG, PNG) ou un PDF.
-                La lettre de stage et le CV doivent etre en PDF.
-            </p>
-        </div>
-
-        <div class="groupe-champ">
-            <label>🪪 Carte Nationale d'Identite (CNI) *</label>
-            <input type="file" name="cni"
-                   accept=".pdf,.jpg,.jpeg,.png" required>
-            <small style="color:#777; font-size:12px;">
-                Formats acceptes : PDF, JPG, PNG — Taille max : 10 MB
-            </small>
-        </div>
-
-        <div class="groupe-champ">
-            <label>📄 Lettre de stage de votre ecole *</label>
-            <input type="file" name="lettreStage"
-                   accept=".pdf" required>
-            <small style="color:#777; font-size:12px;">
-                Lettre officielle adressee au Directeur General — Format PDF uniquement
-            </small>
-        </div>
-
-        <div class="groupe-champ">
-            <label>📋 Curriculum Vitae (CV) *</label>
-            <input type="file" name="cv"
-                   accept=".pdf" required>
-            <small style="color:#777; font-size:12px;">
-                Format PDF uniquement — Taille max : 10 MB
-            </small>
-        </div>
-
-        <button type="submit" class="bouton-soumettre">
-            Envoyer ma candidature
-        </button>
     </form>
 </div>
+
+<script>
+    function afficherNomFichier(inputId, affichageId) {
+        const input = document.getElementById(inputId);
+        const affichage = document.getElementById(affichageId);
+        if (input.files && input.files[0]) {
+            affichage.textContent = input.files[0].name;
+        }
+    }
+
+    function allerEtape(n) {
+        [1,2,3].forEach(i => {
+            document.getElementById('etape-' + i).style.display = 'none';
+            const item = document.getElementById('step-item-' + i);
+            item.classList.remove('actif','fait');
+            if (i < n) item.classList.add('fait');
+            if (i === n) item.classList.add('actif');
+        });
+        [1,2].forEach(i => {
+            document.getElementById('ligne-' + i)
+                    .classList.toggle('fait', i < n);
+        });
+        document.getElementById('etape-' + n).style.display = 'block';
+        window.scrollTo(0,0);
+    }
+
+    function validerChamp(id, errId, condition) {
+        const el = document.getElementById(id);
+        const err = document.getElementById(errId);
+        const ok = condition(el);
+        el.classList.toggle('erreur', !ok);
+        err.classList.toggle('visible', !ok);
+        return ok;
+    }
+
+    function allerEtape2() {
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const v1 = validerChamp('nom','err-nom', el => el.value.trim() !== '');
+        const v2 = validerChamp('prenom','err-prenom', el => el.value.trim() !== '');
+        const v3 = validerChamp('email','err-email',
+                                el => emailOk.test(el.value.trim()));
+        if (v1 && v2 && v3) allerEtape(2);
+    }
+
+    function allerEtape3() {
+        const v1 = validerChamp('ecole','err-ecole', el => el.value.trim() !== '');
+        const v2 = validerChamp('filiere','err-filiere', el => el.value.trim() !== '');
+        const v3 = validerChamp('niveau','err-niveau', el => el.value !== '');
+        const v4 = validerChamp('duree','err-duree', el => el.value !== '');
+        if (v1 && v2 && v3 && v4) allerEtape(3);
+    }
+
+    function validerEtape3() {
+        const v1 = document.getElementById('cni').files.length > 0;
+        const v2 = document.getElementById('lettreStage').files.length > 0;
+        const v3 = document.getElementById('cv').files.length > 0;
+        if (!v1) document.getElementById('err-cni').classList.add('visible');
+        else document.getElementById('err-cni').classList.remove('visible');
+        if (!v2) document.getElementById('err-lettre').classList.add('visible');
+        else document.getElementById('err-lettre').classList.remove('visible');
+        if (!v3) document.getElementById('err-cv').classList.add('visible');
+        else document.getElementById('err-cv').classList.remove('visible');
+        return v1 && v2 && v3;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const succes = /*[[${succes}]]*/ false;
+        if (succes) {
+            document.getElementById('etape-1').style.display = 'none';
+            document.getElementById('stepper').style.display = 'none';
+            document.getElementById('etape-succes').style.display = 'block';
+        }
+    });
+</script>
 
 </body>
 </html>

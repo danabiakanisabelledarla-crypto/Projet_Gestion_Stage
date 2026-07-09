@@ -3,13 +3,14 @@
 <body>
 
 <div th:fragment="sidebar" class="barre-laterale">
-    <h2 class="logo-app">Responsable</h2>
+    <h2 class="logo-app">DTA Alliance</h2>
+    <div class="sidebar-role">Responsable</div>
     <nav>
-        <a th:href="@{/responsable/dashboard}">Tableau de bord</a>
-        <a th:href="@{/responsable/demandes}">Demandes</a>
-        <a th:href="@{/responsable/admissions}">Admissions</a>
-        <a th:href="@{/responsable/affectations}">Affectations</a>
-        <a th:href="@{/responsable/cloture}">Cloture</a>
+        <a th:href="@{/responsable/dashboard}" class="actif">🏠 Tableau de bord</a>
+        <a th:href="@{/responsable/demandes}">📄 Demandes</a>
+        <a th:href="@{/responsable/admissions}">👤 Admissions</a>
+        <a th:href="@{/responsable/affectations}">💼 Affectations</a>
+        <a th:href="@{/responsable/cloture}">📦 Clôture</a>
     </nav>
 </div>
 

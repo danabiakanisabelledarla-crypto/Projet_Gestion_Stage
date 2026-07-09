@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,40 +44,39 @@ public class CandidatController {
     }
 
     @PostMapping("/demande")
-    public String soumettreFormulaire(
-            @RequestParam String nom,
-            @RequestParam String prenom,
-            @RequestParam String email,
-            @RequestParam String ecole,
-            @RequestParam String filiere,
-            @RequestParam String niveau,
-            @RequestParam String dureeSouhaitee,
-            @RequestParam(required = false) MultipartFile cni,
-            @RequestParam(required = false) MultipartFile lettreStage,
-            @RequestParam(required = false) MultipartFile cv,
-            Model model) {
+public String soumettreFormulaire(
+        @RequestParam String nom,
+        @RequestParam String prenom,
+        @RequestParam String email,
+        @RequestParam String ecole,
+        @RequestParam String filiere,
+        @RequestParam String niveau,
+        @RequestParam String dureeSouhaitee,
+        @RequestParam(required = false) MultipartFile cni,
+        @RequestParam(required = false) MultipartFile lettreStage,
+        @RequestParam(required = false) MultipartFile cv,
+        RedirectAttributes redirectAttributes) {
 
-        // 1. Sauvegarder la demande
-        DemandeStage demande = new DemandeStage(nom, prenom, ecole,
-                filiere, niveau, dureeSouhaitee);
-        demande.setCommentaire("Email candidat : " + email);
-        demandeStageRepository.save(demande);
+    DemandeStage demande = new DemandeStage(nom, prenom, ecole,
+            filiere, niveau, dureeSouhaitee);
+    demande.setCommentaire("Email candidat : " + email);
+    demandeStageRepository.save(demande);
 
-        // 2. Sauvegarder les fichiers
-        try {
-            Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
+    try {
+        Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
 
-            sauvegarderDocument(cni, "CNI", demande);
-            sauvegarderDocument(lettreStage, "LETTRE_STAGE", demande);
-            sauvegarderDocument(cv, "CV", demande);
+        sauvegarderDocument(cni, "CNI", demande);
+        sauvegarderDocument(lettreStage, "LETTRE_STAGE", demande);
+        sauvegarderDocument(cv, "CV", demande);
 
-        } catch (IOException e) {
-            System.err.println("Erreur upload : " + e.getMessage());
-        }
-
-        model.addAttribute("succes", true);
-        return "candidat/demande";
+    } catch (IOException e) {
+        System.err.println("Erreur upload : " + e.getMessage());
     }
+
+    redirectAttributes.addFlashAttribute("messageSucces",
+            "Demande envoyée avec succès !");
+    return "redirect:/";
+}
 
     private void sauvegarderDocument(MultipartFile fichier, String typeDocument,
                                       DemandeStage demande) throws IOException {

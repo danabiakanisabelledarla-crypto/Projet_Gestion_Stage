@@ -1,32 +1,57 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
-body { background-color: #f4f6f9; display: flex; min-height: 100vh; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+body {
+    background: #F4F7FC;
+    display: flex;
+    min-height: 100vh;
+}
 
 .barre-laterale {
-    width: 230px;
-    background-color: #1a2236;
+    width: 250px;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #03142D, #061E46, #041630);
     color: white;
-    padding: 30px 20px;
+    padding: 28px 20px;
     flex-shrink: 0;
 }
-.logo-app { font-size: 22px; margin-bottom: 35px; }
-.barre-laterale nav { display: flex; flex-direction: column; gap: 18px; }
-.barre-laterale nav a {
-    color: #c3c9d6;
-    text-decoration: none;
-    font-size: 15px;
-}
-.barre-laterale nav a:hover { color: white; }
 
 .contenu-principal {
     flex: 1;
-    padding: 40px 50px;
+    padding: 32px 36px;
+}
+.barre-laterale .logo-app {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
-.en-tete-page {
+.barre-laterale nav {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
 }
-.en-tete-page h1 { font-size: 26px; color: #1a2236; }
-.en-tete-page .utilisateur-connecte { color: #777; font-size: 14px; }
+
+.barre-laterale nav a {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 12px 14px;
+    border-radius: 12px;
+}
+
+.barre-laterale nav a:hover {
+    background: #0E2E6B;
+    color: white;
+}
+
+.sidebar-role {
+    color: #3B82F6;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 6px 0 12px;
+}

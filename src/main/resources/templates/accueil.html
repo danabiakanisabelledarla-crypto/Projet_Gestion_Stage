@@ -3,162 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <title>Plateforme de Gestion des Stages</title>
-    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=2)}">
 </head>
 <body>
 
-<nav class="navbar">
-    <div class="logo">Gestion des Stages</div>
-    <div class="liens-nav">
-        <a th:href="@{/candidat/demande}">Deposer une candidature</a>
-        <a th:href="@{/candidat/suivi}">Suivre ma demande</a>
-        <button class="btn-theme" id="btnTheme" onclick="basculerTheme()">🌙</button>
-        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
-    </div>
-</nav>
+    <nav class="navbar">
+        <div th:if="${messageSucces}" class="alert-success" th:text="${messageSucces}"></div>
+        <div class="brand">
+            <div class="brand-mark">DTA</div>
+            <div class="brand-text">
+                <strong>DTA</strong>
+                <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
+            </div>
+        </div>
 
-<section class="hero-slider">
-    <div class="hero-left">
-        <div class="slide active">
-            <span class="badge">Bienvenue</span>
-            <h1>Plateforme de Gestion et de Suivi des Stages</h1>
-            <p>
-                Deposez votre candidature en ligne, suivez l'etat de votre demande
-                et effectuez votre stage dans les meilleures conditions.
+        <div class="nav-links">
+            <a class="nav-link active" th:href="@{/}"><i class="fa-solid fa-house"></i> Accueil </a>
+            <a class="nav-link" th:href="@{/candidat/demande}"><i class="fa-solid fa-file-signature"></i> Déposer une candidature</a>
+            <a class="nav-link" th:href="@{/candidat/suivi}"><i class="fa-solid fa-chart-line"></i> Suivre ma demande</a>
+        </div>
+
+        <a class="btn-login" th:href="@{/login}">Connexion</a>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-eyebrow">DTA ALLIANCE</p>
+            <h1>
+                Plateforme de <br>
+                <span>Gestion et de</span> <br>
+                Suivi des Stages
+            </h1>
+
+            <p class="hero-text">
+                Déposez votre candidature, suivez l’état de votre dossier et réalisez votre stage
+                dans un environnement clair, sécurisé et structuré.
             </p>
+
             <div class="hero-actions">
-                <a th:href="@{/candidat/demande}" class="btn-principal">Deposer ma candidature</a>
-                <a th:href="@{/candidat/suivi}" class="btn-secondaire">Suivre ma demande</a>
+                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer</a>
+                <a class="btn-outline" th:href="@{/candidat/suivi}">Suivre</a>
             </div>
         </div>
 
-        <div class="slide">
-            <span class="badge">Comment ca fonctionne ?</span>
-            <h1>Un processus simple en 4 etapes</h1>
-            <div class="steps">
-                <div class="step">
-                    <span>1</span>
-                    <div>
-                        <h3>Deposez votre dossier</h3>
-                        <button class="voir-plus" type="button">Voir plus</button>
-                        <p class="detail">Remplissez le formulaire en ligne et joignez vos documents requis.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <span>2</span>
-                    <div>
-                        <h3>Traitement de la demande</h3>
-                        <button class="voir-plus" type="button">Voir plus</button>
-                        <p class="detail">Le responsable des stages etudie votre dossier et vous informe de la decision.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <span>3</span>
-                    <div>
-                        <h3>Affectation</h3>
-                        <button class="voir-plus" type="button">Voir plus</button>
-                        <p class="detail">En cas d'acceptation, vous etes affecte a un encadreur et a un service.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <span>4</span>
-                    <div>
-                        <h3>Suivi du stage</h3>
-                        <button class="voir-plus" type="button">Voir plus</button>
-                        <p class="detail">Vous accedez a votre espace personnel pour suivre vos taches et deposer vos livrables.</p>
-                    </div>
-                </div>
+        <div class="hero-visual">
+            <div class="hero-glow"></div>
+            <div class="hero-network"></div>
+
+            <div class="floating-icon icon-doc"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="floating-icon icon-cloud"><i class="fa-solid fa-cloud"></i></div>
+            <div class="floating-icon icon-lock"><i class="fa-solid fa-shield-halved"></i></div>
+
+            <img th:src="@{/images/hero-team.png.png}" alt="Équipe et stage">
+        </div>
+    </section>
+
+    <section class="process-section">
+        <div class="section-title">
+            <h2>Comment ça fonctionne ?</h2>
+            <p>Un processus simple en 4 étapes</p>
+            <div class="title-line"></div>
+        </div>
+
+        <div class="process-grid">
+            <div class="process-card">
+                <div class="step-number">1</div>
+                <div class="step-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
+                <h3>Déposer votre dossier</h3>
+                <p>Remplissez le formulaire et joignez vos documents.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="step-number">2</div>
+                <div class="step-icon"><i class="fa-solid fa-gears"></i></div>
+                <h3>Traitement de la demande</h3>
+                <p>Le responsable examine votre candidature et valide les informations.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="step-number">3</div>
+                <div class="step-icon"><i class="fa-solid fa-users"></i></div>
+                <h3>Assignation</h3>
+                <p>Vous êtes affecté à un encadreur et à un service.</p>
+            </div>
+
+            <div class="process-card">
+                <div class="step-number">4</div>
+                <div class="step-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <h3>Suivi du stage</h3>
+                <p>Vous gérez vos tâches, livrables et rapports en ligne.</p>
             </div>
         </div>
+    </section>
 
-        <div class="slide">
-            <span class="badge">Documents requis</span>
-            <h1>Preparez ces documents avant de commencer votre demande</h1>
-            <div class="documents">
-                <div class="document">
-                    <strong>🪪 Carte Nationale d'Identite</strong>
-                    <p>Copie numerique de votre CNI en cours de validite, au format PDF ou image.</p>
-                </div>
-                <div class="document">
-                    <strong>📄 Lettre de stage</strong>
-                    <p>Lettre officielle de votre ecole adressee au Directeur General de l'entreprise.</p>
-                </div>
-                <div class="document">
-                    <strong>📋 Curriculum Vitae</strong>
-                    <p>Votre CV a jour presentant votre parcours academique et vos competences.</p>
-                </div>
+    <section class="advantages-section">
+        <div class="advantages-card">
+            <div class="adv-item">
+                <div class="adv-icon"><i class="fa-solid fa-lock"></i></div>
+                <h3>Dépôt sécurisé</h3>
+                <p>Vos fichiers sont transmis dans un environnement fiable.</p>
+            </div>
+
+            <div class="adv-item">
+                <div class="adv-icon"><i class="fa-solid fa-chart-column"></i></div>
+                <h3>Suivi transparent</h3>
+                <p>Vous voyez l’avancement de votre demande à tout moment.</p>
+            </div>
+
+            <div class="adv-item">
+                <div class="adv-icon"><i class="fa-solid fa-handshake-angle"></i></div>
+                <h3>Encadrement</h3>
+                <p>Un accompagnement clair tout au long du processus.</p>
+            </div>
+
+            <div class="adv-item">
+                <div class="adv-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                <h3>Transformation numérique</h3>
+                <p>Une expérience moderne et simplifiée pour les étudiants.</p>
             </div>
         </div>
+    </section>
 
-        <div class="slider-dots">
-            <button class="dot active" type="button"></button>
-            <button class="dot" type="button"></button>
-            <button class="dot" type="button"></button>
+    <footer class="footer">
+        <div class="footer-col">
+            <h4>DTA Alliance</h4>
+            <p>DTA Alliance oeuvre pour la transformation numérique, l'innovation et le dévéloppement des compétences afin de préparer les talents de demain.</p>
         </div>
-    </div>
 
-    <div class="hero-right">
-        <img th:src="@{/images/stage-hero.PNG}" alt="Etudiants en stage">
-    </div>
-</section>
+        <div class="footer-col">
+            <h4>À propos</h4>
+            <p>Qui sommes-nous ?</p>
+            <p>Notre mission</p>
+            <p>Nos domaines d'action</p>
+            <p>Nos partenaires</p>
+        </div>
 
-<footer class="footer-accueil">
-    <p>Plateforme de Gestion des Stages &copy; 2026 - Tous droits reserves</p>
-</footer>
+        <div class="footer-col">
+            <h4>Liens utiles</h4>
+            <p>Accueil<br>Déposer une candidature<br>Suivre ma demande</p>
+        </div>
 
-<script>
-    // Slider
-    const slides = document.querySelectorAll('.slide');
-    const dots = document.querySelectorAll('.dot');
-    let currentSlide = 0;
-
-    function showSlide(index) {
-        slides[currentSlide].classList.remove('active');
-        dots[currentSlide].classList.remove('active');
-        currentSlide = index;
-        slides[currentSlide].classList.add('active');
-        dots[currentSlide].classList.add('active');
-    }
-
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => showSlide(index));
-    });
-
-    setInterval(() => {
-        showSlide((currentSlide + 1) % slides.length);
-    }, 6000);
-
-    // Voir plus
-    document.querySelectorAll('.voir-plus').forEach(button => {
-        button.addEventListener('click', () => {
-            const detail = button.nextElementSibling;
-            detail.classList.toggle('visible');
-            button.textContent = detail.classList.contains('visible')
-                ? 'Voir moins' : 'Voir plus';
-        });
-    });
-
-    // Mode sombre/clair
-    function basculerTheme() {
-        const body = document.body;
-        const btn = document.getElementById('btnTheme');
-        body.classList.toggle('sombre');
-
-        if (body.classList.contains('sombre')) {
-            btn.textContent = '☀️';
-            localStorage.setItem('theme', 'sombre');
-        } else {
-            btn.textContent = '🌙';
-            localStorage.setItem('theme', 'clair');
-        }
-    }
-
-    // Restaurer le theme au chargement
-    if (localStorage.getItem('theme') === 'sombre') {
-        document.body.classList.add('sombre');
-        document.getElementById('btnTheme').textContent = '☀️';
-    }
-</script>
+        <div class="footer-col">
+            <h4>Contactez-nous</h4>
+            <p><i class="fa-solid fa-location-dot footer-icon"></i> Yaoundé<br><i class="fa-solid fa-phone footer-icon"></i> +237 222 222 222<br><i class="fa-solid fa-envelope footer-icon"></i> contact@dta-alliance.com</p>
+        </div>
+    </footer>
 
 </body>
 </html>

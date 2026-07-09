@@ -11,35 +11,181 @@
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
 <div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Tableau de bord</h1>
-        <span class="utilisateur-connecte">Responsable</span>
-    </div>
 
-    <div class="grille-cartes-stats">
-        <div class="carte-stat bleu">
-            <div class="libelle">Demandes en attente</div>
-            <div class="valeur" th:text="${demandesEnAttente}">0</div>
+    <header class="en-tete-page">
+        <div class="header-gauche">
+            
+            <div>
+                <h1>Bonjour, Responsable 👋</h1>
+                <p class="sous-titre">Voici un aperçu rapide de votre activité et des demandes à traiter.</p>
+            </div>
         </div>
-        <div class="carte-stat vert">
-            <div class="libelle">Stagiaires</div>
-            <div class="valeur" th:text="${totalStagiaires}">0</div>
+        <a th:href="@{/responsable/demandes}" class="btn-principal">Voir les demandes</a>
+    </header>
+
+    <section class="hero-card">
+        <div class="hero-texte">
+            <h2>Tableau de bord</h2>
+            <p>Bienvenue sur votre espace d'administration. Suivez les demandes, gérez les admissions et pilotez les stages depuis un tableau de bord unique.</p>
+        </div>
+        <div class="hero-illustration">
+            <img src="/images/hero-dashboard.png" alt="Illustration responsable" class="hero-image">
+        </div>
+    </section>
+
+    <section class="grille-cartes-stats">
+        <div class="carte-stat bleu">
+            <div class="icon-stat">📋</div>
+            <div class="libelle">Total demandes</div>
+            <div class="valeur" th:text="${totalDemandes}">0</div>
+            <div class="mini-evolution">Candidatures enregistrées</div>
         </div>
         <div class="carte-stat orange">
-            <div class="libelle">Stages</div>
-            <div class="valeur" th:text="${totalStages}">0</div>
+            <div class="icon-stat">⏳</div>
+            <div class="libelle">En attente</div>
+            <div class="valeur" th:text="${demandesEnAttente}">0</div>
+            <div class="mini-evolution">À traiter</div>
         </div>
-    </div>
+        <div class="carte-stat vert">
+            <div class="icon-stat">✅</div>
+            <div class="libelle">Acceptées</div>
+            <div class="valeur" th:text="${acceptees}">0</div>
+            <div class="mini-evolution">Admissions validées</div>
+        </div>
+        <div class="carte-stat rouge">
+            <div class="icon-stat">❌</div>
+            <div class="libelle">Refusées</div>
+            <div class="valeur" th:text="${refusees}">0</div>
+            <div class="mini-evolution">Non retenues</div>
+        </div>
+    </section>
 
-    <div class="grille-blocs">
-        <div class="bloc-blanc">
-            <h3>Actions rapides</h3>
-            <a th:href="@{/responsable/demandes}" class="bouton-action">Consulter les demandes</a>
-            <a th:href="@{/responsable/admissions}" class="bouton-action">Gerer les admissions</a>
-            <a th:href="@{/responsable/affectations}" class="bouton-action">Gerer les affectations</a>
+    <section class="grille-principale">
+        <div class="bloc bloc-activite">
+            <div class="bloc-entete">
+                <h3>Activité récente</h3>
+                <span class="chip">Aujourd'hui</span>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="dot dot-vert"></span>
+                    <div>
+                        <strong>Nouvelle demande reçue</strong>
+                        <p>3 candidatures ont été enregistrées.</p>
+                    </div>
+                    <span class="time">10 min</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="dot dot-bleu"></span>
+                    <div>
+                        <strong>Admission validée</strong>
+                        <p>Un stagiaire a été accepté.</p>
+                    </div>
+                    <span class="time">1h</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="dot dot-orange"></span>
+                    <div>
+                        <strong>Échéance proche</strong>
+                        <p>Un stage arrive à terme dans 5 jours.</p>
+                    </div>
+                    <span class="time">3h</span>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <div class="bloc bloc-actions">
+            <div class="bloc-entete">
+                <h3>Actions rapides</h3>
+            </div>
+            <a th:href="@{/responsable/demandes}" class="bouton-action">Consulter les demandes <span>→</span></a>
+            <a th:href="@{/responsable/admissions}" class="bouton-action">Gérer les admissions <span>→</span></a>
+            <a th:href="@{/responsable/affectations}" class="bouton-action">Gérer les affectations <span>→</span></a>
+            <a th:href="@{/responsable/cloture}" class="bouton-action">Voir la clôture <span>→</span></a>
+        </div>
+
+        <div class="bloc bloc-repartition">
+            <div class="bloc-entete">
+                <h3>Répartition</h3>
+            </div>
+            <div class="donut-wrap">
+                <div class="donut-chart"></div>
+                <div class="legende">
+                    <div><span class="dot dot-vert"></span> Acceptées (65%)</div>
+                    <div><span class="dot dot-orange"></span> En attente (20%)</div>
+                    <div><span class="dot dot-rouge"></span> Refusées (15%)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bloc bloc-tableau">
+        <div class="bloc-entete">
+            <h3>Candidatures récentes</h3>
+            <a th:href="@{/responsable/demandes}" class="text-link">Voir tout</a>
+        </div>
+        <div class="tableau">
+            <div class="ligne ligne-head">
+                <span>Candidat</span>
+                <span>Niveau</span>
+                <span>Filière</span>
+                <span>Statut</span>
+                <span>Date</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(demandesRecents)}" class="ligne">
+                <span>Aucune candidature récente</span>
+            </div>
+
+            <div th:each="demande : ${demandesRecents}" class="ligne">
+                <span class="candidat" th:text="${demande.prenom + ' ' + demande.nom}">Nom</span>
+                <span th:text="${demande.niveau}">Niveau</span>
+                <span th:text="${demande.filiere}">Filière</span>
+                <span class="badge"
+                      th:classappend="${demande.statut.name() == 'acceptee'} ? ' badge-vert' : (${demande.statut.name() == 'refusee'} ? ' badge-rouge' : ' badge-orange')"
+                      th:text="${demande.statut.name() == 'acceptee' ? 'Acceptée' : (demande.statut.name() == 'refusee' ? 'Refusée' : 'En attente')}">Statut</span>
+                <span th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy')}">Date</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="grille-secondaire">
+        <div class="bloc bloc-repartition">
+            <div class="bloc-entete">
+                <h3>Répartition</h3>
+            </div>
+            <div class="donut-wrap">
+                <div class="donut-chart"></div>
+                <div class="legende">
+                    <div><span class="dot dot-vert"></span> Acceptées (<span th:text="${acceptees}">0</span>)</div>
+                    <div><span class="dot dot-orange"></span> En attente (<span th:text="${demandesEnAttente}">0</span>)</div>
+                    <div><span class="dot dot-rouge"></span> Refusées (<span th:text="${refusees}">0</span>)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bloc bloc-calendrier">
+            <div class="bloc-entete">
+                <h3>Échéances importantes</h3>
+            </div>
+            <div class="echeance">
+                <div class="date-box">17</div>
+                <div>
+                    <strong>Entretien de sélection</strong>
+                    <p>Présentation des candidats retenus.</p>
+                </div>
+                <span class="pill">Dans 10 jours</span>
+            </div>
+            <div class="echeance">
+                <div class="date-box">22</div>
+                <div>
+                    <strong>Début des stages</strong>
+                    <p>Première affectation du mois.</p>
+                </div>
+                <span class="pill">Dans 15 jours</span>
+            </div>
+        </div>
+    </section>
 </div>
-
 </body>
 </html>

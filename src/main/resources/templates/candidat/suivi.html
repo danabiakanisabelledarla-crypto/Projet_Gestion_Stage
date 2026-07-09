@@ -3,31 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>Suivre ma demande</title>
-    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=2)}">
     <link rel="stylesheet" th:href="@{/css/suivi.css}">
 </head>
 <body>
 
 <nav class="navbar">
-    <div class="logo">Gestion des Stages</div>
-    <div class="liens-nav">
-        <a th:href="@{/}">Accueil</a>
-        <a th:href="@{/candidat/demande}">Deposer une candidature</a>
-        <a th:href="@{/login}" class="btn-connexion">Connexion</a>
+    <div class="brand">
+        <div class="brand-mark">DTA</div>
+        <div class="brand-text">
+            <strong>DTA</strong>
+            <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="nav-link active"><i class="fa-solid fa-house"></i>Accueil</a>
+        <a href="/candidat/demande" class="nav-link"><i class="fa-solid fa-file-signature"></i>Déposer une candidature</a>
+        <a href="/login" class="btn-login"><i class="fa-solid fa-user"></i>Connexion</a>
     </div>
 </nav>
 
 <div class="conteneur-suivi">
 
-    <div class="carte-suivi">
+    <!-- Formulaire : visible seulement si pas de résultat -->
+    <div th:if="${demande == null}" class="carte-suivi">
         <h1>Suivre ma demande</h1>
         <p class="sous-titre">
-            Entrez l'email que vous avez utilise lors de votre candidature
+            Entrez l'email utilise lors de votre candidature
             pour consulter l'etat de votre demande.
         </p>
 
         <div th:if="${erreur}" class="message-erreur" th:text="${erreur}"></div>
-        <div th:if="${info}" class="message-info" th:text="${info}"></div>
 
         <form th:action="@{/candidat/suivi}" method="post">
             <div class="groupe-champ">
@@ -42,9 +48,14 @@
         </form>
     </div>
 
-    <!-- Resultat si demande trouvee -->
-    <div th:if="${demande}" class="resultat-demande">
-        <h2>Etat de votre demande</h2>
+    <!-- Résultat : visible seulement si demande trouvée -->
+    <div th:if="${demande != null}" class="resultat-demande">
+
+        <div class="resultat-entete">
+            <h2>Etat de votre demande</h2>
+            <span th:class="'statut-badge statut-' + ${demande.statut.name()}"
+                  th:text="${demande.statut}">-</span>
+        </div>
 
         <div class="ligne-info">
             <span class="libelle">Nom complet</span>
@@ -69,19 +80,25 @@
         </div>
         <div class="ligne-info">
             <span class="libelle">Date de depot</span>
-            <span class="valeur" th:text="${demande.dateDemande}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Statut</span>
-            <span th:class="'statut-badge statut-' + ${demande.statut.name()}"
-                  th:text="${demande.statut}">-</span>
+            <span class="valeur"
+                  th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy HH:mm')}">-</span>
         </div>
 
-        <div th:if="${demande.commentaire != null and !demande.commentaire.isEmpty()
+        <div th:if="${demande.commentaire != null
+                     and !demande.commentaire.isEmpty()
                      and !demande.commentaire.startsWith('Email candidat')}"
              class="ligne-info">
             <span class="libelle">Commentaire</span>
             <span class="valeur" th:text="${demande.commentaire}">-</span>
+        </div>
+
+        <div class="resultat-actions">
+            <a th:href="@{/candidat/suivi}" class="btn-nouvelle-recherche">
+                ← Nouvelle recherche
+            </a>
+            <a th:href="@{/candidat/demande}" class="btn-nouvelle-demande">
+                Deposer une autre demande
+            </a>
         </div>
     </div>
 
