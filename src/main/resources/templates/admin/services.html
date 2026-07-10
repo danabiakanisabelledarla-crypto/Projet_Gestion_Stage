@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Services — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('Rechercher un service...')}"></div>
+    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
+
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Gestion des services</div>
+            <h1>Gestion des services de DTA Alliance</h1>
+            <p>Organisez les services de l'entreprise pour affecter efficacement les stagiaires.</p>
+            <div class="portal-hero-btns">
+                <button class="btn-hero-primary" onclick="openModal('modal-add')"><i class="fa-solid fa-plus"></i> Ajouter un service</button>
+            </div>
+        </div>
+        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
+    </section>
+
+    <div class="portal-stats">
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-building"></i></div><div class="number" th:text="${totalServices}">0</div><div class="label">Services</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number" th:text="${totalEncadreurs}">0</div><div class="label">Encadreurs</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-graduate"></i></div><div class="number" th:text="${totalStagiaires}">0</div><div class="label">Stagiaires</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-briefcase"></i></div><div class="number" th:text="${stagesEnCours}">0</div><div class="label">Stages en cours</div></div>
+    </div>
+
+    <div class="portal-table-card">
+        <table class="portal-table">
+            <thead><tr><th>Service</th><th>Description</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+            <tr th:each="s : ${services}">
+                <td><div class="table-user-name" th:text="${s.nom}">Service</div><div class="table-user-id" th:text="'SRV-' + ${#strings.pad(s.id, 3, '0')}">SRV-001</div></td>
+                <td th:text="${s.description}" style="color:#64748B;">Description</td>
+                <td><span class="badge-statut badge-actif">Actif</span></td>
+                <td>
+                    <div class="table-actions">
+                        <button type="button" class="btn-action edit" th:onclick="'openEdit(' + ${s.id} + ',\'' + ${s.nom} + '\',\'' + ${s.description} + '\')'"><i class="fa-solid fa-pen"></i></button>
+                        <form th:action="@{/admin/services/supprimer/{id}(id=${s.id})}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ce service ?')"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action delete"><i class="fa-solid fa-trash"></i></button></form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Ajouter un service</h3>
+        <form th:action="@{/admin/services/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-group"><label>Nom</label><input type="text" name="nom" required></div>
+            <div class="form-group"><label>Description</label><textarea name="description" rows="3" required></textarea></div>
+            <div class="modal-actions"><button type="button" class="btn-portal-secondary" onclick="closeModal('modal-add')">Annuler</button><button type="submit" class="btn-portal-primary">Enregistrer</button></div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Modifier le service</h3>
+        <form id="edit-form" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-group"><label>Nom</label><input type="text" name="nom" id="edit-nom" required></div>
+            <div class="form-group"><label>Description</label><textarea name="description" id="edit-desc" rows="3" required></textarea></div>
+            <div class="modal-actions"><button type="button" class="btn-portal-secondary" onclick="closeModal('modal-edit')">Annuler</button><button type="submit" class="btn-portal-primary">Enregistrer</button></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id){ document.getElementById(id).classList.add('open'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+    function openEdit(id, nom, desc){
+        document.getElementById('edit-form').action = '/admin/services/modifier/' + id;
+        document.getElementById('edit-nom').value = nom;
+        document.getElementById('edit-desc').value = desc;
+        openModal('modal-edit');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mentions légales — DTA Alliance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar-public :: navbar('mentions-legales')}"></div>
+
+<section class="page-hero">
+    <h1>Mentions légales</h1>
+    <p>Informations légales relatives à la plateforme de gestion des stages DTA Alliance.</p>
+</section>
+
+<div class="page-content">
+    <div class="content-card">
+        <h2>Éditeur du site</h2>
+        <p><strong>DTA Alliance</strong> — Digital Transformation Alliance<br>
+        Siège social : Yaoundé, Cameroun<br>
+        Email : contact@dta-alliance.com<br>
+        Téléphone : +237 222 222 222</p>
+    </div>
+    <div class="content-card">
+        <h2>Hébergement</h2>
+        <p>La plateforme est hébergée sur des serveurs sécurisés. Les données sont stockées
+        conformément aux normes de sécurité en vigueur.</p>
+    </div>
+    <div class="content-card">
+        <h2>Propriété intellectuelle</h2>
+        <p>L'ensemble du contenu de cette plateforme (textes, graphismes, logos, icônes) est la propriété
+        exclusive de DTA Alliance. Toute reproduction est interdite sans autorisation préalable.</p>
+    </div>
+    <div class="content-card">
+        <h2>Responsabilité</h2>
+        <p>DTA Alliance s'efforce d'assurer l'exactitude des informations publiées. Toutefois, elle ne saurait
+        être tenue responsable des erreurs ou omissions, ni des dommages résultant de l'utilisation
+        de la plateforme.</p>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

@@ -113,9 +113,4 @@ public class Livrable {
     public void setCommentaireEncadreur(String commentaireEncadreur) {
         this.commentaireEncadreur = commentaireEncadreur;
     }
-
-    public void setNomFichier(String nomFichier) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setNomFichier'");
-    }
 }

@@ -27,6 +27,8 @@ private final TacheRepository tacheRepository;
 private final LivrableRepository livrableRepository;
 private final JournalBordRepository journalBordRepository;
 private final StagiaireRepository stagiaireRepository;
+private final DocumentRepository documentRepository;
+private final ObjectifRepository objectifRepository;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
@@ -34,12 +36,16 @@ public StagiaireController(StageRepository stageRepository,
                             TacheRepository tacheRepository,
                             LivrableRepository livrableRepository,
                             JournalBordRepository journalBordRepository,
-                            StagiaireRepository stagiaireRepository) {
+                            StagiaireRepository stagiaireRepository,
+                            DocumentRepository documentRepository,
+                            ObjectifRepository objectifRepository) {
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
     this.livrableRepository = livrableRepository;
     this.journalBordRepository = journalBordRepository;
     this.stagiaireRepository = stagiaireRepository;
+    this.documentRepository = documentRepository;
+    this.objectifRepository = objectifRepository;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -173,25 +179,73 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
 
 @GetMapping("/rapport")
 public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
-                               Model model) {
+                               Model model,
+                               @RequestParam(required = false) String succes) {
     Optional<Stage> stageOpt = getStage(userDetails);
     model.addAttribute("stage", stageOpt.orElse(null));
+    stageOpt.ifPresent(stage -> {
+        List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
+                .filter(d -> "rapport_final".equals(d.getTypeDocument()))
+                .toList();
+        model.addAttribute("rapports", rapports);
+    });
+    if (succes != null) model.addAttribute("succes", succes);
     return "stagiaire/rapport";
 }
+
 @PostMapping("/rapport/deposer")
 public String deposerRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
                               @RequestParam String titre,
                               @RequestParam MultipartFile fichier) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    if (stageOpt.isEmpty()) {
+        return "redirect:/stagiaire/rapport";
+    }
     try {
         Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
         String nomFichier = "rapport_" + userDetails.getUtilisateur().getId()
                 + "_" + fichier.getOriginalFilename();
         Path chemin = Paths.get(DOSSIER_UPLOAD + nomFichier);
         Files.write(chemin, fichier.getBytes());
-        System.out.println(">>> Rapport depose : " + chemin);
+
+        Document document = new Document(
+                fichier.getOriginalFilename(), "rapport_final", chemin.toString());
+        document.setStage(stageOpt.get());
+        documentRepository.save(document);
     } catch (IOException e) {
         System.err.println("Erreur upload rapport : " + e.getMessage());
+        return "redirect:/stagiaire/rapport?succes=Erreur lors du depot du rapport.";
     }
     return "redirect:/stagiaire/rapport?succes=Rapport depose avec succes.";
+}
+
+@GetMapping("/profil")
+public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "profil");
+    model.addAttribute("utilisateur", userDetails.getUtilisateur());
+    stagiaireRepository.findByUtilisateurId(userDetails.getUtilisateur().getId())
+            .ifPresent(s -> model.addAttribute("stagiaire", s));
+    model.addAttribute("stage", getStage(userDetails).orElse(null));
+    return "stagiaire/profil";
+}
+
+@GetMapping("/objectifs")
+public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "objectifs");
+    getStage(userDetails).ifPresent(stage -> {
+        model.addAttribute("stage", stage);
+        model.addAttribute("objectifs", objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()));
+    });
+    return "stagiaire/objectifs";
+}
+
+@GetMapping("/planning")
+public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "planning");
+    getStage(userDetails).ifPresent(stage -> {
+        model.addAttribute("stage", stage);
+        model.addAttribute("taches", tacheRepository.findByStageId(stage.getId()));
+    });
+    return "stagiaire/planning";
 }
 }

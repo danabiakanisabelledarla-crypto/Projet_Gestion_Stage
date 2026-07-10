@@ -320,7 +320,64 @@ public String cloturer(@PathVariable Integer id) {
 }
 @GetMapping("/affectations")
 public String afficherAffectations(Model model) {
+    model.addAttribute("activePage", "affectations");
     model.addAttribute("stages", stageRepository.findAll());
     return "responsable/affectations";
+}
+
+@GetMapping("/archives")
+public String afficherArchives(Model model) {
+    model.addAttribute("activePage", "archives");
+    model.addAttribute("archives", archiveRepository.findAll());
+    return "responsable/archives";
+}
+
+@GetMapping("/stagiaires")
+public String afficherStagiairesResp(Model model) {
+    model.addAttribute("activePage", "stagiaires");
+    model.addAttribute("stagiaires", stagiaireRepository.findAll());
+    model.addAttribute("stages", stageRepository.findAll());
+    return "responsable/stagiaires";
+}
+
+@GetMapping("/dossiers")
+public String afficherDossiers(Model model) {
+    model.addAttribute("activePage", "dossiers");
+    model.addAttribute("documents", documentRepository.findAll());
+    return "responsable/dossiers";
+}
+
+@GetMapping("/planning")
+public String afficherPlanning(Model model) {
+    model.addAttribute("activePage", "planning");
+    model.addAttribute("stages", stageRepository.findAll());
+    return "responsable/planning";
+}
+
+@GetMapping("/suivi")
+public String afficherSuivi(Model model) {
+    model.addAttribute("activePage", "suivi");
+    model.addAttribute("stages", stageRepository.findByStatut(Stage.StatutStage.en_cours));
+    return "responsable/suivi";
+}
+
+@GetMapping("/notifications")
+public String afficherNotificationsResp(Model model) {
+    model.addAttribute("activePage", "notifications");
+    return "responsable/notifications";
+}
+
+@GetMapping("/rapports")
+public String afficherRapportsResp(Model model) {
+    model.addAttribute("activePage", "rapports");
+    model.addAttribute("totalStagiaires", stagiaireRepository.count());
+    model.addAttribute("totalStages", stageRepository.count());
+    return "responsable/rapports";
+}
+
+@GetMapping("/parametres")
+public String afficherParametresResp(Model model) {
+    model.addAttribute("activePage", "parametres");
+    return "responsable/parametres";
 }
 }

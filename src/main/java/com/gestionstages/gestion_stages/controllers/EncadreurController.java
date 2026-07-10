@@ -243,4 +243,27 @@ public String rejeterLivrable(@PathVariable Integer id) {
     return "redirect:/encadreur/livrables";
 }
 
+@GetMapping("/mes-stagiaires")
+public String mesStagiaires(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "mes-stagiaires");
+    Encadreur encadreur = getEncadreur(userDetails);
+    List<Stage> stages = encadreur != null ? stageRepository.findByEncadreurId(encadreur.getId()) : List.of();
+    model.addAttribute("stages", stages);
+    return "encadreur/mes-stagiaires";
+}
+
+@GetMapping("/planning")
+public String planning(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "planning");
+    Encadreur encadreur = getEncadreur(userDetails);
+    model.addAttribute("stages", encadreur != null ? stageRepository.findByEncadreurId(encadreur.getId()) : List.of());
+    return "encadreur/planning";
+}
+
+@GetMapping("/messagerie")
+public String messagerie(Model model) {
+    model.addAttribute("activePage", "messagerie");
+    return "encadreur/messagerie";
+}
+
 }

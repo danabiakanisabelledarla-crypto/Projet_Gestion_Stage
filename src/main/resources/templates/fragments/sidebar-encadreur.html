@@ -2,15 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="sidebar" class="barre-laterale">
-    <h2 class="logo-app">Encadreur</h2>
+<div th:fragment="sidebar" class="barre-laterale portal-sidebar">
+    <div class="logo-app">DTA Alliance</div>
+    <div class="sidebar-role">Encadreur</div>
     <nav>
-        <a th:href="@{/encadreur/dashboard}">Tableau de bord</a>
-        <a th:href="@{/encadreur/objectifs}">Objectifs</a>
-        <a th:href="@{/encadreur/taches}">Taches</a>
-        <a th:href="@{/encadreur/livrables}">Livrables</a>
-        <a th:href="@{/encadreur/evaluations}">Evaluations</a>
+        <a th:href="@{/encadreur/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
+        <a th:href="@{/encadreur/mes-stagiaires}" th:classappend="${activePage == 'mes-stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Mes stagiaires</a>
+        <a th:href="@{/encadreur/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
+        <a th:href="@{/encadreur/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Tâches</a>
+        <a th:href="@{/encadreur/livrables}" th:classappend="${activePage == 'livrables'} ? ' actif'"><i class="fa-solid fa-file-arrow-up"></i> Livrables</a>
+        <a th:href="@{/encadreur/evaluations}" th:classappend="${activePage == 'evaluations'} ? ' actif'"><i class="fa-solid fa-star"></i> Évaluations</a>
+        <a th:href="@{/encadreur/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
+        <a th:href="@{/encadreur/messagerie}" th:classappend="${activePage == 'messagerie'} ? ' actif'"><i class="fa-solid fa-comments"></i> Messagerie</a>
+        <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
     </nav>
+    <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
+    <div class="sidebar-profile-card"><div class="avatar">E</div><div class="info"><div class="name">Encadreur</div><div class="badge-online">En ligne</div></div></div>
+    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>
 </div>
 
 </body>

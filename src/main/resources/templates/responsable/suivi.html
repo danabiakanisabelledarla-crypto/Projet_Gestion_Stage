@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Suivi</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Suivi</div><h1>Suivi des stagiaires</h1></div></section>
+<div class="portal-stats" th:each="s : ${stages}">
+<div class="portal-stat-card"><div class="table-user-name" th:text="${s.stagiaire.utilisateur.prenom + ' ' + s.stagiaire.utilisateur.nom}">Nom</div><div class="label" th:text="${s.service.nom + ' — ' + s.encadreur.utilisateur.prenom}">Info</div><span class="badge-statut badge-actif" th:text="${s.statut}">en_cours</span></div>
+</div>
+</div></body></html>

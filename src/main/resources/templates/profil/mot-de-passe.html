@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Changer le mot de passe</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-admin :: sidebar}" th:if="${utilisateur.role.libelle == 'ADMINISTRATEUR'}"></div>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}" th:if="${utilisateur.role.libelle == 'RESPONSABLE_STAGE'}"></div>
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}" th:if="${utilisateur.role.libelle == 'ENCADREUR'}"></div>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}" th:if="${utilisateur.role.libelle == 'STAGIAIRE'}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Changer le mot de passe</h1>
+        <a th:href="@{/profil}" class="lien-action"><i class="fa-solid fa-arrow-left"></i> Retour au profil</a>
+    </div>
+
+    <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+    <div th:if="${erreur}" class="alert-erreur" th:text="${erreur}"></div>
+
+    <div class="bloc-module" style="max-width:500px;">
+        <form th:action="@{/profil/mot-de-passe}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Ancien mot de passe</label>
+                <input type="password" name="ancienMotDePasse" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Nouveau mot de passe</label>
+                <input type="password" name="nouveauMotDePasse" required minlength="6">
+            </div>
+            <div class="groupe-champ">
+                <label>Confirmer le nouveau mot de passe</label>
+                <input type="password" name="confirmation" required minlength="6">
+            </div>
+            <button type="submit" class="bouton-principal">Modifier le mot de passe</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

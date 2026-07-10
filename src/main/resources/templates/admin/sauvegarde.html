@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sauvegarde — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('')}"></div>
+    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
+    <section class="portal-hero" style="min-height:160px;">
+        <div class="portal-hero-text"><div class="portal-hero-eyebrow">Sauvegarde</div><h1>Gestion des sauvegardes</h1><p>Sauvegardez et restaurez les données de la plateforme.</p></div>
+    </section>
+    <div class="portal-stats">
+        <div class="portal-card"><h3><i class="fa-solid fa-database"></i> Sauvegarder</h3><p style="color:#64748B;margin:12px 0;">Créer une sauvegarde complète de la base de données.</p>
+            <form th:action="@{/admin/sauvegarde}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-portal-primary"><i class="fa-solid fa-download"></i> Lancer la sauvegarde</button></form>
+        </div>
+        <div class="portal-card"><h3><i class="fa-solid fa-rotate-left"></i> Restaurer</h3><p style="color:#64748B;margin:12px 0;">Restaurer une sauvegarde précédente.</p><button class="btn-portal-secondary" disabled>Restaurer (bientôt)</button></div>
+        <div class="portal-card"><h3><i class="fa-solid fa-file-export"></i> Exporter</h3><p style="color:#64748B;margin:12px 0;">Exporter toutes les données au format CSV.</p><button class="btn-portal-secondary" disabled>Exporter (bientôt)</button></div>
+    </div>
+</div>
+</body>
+</html>

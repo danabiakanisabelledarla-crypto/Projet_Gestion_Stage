@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Planning</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Calendrier</div><h1>Planning des stages</h1></div></section>
+<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Stagiaire</th><th>Début</th><th>Fin</th><th>Service</th></tr></thead>
+<tbody><tr th:each="s : ${stages}"><td th:text="${s.stagiaire.utilisateur.prenom + ' ' + s.stagiaire.utilisateur.nom}">Nom</td><td th:text="${s.dateDebut}">debut</td><td th:text="${s.dateFin}">fin</td><td th:text="${s.service.nom}">service</td></tr></tbody></table></div>
+</div></body></html>

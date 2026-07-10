@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Politique de confidentialité — DTA Alliance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar-public :: navbar('confidentialite')}"></div>
+
+<section class="page-hero">
+    <h1>Politique de confidentialité</h1>
+    <p>Comment nous collectons, utilisons et protégeons vos données personnelles.</p>
+</section>
+
+<div class="page-content">
+    <div class="content-card">
+        <h2>Données collectées</h2>
+        <p>Dans le cadre de la gestion des stages, nous collectons les données suivantes :</p>
+        <ul>
+            <li>Identité : nom, prénom, adresse email, téléphone</li>
+            <li>Parcours académique : école, filière, niveau d'études</li>
+            <li>Documents : CV, lettre de motivation, livrables, rapports de stage</li>
+            <li>Données de connexion : identifiants, logs d'accès</li>
+        </ul>
+    </div>
+    <div class="content-card">
+        <h2>Finalité du traitement</h2>
+        <p>Vos données sont utilisées exclusivement pour :</p>
+        <ul>
+            <li>Le traitement et le suivi de votre candidature</li>
+            <li>La gestion de votre stage (affectation, tâches, évaluation)</li>
+            <li>La communication relative à votre parcours</li>
+            <li>L'archivage des dossiers de stage</li>
+        </ul>
+    </div>
+    <div class="content-card">
+        <h2>Conservation des données</h2>
+        <p>Les données sont conservées pendant la durée du stage et archivées conformément
+        aux obligations légales. Les candidatures non retenues sont supprimées après 12 mois.</p>
+    </div>
+    <div class="content-card">
+        <h2>Vos droits</h2>
+        <p>Conformément à la réglementation en vigueur, vous disposez d'un droit d'accès,
+        de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits,
+        contactez-nous à <strong>contact@dta-alliance.com</strong>.</p>
+    </div>
+    <div class="content-card">
+        <h2>Sécurité</h2>
+        <p>Nous mettons en œuvre des mesures techniques et organisationnelles pour protéger
+        vos données : chiffrement des mots de passe, accès restreint par rôle, et stockage
+        sécurisé des documents.</p>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

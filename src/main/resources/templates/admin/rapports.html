@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapports — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('')}"></div>
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Analytique</div>
+            <h1>Rapports et statistiques</h1>
+            <p>Exportez les données et consultez les indicateurs clés de la plateforme.</p>
+            <div class="portal-hero-btns">
+                <a href="#" class="btn-hero-primary"><i class="fa-solid fa-file-pdf"></i> Export PDF</a>
+                <a href="#" class="btn-hero-outline"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
+            </div>
+        </div>
+    </section>
+    <div class="portal-stats">
+        <div class="portal-stat-card"><div class="number" th:text="${totalStagiaires}">0</div><div class="label">Stagiaires</div></div>
+        <div class="portal-stat-card"><div class="number" th:text="${totalStages}">0</div><div class="label">Stages</div></div>
+        <div class="portal-stat-card"><div class="number" th:text="${stagesTermines}">0</div><div class="label">Terminés</div></div>
+        <div class="portal-stat-card"><div class="number" th:text="${totalDocuments}">0</div><div class="label">Documents</div></div>
+    </div>
+</div>
+</body>
+</html>

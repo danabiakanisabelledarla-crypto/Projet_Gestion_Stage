@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Archives des stages</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Archives des stages</h1>
+        <span class="utilisateur-connecte">Responsable</span>
+    </div>
+
+    <div class="bloc-blanc">
+        <p th:if="${archives.isEmpty()}" style="color:#64748B; padding:20px;">
+            Aucun stage archivé pour le moment.
+        </p>
+
+        <table th:if="${!archives.isEmpty()}" class="tableau-donnees">
+            <thead>
+                <tr>
+                    <th>Stagiaire</th>
+                    <th>N° Stage</th>
+                    <th>Service</th>
+                    <th>Date de clôture</th>
+                    <th>Motif</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="archive : ${archives}">
+                    <td th:text="${archive.stage.stagiaire.utilisateur.prenom + ' ' + archive.stage.stagiaire.utilisateur.nom}">Nom</td>
+                    <td th:text="${archive.stage.numeroStage}">STG-NUM</td>
+                    <td th:text="${archive.stage.service.nom}">Service</td>
+                    <td th:text="${#temporals.format(archive.dateArchivage, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${archive.motif}">Motif</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

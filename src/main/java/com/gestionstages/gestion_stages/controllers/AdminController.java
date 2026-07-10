@@ -34,6 +34,7 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String afficherDashboard(Model model) {
+        model.addAttribute("activePage", "dashboard");
 
         long nombreDemandes = demandeStageRepository.count();
         long stagesEnCours = stageRepository.findByStatut(Stage.StatutStage.en_cours).size();
@@ -49,24 +50,28 @@ public class AdminController {
     }
     @GetMapping("/demandes")
 public String afficherDemandes(Model model) {
+    model.addAttribute("activePage", "demandes");
     model.addAttribute("demandes", demandeStageRepository.findAll());
     return "admin/demandes";
 }
 
 @GetMapping({"/stagiaires", "/stagiaire"})
 public String afficherStagiaires(Model model) {
+    model.addAttribute("activePage", "stagiaires");
     model.addAttribute("stagiaires", stagiaireRepository.findAll());
     return "admin/stagiaires";
 }
 
 @GetMapping("/encadreurs")
 public String afficherEncadreurs(Model model) {
+    model.addAttribute("activePage", "encadreurs");
     model.addAttribute("encadreurs", encadreurRepository.findAll());
     return "admin/encadreurs";
 }
 
 @GetMapping("/statistiques")
 public String afficherStatistiques(Model model) {
+    model.addAttribute("activePage", "statistiques");
     model.addAttribute("nombreDemandes", demandeStageRepository.count());
     model.addAttribute("nombreStagiaires", stagiaireRepository.count());
     model.addAttribute("nombreEncadreurs", encadreurRepository.count());

@@ -2,15 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="sidebar" class="barre-laterale">
-    <h2 class="logo-app">Stagiaire</h2>
+<div th:fragment="sidebar" class="barre-laterale portal-sidebar">
+    <div class="logo-app">DTA Alliance</div>
+    <div class="sidebar-role">Stagiaire</div>
     <nav>
-        <a th:href="@{/stagiaire/dashboard}">Tableau de bord</a>
-        <a th:href="@{/stagiaire/taches}">Mes taches</a>
-        <a th:href="@{/stagiaire/journal}">Journal</a>
-        <a th:href="@{/stagiaire/livrables}">Livrables</a>
-        <a th:href="@{/stagiaire/rapport}">Rapport final</a>
+        <a th:href="@{/stagiaire/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
+        <a th:href="@{/stagiaire/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Mon profil</a>
+        <a th:href="@{/stagiaire/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
+        <a th:href="@{/stagiaire/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Mes tâches</a>
+        <a th:href="@{/stagiaire/journal}" th:classappend="${activePage == 'journal'} ? ' actif'"><i class="fa-solid fa-book"></i> Journal</a>
+        <a th:href="@{/stagiaire/livrables}" th:classappend="${activePage == 'livrables'} ? ' actif'"><i class="fa-solid fa-file-arrow-up"></i> Livrables</a>
+        <a th:href="@{/stagiaire/rapport}" th:classappend="${activePage == 'rapport'} ? ' actif'"><i class="fa-solid fa-file-pdf"></i> Rapport final</a>
+        <a th:href="@{/stagiaire/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
     </nav>
+    <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
+    <div class="sidebar-profile-card"><div class="avatar">S</div><div class="info"><div class="name">Stagiaire</div><div class="badge-online">En ligne</div></div></div>
+    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>
 </div>
 
 </body>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Documents — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('Rechercher un document...')}"></div>
+    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
+
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Gestion documentaire</div>
+            <h1>Gestion des documents des stagiaires</h1>
+            <p>Centralisez, consultez, téléchargez et archivez les documents liés aux stages.</p>
+        </div>
+        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
+    </section>
+
+    <div class="portal-stats">
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-folder-open"></i></div><div class="number" th:text="${totalDocs}">0</div><div class="label">Documents</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-file-lines"></i></div><div class="number" th:text="${totalRapports}">0</div><div class="label">Rapports</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-shield-halved"></i></div><div class="number" th:text="${totalConventions}">0</div><div class="label">Conventions</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-box-archive"></i></div><div class="number" th:text="${totalArchives}">0</div><div class="label">Archivés</div></div>
+    </div>
+
+    <div class="portal-table-card">
+        <table class="portal-table">
+            <thead><tr><th>Document</th><th>Stagiaire</th><th>Type</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+            <tr th:each="doc : ${documents}">
+                <td>
+                    <div class="table-user-name" th:text="${doc.nomFichier}">fichier.pdf</div>
+                    <div class="table-user-id" th:text="'DOC-' + ${#strings.pad(doc.id, 3, '0')}">DOC-001</div>
+                </td>
+                <td th:text="${doc.stage != null ? doc.stage.stagiaire.utilisateur.prenom + ' ' + doc.stage.stagiaire.utilisateur.nom : '—'}">Stagiaire</td>
+                <td><span class="badge-role badge-cv" th:text="${doc.typeDocument}">type</span></td>
+                <td th:text="${#temporals.format(doc.dateDepot, 'dd/MM/yyyy')}">01/01/2026</td>
+                <td><span th:class="${doc.statut == 'archive'} ? 'badge-statut badge-archive' : 'badge-statut badge-actif'" th:text="${doc.statut}">disponible</span></td>
+                <td>
+                    <div class="table-actions">
+                        <a th:href="@{/documents/{id}(id=${doc.id})}" class="btn-action download"><i class="fa-solid fa-download"></i></a>
+                        <form th:action="@{/admin/documents/archiver/{id}(id=${doc.id})}" method="post" style="display:inline;"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action view"><i class="fa-solid fa-box-archive"></i></button></form>
+                        <form th:action="@{/admin/documents/supprimer/{id}(id=${doc.id})}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ?')"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action delete"><i class="fa-solid fa-trash"></i></button></form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

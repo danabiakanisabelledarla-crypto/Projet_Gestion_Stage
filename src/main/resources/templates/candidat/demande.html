@@ -3,29 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Deposer une candidature</title>
-    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=3)}">
     <link rel="stylesheet" th:href="@{/css/candidat.css}">
 </head>
 <body>
 
-<nav class="navbar">
-    <div class="brand">
-        <div class="brand-mark">DTA</div>
-        <div class="brand-text">
-            <strong>DTA</strong>
-            <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
-        </div>
-    </div>
-
-    <div class="nav-links">
-        <a class="nav-link active" href="/">
-            <i class="fa-solid fa-house"></i> Accueil</a>
-        <a th:href="@{/candidat/suivi}" class="nav-link">
-            <i class="fa-solid fa-binoculars"></i> Suivre ma demande
-        </a>
-        <a class="btn-login" href="/login">Connexion</a>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar-public :: navbar('demande')}"></div>
 
 <div class="page-demande">
     <h1>Deposer une candidature</h1>
@@ -348,6 +332,8 @@
         }
     });
 </script>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 </body>
 </html>

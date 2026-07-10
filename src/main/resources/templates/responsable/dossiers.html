@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Dossiers</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Documents</div><h1>Gestion des dossiers</h1><p>Tous les documents administratifs et pédagogiques.</p></div></section>
+<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Document</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody><tr th:each="d : ${documents}"><td th:text="${d.nomFichier}">doc</td><td th:text="${d.typeDocument}">type</td><td th:text="${#temporals.format(d.dateDepot,'dd/MM/yyyy')}">date</td>
+<td><a th:href="@{/documents/{id}(id=${d.id})}" class="btn-action download"><i class="fa-solid fa-download"></i></a></td></tr></tbody></table></div>
+</div></body></html>

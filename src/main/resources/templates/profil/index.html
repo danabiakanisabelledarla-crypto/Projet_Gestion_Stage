@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon profil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/sidebar-admin :: sidebar}" th:if="${utilisateur.role.libelle == 'ADMINISTRATEUR'}"></div>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}" th:if="${utilisateur.role.libelle == 'RESPONSABLE_STAGE'}"></div>
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}" th:if="${utilisateur.role.libelle == 'ENCADREUR'}"></div>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}" th:if="${utilisateur.role.libelle == 'STAGIAIRE'}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Mon profil</h1>
+        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Utilisateur</span>
+    </div>
+
+    <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+
+    <div class="bloc-module">
+        <div class="profil-header">
+            <div class="profil-avatar">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+                <h2 th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Nom</h2>
+                <p class="profil-role" th:text="${utilisateur.role.libelle}">Rôle</p>
+                <p class="profil-email" th:text="${utilisateur.email}">email</p>
+            </div>
+        </div>
+
+        <form th:action="@{/profil/modifier}" method="post" style="margin-top:24px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Prénom</label>
+                <input type="text" name="prenom" th:value="${utilisateur.prenom}" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Nom</label>
+                <input type="text" name="nom" th:value="${utilisateur.nom}" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Email</label>
+                <input type="email" th:value="${utilisateur.email}" disabled>
+            </div>
+            <div class="groupe-champ">
+                <label>Téléphone</label>
+                <input type="tel" name="telephone" th:value="${utilisateur.telephone}" placeholder="+237 ...">
+            </div>
+            <button type="submit" class="bouton-principal">Enregistrer les modifications</button>
+        </form>
+
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid #e2e8f0;">
+            <a th:href="@{/profil/mot-de-passe}" class="lien-action">
+                <i class="fa-solid fa-key"></i> Changer le mot de passe
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

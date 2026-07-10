@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('Rechercher une notification...')}"></div>
+    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
+
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Centre de notifications</div>
+            <h1>Envoyer et gérer les notifications</h1>
+            <p>Diffusez des notifications aux stagiaires, responsables et encadreurs.</p>
+        </div>
+        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
+    </section>
+
+    <div class="portal-stats">
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-bell"></i></div><div class="number" th:text="${totalNotif}">0</div><div class="label">Envoyées</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-graduate"></i></div><div class="number" th:text="${totalStag}">0</div><div class="label">Stagiaires</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-tie"></i></div><div class="number" th:text="${totalResp}">0</div><div class="label">Responsables</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number" th:text="${totalEnc}">0</div><div class="label">Encadreurs</div></div>
+    </div>
+
+    <div class="portal-two-col">
+        <div class="portal-card">
+            <h3><i class="fa-solid fa-paper-plane"></i> Nouvelle notification</h3>
+            <form th:action="@{/admin/notifications/envoyer}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="form-group"><label>Destinataires</label>
+                    <select name="destinataireType" required>
+                        <option value="Tous les stagiaires">Tous les stagiaires</option>
+                        <option value="Tous les responsables">Tous les responsables</option>
+                        <option value="Tous les encadreurs">Tous les encadreurs</option>
+                        <option value="Tous les administrateurs">Tous les administrateurs</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Objet</label><input type="text" name="objet" required placeholder="Objet de la notification"></div>
+                <div class="form-group"><label>Message</label><textarea name="message" rows="5" required placeholder="Rédigez votre message..."></textarea></div>
+                <div class="form-group"><label>Priorité</label>
+                    <select name="priorite"><option value="normale">Normale</option><option value="importante">Importante</option><option value="urgente">Urgente</option></select>
+                </div>
+                <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
+            </form>
+        </div>
+        <div class="portal-card">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Historique récent</h3>
+            <div th:each="n : ${notifications}" class="notif-history-item">
+                <div class="table-user-name" th:text="${n.objet}">Titre</div>
+                <div style="font-size:12px;color:#64748B;margin:6px 0;" th:text="${n.destinataireType}">Destinataires</div>
+                <div style="font-size:11px;color:#94A3B8;" th:text="${#temporals.format(n.dateEnvoi, 'dd/MM/yyyy HH:mm')}">Date</div>
+                <span th:if="${n.priorite == 'urgente'}" class="badge-statut badge-inactif" style="margin-top:6px;">URGENT</span>
+            </div>
+            <p th:if="${notifications.isEmpty()}" style="color:#94A3B8;">Aucune notification envoyée.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -3,25 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Suivre ma demande</title>
-    <link rel="stylesheet" th:href="@{/css/accueil.css(v=2)}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=3)}">
     <link rel="stylesheet" th:href="@{/css/suivi.css}">
 </head>
 <body>
 
-<nav class="navbar">
-    <div class="brand">
-        <div class="brand-mark">DTA</div>
-        <div class="brand-text">
-            <strong>DTA</strong>
-            <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
-        </div>
-    </div>
-    <div class="nav-links">
-        <a href="/" class="nav-link active"><i class="fa-solid fa-house"></i>Accueil</a>
-        <a href="/candidat/demande" class="nav-link"><i class="fa-solid fa-file-signature"></i>Déposer une candidature</a>
-        <a href="/login" class="btn-login"><i class="fa-solid fa-user"></i>Connexion</a>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar-public :: navbar('suivi')}"></div>
 
 <div class="conteneur-suivi">
 
@@ -103,6 +91,8 @@
     </div>
 
 </div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 </body>
 </html>

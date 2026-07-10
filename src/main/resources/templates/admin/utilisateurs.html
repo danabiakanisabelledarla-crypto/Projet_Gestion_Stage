@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Utilisateurs — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('Rechercher un utilisateur...')}"></div>
+    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
+
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Gestion des utilisateurs</div>
+            <h1>Gestion des comptes utilisateurs</h1>
+            <p>Ajoutez, modifiez et gérez les comptes des administrateurs, responsables, encadreurs et stagiaires.</p>
+            <div class="portal-hero-btns">
+                <button class="btn-hero-primary" onclick="openModal('modal-add')"><i class="fa-solid fa-plus"></i> Ajouter un utilisateur</button>
+                <a href="#" class="btn-hero-outline"><i class="fa-solid fa-download"></i> Exporter</a>
+            </div>
+        </div>
+        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
+    </section>
+
+    <div class="portal-stats">
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-users"></i></div><div class="number" th:text="${totalUsers}">0</div><div class="label">Utilisateurs</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-shield"></i></div><div class="number" th:text="${totalAdmin}">0</div><div class="label">Administrateurs</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-tie"></i></div><div class="number" th:text="${totalResp}">0</div><div class="label">Responsables</div></div>
+        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-graduate"></i></div><div class="number" th:text="${totalStag}">0</div><div class="label">Stagiaires</div></div>
+    </div>
+
+    <div class="portal-table-card">
+        <table class="portal-table">
+            <thead><tr><th>Photo</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${utilisateurs}">
+                <td><div class="table-avatar" th:text="${#strings.substring(u.prenom,0,1) + #strings.substring(u.nom,0,1)}">AB</div></td>
+                <td><div class="table-user-name" th:text="${u.prenom + ' ' + u.nom}">Nom</div><div class="table-user-id" th:text="'ADM-' + ${#strings.pad(u.id, 3, '0')}">ADM-001</div></td>
+                <td th:text="${u.email}" style="color:#64748B;">email</td>
+                <td>
+                    <span th:class="${u.role.libelle == 'ADMINISTRATEUR'} ? 'badge-role badge-admin' : (${u.role.libelle == 'RESPONSABLE_STAGE'} ? 'badge-role badge-responsable' : (${u.role.libelle == 'ENCADREUR'} ? 'badge-role badge-encadreur' : 'badge-role badge-stagiaire'))" th:text="${u.role.libelle}">Role</span>
+                </td>
+                <td><span th:class="${u.statut.name() == 'actif'} ? 'badge-statut badge-actif' : 'badge-statut badge-inactif'" th:text="${u.statut}">actif</span></td>
+                <td>
+                    <div class="table-actions">
+                        <button type="button" class="btn-action edit" th:onclick="'openEdit(' + ${u.id} + ')'"><i class="fa-solid fa-pen"></i></button>
+                        <form th:action="@{/admin/utilisateurs/reinitialiser/{id}(id=${u.id})}" method="post" style="display:inline;"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action key"><i class="fa-solid fa-key"></i></button></form>
+                        <form th:if="${u.statut.name() == 'actif'}" th:action="@{/admin/utilisateurs/desactiver/{id}(id=${u.id})}" method="post" style="display:inline;"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action disable"><i class="fa-solid fa-ban"></i></button></form>
+                        <form th:if="${u.statut.name() != 'actif'}" th:action="@{/admin/utilisateurs/reactiver/{id}(id=${u.id})}" method="post" style="display:inline;"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action view"><i class="fa-solid fa-check"></i></button></form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="portal-pagination"><span class="active">1</span><a href="#">2</a><a href="#">3</a></div>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Ajouter un utilisateur</h3>
+        <form th:action="@{/admin/utilisateurs/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-group"><label>Prénom</label><input type="text" name="prenom" required></div>
+            <div class="form-group"><label>Nom</label><input type="text" name="nom" required></div>
+            <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+            <div class="form-group"><label>Rôle</label><select name="roleLibelle" required><option th:each="r : ${roles}" th:value="${r.libelle}" th:text="${r.libelle}"></option></select></div>
+            <div class="form-group"><label>Mot de passe</label><input type="password" name="motDePasse" required minlength="6"></div>
+            <div class="modal-actions"><button type="button" class="btn-portal-secondary" onclick="closeModal('modal-add')">Annuler</button><button type="submit" class="btn-portal-primary">Enregistrer</button></div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Modifier l'utilisateur</h3>
+        <form id="edit-form" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-group"><label>Prénom</label><input type="text" name="prenom" id="edit-prenom" required></div>
+            <div class="form-group"><label>Nom</label><input type="text" name="nom" id="edit-nom" required></div>
+            <div class="form-group"><label>Rôle</label><select name="roleLibelle" id="edit-role" required><option th:each="r : ${roles}" th:value="${r.libelle}" th:text="${r.libelle}"></option></select></div>
+            <div class="modal-actions"><button type="button" class="btn-portal-secondary" onclick="closeModal('modal-edit')">Annuler</button><button type="submit" class="btn-portal-primary">Enregistrer</button></div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const users = /*[[${utilisateurs}]]*/ [];
+    function openModal(id){ document.getElementById(id).classList.add('open'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+    function openEdit(id){
+        const u = users.find(x => x.id === id);
+        if(!u) return;
+        document.getElementById('edit-form').action = '/admin/utilisateurs/modifier/' + id;
+        document.getElementById('edit-prenom').value = u.prenom;
+        document.getElementById('edit-nom').value = u.nom;
+        document.getElementById('edit-role').value = u.role.libelle;
+        openModal('modal-edit');
+    }
+</script>
+</body>
+</html>

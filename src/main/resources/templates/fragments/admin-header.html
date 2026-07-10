@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header th:fragment="header(searchPlaceholder)" class="portal-header">
+    <div class="portal-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" th:placeholder="${searchPlaceholder != null ? searchPlaceholder : 'Rechercher...'}">
+    </div>
+    <div class="portal-header-right">
+        <button class="btn-notif-portal" type="button">
+            <i class="fa-solid fa-bell"></i>
+            <span class="badge">3</span>
+        </button>
+        <div class="portal-avatar-header">
+            <div class="av">A</div>
+            <div class="meta">
+                <div class="name">Administrateur</div>
+                <div class="role">Super Admin</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>

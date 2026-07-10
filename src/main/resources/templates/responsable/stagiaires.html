@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Stagiaires</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Gestion</div><h1>Stagiaires</h1><p>Consultez et suivez tous les stagiaires admis.</p></div></section>
+<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Matricule</th><th>Nom</th><th>École</th><th>Statut</th></tr></thead>
+<tbody><tr th:each="s : ${stagiaires}"><td th:text="${s.matricule}">STG</td><td th:text="${s.utilisateur.prenom + ' ' + s.utilisateur.nom}">Nom</td><td th:text="${s.demandeStage.ecole}">Ecole</td><td><span class="badge-statut badge-actif" th:text="${s.statut}">actif</span></td></tr></tbody></table></div>
+</div></body></html>

@@ -14,28 +14,57 @@
         <span class="utilisateur-connecte">Stagiaire</span>
     </div>
 
+    <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+
     <div th:if="${stage == null}" class="bloc-module">
-        <p style="color:#777;">Vous n'avez pas encore de stage affecte.</p>
+        <p style="color:#777;">Vous n'avez pas encore de stage affecté.</p>
     </div>
 
-    <div th:if="${stage != null}" class="bloc-module">
-        <h2>Deposer votre rapport final</h2>
-        <p style="color:#777; margin-bottom:20px; font-size:14px;">
-            Deposez votre rapport final en PDF une fois votre stage termine.
-        </p>
-        <form th:action="@{/stagiaire/rapport/deposer}" method="post"
-              enctype="multipart/form-data">
-            <div class="groupe-champ">
-                <label>Titre du rapport</label>
-                <input type="text" name="titre"
-                       placeholder="Ex: Rapport de stage - Gestion des stages" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Fichier (PDF)</label>
-                <input type="file" name="fichier" accept=".pdf" required>
-            </div>
-            <button type="submit" class="bouton-principal">Deposer le rapport</button>
-        </form>
+    <div th:if="${stage != null}">
+        <div th:if="${rapports != null and !rapports.isEmpty()}" class="bloc-module" style="margin-bottom:20px;">
+            <h2>Rapports déposés</h2>
+            <table class="tableau-donnees" style="width:100%; margin-top:12px;">
+                <thead>
+                    <tr>
+                        <th>Fichier</th>
+                        <th>Date de dépôt</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="doc : ${rapports}">
+                        <td th:text="${doc.nomFichier}">rapport.pdf</td>
+                        <td th:text="${#temporals.format(doc.dateDepot, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                        <td>
+                            <a th:href="@{/documents/{id}(id=${doc.id})}" class="lien-action">
+                                <i class="fa-solid fa-download"></i> Télécharger
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bloc-module">
+            <h2>Déposer votre rapport final</h2>
+            <p style="color:#777; margin-bottom:20px; font-size:14px;">
+                Déposez votre rapport final en PDF une fois votre stage terminé.
+            </p>
+            <form th:action="@{/stagiaire/rapport/deposer}" method="post"
+                  enctype="multipart/form-data">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="groupe-champ">
+                    <label>Titre du rapport</label>
+                    <input type="text" name="titre"
+                           placeholder="Ex: Rapport de stage - Gestion des stages" required>
+                </div>
+                <div class="groupe-champ">
+                    <label>Fichier (PDF)</label>
+                    <input type="file" name="fichier" accept=".pdf" required>
+                </div>
+                <button type="submit" class="bouton-principal">Déposer le rapport</button>
+            </form>
+        </div>
     </div>
 </div>
 </body>

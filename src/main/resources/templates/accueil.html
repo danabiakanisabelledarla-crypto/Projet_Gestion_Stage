@@ -2,31 +2,17 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Plateforme de Gestion des Stages</title>
+    <title>Plateforme de Gestion des Stages — DTA Alliance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plateforme de gestion et de suivi des stages — DTA Alliance">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/accueil.css(v=2)}">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=3)}">
 </head>
 <body>
 
-    <nav class="navbar">
-        <div th:if="${messageSucces}" class="alert-success" th:text="${messageSucces}"></div>
-        <div class="brand">
-            <div class="brand-mark">DTA</div>
-            <div class="brand-text">
-                <strong>DTA</strong>
-                <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
-            </div>
-        </div>
+    <div th:if="${messageSucces}" class="alert-success banner-alert" th:text="${messageSucces}"></div>
 
-        <div class="nav-links">
-            <a class="nav-link active" th:href="@{/}"><i class="fa-solid fa-house"></i> Accueil </a>
-            <a class="nav-link" th:href="@{/candidat/demande}"><i class="fa-solid fa-file-signature"></i> Déposer une candidature</a>
-            <a class="nav-link" th:href="@{/candidat/suivi}"><i class="fa-solid fa-chart-line"></i> Suivre ma demande</a>
-        </div>
-
-        <a class="btn-login" th:href="@{/login}">Connexion</a>
-    </nav>
+    <div th:replace="~{fragments/navbar-public :: navbar('accueil')}"></div>
 
     <section class="hero">
         <div class="hero-content">
@@ -38,13 +24,13 @@
             </h1>
 
             <p class="hero-text">
-                Déposez votre candidature, suivez l’état de votre dossier et réalisez votre stage
+                Déposez votre candidature, suivez l'état de votre dossier et réalisez votre stage
                 dans un environnement clair, sécurisé et structuré.
             </p>
 
             <div class="hero-actions">
-                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer</a>
-                <a class="btn-outline" th:href="@{/candidat/suivi}">Suivre</a>
+                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer une candidature</a>
+                <a class="btn-outline" th:href="@{/candidat/suivi}">Suivre ma demande</a>
             </div>
         </div>
 
@@ -56,7 +42,7 @@
             <div class="floating-icon icon-cloud"><i class="fa-solid fa-cloud"></i></div>
             <div class="floating-icon icon-lock"><i class="fa-solid fa-shield-halved"></i></div>
 
-            <img th:src="@{/images/hero-team.png.png}" alt="Équipe et stage">
+            <img th:src="@{/images/stage-hero.png}" alt="Équipe et stage professionnel">
         </div>
     </section>
 
@@ -109,7 +95,7 @@
             <div class="adv-item">
                 <div class="adv-icon"><i class="fa-solid fa-chart-column"></i></div>
                 <h3>Suivi transparent</h3>
-                <p>Vous voyez l’avancement de votre demande à tout moment.</p>
+                <p>Vous voyez l'avancement de votre demande à tout moment.</p>
             </div>
 
             <div class="adv-item">
@@ -126,30 +112,18 @@
         </div>
     </section>
 
-    <footer class="footer">
-        <div class="footer-col">
-            <h4>DTA Alliance</h4>
-            <p>DTA Alliance oeuvre pour la transformation numérique, l'innovation et le dévéloppement des compétences afin de préparer les talents de demain.</p>
+    <section class="cta-section">
+        <div class="cta-card">
+            <h2>Prêt à commencer votre stage ?</h2>
+            <p>Rejoignez DTA Alliance et développez vos compétences dans un environnement professionnel.</p>
+            <div class="cta-actions">
+                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer ma candidature</a>
+                <a class="btn-outline-light" th:href="@{/a-propos}">En savoir plus</a>
+            </div>
         </div>
+    </section>
 
-        <div class="footer-col">
-            <h4>À propos</h4>
-            <p>Qui sommes-nous ?</p>
-            <p>Notre mission</p>
-            <p>Nos domaines d'action</p>
-            <p>Nos partenaires</p>
-        </div>
-
-        <div class="footer-col">
-            <h4>Liens utiles</h4>
-            <p>Accueil<br>Déposer une candidature<br>Suivre ma demande</p>
-        </div>
-
-        <div class="footer-col">
-            <h4>Contactez-nous</h4>
-            <p><i class="fa-solid fa-location-dot footer-icon"></i> Yaoundé<br><i class="fa-solid fa-phone footer-icon"></i> +237 222 222 222<br><i class="fa-solid fa-envelope footer-icon"></i> contact@dta-alliance.com</p>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
 </body>
 </html>

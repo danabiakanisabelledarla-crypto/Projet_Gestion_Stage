@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Journal — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('Rechercher une activité...')}"></div>
+    <section class="portal-hero">
+        <div class="portal-hero-text">
+            <div class="portal-hero-eyebrow">Journal d'activités</div>
+            <h1>Historique des actions</h1>
+            <p>Toutes les actions importantes de la plateforme sont enregistrées ici.</p>
+        </div>
+    </section>
+    <div class="portal-card">
+        <div th:each="a : ${activites}" class="activity-item">
+            <div class="activity-time" th:text="${#temporals.format(a.dateActivite, 'HH:mm')}">09:40</div>
+            <div class="activity-text">
+                <strong th:text="${a.action}">Action</strong>
+                <span th:text="${a.details + ' — ' + a.utilisateurNom}">Détails</span>
+            </div>
+        </div>
+        <p th:if="${activites.isEmpty()}" style="color:#94A3B8;padding:20px;">Aucune activité enregistrée.</p>
+    </div>
+</div>
+</body>
+</html>

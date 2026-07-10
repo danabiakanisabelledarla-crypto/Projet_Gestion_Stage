@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar-user" class="sidebar-user">
+    <a th:href="@{/profil}" class="sidebar-user-link">
+        <i class="fa-solid fa-user"></i> Mon profil
+    </a>
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="btn-logout">
+            <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+        </button>
+    </form>
+</div>
+
+</body>
+</html>

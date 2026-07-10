@@ -31,6 +31,9 @@ public class Document {
     @Column(name = "date_depot", nullable = false, updatable = false)
     private LocalDateTime dateDepot = LocalDateTime.now();
 
+    @Column(length = 30)
+    private String statut = "disponible";
+
     // Constructeurs
     public Document() {
     }
@@ -96,5 +99,13 @@ public class Document {
 
     public void setDateDepot(LocalDateTime dateDepot) {
         this.dateDepot = dateDepot;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 }

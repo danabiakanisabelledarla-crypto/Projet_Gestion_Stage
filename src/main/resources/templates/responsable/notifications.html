@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Notifications</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Alertes</div><h1>Notifications</h1></div></section>
+<div class="portal-card"><div class="activity-item"><div class="activity-time">09:40</div><div class="activity-text"><strong>Nouvelle candidature reçue</strong><span>Il y a 2 heures</span></div></div>
+<div class="activity-item"><div class="activity-time">09:43</div><div class="activity-text"><strong>Nouveau rapport déposé</strong><span>Il y a 1 heure</span></div></div>
+<div class="activity-item"><div class="activity-time">09:50</div><div class="activity-text"><strong>Stage terminé</strong><span>Aujourd'hui</span></div></div></div>
+</div></body></html>

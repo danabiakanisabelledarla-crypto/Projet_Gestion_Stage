@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sécurité — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+</head>
+<body class="portal-body">
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<div class="contenu-principal portal-main">
+    <div th:replace="~{fragments/admin-header :: header('')}"></div>
+    <section class="portal-hero" style="min-height:160px;">
+        <div class="portal-hero-text"><div class="portal-hero-eyebrow">Sécurité</div><h1>Gestion de la sécurité</h1><p>Rôles, permissions et sessions actives.</p></div>
+    </section>
+    <div class="portal-table-card">
+        <h3 style="margin-bottom:16px;">Rôles et permissions</h3>
+        <table class="portal-table">
+            <thead><tr><th>Rôle</th><th>Description</th><th>Utilisateurs</th></tr></thead>
+            <tbody>
+            <tr th:each="r : ${roles}">
+                <td><span class="badge-role badge-admin" th:text="${r.libelle}">Role</span></td>
+                <td th:text="${r.description}">Description</td>
+                <td th:text="${#lists.size(utilisateurs.?[role.libelle == __${r.libelle}__])}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="portal-card" style="margin-top:24px;">
+        <h3><i class="fa-solid fa-shield-halved"></i> Sessions actives</h3>
+        <p style="color:#64748B;margin-top:12px;">Authentification sécurisée par rôle. Les sessions expirent après inactivité.</p>
+        <div class="activity-item"><div class="activity-time">Actif</div><div class="activity-text"><strong>Session administrateur</strong><span>Connexion sécurisée SSL — Yaoundé</span></div></div>
+    </div>
+</div>
+</body>
+</html>

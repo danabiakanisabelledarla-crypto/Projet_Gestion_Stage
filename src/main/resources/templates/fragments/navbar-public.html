@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="navbar(activePage)" class="navbar">
+    <div class="brand">
+        <div class="brand-mark">DTA</div>
+        <div class="brand-text">
+            <strong>DTA</strong>
+            <span>DIGITAL<br>TRANSFORMATION<br>ALLIANCE</span>
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a class="nav-link" th:classappend="${activePage == 'accueil'} ? ' active'" th:href="@{/}">
+            <i class="fa-solid fa-house"></i> Accueil
+        </a>
+        <a class="nav-link" th:classappend="${activePage == 'a-propos'} ? ' active'" th:href="@{/a-propos}">
+            <i class="fa-solid fa-building"></i> À propos
+        </a>
+        <a class="nav-link" th:classappend="${activePage == 'demande'} ? ' active'" th:href="@{/candidat/demande}">
+            <i class="fa-solid fa-file-signature"></i> Candidature
+        </a>
+        <a class="nav-link" th:classappend="${activePage == 'suivi'} ? ' active'" th:href="@{/candidat/suivi}">
+            <i class="fa-solid fa-chart-line"></i> Suivi
+        </a>
+        <a class="nav-link" th:classappend="${activePage == 'contact'} ? ' active'" th:href="@{/contact}">
+            <i class="fa-solid fa-envelope"></i> Contact
+        </a>
+    </div>
+
+    <a class="btn-login" th:href="@{/login}">Connexion</a>
+</nav>
+
+</body>
+</html>

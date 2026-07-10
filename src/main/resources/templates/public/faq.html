@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>FAQ — DTA Alliance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar-public :: navbar('faq')}"></div>
+
+<section class="page-hero">
+    <h1>Questions fréquentes</h1>
+    <p>Trouvez rapidement les réponses aux questions les plus courantes sur notre plateforme de stages.</p>
+</section>
+
+<div class="page-content">
+    <div class="content-card">
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                Comment déposer une candidature ?</h3>
+            <p>Rendez-vous sur la page « Déposer une candidature », remplissez le formulaire avec vos informations
+            académiques et joignez votre CV et lettre de motivation au format PDF.</p>
+        </div>
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                Comment suivre l'état de ma demande ?</h3>
+            <p>Utilisez la page « Suivre ma demande » en saisissant l'adresse email utilisée lors de votre candidature.
+            Vous verrez le statut actuel : en attente, acceptée ou refusée.</p>
+        </div>
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                Quels documents dois-je fournir ?</h3>
+            <p>Un CV à jour et une lettre de motivation sont obligatoires. Les fichiers doivent être au format PDF
+            et ne pas dépasser 5 Mo chacun.</p>
+        </div>
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                Combien de temps dure le traitement ?</h3>
+            <p>Le délai moyen de traitement est de 5 à 10 jours ouvrés. Vous recevrez un email de confirmation
+            en cas d'admission avec vos identifiants de connexion.</p>
+        </div>
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                Que se passe-t-il après mon admission ?</h3>
+            <p>Vous recevez un compte stagiaire, êtes affecté à un encadreur et un service, puis vous accédez
+            à votre espace pour gérer vos tâches, journal de bord, livrables et rapport final.</p>
+        </div>
+        <div class="faq-item">
+            <h3><i class="fa-solid fa-circle-question" style="color:#2563EB;margin-right:8px;"></i>
+                J'ai oublié mon mot de passe, que faire ?</h3>
+            <p>Connectez-vous à votre espace et accédez à « Mon profil » puis « Changer le mot de passe ».
+            Pour toute autre difficulté, contactez-nous via le formulaire de contact.</p>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

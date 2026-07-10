@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer th:fragment="footer" class="footer">
+    <div class="footer-col">
+        <h4>DTA Alliance</h4>
+        <p>DTA Alliance œuvre pour la transformation numérique, l'innovation et le développement des compétences afin de préparer les talents de demain.</p>
+    </div>
+
+    <div class="footer-col">
+        <h4>À propos</h4>
+        <p><a th:href="@{/a-propos}">Qui sommes-nous ?</a></p>
+        <p><a th:href="@{/a-propos}">Notre mission</a></p>
+        <p><a th:href="@{/a-propos}">Nos domaines d'action</a></p>
+        <p><a th:href="@{/faq}">FAQ</a></p>
+    </div>
+
+    <div class="footer-col">
+        <h4>Liens utiles</h4>
+        <p><a th:href="@{/}">Accueil</a></p>
+        <p><a th:href="@{/candidat/demande}">Déposer une candidature</a></p>
+        <p><a th:href="@{/candidat/suivi}">Suivre ma demande</a></p>
+        <p><a th:href="@{/login}">Connexion</a></p>
+    </div>
+
+    <div class="footer-col">
+        <h4>Contact &amp; Légal</h4>
+        <p><i class="fa-solid fa-location-dot footer-icon"></i> Yaoundé, Cameroun</p>
+        <p><i class="fa-solid fa-phone footer-icon"></i> +237 222 222 222</p>
+        <p><i class="fa-solid fa-envelope footer-icon"></i> contact@dta-alliance.com</p>
+        <p style="margin-top:12px;">
+            <a th:href="@{/mentions-legales}">Mentions légales</a> ·
+            <a th:href="@{/confidentialite}">Confidentialité</a>
+        </p>
+    </div>
+
+    <div class="footer-bottom">
+        <span>© 2026 DTA Alliance — Plateforme de Gestion des Stages</span>
+    </div>
+</footer>
+
+</body>
+</html>

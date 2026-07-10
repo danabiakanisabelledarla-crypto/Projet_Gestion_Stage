@@ -16,35 +16,42 @@ public class DataInitializer implements CommandLineRunner {
     private final EncadreurRepository encadreurRepository;
     private final ServiceEntrepriseRepository serviceRepository;
     private final ProjetRepository projetRepository;
-   private final CritereEvaluationRepository critereRepository;
+    private final CritereEvaluationRepository critereRepository;
+    private final DemandeStageRepository demandeStageRepository;
+    private final StagiaireRepository stagiaireRepository;
+    private final StageRepository stageRepository;
     private final PasswordEncoder passwordEncoder;
 
-   public DataInitializer(RoleRepository roleRepository,
-                        UtilisateurRepository utilisateurRepository,
-                        EncadreurRepository encadreurRepository,
-                        ServiceEntrepriseRepository serviceRepository,
-                        ProjetRepository projetRepository,
-                        CritereEvaluationRepository critereRepository,
-                        PasswordEncoder passwordEncoder) {
-    this.roleRepository = roleRepository;
-    this.utilisateurRepository = utilisateurRepository;
-    this.encadreurRepository = encadreurRepository;
-    this.serviceRepository = serviceRepository;
-    this.projetRepository = projetRepository;
-    this.critereRepository = critereRepository;
-    this.passwordEncoder = passwordEncoder;
-}
+    public DataInitializer(RoleRepository roleRepository,
+                           UtilisateurRepository utilisateurRepository,
+                           EncadreurRepository encadreurRepository,
+                           ServiceEntrepriseRepository serviceRepository,
+                           ProjetRepository projetRepository,
+                           CritereEvaluationRepository critereRepository,
+                           DemandeStageRepository demandeStageRepository,
+                           StagiaireRepository stagiaireRepository,
+                           StageRepository stageRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.roleRepository = roleRepository;
+        this.utilisateurRepository = utilisateurRepository;
+        this.encadreurRepository = encadreurRepository;
+        this.serviceRepository = serviceRepository;
+        this.projetRepository = projetRepository;
+        this.critereRepository = critereRepository;
+        this.demandeStageRepository = demandeStageRepository;
+        this.stagiaireRepository = stagiaireRepository;
+        this.stageRepository = stageRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void run(String... args) {
 
-        // 1. Roles
         creerRoleSiAbsent("ADMINISTRATEUR", "Administrateur de la plateforme");
         creerRoleSiAbsent("RESPONSABLE_STAGE", "Responsable des stages");
         creerRoleSiAbsent("ENCADREUR", "Encadreur de stagiaires");
         creerRoleSiAbsent("STAGIAIRE", "Stagiaire");
 
-        // 2. Utilisateurs de test
         creerUtilisateurSiAbsent("ADMINISTRATEUR", "Admin", "Test",
                 "admin@gestion-stages.com", "admin1234");
         creerUtilisateurSiAbsent("RESPONSABLE_STAGE", "Responsable", "Test",
@@ -54,10 +61,10 @@ public class DataInitializer implements CommandLineRunner {
                 "ENCADREUR", "Nikoa", "M",
                 "encadreur@gestion-stages.com", "enc1234");
 
-        creerUtilisateurSiAbsent("STAGIAIRE", "Mebale", "Darla",
+        Utilisateur utilisateurStagiaire = creerUtilisateurSiAbsent(
+                "STAGIAIRE", "Mebale", "Darla",
                 "stagiaire@gestion-stages.com", "stag1234");
 
-        // 3. Fiche encadreur
         if (utilisateurEncadreur != null &&
                 encadreurRepository.findByUtilisateurId(utilisateurEncadreur.getId()).isEmpty()) {
             Encadreur encadreur = new Encadreur(utilisateurEncadreur,
@@ -67,7 +74,6 @@ public class DataInitializer implements CommandLineRunner {
                     + utilisateurEncadreur.getEmail());
         }
 
-        // 4. Services
         creerServiceSiAbsent("Developpement logiciel",
                 "Service en charge du developpement des applications");
         creerServiceSiAbsent("Infrastructure",
@@ -75,22 +81,70 @@ public class DataInitializer implements CommandLineRunner {
         creerServiceSiAbsent("Data et Intelligence Artificielle",
                 "Service en charge des donnees et modeles IA");
 
-        // 5. Projets
         creerProjetSiAbsent("Plateforme de gestion des stages",
                 "Developpement d'une plateforme web de suivi des stages",
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
         creerProjetSiAbsent("Application mobile RH",
                 "Developpement d'une app mobile pour la gestion RH",
                 LocalDate.of(2026, 3, 1), LocalDate.of(2026, 9, 30));
-        // 6. Criteres d'evaluation
+
         creerCritereSiAbsent("Technique", "Maitrise des outils et technologies");
         creerCritereSiAbsent("Autonomie", "Capacite a travailler de facon independante");
         creerCritereSiAbsent("Communication", "Qualite de la communication orale et ecrite");
         creerCritereSiAbsent("Ponctualite", "Respect des horaires et des delais");
-        creerCritereSiAbsent("Initiative", "Prise d initiative et propositions");        
+        creerCritereSiAbsent("Initiative", "Prise d initiative et propositions");
+
+        creerStageDemo(utilisateurStagiaire, utilisateurEncadreur);
     }
 
-   
+    private void creerStageDemo(Utilisateur utilisateurStagiaire, Utilisateur utilisateurEncadreur) {
+        if (utilisateurStagiaire == null || utilisateurEncadreur == null) return;
+
+        try {
+            var stagiaireExistant = stagiaireRepository.findByUtilisateurId(utilisateurStagiaire.getId());
+            if (stagiaireExistant.isPresent()) {
+                if (stageRepository.findByStagiaireId(stagiaireExistant.get().getId()).isEmpty()) {
+                    creerStagePourStagiaire(stagiaireExistant.get(), utilisateurEncadreur);
+                }
+                return;
+            }
+
+            String matricule = "STG-DEMO-" + utilisateurStagiaire.getId();
+            if (stagiaireRepository.findByMatricule(matricule).isPresent()) return;
+
+            DemandeStage demande = new DemandeStage("Mebale", "Darla",
+                    "Universite de Yaounde I", "Informatique", "Licence 3", "3 mois");
+            demande.setStatut(DemandeStage.StatutDemande.acceptee);
+            demande.setCommentaire("Email candidat : stagiaire@gestion-stages.com");
+            demandeStageRepository.save(demande);
+
+            Stagiaire stagiaire = new Stagiaire(utilisateurStagiaire, demande,
+                    matricule, LocalDate.now().minusMonths(1));
+            stagiaireRepository.save(stagiaire);
+            creerStagePourStagiaire(stagiaire, utilisateurEncadreur);
+        } catch (Exception e) {
+            System.err.println(">>> Impossible de creer le stage demo : " + e.getMessage());
+        }
+    }
+
+    private void creerStagePourStagiaire(Stagiaire stagiaire, Utilisateur utilisateurEncadreur) {
+        var encadreurOpt = encadreurRepository.findByUtilisateurId(utilisateurEncadreur.getId());
+        var serviceOpt = serviceRepository.findAll().stream().findFirst();
+        var projetOpt = projetRepository.findAll().stream().findFirst();
+
+        if (encadreurOpt.isEmpty() || serviceOpt.isEmpty()) return;
+
+        String numeroStage = "STG-NUM-DEMO-" + stagiaire.getId();
+        Stage stage = new Stage(stagiaire, encadreurOpt.get(), serviceOpt.get(),
+                numeroStage,
+                LocalDate.now().minusMonths(1),
+                LocalDate.now().plusMonths(2),
+                "90 jours");
+        projetOpt.ifPresent(stage::setProjet);
+        stageRepository.save(stage);
+        System.out.println(">>> Stage demo cree pour : stagiaire@gestion-stages.com");
+    }
+
     private void creerRoleSiAbsent(String libelle, String description) {
         if (roleRepository.findByLibelle(libelle).isEmpty()) {
             roleRepository.save(new Role(libelle, description));

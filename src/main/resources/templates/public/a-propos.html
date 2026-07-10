@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>À propos — DTA Alliance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/accueil.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar-public :: navbar('a-propos')}"></div>
+
+<section class="page-hero">
+    <h1>À propos de DTA Alliance</h1>
+    <p>Découvrez notre mission, nos valeurs et notre engagement pour la transformation numérique en Afrique.</p>
+</section>
+
+<div class="page-content">
+    <div class="content-card">
+        <h2>Qui sommes-nous ?</h2>
+        <p>
+            <strong>DTA Alliance</strong> (Digital Transformation Alliance) est une organisation dédiée à
+            l'accompagnement des talents numériques et à la modernisation des processus organisationnels.
+            Nous offrons un cadre structuré pour les stages professionnels, permettant aux étudiants
+            de développer leurs compétences dans un environnement innovant.
+        </p>
+        <p>
+            Notre plateforme de gestion des stages centralise l'ensemble du cycle de vie d'un stage :
+            de la candidature à l'archivage, en passant par l'encadrement, le suivi des tâches et l'évaluation.
+        </p>
+    </div>
+
+    <div class="grid-2">
+        <div class="content-card">
+            <h2>Notre mission</h2>
+            <p>Former la prochaine génération de professionnels du numérique en offrant :</p>
+            <ul>
+                <li>Des stages encadrés par des experts du domaine</li>
+                <li>Un suivi transparent et structuré des parcours</li>
+                <li>Des projets concrets à fort impact</li>
+                <li>Un environnement propice à l'innovation</li>
+            </ul>
+        </div>
+        <div class="content-card">
+            <h2>Nos domaines d'action</h2>
+            <div class="info-box" style="margin-bottom:12px;">
+                <h3><i class="fa-solid fa-code"></i> Développement logiciel</h3>
+                <p>Applications web, mobiles et solutions métier sur mesure.</p>
+            </div>
+            <div class="info-box" style="margin-bottom:12px;">
+                <h3><i class="fa-solid fa-server"></i> Infrastructure &amp; Cloud</h3>
+                <p>Administration systèmes, réseaux et déploiement cloud.</p>
+            </div>
+            <div class="info-box">
+                <h3><i class="fa-solid fa-brain"></i> Data &amp; Intelligence Artificielle</h3>
+                <p>Analyse de données, machine learning et solutions IA.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <h2>Nos partenaires</h2>
+        <div class="grid-3">
+            <div class="partner-card">
+                <div class="icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <h3>Universités &amp; Écoles</h3>
+            </div>
+            <div class="partner-card">
+                <div class="icon"><i class="fa-solid fa-building"></i></div>
+                <h3>Entreprises technologiques</h3>
+            </div>
+            <div class="partner-card">
+                <div class="icon"><i class="fa-solid fa-handshake"></i></div>
+                <h3>Institutions publiques</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
