@@ -2,55 +2,185 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Affectations - Responsable</title>
+    <title>Affectations</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/affectation.css}">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
 <div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Affectations</h1>
-        <span class="utilisateur-connecte">Responsable</span>
-    </div>
+    <header class="en-tete-page">
+        <div class="header-gauche">
+            <button class="btn-icon menu-btn">☰</button>
+            <div>
+                <h1>Affectations</h1>
+                <p class="sous-titre">Consultez la liste des stagiaires affectés aux différents services et encadreurs.</p>
+            </div>
+        </div>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Matricule</th>
-                <th>Stagiaire</th>
-                <th>Encadreur</th>
-                <th>Service</th>
-                <th>Debut</th>
-                <th>Fin</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="stage : ${stages}">
-                <td th:text="${stage.numeroStage}">-</td>
-                <td th:text="${stage.stagiaire.utilisateur.prenom
-                             + ' ' + stage.stagiaire.utilisateur.nom}">-</td>
-                <td th:text="${stage.encadreur.utilisateur.prenom
-                             + ' ' + stage.encadreur.utilisateur.nom}">-</td>
-                <td th:text="${stage.service.nom}">-</td>
-                <td th:text="${stage.dateDebut}">-</td>
-                <td th:text="${stage.dateFin}">-</td>
-                <td>
-                    <span th:class="'badge ' + ${stage.statut.name()}"
-                          th:text="${stage.statut}">-</span>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(stages)}">
-                <td colspan="7" style="text-align:center; color:#777; padding:30px;">
-                    Aucune affectation pour le moment.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+        <div class="header-actions">
+            <div class="recherche-header">
+                <span class="icon">🔍</span>
+                <input type="text" class="filtre-input" id="rechercheAffectation"
+                       placeholder="Rechercher une affectation..." oninput="filtrerTableau()">
+            </div>
+
+            <button class="btn-notif">
+                🔔<span class="badge-notif">3</span>
+            </button>
+
+            <div class="avatar-header">
+                <div class="avatar-round">R</div>
+                <div class="avatar-info">
+                    <div>Responsable</div>
+                </div>
+                <span class="avatar-arrow">▼</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-card">
+        <div class="hero-texte">
+            <div class="hero-icon">💼</div>
+            <h2>Affectations</h2>
+            <div class="breadcrumb">Tableau de bord &gt; Affectations</div>
+            <p>Consultez la liste des stagiaires affectés aux différents services et encadreurs.</p>
+        </div>
+
+        <div class="hero-illustration">
+            <img src="/images/hero-affectation.webp" alt="Illustration affectations" class="hero-image">
+        </div>
+    </section>
+
+    <section class="bloc filtres-card">
+        <div class="bloc-entete">
+            <h3>Filtres</h3>
+            <button class="btn-principal btn-nouvelle">+ Nouvelle Affectation</button>
+        </div>
+
+        <div class="barre-filtres">
+            <input class="filtre-input" type="text" id="filtreNom" placeholder="Rechercher par stagiaire..." oninput="filtrerTableau()">
+            <select class="filtre-select" id="filtreService" onchange="filtrerTableau()">
+                <option value="">Service ▼</option>
+                <option>Marketing</option>
+                <option>IT</option>
+                <option>RH</option>
+            </select>
+            <select class="filtre-select" id="filtreEncadreur" onchange="filtrerTableau()">
+                <option value="">Encadreur ▼</option>
+                <option>Jean</option>
+                <option>Sarah</option>
+            </select>
+            <select class="filtre-select" id="filtreStatut" onchange="filtrerTableau()">
+                <option value="">Statut ▼</option>
+                <option>Actif</option>
+                <option>Terminé</option>
+            </select>
+            <button class="btn-reinit" onclick="reinitFiltres()">Réinitialiser</button>
+        </div>
+    </section>
+
+    <section class="bloc">
+        <div class="bloc-entete">
+            <h3>Tableau des affectations</h3>
+        </div>
+
+        <div class="tableau-wrapper">
+            <div class="tableau-header">
+                <div class="col-header">Matricule</div>
+                <div class="col-header">Stagiaire</div>
+                <div class="col-header">Encadreur</div>
+                <div class="col-header">Service</div>
+                <div class="col-header">Début</div>
+                <div class="col-header">Fin</div>
+                <div class="col-header">Statut</div>
+                <div class="col-header">Action</div>
+            </div>
+
+            <div class="tableau-ligne" th:each="stage : ${stages}"
+                 th:data-matricule="${stage.numeroStage}"
+                 th:data-stagiaire="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}"
+                 th:data-encadreur="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}"
+                 th:data-service="${stage.service.nom}"
+                 th:data-statuts="${stage.statut}">
+                <div class="col-mono" th:text="${stage.numeroStage}">-</div>
+                <div class="col-stagiaire">
+                    <div class="candidat-cell">
+                        <div class="candidat-avatar" th:text="${#strings.substring(stage.stagiaire.utilisateur.prenom,0,1)}">A</div>
+                        <div>
+                            <div class="candidat-nom" th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Nom</div>
+                            <div class="candidat-email">Étudiant</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-encadreur">
+                    <div class="encadreur-cell">
+                        <div class="encadreur-avatar" th:text="${#strings.substring(stage.encadreur.utilisateur.prenom,0,1)}">E</div>
+                        <span th:text="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}">Encadreur</span>
+                    </div>
+                </div>
+                <div class="col-service">
+                    <span class="service-badge" th:text="${stage.service.nom}">Service</span>
+                </div>
+                <div class="col-date" th:text="${stage.dateDebut}">-</div>
+                <div class="col-date" th:text="${stage.dateFin}">-</div>
+                <div>
+                    <span class="badge-statut" th:text="${stage.statut}">Actif</span>
+                </div>
+                <div class="actions-cell">
+                    <button class="btn-action btn-menu">⋮</button>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(stages)}" class="tableau-vide">
+                Aucune affectation pour le moment.
+            </div>
+        </div>
+
+        <div class="pagination droite">
+            <button class="page-btn">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn actif">3</button>
+            <button class="page-btn">Suivant ▶</button>
+        </div>
+    </section>
 </div>
+
+<script>
+    function filtrerTableau() {
+        const nom = document.getElementById('filtreNom').value.toLowerCase();
+        const recherche = document.getElementById('rechercheAffectation').value.toLowerCase();
+        const service = document.getElementById('filtreService').value.toLowerCase();
+        const encadreur = document.getElementById('filtreEncadreur').value.toLowerCase();
+        const statut = document.getElementById('filtreStatut').value.toLowerCase();
+
+        document.querySelectorAll('.tableau-ligne').forEach(ligne => {
+            const lNom = (ligne.dataset.stagiaire || '').toLowerCase();
+            const lService = (ligne.dataset.service || '').toLowerCase();
+            const lEncadreur = (ligne.dataset.encadreur || '').toLowerCase();
+            const lStatut = (ligne.dataset.statuts || '').toLowerCase();
+
+            const ok = (!nom || lNom.includes(nom))
+                && (!recherche || lNom.includes(recherche) || lService.includes(recherche) || lEncadreur.includes(recherche))
+                && (!service || lService.includes(service))
+                && (!encadreur || lEncadreur.includes(encadreur))
+                && (!statut || lStatut.includes(statut));
+
+            ligne.style.display = ok ? '' : 'none';
+        });
+    }
+
+    function reinitFiltres() {
+        document.getElementById('filtreNom').value = '';
+        document.getElementById('rechercheAffectation').value = '';
+        document.getElementById('filtreService').value = '';
+        document.getElementById('filtreEncadreur').value = '';
+        document.getElementById('filtreStatut').value = '';
+        filtrerTableau();
+    }
+</script>
 
 </body>
 </html>

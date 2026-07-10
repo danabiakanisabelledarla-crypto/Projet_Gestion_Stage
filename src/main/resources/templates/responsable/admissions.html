@@ -4,46 +4,98 @@
     <meta charset="UTF-8">
     <title>Admissions</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
 <div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Admissions</h1>
-        <span class="utilisateur-connecte">Responsable</span>
-    </div>
+    <header class="en-tete-page">
+        <div class="header-gauche">
+            <div>
+                <h1>Admissions</h1>
+                <p class="sous-titre">Gérez les admissions et préparez les fiches stagiaires.</p>
+            </div>
+        </div>
+        <a th:href="@{/responsable/dashboard}" class="btn-principal">Retour au tableau de bord</a>
+    </header>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Ecole</th>
-                <th>Filiere</th>
-                <th>Niveau</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="demande : ${demandesAcceptees}">
-                <td th:text="${demande.prenom + ' ' + demande.nom}">-</td>
-                <td th:text="${demande.ecole}">-</td>
-                <td th:text="${demande.filiere}">-</td>
-                <td th:text="${demande.niveau}">-</td>
-                <td>
+    <section class="hero-card">
+        <div class="hero-texte">
+            <h2>Admissions</h2>
+            <p>Consultez les candidatures acceptées et créez les fiches stagiaires associées.</p>
+        </div>
+        <div class="hero-illustration">
+            <img src="/images/hero-teamm.png" alt="Illustration admissions" class="hero-image">
+        </div>
+    </section>
+
+    <section class="bloc">
+        <div class="bloc-entete">
+            <h3>Liste des admissions</h3>
+        </div>
+
+        <div class="barre-filtres">
+            <input class="filtre-input" type="text" id="filtreNom" placeholder="Rechercher par nom..." oninput="filtrerTableau()">
+            <select class="filtre-select" id="filtreEcole" onchange="filtrerTableau()">
+                <option value="">École ▼</option>
+                <option>EST</option>
+                <option>ENSA</option>
+                <option>FS</option>
+            </select>
+            <input class="filtre-input" type="text" id="filtreFiliere" placeholder="Filière" oninput="filtrerTableau()">
+            <select class="filtre-select" id="filtreNiveau" onchange="filtrerTableau()">
+                <option value="">Niveau ▼</option>
+                <option>BTS 1</option>
+                <option>BTS 2</option>
+                <option>Licence 2</option>
+                <option>Licence 3</option>
+            </select>
+            <button class="btn-reinit" onclick="reinitFiltres()">Réinitialiser</button>
+            <button class="btn-filtrer" onclick="filtrerTableau()">Filtrer</button>
+        </div>
+
+        <div class="tableau-wrapper">
+            <div class="tableau-header">
+                <div class="col-header">Nom</div>
+                <div class="col-header">École</div>
+                <div class="col-header">Filière</div>
+                <div class="col-header">Niveau</div>
+                <div class="col-header">Action</div>
+            </div>
+
+            <div class="tableau-ligne" th:each="demande : ${demandesAcceptees}"
+                 th:data-nom="${demande.prenom + ' ' + demande.nom}"
+                 th:data-ecole="${demande.ecole}"
+                 th:data-filiere="${demande.filiere}"
+                 th:data-niveau="${demande.niveau}">
+                <div class="candidat-cell">
+                    <div class="candidat-avatar"
+                         th:text="${#strings.substring(demande.prenom, 0, 1)}">A</div>
+                    <div>
+                        <div class="candidat-nom"
+                             th:text="${demande.prenom + ' ' + demande.nom}">Nom</div>
+                        <div class="candidat-email"
+                             th:text="${demande.ecole != null ? demande.ecole : '—'}">École</div>
+                    </div>
+                </div>
+
+                <div class="col-text" th:text="${demande.ecole}">-</div>
+                <div class="col-text" th:text="${demande.filiere}">-</div>
+                <div class="col-text" th:text="${demande.niveau}">-</div>
+
+                <div class="actions-cell">
                     <a th:href="@{/responsable/admissions/fiche/{id}(id=${demande.id})}"
-                       class="btn-accepter">Creer fiche stagiaire</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(demandesAcceptees)}">
-                <td colspan="5" style="text-align:center; color:#777; padding:30px;">
-                    Aucune demande acceptee pour le moment.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                       class="btn-action">Créer fiche stagiaire</a>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(demandesAcceptees)}" class="tableau-vide">
+                Aucune demande acceptée pour le moment.
+            </div>
+        </div>
+    </section>
 </div>
 
 </body>

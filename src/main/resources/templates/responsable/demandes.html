@@ -3,104 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <title>Demandes de stage</title>
-    <link rel="stylesheet" th:href="@{/css/responsable-demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
 </head>
 <body>
 
-<!-- ========== SIDEBAR ========== -->
-<aside class="sidebar">
-    <div>
-        <div class="sidebar-logo">
-            <div class="logo-titre">DTA</div>
-            <div class="logo-sous">Alliance</div>
-        </div>
-        <div class="sidebar-role">Responsable</div>
-        <nav class="sidebar-menu">
-            <a th:href="@{/responsable/dashboard}" class="menu-item">
-                <span class="menu-icone">🏠</span> Tableau de bord
-            </a>
-            <a th:href="@{/responsable/demandes}" class="menu-item actif">
-                <span class="menu-icone">📄</span> Demandes
-            </a>
-            <a th:href="@{/responsable/admissions}" class="menu-item">
-                <span class="menu-icone">👤</span> Admissions
-            </a>
-            <a th:href="@{/responsable/affectations}" class="menu-item">
-                <span class="menu-icone">📦</span> Affectations
-            </a>
-            <a th:href="@{/responsable/cloture}" class="menu-item">
-                <span class="menu-icone">📁</span> Cloture
-            </a>
-        </nav>
-    </div>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
-    <div>
-        <div class="sidebar-profil">
-            <div class="profil-avatar">R</div>
-            <div class="profil-info">
-                <div class="profil-nom">Responsable</div>
-                <div class="profil-email">responsable@gestion-stages.com</div>
-            </div>
-            <span class="profil-fleche">▼</span>
-        </div>
-    </div>
-</aside>
-
-<!-- ========== MAIN ========== -->
-<div class="main">
-
-    <!-- HEADER -->
-    <header class="header">
-    <div class="header-titre">
-        <h1 class="page-titre">Demandes de stage</h1>
-        <p class="page-sous-titre">
-            Consultez, analysez et traitez les candidatures reçues.
-        </p>
-    </div>
-</header>
-
-    <!-- CONTENU -->
-    <div class="contenu">
-
-        
-
-        <!-- CARTES STATS -->
-        <div class="grille-stats">
-            <div class="carte-stat">
-                <div class="stat-icone bleu">📋</div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${totalDemandes}">0</div>
-                    <div class="stat-label">Total demandes</div>
-                    <div class="stat-evolution">Ce mois</div>
-                </div>
-            </div>
-            <div class="carte-stat">
-                <div class="stat-icone orange">⏳</div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${enAttente}">0</div>
-                    <div class="stat-label">En attente</div>
-                    <div class="stat-evolution" style="color:#F59E0B;">A traiter</div>
-                </div>
-            </div>
-            <div class="carte-stat">
-                <div class="stat-icone vert">✅</div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${acceptees}">0</div>
-                    <div class="stat-label">Acceptees</div>
-                    <div class="stat-evolution">Admis</div>
-                </div>
-            </div>
-            <div class="carte-stat">
-                <div class="stat-icone rouge">❌</div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${refusees}">0</div>
-                    <div class="stat-label">Refusees</div>
-                    <div class="stat-evolution" style="color:#EF4444;">Non retenus</div>
-                </div>
+<div class="contenu-principal">
+    <header class="en-tete-page">
+        <div class="header-gauche">
+            <div>
+                <h1>Demandes de stage</h1>
+                <p class="sous-titre">Consultez les demandes reçues et gérez les statuts directement depuis votre espace Responsable.</p>
             </div>
         </div>
+        <a th:href="@{/responsable/dashboard}" class="btn-principal">Retour au tableau de bord</a>
+    </header>
 
-        <!-- BARRE FILTRES -->
+    <section class="grille-cartes-stats">
+        <div class="carte-stat bleu">
+            <div class="icon-stat">📋</div>
+            <div class="libelle">Total demandes</div>
+            <div class="valeur" th:text="${totalDemandes}">0</div>
+            <div class="mini-evolution">Ce mois</div>
+        </div>
+        <div class="carte-stat orange">
+            <div class="icon-stat">⏳</div>
+            <div class="libelle">En attente</div>
+            <div class="valeur" th:text="${enAttente}">0</div>
+            <div class="mini-evolution">À traiter</div>
+        </div>
+        <div class="carte-stat vert">
+            <div class="icon-stat">✅</div>
+            <div class="libelle">Acceptées</div>
+            <div class="valeur" th:text="${acceptees}">0</div>
+            <div class="mini-evolution">Admis</div>
+        </div>
+        <div class="carte-stat rouge">
+            <div class="icon-stat">❌</div>
+            <div class="libelle">Refusées</div>
+            <div class="valeur" th:text="${refusees}">0</div>
+            <div class="mini-evolution">Non retenus</div>
+        </div>
+    </section>
+
+    <section class="bloc">
+        <div class="bloc-entete">
+            <h3>Liste des demandes</h3>
+        </div>
+
         <div class="barre-filtres">
             <input class="filtre-input" type="text"
                    id="filtreNom" placeholder="Rechercher par nom..."
@@ -108,35 +60,33 @@
             <select class="filtre-select" id="filtreNiveau"
                     onchange="filtrerTableau()">
                 <option value="">Niveau ▼</option>
-                <option>BTS 1</option><option>BTS 2</option>
-                <option>Licence 1</option><option>Licence 2</option>
+                <option>BTS 1</option>
+                <option>BTS 2</option>
+                <option>Licence 1</option>
+                <option>Licence 2</option>
                 <option>Licence 3</option>
-                <option>Master 1</option><option>Master 2</option>
+                <option>Master 1</option>
+                <option>Master 2</option>
             </select>
             <input class="filtre-input" type="text"
-                   id="filtreFiliere" placeholder="Filiere"
+                   id="filtreFiliere" placeholder="Filière"
                    oninput="filtrerTableau()">
             <select class="filtre-select" id="filtreStatut"
                     onchange="filtrerTableau()">
                 <option value="">Statut ▼</option>
                 <option value="en_attente">En attente</option>
-                <option value="acceptee">Acceptee</option>
-                <option value="refusee">Refusee</option>
+                <option value="acceptee">Acceptée</option>
+                <option value="refusee">Refusée</option>
             </select>
-            <button class="btn-reinit" onclick="reinitFiltres()">
-                Reinitialiser
-            </button>
-            <button class="btn-filtrer" onclick="filtrerTableau()">
-                Filtrer
-            </button>
+            <button class="btn-reinit" onclick="reinitFiltres()">Réinitialiser</button>
+            <button class="btn-filtrer" onclick="filtrerTableau()">Filtrer</button>
         </div>
 
-        <!-- TABLEAU -->
         <div class="tableau-wrapper">
             <div class="tableau-header">
                 <div class="col-header">Candidat</div>
                 <div class="col-header">Niveau</div>
-                <div class="col-header">Filiere</div>
+                <div class="col-header">Filière</div>
                 <div class="col-header">Date</div>
                 <div class="col-header">Statut</div>
                 <div class="col-header">Actions</div>
@@ -150,7 +100,6 @@
                      th:data-statut="${demande.statut.name()}"
                      class="tableau-ligne">
 
-                    <!-- Candidat -->
                     <div class="candidat-cell">
                         <div class="candidat-avatar"
                              th:style="${iter.index % 4 == 0 ? 'background:#2563EB' :
@@ -170,25 +119,16 @@
                         </div>
                     </div>
 
-                    <!-- Niveau -->
                     <div class="col-text" th:text="${demande.niveau}">-</div>
-
-                    <!-- Filière -->
                     <div class="col-text" th:text="${demande.filiere}">-</div>
-
-                    <!-- Date -->
                     <div class="col-date"
                          th:text="${#temporals.format(demande.dateDemande,'dd/MM/yyyy')}">-</div>
-
-                    <!-- Statut -->
                     <div>
                         <span th:class="'badge-statut badge-' + ${demande.statut.name()}">
                             <span class="point"></span>
                             <span th:text="${demande.statut}">-</span>
                         </span>
                     </div>
-
-                    <!-- Actions -->
                     <div class="actions-cell">
                         <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}"
                            class="btn-action btn-accepter" title="Accepter">✓</a>
@@ -205,17 +145,15 @@
             </div>
         </div>
 
-        <!-- PAGINATION -->
         <div class="pagination">
-            <button class="page-btn prev-next">◀ Precedent</button>
+            <button class="page-btn prev-next">◀ Précédent</button>
             <button class="page-btn actif">1</button>
             <button class="page-btn">2</button>
             <button class="page-btn">3</button>
             <span style="color:#64748B;">...</span>
             <button class="page-btn prev-next">Suivant ▶</button>
         </div>
-
-    </div>
+    </section>
 </div>
 
 <script>
@@ -248,6 +186,5 @@
         filtrerTableau();
     }
 </script>
-
 </body>
 </html>

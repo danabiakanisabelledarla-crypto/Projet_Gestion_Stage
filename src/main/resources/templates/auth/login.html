@@ -2,43 +2,208 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion - Gestion des stages</title>
+    <title>Connexion - Plateforme de Gestion des Stages</title>
     <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
 <body>
 
-    <div class="conteneur">
-        <div class="panneau-gauche">
-            <h1>Gestion des stages</h1>
-            <p>Suivi complet du stage, du depot de candidature jusqu'a l'archivage.</p>
-            <div class="carte-info">
-                <strong>Cycle du stage</strong>
-                <span>Demande, affectation, suivi, evaluation et cloture.</span>
+<div class="login-container">
+
+    <!-- ========== PARTIE GAUCHE ========== -->
+    <div class="left-panel">
+
+        <!-- Couches décoratives -->
+        <div class="left-overlay-radial"></div>
+        <div class="left-dots"></div>
+
+        <!-- Logo -->
+        <div class="left-logo">
+            <div class="logo-nom">DTA</div>
+            <div class="logo-sous">Alliance</div>
+        </div>
+
+        <!-- Carte Afrique SVG (points lumineux) -->
+        <div class="afrique-wrapper">
+            <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+                <!-- Silhouette Afrique simplifiée en points -->
+                <defs>
+                    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#2F80FF" stop-opacity="1"/>
+                        <stop offset="100%" stop-color="#2F80FF" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <!-- Lignes réseau -->
+                <line x1="80" y1="120" x2="200" y2="80" stroke="#2F80FF" stroke-width="0.8" opacity="0.6"/>
+                <line x1="200" y1="80" x2="320" y2="140" stroke="#2F80FF" stroke-width="0.8" opacity="0.6"/>
+                <line x1="120" y1="200" x2="280" y2="180" stroke="#2F80FF" stroke-width="0.8" opacity="0.5"/>
+                <line x1="100" y1="300" x2="250" y2="280" stroke="#2F80FF" stroke-width="0.8" opacity="0.5"/>
+                <line x1="150" y1="380" x2="220" y2="420" stroke="#2F80FF" stroke-width="0.8" opacity="0.4"/>
+                <line x1="200" y1="80" x2="180" y2="200" stroke="#2F80FF" stroke-width="0.5" opacity="0.4"/>
+                <line x1="280" y1="180" x2="260" y2="300" stroke="#2F80FF" stroke-width="0.5" opacity="0.4"/>
+                <!-- Points lumineux -->
+                <circle cx="80" cy="120" r="4" fill="#2F80FF" opacity="0.9"/>
+                <circle cx="200" cy="80" r="6" fill="#2F80FF" opacity="1"/>
+                <circle cx="320" cy="140" r="4" fill="#2F80FF" opacity="0.8"/>
+                <circle cx="120" cy="200" r="5" fill="#2F80FF" opacity="0.9"/>
+                <circle cx="280" cy="180" r="4" fill="#2F80FF" opacity="0.8"/>
+                <circle cx="100" cy="300" r="6" fill="#4F94FF" opacity="1"/>
+                <circle cx="250" cy="280" r="4" fill="#2F80FF" opacity="0.8"/>
+                <circle cx="180" cy="200" r="3" fill="#2F80FF" opacity="0.7"/>
+                <circle cx="260" cy="300" r="5" fill="#4F94FF" opacity="0.9"/>
+                <circle cx="150" cy="380" r="4" fill="#2F80FF" opacity="0.8"/>
+                <circle cx="220" cy="420" r="6" fill="#2F80FF" opacity="1"/>
+                <circle cx="160" cy="340" r="3" fill="#2F80FF" opacity="0.6"/>
+                <circle cx="210" cy="150" r="3" fill="#4F94FF" opacity="0.7"/>
+                <circle cx="300" cy="230" r="4" fill="#2F80FF" opacity="0.8"/>
+                <circle cx="90" cy="250" r="3" fill="#2F80FF" opacity="0.6"/>
+                <!-- Halos -->
+                <circle cx="200" cy="80" r="14" fill="url(#glow)" opacity="0.5"/>
+                <circle cx="100" cy="300" r="16" fill="url(#glow)" opacity="0.4"/>
+                <circle cx="220" cy="420" r="14" fill="url(#glow)" opacity="0.4"/>
+            </svg>
+        </div>
+
+        <!-- Contenu gauche -->
+        <div class="left-content">
+            <h1>
+                Plateforme de<br>
+                Gestion des <span class="mot-bleu">Stages</span>
+            </h1>
+            <p class="left-description">
+                Accedez a votre espace personnel pour gerer,
+                suivre et piloter les stages en temps reel.
+            </p>
+
+            <div class="cartes-info">
+                <div class="carte-info">
+                    <div class="carte-info-icone">🔒</div>
+                    <div class="carte-info-texte">
+                        <div class="titre">Acces securise</div>
+                        <div class="sous">
+                            Authentification protegee selon votre role utilisateur.
+                        </div>
+                    </div>
+                </div>
+                <div class="carte-info">
+                    <div class="carte-info-icone">📊</div>
+                    <div class="carte-info-texte">
+                        <div class="titre">Tableau de bord</div>
+                        <div class="sous">
+                            Pilotage complet des demandes et suivi en temps reel.
+                        </div>
+                    </div>
+                </div>
+                <div class="carte-info">
+                    <div class="carte-info-icone">🏢</div>
+                    <div class="carte-info-texte">
+                        <div class="titre">Gestion centralisee</div>
+                        <div class="sous">
+                            Admissions · Affectations · Evaluations · Archivage
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="panneau-droit">
-            <h2>Connexion</h2>
-            <p class="sous-titre">Acces securise selon le role utilisateur</p>
-
-            <div th:if="${param.error}" class="message-erreur">
-                Email ou mot de passe incorrect.
-            </div>
-            <div th:if="${param.logout}" class="message-info">
-                Vous avez ete deconnecte avec succes.
-            </div>
-
-            <form th:action="@{/login}" method="post">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="username" placeholder="utilisateur@email.com" required autofocus>
-
-                <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" placeholder="********" required>
-
-                <button type="submit">Se connecter</button>
-            </form>
-        </div>
     </div>
+
+    <!-- ========== PARTIE DROITE ========== -->
+    <div class="right-panel">
+
+        <h2>
+            Connexion à la<br>
+            <span class="mot-bleu">Plateforme</span>
+        </h2>
+
+        <p class="right-sous-titre">
+            Accedez a votre espace personnel securise selon votre role.
+        </p>
+
+        <!-- Badges rôles -->
+        <div class="roles-badges">
+            <span class="role-badge admin">👤 Administrateur</span>
+            <span class="role-badge responsable">📋 Responsable</span>
+            <span class="role-badge encadreur">🎓 Encadreur</span>
+            <span class="role-badge stagiaire">🎒 Stagiaire</span>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${param.error}" class="message-erreur">
+            Email ou mot de passe incorrect. Verifiez vos identifiants.
+        </div>
+        <div th:if="${param.logout}" class="message-info">
+            Vous avez ete deconnecte avec succes.
+        </div>
+
+        <!-- Formulaire -->
+        <form th:action="@{/login}" method="post">
+
+            <div class="champ-groupe">
+                <span class="champ-icone">✉️</span>
+                <input class="champ-input" type="email"
+                       id="email" name="username"
+                       placeholder="Adresse email"
+                       required autofocus>
+            </div>
+
+            <div class="champ-groupe">
+                <span class="champ-icone">🔒</span>
+                <input class="champ-input" type="password"
+                       id="password" name="password"
+                       placeholder="Mot de passe"
+                       required>
+                <button type="button" class="btn-oeil"
+                        onclick="basculerMdp()" id="btnOeil">👁️</button>
+            </div>
+
+            <div class="options-ligne">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember-me">
+                    Se souvenir de moi
+                </label>
+                <a href="#" class="lien-oubli">Mot de passe oublie ?</a>
+            </div>
+
+            <button type="submit" class="btn-connexion">
+                Se connecter →
+            </button>
+
+        </form>
+
+        <div class="separateur">🔐 Connexion securisee</div>
+
+        <div class="carte-securite">
+            <div class="securite-icone">🛡️</div>
+            <div class="securite-texte">
+                <div class="titre">Votre connexion est protegee</div>
+                <div class="sous">
+                    Protocole de securite avance —
+                    Acces restreint selon votre role utilisateur.
+                </div>
+            </div>
+        </div>
+
+        <div class="right-footer">
+            <span>© 2026 DTA Alliance</span><br>
+            Plateforme de Gestion des Stages
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function basculerMdp() {
+        const champ = document.getElementById('password');
+        const btn = document.getElementById('btnOeil');
+        if (champ.type === 'password') {
+            champ.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            champ.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
+</script>
 
 </body>
 </html>
