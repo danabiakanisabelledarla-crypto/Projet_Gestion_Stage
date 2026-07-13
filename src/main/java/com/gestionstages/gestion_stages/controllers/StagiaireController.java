@@ -236,13 +236,17 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
     model.addAttribute("activePage", "rapport");
     model.addAttribute("stage", stageOpt.orElse(null));
     stageOpt.ifPresent(stage -> {
-        List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
-                .filter(d -> "rapport_final".equals(d.getTypeDocument()))
-                .toList();
-        model.addAttribute("rapports", rapports);
-    });
-    if (succes != null) model.addAttribute("succes", succes);
-    return "stagiaire/rapport";
+    List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
+            .filter(d -> "rapport_final".equals(d.getTypeDocument()))
+            .sorted((a, b) -> b.getDateDepot().compareTo(a.getDateDepot()))
+            .toList();
+    model.addAttribute("rapports", rapports);
+    if (!rapports.isEmpty()) {
+        model.addAttribute("dernierRapport", rapports.get(0));
+    }
+    model.addAttribute("evaluations", evaluationRepository.findByStageId(stage.getId()));
+});
+    
 }
 
 @PostMapping("/rapport/deposer")
@@ -284,9 +288,15 @@ public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails
 @GetMapping("/objectifs")
 public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "objectifs");
+    model.addAttribute("objectifs", new ArrayList<Objectif>());
     getStage(userDetails).ifPresent(stage -> {
-        model.addAttribute("stage", stage);
-        model.addAttribute("objectifs", objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()));
+        List<Objectif> objectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+        model.addAttribute("objectifs", objectifs);
+        model.addAttribute("totalObjectifs", objectifs.size());
+        model.addAttribute("objectifsEnCours", objectifs.stream()
+                .filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
+        model.addAttribute("objectifsTermines", objectifs.stream()
+                .filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
     });
     return "stagiaire/objectifs";
 }
@@ -294,9 +304,23 @@ public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDeta
 @GetMapping("/planning")
 public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "planning");
+    model.addAttribute("taches", new ArrayList<Tache>());
+    model.addAttribute("objectifs", new ArrayList<Objectif>());
+    model.addAttribute("livrables", new ArrayList<Livrable>());
+
     getStage(userDetails).ifPresent(stage -> {
         model.addAttribute("stage", stage);
-        model.addAttribute("taches", tacheRepository.findByStageId(stage.getId()));
+        List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+        model.addAttribute("taches", taches);
+
+        model.addAttribute("objectifs",
+                objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()));
+
+        List<Livrable> livrables = new ArrayList<>();
+        for (Tache t : taches) {
+            livrables.addAll(livrableRepository.findByTacheId(t.getId()));
+        }
+        model.addAttribute("livrables", livrables);
     });
     return "stagiaire/planning";
 }

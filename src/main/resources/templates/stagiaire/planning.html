@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Planning - Stagiaire</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
 </head>
 <body>
     <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
@@ -11,7 +14,7 @@
     <div class="contenu-principal">
         <div class="en-tete-page">
             <h1>📅 Planning</h1>
-            <span class="utilisateur-connecte">Stagiaire</span>
+            <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
         </div>
 
         <div class="bloc-blanc">

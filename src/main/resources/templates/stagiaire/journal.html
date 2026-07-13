@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Journal de bord</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
 </head>
 <body>
 
@@ -13,7 +15,7 @@
 <div class="contenu-principal">
     <div class="en-tete-page">
         <h1>Journal de bord</h1>
-        <span class="utilisateur-connecte">Stagiaire</span>
+        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
     </div>
 
     <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
