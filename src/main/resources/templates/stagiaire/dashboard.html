@@ -3,53 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord - Stagiaire</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-dashboard.css}">
 </head>
 <body>
 
-<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1 th:text="'Bienvenue ' + ${nomComplet}">Bienvenue</h1>
-        <span class="utilisateur-connecte">Stagiaire</span>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+    <!--<div class="sidebar-logo">
+        <div class="logo-titre">DTA Alliance</div>
+        <div class="logo-sous">Plateforme de gestion des stages</div>
     </div>
 
-    <div th:if="${stage == null}" class="bloc-blanc" style="margin-bottom: 20px;">
-        <p style="color:#777;">Vous n'avez pas encore de stage affecte. Contactez le responsable des stages.</p>
+    <div class="sidebar-role-label">Stagiaire</div>
+
+    <nav class="sidebar-menu">
+        <a th:href="@{/stagiaire/dashboard}" class="menu-item actif">
+            <span class="icone">🏠</span> Tableau de bord
+        </a>
+        <a href="#" class="menu-item">
+            <span class="icone">👤</span> Mon profil
+        </a>
+        <a th:href="@{/stagiaire/taches}" class="menu-item">
+            <span class="icone">✅</span> Mes taches
+        </a>
+        <a th:href="@{/stagiaire/journal}" class="menu-item">
+            <span class="icone">📔</span> Journal
+        </a>
+        <a th:href="@{/stagiaire/livrables}" class="menu-item">
+            <span class="icone">📦</span> Livrables
+        </a>
+        <a th:href="@{/stagiaire/rapport}" class="menu-item">
+            <span class="icone">📄</span> Rapport final
+        </a>
+        <a href="#" class="menu-item">
+            <span class="icone">📅</span> Planning
+        </a>
+    </nav>-->
+
+    <div class="sidebar-bas">
+        <div th:if="${stage != null}">
+            <div class="profil-card">
+                <div class="profil-avatar"
+                     th:text="${initiales}">
+                    JC
+                    <div class="badge-online"></div>
+                </div>
+                <div>
+                    <div class="profil-nom" th:text="${nomComplet}">Nom</div>
+                    <div class="profil-role">Stagiaire</div>
+                </div>
+            </div>
+            <div class="infos-stage">
+                <div class="info-ligne">
+                    <span class="icone">⚙️</span>
+                    <span th:text="'Service : ' + ${stage.service.nom}">Service</span>
+                </div>
+                <div class="info-ligne">
+                    <span class="icone">👤</span>
+                    <span th:text="'Encadreur : ' + ${stage.encadreur.utilisateur.prenom}
+                                  + ' ' + ${stage.encadreur.utilisateur.nom}">
+                        Encadreur
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div th:if="${stage == null}">
+            <div class="profil-card">
+                <div class="profil-avatar" th:text="${initiales}">S</div>
+                <div>
+                    <div class="profil-nom" th:text="${nomComplet}">Nom</div>
+                    <div class="profil-role">Stagiaire</div>
+                </div>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn-deconnexion">
+                🚪 Se deconnecter
+            </button>
+        </form>
     </div>
+</aside>
 
-    <div th:if="${stage != null}">
-        <div class="bloc-blanc" style="margin-bottom: 25px;">
-            <h3>Plateforme de gestion des stages</h3>
-            <p style="color:#777; margin-top: 8px; font-size: 14px;">
-                Encadreur :
-                <span th:text="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}">-</span>
-                | Service :
-                <span th:text="${stage.service.nom}">-</span>
-            </p>
+<!-- ========== MAIN ========== -->
+<div class="main">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-recherche">
+            <span class="icone">🔍</span>
+            <input type="text" placeholder="Rechercher une tache, un document...">
         </div>
-
-        <div class="grille-cartes-stats">
-            <div class="carte-stat bleu">
-                <div class="libelle">Taches</div>
-                <div class="valeur" th:text="${nombreTaches}">0</div>
-                <div style="font-size:12px; color:#555; margin-top:4px;">en cours</div>
+        <div class="header-droite">
+            <div class="header-icone-btn">
+                🔔
+                <div class="notif-badge">2</div>
             </div>
-            <div class="carte-stat vert">
-                <div class="libelle">Livrables</div>
-                <div class="valeur" th:text="${nombreLivrables}">0</div>
-                <div style="font-size:12px; color:#555; margin-top:4px;">deposes</div>
-            </div>
-            <div class="carte-stat orange">
-                <div class="libelle">Journal</div>
-                <div class="valeur" th:text="${nombreJours}">0</div>
-                <div style="font-size:12px; color:#555; margin-top:4px;">jours saisis</div>
+            <div class="header-icone-btn">💬</div>
+            <div class="header-profil">
+                <div>
+                    <div class="nom" th:text="${nomComplet}">Nom</div>
+                    <div class="role">Stagiaire</div>
+                </div>
+                <div class="header-avatar" th:text="${initiales}">S</div>
+                <span style="color:#94A3B8; font-size:12px;">▼</span>
             </div>
         </div>
+    </header>
+
+    <!-- CONTENU -->
+    <div class="contenu">
+
+        <!-- TITRE + DATE/HEURE -->
+        <div class="contenu-top">
+            <div class="titre-bienvenue">
+                <h1>
+                    Bienvenue, <span class="prenom"
+                                     th:text="${prenom}">Prenom</span> 👋
+                </h1>
+                <p class="sous-titre">
+                    📌 Voici un apercu de la progression de ton stage.
+                </p>
+            </div>
+            <div class="date-heure">
+                <div class="date-bloc">
+                    <span class="icone">📅</span>
+                    <div>
+                        <div class="label">Aujourd'hui</div>
+                        <div class="valeur" id="dateAujourdhui">--</div>
+                    </div>
+                </div>
+                <div class="heure-bloc">
+                    <span class="icone">🕐</span>
+                    <div>
+                        <div class="label">Il est</div>
+                        <div class="valeur" id="heureActuelle">--:--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARTES STATS -->
+        <div class="grille-stats">
+            <div class="carte-stat">
+                <div class="stat-icone-wrapper bleu">📋</div>
+                <div>
+                    <div class="stat-valeur" th:text="${nombreTaches}">0</div>
+                    <div class="stat-label">Taches</div>
+                    <div class="stat-sous"
+                         th:text="${tachesEnCours} + ' en cours'">0 en cours</div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone-wrapper vert">📄</div>
+                <div>
+                    <div class="stat-valeur" th:text="${nombreLivrables}">0</div>
+                    <div class="stat-label">Livrables</div>
+                    <div class="stat-sous orange"
+                         th:text="${livrablesPending} + ' en attente'">
+                        0 en attente
+                    </div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone-wrapper violet">🎯</div>
+                <div>
+                    <div class="stat-valeur" th:text="${nombreObjectifs}">0</div>
+                    <div class="stat-label">Objectifs</div>
+                    <div class="stat-sous"
+                         th:text="${objectifsEnCours} + ' en cours'">
+                        0 en cours
+                    </div>
+                </div>
+            </div>
+            <div class="carte-stat">
+                <div class="stat-icone-wrapper orange">📈</div>
+                <div class="progression-barre-wrapper">
+                    <div class="stat-valeur"
+                         th:text="${progression} + '%'">0%</div>
+                    <div class="stat-label">Progression globale</div>
+                    <div class="progression-barre">
+                        <div class="remplissage"
+                             th:style="'width:' + ${progression} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRILLE PRINCIPALE -->
+        <div class="grille-principale">
+
+            <!-- COLONNE GAUCHE -->
+            <div class="colonne-gauche">
+
+                <!-- TIMELINE -->
+                <div class="bloc">
+                    <div class="bloc-header">
+                        <div class="bloc-titre">Progression de mon stage</div>
+                    </div>
+                    <div style="position:relative;">
+                        <div class="timeline">
+                            <div class="timeline-progres"
+                                 th:if="${stage != null}"
+                                 style="width: 55%;"></div>
+                            <div class="timeline-etape">
+                                <div class="etape-cercle fait">✓</div>
+                                <div class="etape-label fait">Admission</div>
+                            </div>
+                            <div class="timeline-etape">
+                                <div th:if="${stage != null}"
+                                     class="etape-cercle fait">✓</div>
+                                <div th:if="${stage == null}"
+                                     class="etape-cercle">2</div>
+                                <div class="etape-label"
+                                     th:class="${stage != null} ? 'etape-label fait' : 'etape-label'">
+                                    Affectation
+                                </div>
+                            </div>
+                            <div class="timeline-etape">
+                                <div th:if="${stage != null}"
+                                     class="etape-cercle fait">✓</div>
+                                <div th:if="${stage == null}"
+                                     class="etape-cercle">3</div>
+                                <div class="etape-label"
+                                     th:class="${stage != null} ? 'etape-label fait' : 'etape-label'">
+                                    Debut stage
+                                </div>
+                            </div>
+                            <div class="timeline-etape">
+                                <div th:if="${stage != null}"
+                                     class="etape-cercle actif">💼</div>
+                                <div th:if="${stage == null}"
+                                     class="etape-cercle">4</div>
+                                <div class="etape-label"
+                                     th:class="${stage != null} ? 'etape-label actif' : 'etape-label'">
+                                    En cours
+                                </div>
+                            </div>
+                            <div class="timeline-etape">
+                                <div class="etape-cercle">📄</div>
+                                <div class="etape-label">Rapport final</div>
+                            </div>
+                            <div class="timeline-etape">
+                                <div class="etape-cercle">🏁</div>
+                                <div class="etape-label">Cloture</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TACHES RECENTES -->
+                <div class="bloc">
+                    <div class="bloc-header">
+                        <div class="bloc-titre">Mes taches recentes</div>
+                        <a th:href="@{/stagiaire/taches}"
+                           class="btn-voir-tout">Voir toutes</a>
+                    </div>
+                    <div class="liste-taches">
+                        <div th:each="tache : ${tachesRecentes}"
+                             class="tache-item">
+                            <div class="tache-icone bleu">📝</div>
+                            <div class="tache-info">
+                                <div class="tache-titre"
+                                     th:text="${tache.titre}">-</div>
+                                <div class="tache-service">
+                                    Stage
+                                </div>
+                            </div>
+                            <span th:class="'badge-tache badge-' + ${tache.statut.name()}"
+                                  th:text="${tache.statut}">-</span>
+                            <div class="tache-echeance"
+                                 th:text="'Echeance : '
+                                 + ${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}">
+                            </div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(tachesRecentes)}"
+                             class="vide">
+                            Aucune tache assignee pour le moment.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OBSERVATION ENCADREUR -->
+                <div class="bloc" th:if="${stage != null}">
+                    <div class="bloc-titre" style="margin-bottom:14px;">
+                        Observation de mon encadreur
+                    </div>
+                    <div class="observation-bloc">
+                        <div class="guillemets">"</div>
+                        <div class="observation-texte">
+                            Continuez ainsi et n'oubliez pas de bien documenter
+                            chaque etape de votre travail.
+                        </div>
+                        <div class="observation-auteur">
+                            <div class="auteur-info">
+                                <div class="auteur-avatar">👤</div>
+                                <div>
+                                    <div class="auteur-nom"
+                                         th:text="${stage.encadreur.utilisateur.prenom}
+                                         + ' ' + ${stage.encadreur.utilisateur.nom}">
+                                        Encadreur
+                                    </div>
+                                    <div class="auteur-role">Encadreur</div>
+                                </div>
+                            </div>
+                            <div class="auteur-date"
+                                 th:text="${#temporals.format(
+                                     stage.dateDebut, 'dd/MM/yyyy')}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLONNE DROITE -->
+            <div class="colonne-droite">
+
+                <!-- ECHEANCES -->
+                <div class="bloc">
+                    <div class="titre-section-droit">Echeances a venir</div>
+                    <div class="liste-echeances">
+                        <div th:each="tache : ${tachesRecentes}"
+                             class="echeance-item">
+                            <div class="echeance-date-bloc">
+                                <div class="echeance-jour"
+                                     th:text="${#temporals.format(
+                                         tache.dateLimite,'dd')}">--</div>
+                                <div class="echeance-mois"
+                                     th:text="${#temporals.format(
+                                         tache.dateLimite,'MMM')}">---</div>
+                            </div>
+                            <div class="echeance-info">
+                                <div class="echeance-titre"
+                                     th:text="${tache.titre}">-</div>
+                                <div class="echeance-sous">
+                                    Echeance a venir
+                                </div>
+                            </div>
+                            <span class="echeance-badge proche">
+                                A venir
+                            </span>
+                        </div>
+                        <div th:if="${#lists.isEmpty(tachesRecentes)}"
+                             class="vide">
+                            Aucune echeance.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTIVITE RECENTE -->
+                <div class="bloc">
+                    <div class="bloc-header">
+                        <div class="titre-section-droit"
+                             style="margin-bottom:0;">
+                            Activite recente
+                        </div>
+                        <a href="#" class="btn-voir-tout">Voir tout</a>
+                    </div>
+                    <div class="liste-activite" style="margin-top:14px;">
+                        <div th:if="${stage != null}" class="activite-item">
+                            <div class="activite-date"
+                                 th:text="${#temporals.format(
+                                     stage.dateDebut,'dd/MM/yyyy')}">
+                            </div>
+                            <div class="activite-point"
+                                 style="background:#2563EB;"></div>
+                            <div class="activite-texte">
+                                Stage commence — Affectation confirmee
+                            </div>
+                        </div>
+                        <div th:each="tache : ${tachesRecentes}"
+                             class="activite-item">
+                            <div class="activite-date"
+                                 th:text="${#temporals.format(
+                                     tache.dateCreation,'dd/MM/yyyy HH:mm')}">
+                            </div>
+                            <div class="activite-point"
+                                 style="background:#22C55E;"></div>
+                            <div class="activite-texte"
+                                 th:text="'Tache assignee : '
+                                 + ${tache.titre}">-</div>
+                        </div>
+                        <div th:if="${stage == null}" class="vide">
+                            Aucune activite recente.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script>
+    // Date et heure en temps réel
+    function mettreAJourDateTime() {
+        const maintenant = new Date();
+        const optDate = {
+            day: 'numeric', month: 'long', year: 'numeric'
+        };
+        const optHeure = { hour: '2-digit', minute: '2-digit' };
+
+        document.getElementById('dateAujourdhui').textContent =
+            maintenant.toLocaleDateString('fr-FR', optDate);
+        document.getElementById('heureActuelle').textContent =
+            maintenant.toLocaleTimeString('fr-FR', optHeure);
+    }
+
+    mettreAJourDateTime();
+    setInterval(mettreAJourDateTime, 60000);
+</script>
 
 </body>
 </html>

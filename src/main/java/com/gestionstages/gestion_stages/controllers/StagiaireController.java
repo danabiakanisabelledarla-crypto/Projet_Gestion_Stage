@@ -55,36 +55,79 @@ public StagiaireController(StageRepository stageRepository,
 }
 
     @GetMapping("/dashboard")
-    public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                     Model model) {
-        Optional<Stage> stageOpt = getStage(userDetails);
-        String nomComplet = userDetails.getUtilisateur().getPrenom()
-                + " " + userDetails.getUtilisateur().getNom();
-        model.addAttribute("nomComplet", nomComplet);
+public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                 Model model) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    String initiales = prenom.substring(0,1).toUpperCase()
+            + nom.substring(0,1).toUpperCase();
 
-        if (stageOpt.isPresent()) {
-            Stage stage = stageOpt.get();
-            model.addAttribute("stage", stage);
-            List<Tache> taches = tacheRepository.findByStageId(stage.getId());
-            model.addAttribute("nombreTaches", taches.size());
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", initiales);
 
-            int totalLivrables = 0;
-            for (Tache t : taches) {
-                totalLivrables += livrableRepository.findByTacheId(t.getId()).size();
-            }
-            model.addAttribute("nombreLivrables", totalLivrables);
-            model.addAttribute("nombreJours",
-                    journalBordRepository
-                            .findByStageIdOrderByDateActiviteDesc(stage.getId()).size());
-        } else {
-            model.addAttribute("stage", null);
-            model.addAttribute("nombreTaches", 0);
-            model.addAttribute("nombreLivrables", 0);
-            model.addAttribute("nombreJours", 0);
+    if (stageOpt.isPresent()) {
+        Stage stage = stageOpt.get();
+        model.addAttribute("stage", stage);
+
+        List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+        long tachesEnCours = taches.stream()
+                .filter(t -> t.getStatut() == Tache.StatutTache.en_cours)
+                .count();
+        long tachesAFaire = taches.stream()
+                .filter(t -> t.getStatut() == Tache.StatutTache.a_faire)
+                .count();
+
+        List<Livrable> livrables = new ArrayList<>();
+        for (Tache t : taches) {
+            livrables.addAll(livrableRepository.findByTacheId(t.getId()));
         }
-        return "stagiaire/dashboard";
+        long livrablesPending = livrables.stream()
+                .filter(l -> l.getStatut() == Livrable.StatutLivrable.depose)
+                .count();
+
+        List<Objectif> objectifs = objectifRepository
+                .findByStageIdOrderByOrdreAsc(stage.getId());
+        long objectifsEnCours = objectifs.stream()
+                .filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours)
+                .count();
+
+        int totalTaches = taches.size();
+        int tachesTerminees = (int) taches.stream()
+                .filter(t -> t.getStatut() == Tache.StatutTache.terminee)
+                .count();
+        int progression = totalTaches > 0
+                ? (tachesTerminees * 100 / totalTaches) : 0;
+
+        List<JournalBord> journaux = journalBordRepository
+                .findByStageIdOrderByDateActiviteDesc(stage.getId());
+
+        model.addAttribute("nombreTaches", totalTaches);
+        model.addAttribute("tachesEnCours", tachesEnCours);
+        model.addAttribute("tachesRecentes", taches.stream().limit(3).toList());
+        model.addAttribute("nombreLivrables", livrables.size());
+        model.addAttribute("livrablesPending", livrablesPending);
+        model.addAttribute("nombreObjectifs", objectifs.size());
+        model.addAttribute("objectifsEnCours", objectifsEnCours);
+        model.addAttribute("progression", progression);
+        model.addAttribute("nombreJours", journaux.size());
+
+    } else {
+        model.addAttribute("stage", null);
+        model.addAttribute("nombreTaches", 0);
+        model.addAttribute("tachesEnCours", 0);
+        model.addAttribute("tachesRecentes", new ArrayList<>());
+        model.addAttribute("nombreLivrables", 0);
+        model.addAttribute("livrablesPending", 0);
+        model.addAttribute("nombreObjectifs", 0);
+        model.addAttribute("objectifsEnCours", 0);
+        model.addAttribute("progression", 0);
+        model.addAttribute("nombreJours", 0);
     }
 
+    return "stagiaire/dashboard";
+}
     @GetMapping("/journal")
     public String afficherJournal(@AuthenticationPrincipal CustomUserDetails userDetails,
                                    Model model,
