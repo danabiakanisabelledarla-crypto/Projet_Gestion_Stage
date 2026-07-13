@@ -53,8 +53,8 @@ public StagiaireController(StageRepository stageRepository,
     return stagiaireRepository.findByUtilisateurId(utilisateurId)
             .flatMap(stagiaire -> stageRepository.findByStagiaireId(stagiaire.getId()));
 }
-
-    @GetMapping("/dashboard")
+ 
+@GetMapping("/dashboard")
 public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userDetails,
                                  Model model) {
     Optional<Stage> stageOpt = getStage(userDetails);
@@ -66,6 +66,8 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
     model.addAttribute("prenom", prenom);
     model.addAttribute("nomComplet", prenom + " " + nom);
     model.addAttribute("initiales", initiales);
+    model.addAttribute("activePage", "dashboard");
+
 
     if (stageOpt.isPresent()) {
         Stage stage = stageOpt.get();
@@ -128,11 +130,13 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
 
     return "stagiaire/dashboard";
 }
+// dans afficherJournal
     @GetMapping("/journal")
     public String afficherJournal(@AuthenticationPrincipal CustomUserDetails userDetails,
                                    Model model,
                                    @RequestParam(required = false) String succes) {
         Optional<Stage> stageOpt = getStage(userDetails);
+        model.addAttribute("activePage", "journal");
 
         if (stageOpt.isPresent()) {
             Stage stage = stageOpt.get();
@@ -197,11 +201,13 @@ public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDeta
     Optional<Stage> stageOpt = getStage(userDetails);
     List<Tache> taches = new ArrayList<>();
 
+    model.addAttribute("activePage", "taches");
     if (stageOpt.isPresent()) {
         taches = tacheRepository.findByStageId(stageOpt.get().getId());
     }
     model.addAttribute("taches", taches);
     return "stagiaire/taches";
+
 }
 
 @GetMapping("/livrables")
@@ -209,6 +215,8 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
                                  Model model) {
     Optional<Stage> stageOpt = getStage(userDetails);
     List<Livrable> livrables = new ArrayList<>();
+
+    model.addAttribute("activePage", "livrables");
 
     if (stageOpt.isPresent()) {
         List<Tache> taches = tacheRepository.findByStageId(stageOpt.get().getId());
@@ -225,6 +233,7 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
                                Model model,
                                @RequestParam(required = false) String succes) {
     Optional<Stage> stageOpt = getStage(userDetails);
+    model.addAttribute("activePage", "rapport");
     model.addAttribute("stage", stageOpt.orElse(null));
     stageOpt.ifPresent(stage -> {
         List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()

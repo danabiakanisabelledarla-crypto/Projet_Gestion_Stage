@@ -30,6 +30,12 @@ public class Utilisateur {
     @Column(length = 30)
     private String telephone;
 
+    @Column(length = 255)
+    private String adresse;
+
+    @Column(length = 255)
+    private String photo;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutUtilisateur statut = StatutUtilisateur.actif;
@@ -125,5 +131,21 @@ public class Utilisateur {
 
     public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 }

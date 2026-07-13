@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord - Stagiaire</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-dashboard.css}">
 </head>
 <body>
 
 <!-- ========== SIDEBAR ========== -->
-<aside class="sidebar">
+<!--<aside class="sidebar">
     <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-    <!--<div class="sidebar-logo">
+    <div class="sidebar-logo">
         <div class="logo-titre">DTA Alliance</div>
         <div class="logo-sous">Plateforme de gestion des stages</div>
     </div>
@@ -39,7 +40,7 @@
         <a href="#" class="menu-item">
             <span class="icone">📅</span> Planning
         </a>
-    </nav>-->
+    </nav>
 
     <div class="sidebar-bas">
         <div th:if="${stage != null}">
@@ -83,8 +84,8 @@
             </button>
         </form>
     </div>
-</aside>
-
+</aside>-->
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 <!-- ========== MAIN ========== -->
 <div class="main">
 

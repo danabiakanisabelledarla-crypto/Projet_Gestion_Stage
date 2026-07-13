@@ -1,6 +1,7 @@
 package com.gestionstages.gestion_stages.entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "objectifs")
@@ -26,6 +27,19 @@ public class Objectif {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutObjectif statut = StatutObjectif.non_commence;
+
+    private LocalDate dateLimite;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Priorite priorite = Priorite.moyenne;
+
+    @Column(nullable = false)
+    private Integer progression = 0;
+
+    public enum Priorite {
+        basse, moyenne, haute
+    }
 
     public enum StatutObjectif {
         non_commence, en_cours, atteint
@@ -89,5 +103,29 @@ public class Objectif {
 
     public void setStatut(StatutObjectif statut) {
         this.statut = statut;
+    }
+
+    public LocalDate getDateLimite() {
+        return dateLimite;
+    }
+
+    public void setDateLimite(LocalDate dateLimite) {
+        this.dateLimite = dateLimite;
+    }
+
+    public Priorite getPriorite() {
+        return priorite;
+    }
+
+    public void setPriorite(Priorite priorite) {
+        this.priorite = priorite;
+    }
+
+    public Integer getProgression() {
+        return progression;
+    }
+
+    public void setProgression(Integer progression) {
+        this.progression = progression;
     }
 }

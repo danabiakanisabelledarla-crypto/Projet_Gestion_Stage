@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Planning - Stagiaire</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+</head>
+<body>
+    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+
+    <div class="contenu-principal">
+        <div class="en-tete-page">
+            <h1>📅 Planning</h1>
+            <span class="utilisateur-connecte">Stagiaire</span>
+        </div>
+
+        <div class="bloc-blanc">
+            <h3>Calendrier des échéances</h3>
+            
+            <!-- Liste des événements -->
+            <div th:each="tache : ${taches}" style="padding: 15px; border-bottom: 1px solid #eee;">
+                <strong th:text="${tache.titre}"></strong><br>
+                <small>
+                    Échéance : <span th:text="${tache.dateLimite}"></span> | 
+                    Statut : <span th:text="${tache.statut}"></span>
+                </small>
+            </div>
+
+            <div th:if="${#lists.isEmpty(taches)}" style="text-align: center; padding: 40px; color: #777;">
+                Aucun événement dans le planning pour le moment.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
