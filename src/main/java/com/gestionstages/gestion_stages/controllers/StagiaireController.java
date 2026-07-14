@@ -1,5 +1,8 @@
 package com.gestionstages.gestion_stages.controllers;
 
+import com.gestionstages.gestion_stages.dto.EvenementPlanning;
+import java.util.Comparator;
+
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.gestionstages.gestion_stages.repositories.EvaluationRepository;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,16 +33,20 @@ private final JournalBordRepository journalBordRepository;
 private final StagiaireRepository stagiaireRepository;
 private final DocumentRepository documentRepository;
 private final ObjectifRepository objectifRepository;
+private final EvaluationRepository evaluationRepository;
+//private final EvaluationRepository evaluationRepository;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
 public StagiaireController(StageRepository stageRepository,
-                            TacheRepository tacheRepository,
-                            LivrableRepository livrableRepository,
-                            JournalBordRepository journalBordRepository,
-                            StagiaireRepository stagiaireRepository,
-                            DocumentRepository documentRepository,
-                            ObjectifRepository objectifRepository) {
+                           TacheRepository tacheRepository,
+                           LivrableRepository livrableRepository,
+                           JournalBordRepository journalBordRepository,
+                           StagiaireRepository stagiaireRepository,
+                           DocumentRepository documentRepository,
+                           ObjectifRepository objectifRepository,
+                           EvaluationRepository evaluationRepository) {   // ← Ajoute cette ligne
+
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
     this.livrableRepository = livrableRepository;
@@ -46,6 +54,7 @@ public StagiaireController(StageRepository stageRepository,
     this.stagiaireRepository = stagiaireRepository;
     this.documentRepository = documentRepository;
     this.objectifRepository = objectifRepository;
+    this.evaluationRepository = evaluationRepository;   // ← Ajoute cette ligne
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -232,21 +241,25 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
 public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
                                Model model,
                                @RequestParam(required = false) String succes) {
-    Optional<Stage> stageOpt = getStage(userDetails);
-    model.addAttribute("activePage", "rapport");
-    model.addAttribute("stage", stageOpt.orElse(null));
-    stageOpt.ifPresent(stage -> {
-    List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
-            .filter(d -> "rapport_final".equals(d.getTypeDocument()))
-            .sorted((a, b) -> b.getDateDepot().compareTo(a.getDateDepot()))
-            .toList();
-    model.addAttribute("rapports", rapports);
-    if (!rapports.isEmpty()) {
-        model.addAttribute("dernierRapport", rapports.get(0));
-    }
-    model.addAttribute("evaluations", evaluationRepository.findByStageId(stage.getId()));
-});
     
+    Optional<Stage> stageOpt = getStage(userDetails);
+    model.addAttribute("stage", stageOpt.orElse(null));
+    
+    stageOpt.ifPresent(stage -> {
+        List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
+                .filter(d -> "rapport_final".equals(d.getTypeDocument()))
+                .toList();
+        
+        // Trier manuellement si la méthode existe
+        model.addAttribute("rapports", rapports);
+        
+        if (!rapports.isEmpty()) {
+            model.addAttribute("dernierRapport", rapports.get(0));
+        }
+    });
+    
+    if (succes != null) model.addAttribute("succes", succes);
+    return "stagiaire/rapport";
 }
 
 @PostMapping("/rapport/deposer")
@@ -285,43 +298,67 @@ public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails
     return "stagiaire/profil";
 }
 
+
+
 @GetMapping("/objectifs")
 public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "objectifs");
-    model.addAttribute("objectifs", new ArrayList<Objectif>());
-    getStage(userDetails).ifPresent(stage -> {
-        List<Objectif> objectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
-        model.addAttribute("objectifs", objectifs);
-        model.addAttribute("totalObjectifs", objectifs.size());
-        model.addAttribute("objectifsEnCours", objectifs.stream()
-                .filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
-        model.addAttribute("objectifsTermines", objectifs.stream()
-                .filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
-    });
+    Optional<Stage> stageOpt = getStage(userDetails);
+    model.addAttribute("stage", stageOpt.orElse(null));
+
+    List<Objectif> objectifs = stageOpt.isPresent()
+            ? objectifRepository.findByStageIdOrderByOrdreAsc(stageOpt.get().getId())
+            : new ArrayList<>();
+
+    model.addAttribute("objectifs", objectifs);
+    model.addAttribute("nombreObjectifs", objectifs.size());
+    model.addAttribute("objectifsAtteints", objectifs.stream()
+            .filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
+    model.addAttribute("objectifsEnCours", objectifs.stream()
+            .filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
+    model.addAttribute("objectifsNonCommences", objectifs.stream()
+            .filter(o -> o.getStatut() == Objectif.StatutObjectif.non_commence).count());
+
     return "stagiaire/objectifs";
 }
 
 @GetMapping("/planning")
 public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "planning");
-    model.addAttribute("taches", new ArrayList<Tache>());
-    model.addAttribute("objectifs", new ArrayList<Objectif>());
-    model.addAttribute("livrables", new ArrayList<Livrable>());
+    Optional<Stage> stageOpt = getStage(userDetails);
+    model.addAttribute("stage", stageOpt.orElse(null));
 
-    getStage(userDetails).ifPresent(stage -> {
-        model.addAttribute("stage", stage);
+    List<EvenementPlanning> evenements = new ArrayList<>();
+
+    if (stageOpt.isPresent()) {
+        Stage stage = stageOpt.get();
+
         List<Tache> taches = tacheRepository.findByStageId(stage.getId());
-        model.addAttribute("taches", taches);
-
-        model.addAttribute("objectifs",
-                objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()));
-
-        List<Livrable> livrables = new ArrayList<>();
         for (Tache t : taches) {
-            livrables.addAll(livrableRepository.findByTacheId(t.getId()));
+            if (t.getDateLimite() != null) {
+                evenements.add(new EvenementPlanning(
+                        t.getDateLimite(), "Echeance : " + t.getTitre(), "tache"));
+            }
         }
-        model.addAttribute("livrables", livrables);
-    });
+
+        List<Evaluation> evaluations = evaluationRepository.findByStageId(stage.getId());
+        for (Evaluation e : evaluations) {
+            evenements.add(new EvenementPlanning(
+                    e.getDateEvaluation(), "Evaluation (" + e.getTypeEvaluation() + ")", "evaluation"));
+        }
+        if (stage.getDateFin() != null) {
+            evenements.add(new EvenementPlanning(stage.getDateFin(), "Fin du stage", "fin_stage"));
+        }
+    }
+
+    evenements.sort(Comparator.comparing(EvenementPlanning::getDate));
+    model.addAttribute("evenements", evenements);
+
+    LocalDate aujourdHui = LocalDate.now();
+    model.addAttribute("evenementsAvenir", evenements.stream()
+            .filter(e -> !e.getDate().isBefore(aujourdHui))
+            .toList());
+
     return "stagiaire/planning";
 }
 }

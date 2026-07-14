@@ -2,46 +2,92 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Objectifs - Stagiaire</title>
+    <title>Mes objectifs - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-objectifs.css}">
 </head>
 <body>
-    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-    <div class="contenu-principal">
-        <div class="en-tete-page">
-            <h1>🎯 Mes Objectifs</h1>
-            <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Mes objectifs</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
+    </div>
+
+    <!-- EN HAUT : RESUME -->
+    <div class="objectifs-resume">
+        <div class="resume-carte">
+            <div class="resume-valeur" th:text="${nombreObjectifs}">0</div>
+            <div class="resume-label">Objectifs au total</div>
         </div>
-
-        <div class="bloc-blanc">
-            <h3>Résumé des objectifs</h3>
-            <p th:text="'Total : ' + ${objectifs.size()} + ' objectifs'"></p>
+        <div class="resume-carte">
+            <div class="resume-valeur" th:text="${objectifsNonCommences}">0</div>
+            <div class="resume-label">Non commences</div>
         </div>
-
-        <div class="grille-cartes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-top: 20px;">
-            
-            <div th:each="objectif : ${objectifs}" class="bloc-blanc" style="padding: 20px;">
-                <h4 th:text="${objectif.titre}"></h4>
-                <p th:text="${objectif.description}"></p>
-                
-                <div style="margin-top: 15px; font-size: 14px;">
-                    <strong>Date limite :</strong> <span th:text="${objectif.dateLimite}"></span><br>
-                    <strong>Priorité :</strong> <span th:text="${objectif.priorite}"></span><br>
-                    <strong>Progression :</strong> <span th:text="${objectif.progression} + '%'"></span>
-                </div>
-                
-                <span th:class="'badge-statut ' + ${objectif.statut.name()}" 
-                      th:text="${objectif.statut}"></span>
-            </div>
-
-            <div th:if="${#lists.isEmpty(objectifs)}" class="bloc-blanc" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                Aucun objectif défini pour le moment.
-            </div>
+        <div class="resume-carte">
+            <div class="resume-valeur" th:text="${objectifsEnCours}">0</div>
+            <div class="resume-label">En cours</div>
+        </div>
+        <div class="resume-carte vert">
+            <div class="resume-valeur" th:text="${objectifsAtteints}">0</div>
+            <div class="resume-label">Atteints</div>
         </div>
     </div>
+
+    <!-- AU CENTRE : CARTES OBJECTIFS -->
+    <div class="grille-objectifs">
+        <div class="carte-objectif" th:each="objectif : ${objectifs}">
+            <div class="carte-objectif-entete">
+                <div class="carte-objectif-titre" th:text="${objectif.libelle}">Titre</div>
+                <span th:class="'badge-priorite ' + ${objectif.priorite.name()}"
+                      th:text="${objectif.priorite}">Priorite</span>
+            </div>
+            <p class="carte-objectif-description"
+               th:text="${objectif.description != null ? objectif.description : 'Aucune description.'}">
+                Description
+            </p>
+            <div class="carte-objectif-echeance" th:if="${objectif.dateLimite != null}">
+                <i class="fa-regular fa-calendar"></i>
+                Echeance : <span th:text="${#temporals.format(objectif.dateLimite, 'dd/MM/yyyy')}">-</span>
+            </div>
+            <div class="carte-objectif-progression">
+                <div class="progression-entete">
+                    <span>Progression</span>
+                    <span th:text="${objectif.progression} + '%'">0%</span>
+                </div>
+                <div class="progression-barre">
+                    <div class="progression-remplissage" th:style="'width:' + ${objectif.progression} + '%'"></div>
+                </div>
+            </div>
+            <span th:class="'badge-statut ' + ${objectif.statut.name()}"
+                  th:text="${objectif.statut}">Statut</span>
+        </div>
+
+        <div class="objectif-vide" th:if="${#lists.isEmpty(objectifs)}">
+            Aucun objectif defini par ton encadreur pour le moment.
+        </div>
+    </div>
+
+    <!-- EN BAS : OBJECTIFS TERMINES -->
+    <div class="bloc-module" style="margin-top:25px;" th:if="${objectifsAtteints > 0}">
+        <h2>Objectifs termines</h2>
+        <ul class="liste-taches">
+            <li th:each="objectif : ${objectifs}" th:if="${objectif.statut.name() == 'atteint'}">
+                <div>
+                    <div class="objectif-titre" th:text="${objectif.libelle}">-</div>
+                    <div class="objectif-detail"
+                         th:text="${objectif.dateLimite != null ? 'Echeance : ' + #temporals.format(objectif.dateLimite,'dd/MM/yyyy') : ''}">
+                    </div>
+                </div>
+                <span class="badge-statut atteint" th:text="${objectif.statut}">Atteint</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
 </body>
 </html>

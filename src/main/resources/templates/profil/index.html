@@ -52,6 +52,10 @@
                 <label>Téléphone</label>
                 <input type="tel" name="telephone" th:value="${utilisateur.telephone}" placeholder="+237 ...">
             </div>
+            <div class="groupe-champ">
+                <label>Adresse</label>
+                <input type="text" name="adresse" th:value="${utilisateur.adresse}" placeholder="Ville, quartier...">
+            </div>
             <button type="submit" class="bouton-principal">Enregistrer les modifications</button>
         </form>
 

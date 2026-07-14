@@ -2,65 +2,108 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Mon Profil - Stagiaire</title>
+    <title>Mon profil - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-fiche.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-profil.css}">
 </head>
 <body>
-    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-    <div class="contenu-principal">
-        <div class="en-tete-page">
-            <h1>Mon Profil</h1>
-            <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Mon profil</h1>
+        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
+    </div>
+
+    <!-- EN HAUT -->
+    <div class="profil-entete">
+        <img th:if="${utilisateur.photo != null}" th:src="@{'/uploads/' + ${utilisateur.photo}}"
+             class="profil-entete-avatar" alt="Photo de profil">
+        <div th:if="${utilisateur.photo == null}" class="profil-entete-avatar"
+             th:text="${utilisateur.prenom.substring(0,1) + utilisateur.nom.substring(0,1)}">S</div>
+
+        <div class="profil-entete-identite">
+            <h2 th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Nom Prenom</h2>
+            <div class="profil-entete-matricule" th:if="${stagiaire != null}"
+                 th:text="'Matricule : ' + ${stagiaire.matricule}">Matricule</div>
         </div>
 
-        <div class="bloc-blanc" style="padding: 30px;">
-            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 30px;">
-                
-                <!-- Colonne Gauche : Photo + Infos de base -->
-                <div>
-                    <div style="text-align: center;">
-                        <div class="avatar" style="width: 120px; height: 120px; margin: 0 auto; font-size: 50px;">
-                            <span th:text="${#strings.toUpperCase(utilisateur.prenom.substring(0,1) + utilisateur.nom.substring(0,1))}">S</span>
-                        </div>
-                        <h2 th:text="${utilisateur.prenom + ' ' + utilisateur.nom}"></h2>
-                        <p th:text="'Matricule : ' + ${stagiaire?.matricule}"></p>
-                    </div>
-                    <p><strong>École :</strong> <span th:text="${stagiaire?.ecole}"></span></p>
-                    <p><strong>Filière :</strong> <span th:text="${stagiaire?.filiere}"></span></p>
-                    <p><strong>Niveau :</strong> <span th:text="${stagiaire?.niveau}"></span></p>
-                </div>
-
-                <!-- Centre : Informations personnelles -->
-                <div>
-                    <h3>Informations personnelles</h3>
-                    <p><strong>Téléphone :</strong> <span th:text="${utilisateur.telephone}"></span></p>
-                    <p><strong>Email :</strong> <span th:text="${utilisateur.email}"></span></p>
-                    <p><strong>Adresse :</strong> <span th:text="${utilisateur.adresse}"></span></p>
-                </div>
-
-                <!-- Droite : Infos du Stage -->
-                <div th:if="${stage != null}">
-                    <h3>Informations du stage</h3>
-                    <p><strong>Service :</strong> <span th:text="${stage.service.nom}"></span></p>
-                    <p><strong>Encadreur :</strong> <span th:text="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}"></span></p>
-                    <p><strong>Date début :</strong> <span th:text="${stage.dateDebut}"></span></p>
-                    <p><strong>Date fin :</strong> <span th:text="${stage.dateFin}"></span></p>
-                    <p><strong>Statut :</strong> <span th:text="${stage.statut}"></span></p>
-                </div>
-            </div>
-
-            <hr style="margin: 30px 0;">
-            
-            <div style="text-align: center;">
-                <a href="#" class="btn btn-primary">Modifier mes informations</a>
-                <a href="#" class="btn btn-secondary" style="margin-left: 15px;">Changer mon mot de passe</a>
-                <a href="#" class="btn btn-success" style="margin-left: 15px;">Télécharger ma fiche stagiaire</a>
-            </div>
+        <div class="profil-entete-tags" th:if="${stagiaire != null and stagiaire.demandeStage != null}">
+            <div class="profil-tag"><strong>Ecole : </strong><span th:text="${stagiaire.demandeStage.ecole}">-</span></div>
+            <div class="profil-tag"><strong>Filiere : </strong><span th:text="${stagiaire.demandeStage.filiere}">-</span></div>
+            <div class="profil-tag"><strong>Niveau : </strong><span th:text="${stagiaire.demandeStage.niveau}">-</span></div>
         </div>
     </div>
+
+    <!-- CENTRE + DROITE -->
+    <div class="profil-colonnes">
+
+        <!-- INFOS PERSONNELLES -->
+        <div class="bloc-module">
+            <h2>Informations personnelles</h2>
+            <div class="info-ligne">
+                <strong>Telephone</strong>
+                <span th:text="${utilisateur.telephone != null ? utilisateur.telephone : 'Non renseigne'}">-</span>
+            </div>
+            <div class="info-ligne">
+                <strong>Email</strong>
+                <span th:text="${utilisateur.email}">-</span>
+            </div>
+            <div class="info-ligne">
+                <strong>Adresse</strong>
+                <span th:text="${utilisateur.adresse != null ? utilisateur.adresse : 'Non renseignee'}">-</span>
+            </div>
+        </div>
+
+        <!-- INFOS DU STAGE -->
+        <div class="bloc-module">
+            <h2>Informations du stage</h2>
+            <div th:if="${stage != null}">
+                <div class="info-ligne">
+                    <strong>Service</strong>
+                    <span th:text="${stage.service.nom}">-</span>
+                </div>
+                <div class="info-ligne">
+                    <strong>Encadreur</strong>
+                    <span th:text="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}">-</span>
+                </div>
+                <div class="info-ligne">
+                    <strong>Date de debut</strong>
+                    <span th:text="${#temporals.format(stage.dateDebut, 'dd/MM/yyyy')}">-</span>
+                </div>
+                <div class="info-ligne">
+                    <strong>Date de fin</strong>
+                    <span th:text="${#temporals.format(stage.dateFin, 'dd/MM/yyyy')}">-</span>
+                </div>
+                <div class="info-ligne">
+                    <strong>Statut</strong>
+                    <span class="badge-admis" th:text="${stage.statut}">-</span>
+                </div>
+            </div>
+            <div th:if="${stage == null}" style="color:#777;">
+                Aucun stage actif pour le moment.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- EN BAS -->
+    <div class="profil-boutons">
+        <a th:href="@{/profil}" class="btn-modifier">
+            <i class="fa-solid fa-pen"></i> Modifier certaines informations
+        </a>
+        <a th:href="@{/profil/mot-de-passe}" class="btn-mdp">
+            <i class="fa-solid fa-key"></i> Changer le mot de passe
+        </a>
+        <button type="button" class="btn-telecharger" onclick="window.print()">
+            <i class="fa-solid fa-download"></i> Telecharger la fiche stagiaire
+        </button>
+    </div>
+</div>
+
 </body>
 </html>

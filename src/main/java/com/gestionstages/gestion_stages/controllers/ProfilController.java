@@ -33,21 +33,23 @@ public class ProfilController {
     }
 
     @PostMapping("/modifier")
-    public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                  @RequestParam String prenom,
-                                  @RequestParam String nom,
-                                  @RequestParam(required = false) String telephone,
-                                  Model model) {
-        Utilisateur u = utilisateurRepository.findById(userDetails.getUtilisateur().getId())
-                .orElseThrow();
-        u.setPrenom(prenom);
-        u.setNom(nom);
-        u.setTelephone(telephone);
-        utilisateurRepository.save(u);
-        model.addAttribute("utilisateur", u);
-        model.addAttribute("succes", "Profil mis à jour avec succès.");
-        return "profil/index";
-    }
+public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @RequestParam String prenom,
+                              @RequestParam String nom,
+                              @RequestParam(required = false) String telephone,
+                              @RequestParam(required = false) String adresse,
+                              Model model) {
+    Utilisateur u = utilisateurRepository.findById(userDetails.getUtilisateur().getId())
+            .orElseThrow();
+    u.setPrenom(prenom);
+    u.setNom(nom);
+    u.setTelephone(telephone);
+    u.setAdresse(adresse);
+    utilisateurRepository.save(u);
+    model.addAttribute("utilisateur", u);
+    model.addAttribute("succes", "Profil mis à jour avec succès.");
+    return "profil/index";
+}
 
     @GetMapping("/mot-de-passe")
     public String afficherMotDePasse(@AuthenticationPrincipal CustomUserDetails userDetails,

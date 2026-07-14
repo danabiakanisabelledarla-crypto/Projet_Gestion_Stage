@@ -1,0 +1,158 @@
+.planning-layout {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+    align-items: start;
+}
+
+.planning-colonne-gauche {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.calendrier-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.calendrier-titre {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-dark);
+    text-transform: capitalize;
+}
+
+.btn-nav-mois {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: white;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-dark);
+}
+
+.btn-nav-mois:hover { background: var(--bg-page); }
+
+.calendrier-jours-semaine {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.calendrier-grille {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.case-jour {
+    min-height: 60px;
+    border-radius: 8px;
+    padding: 6px;
+    background: var(--bg-page);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.case-jour.vide { background: transparent; }
+
+.numero-jour {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.case-jour.aujourdhui {
+    background: #dbeafe;
+    border: 1px solid var(--primary-blue);
+}
+
+.case-jour.avec-evenement { background: #eef2ff; }
+
+.pastille-evenement {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.pastille-evenement.tache { background: #2563eb; }
+.pastille-evenement.evaluation { background: #f59e0b; }
+.pastille-evenement.fin_stage { background: #dc2626; }
+
+.legende-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.legende-item em { color: var(--text-muted); font-style: normal; font-size: 11px; }
+.legende-item.legende-desactive { opacity: 0.5; }
+
+.pastille-legende {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.pastille-legende.tache { background: #2563eb; }
+.pastille-legende.evaluation { background: #f59e0b; }
+.pastille-legende.fin_stage { background: #dc2626; }
+.pastille-legende.reunion { background: #a855f7; }
+.pastille-legende.livrable { background: #14b8a6; }
+
+.liste-evenements {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.evenement-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--bg-page);
+}
+
+.evenement-date-bloc {
+    width: 44px;
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+    padding: 6px 0;
+    flex-shrink: 0;
+}
+
+.evenement-jour { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+.evenement-mois { font-size: 10px; text-transform: uppercase; color: var(--text-muted); }
+
+.evenement-titre { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+
+.evenement-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .planning-layout { grid-template-columns: 1fr; }
+}

@@ -3,36 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <title>Planning - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-planning.css}">
 </head>
 <body>
-    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-    <div class="contenu-principal">
-        <div class="en-tete-page">
-            <h1>📅 Planning</h1>
-            <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
-        </div>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-        <div class="bloc-blanc">
-            <h3>Calendrier des échéances</h3>
-            
-            <!-- Liste des événements -->
-            <div th:each="tache : ${taches}" style="padding: 15px; border-bottom: 1px solid #eee;">
-                <strong th:text="${tache.titre}"></strong><br>
-                <small>
-                    Échéance : <span th:text="${tache.dateLimite}"></span> | 
-                    Statut : <span th:text="${tache.statut}"></span>
-                </small>
-            </div>
-
-            <div th:if="${#lists.isEmpty(taches)}" style="text-align: center; padding: 40px; color: #777;">
-                Aucun événement dans le planning pour le moment.
-            </div>
-        </div>
+<div class="contenu-principal">
+    <div class="en-tete-page">
+        <h1>Planning</h1>
+        <span class="utilisateur-connecte">Stagiaire</span>
     </div>
+
+    <div class="planning-layout">
+
+        <!-- EN HAUT + CENTRE -->
+        <div class="planning-colonne-gauche">
+
+            <div class="calendrier-wrapper bloc-module">
+                <div class="calendrier-entete">
+                    <button type="button" id="moisPrecedent" class="btn-nav-mois">&lsaquo;</button>
+                    <div id="calendrierTitre" class="calendrier-titre">-</div>
+                    <button type="button" id="moisSuivant" class="btn-nav-mois">&rsaquo;</button>
+                </div>
+                <div class="calendrier-jours-semaine">
+                    <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+                </div>
+                <div id="calendrierGrille" class="calendrier-grille"></div>
+            </div>
+
+            <div class="bloc-module calendrier-legende">
+                <h2>Types d'evenements</h2>
+                <div class="legende-item"><span class="pastille-legende tache"></span> Dates limites des taches</div>
+                <div class="legende-item"><span class="pastille-legende evaluation"></span> Evaluations</div>
+                <div class="legende-item"><span class="pastille-legende fin_stage"></span> Fin du stage</div>
+                <div class="legende-item legende-desactive"><span class="pastille-legende reunion"></span> Reunions <em>(a venir)</em></div>
+                <div class="legende-item legende-desactive"><span class="pastille-legende livrable"></span> Depot des livrables <em>(a venir)</em></div>
+            </div>
+
+        </div>
+
+        <!-- A DROITE -->
+        <div class="bloc-module planning-colonne-droite">
+            <h2>Evenements a venir</h2>
+            <div class="liste-evenements">
+                <div class="evenement-item" th:each="ev : ${evenementsAvenir}">
+                    <div class="evenement-date-bloc">
+                        <div class="evenement-jour" th:text="${#temporals.format(ev.date,'dd')}">-</div>
+                        <div class="evenement-mois" th:text="${#temporals.format(ev.date,'MMM')}">-</div>
+                    </div>
+                    <div class="evenement-info">
+                        <div class="evenement-titre" th:text="${ev.titre}">-</div>
+                        <span th:class="'evenement-type ' + ${ev.type}" th:text="${ev.type}">-</span>
+                    </div>
+                </div>
+                <div class="vide" th:if="${#lists.isEmpty(evenementsAvenir)}">
+                    Aucun evenement a venir.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const evenements = [
+        /*[# th:each="ev : ${evenements}"]*/
+        {
+            date: /*[[${#temporals.format(ev.date, 'yyyy-MM-dd')}]]*/ '2026-01-01',
+            titre: /*[[${ev.titre}]]*/ 'Titre',
+            type: /*[[${ev.type}]]*/ 'tache'
+        },
+        /*[/]*/
+    ];
+
+    let currentDate = new Date();
+    currentDate.setDate(1);
+
+    const nomsMois = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+
+    function formatDateKey(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function evenementsDuJour(cle) {
+        return evenements.filter(e => e.date === cle);
+    }
+
+    function genererCalendrier() {
+        const grille = document.getElementById('calendrierGrille');
+        grille.innerHTML = '';
+        document.getElementById('calendrierTitre').textContent =
+            nomsMois[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+
+        const premierJourMois = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const dernierJourMois = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+        let decalage = premierJourMois.getDay() - 1;
+        if (decalage < 0) decalage = 6;
+
+        for (let i = 0; i < decalage; i++) {
+            const vide = document.createElement('div');
+            vide.className = 'case-jour vide';
+            grille.appendChild(vide);
+        }
+
+        const aujourdHui = formatDateKey(new Date());
+
+        for (let jour = 1; jour <= dernierJourMois.getDate(); jour++) {
+            const dateCourante = new Date(currentDate.getFullYear(), currentDate.getMonth(), jour);
+            const cle = formatDateKey(dateCourante);
+            const evtsJour = evenementsDuJour(cle);
+
+            const caseJour = document.createElement('div');
+            caseJour.className = 'case-jour';
+            if (cle === aujourdHui) caseJour.classList.add('aujourdhui');
+            if (evtsJour.length > 0) caseJour.classList.add('avec-evenement');
+
+            const numero = document.createElement('div');
+            numero.className = 'numero-jour';
+            numero.textContent = jour;
+            caseJour.appendChild(numero);
+
+            evtsJour.forEach(e => {
+                const pastille = document.createElement('div');
+                pastille.className = 'pastille-evenement ' + e.type;
+                pastille.title = e.titre;
+                caseJour.appendChild(pastille);
+            });
+
+            grille.appendChild(caseJour);
+        }
+    }
+
+    document.getElementById('moisPrecedent').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        genererCalendrier();
+    });
+    document.getElementById('moisSuivant').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        genererCalendrier();
+    });
+
+    genererCalendrier();
+</script>
+
 </body>
 </html>
