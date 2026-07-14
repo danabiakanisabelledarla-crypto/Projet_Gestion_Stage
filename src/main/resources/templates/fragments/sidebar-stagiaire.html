@@ -15,9 +15,22 @@
         <a th:href="@{/stagiaire/rapport}" th:classappend="${activePage == 'rapport'} ? ' actif'"><i class="fa-solid fa-file-pdf"></i> Rapport final</a>
         <a th:href="@{/stagiaire/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
     </nav>
-    <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
-    <div class="sidebar-profile-card"><div class="avatar">S</div><div class="info"><div class="name">Stagiaire</div><div class="badge-online">En ligne</div></div></div>
-    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>
+    <!--<img class="sidebar-deco" th:src="@{/images/heroo.png}" alt="">
+     <div class="sidebar-profile-card"><div class="avatar">S</div><div class="info"><div class="name">Stagiaire</div><div class="badge-online">En ligne</div></div></div> 
+    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>  -->
+        
+    <div class="sidebar-user">
+        <a th:href="@{/stagiaire/profil}" class="sidebar-user-link">
+            <i class="fa-solid fa-user"></i> Mon profil
+        </a>
+        <form th:action="@{/logout}" method="post" class="logout-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn-logout">
+                <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+
 </div>
 
 </body>

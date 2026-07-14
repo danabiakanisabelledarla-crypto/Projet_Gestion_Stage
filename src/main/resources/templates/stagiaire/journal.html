@@ -2,101 +2,213 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Journal de bord</title>
+    <title>Journal de bord - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-journal.css}">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Journal de bord</h1>
-        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
-    </div>
+<div class="journal-main">
 
-    <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
-
-    <div th:if="${stage == null}" class="bloc-module">
-        <p style="color:#777;">Vous n'avez pas encore de stage affecte.</p>
-    </div>
-
-    <div th:if="${stage != null}" class="grille-modules">
-
-        <!-- Journal de bord -->
-        <div class="bloc-module">
-            <h2>Journal de bord</h2>
-            <form th:action="@{/stagiaire/journal/ajouter}" method="post">
-
-                <div class="groupe-champ">
-                    <label>Date</label>
-                    <input type="date" name="dateActivite"
-                           th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"
-                           required>
+    <!-- ========== BARRE SUPERIEURE ========== -->
+    <header class="journal-header">
+        <div class="header-gauche">
+            <div class="header-search">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" placeholder="Rechercher une activite...">
+            </div>
+        </div>
+        <div class="header-droite">
+            <div class="header-icon-btn">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notif-dot">2</span>
+            </div>
+            <div class="header-icon-btn">
+                <i class="fa-regular fa-envelope"></i>
+            </div>
+            <div class="header-user">
+                <div class="header-user-text">
+                    <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
+                    <span class="header-user-role">Stagiaire</span>
                 </div>
+                <div class="header-avatar" th:text="${initiales}">S</div>
+                <i class="fa-solid fa-chevron-down header-arrow"></i>
+            </div>
+        </div>
+    </header>
 
-                <div class="groupe-champ">
-                    <label>Travaux realises</label>
-                    <textarea name="travauxRealises"
-                              placeholder="Decrivez vos activites du jour..."
-                              required></textarea>
+    <!-- ========== CONTENU ========== -->
+    <div class="journal-content">
+
+        <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+
+        <!-- EN-TETE PAGE -->
+        <div class="page-entete">
+            <div class="page-entete-gauche">
+                <div class="page-icon">
+                    <i class="fa-solid fa-book-open"></i>
                 </div>
-
-                <div class="groupe-champ">
-                    <label>Difficultes rencontrees</label>
-                    <textarea name="difficultes"
-                              placeholder="Optionnel..."></textarea>
+                <div>
+                    <h1 class="page-titre">Journal de bord</h1>
+                    <p class="page-sous-titre">Consignez quotidiennement les activites realisees durant votre stage.</p>
                 </div>
-
-                <button type="submit" class="bouton-principal">Enregistrer</button>
-            </form>
+            </div>
+            <div class="page-entete-droite">
+                <a href="#" class="btn-nouveau" onclick="document.getElementById('formNouveauJournal').style.display='block'; return false;">
+                    <i class="fa-solid fa-plus"></i> Nouvelle entree
+                </a>
+            </div>
         </div>
 
-        <!-- Depot de livrables -->
-        <div class="bloc-module">
-            <h2>Depot de livrables</h2>
-
-            <!-- Liste des livrables deja deposes -->
-            <ul class="liste-fichiers">
-                <li th:each="livrable : ${livrables}"
-                    th:text="${livrable.titre}">fichier.pdf</li>
-                <li th:if="${#lists.isEmpty(livrables)}"
-                    style="color:#777;">Aucun livrable depose.</li>
-            </ul>
-
-            <!-- Formulaire depot -->
-            <form th:action="@{/stagiaire/livrables/deposer}" method="post"
-                  enctype="multipart/form-data">
-
-                <div class="groupe-champ">
-                    <label>Tache concernee</label>
-                    <select name="tacheId" required>
-                        <option value="">-- Choisir une tache --</option>
-                        <option th:each="tache : ${taches}"
-                                th:value="${tache.id}"
-                                th:text="${tache.titre}">
-                        </option>
-                    </select>
+        <!-- CARTES RESUME -->
+        <div class="resume-cartes">
+            <div class="resume-carte">
+                <div class="resume-icone bleu"><i class="fa-regular fa-calendar"></i></div>
+                <div class="resume-info">
+                    <div class="resume-label">Entrees</div>
+                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
+                    <div class="resume-sous">activites enregistrees</div>
                 </div>
-
-                <div class="groupe-champ">
-                    <label>Titre du livrable</label>
-                    <input type="text" name="titre"
-                           placeholder="Ex: diagrammes_uml.pdf" required>
+            </div>
+            <div class="resume-carte">
+                <div class="resume-icone orange"><i class="fa-regular fa-clock"></i></div>
+                <div class="resume-info">
+                    <div class="resume-label">Cette semaine</div>
+                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
+                    <div class="resume-sous">nouvelles entrees</div>
                 </div>
-
-                <div class="groupe-champ">
-                    <label>Fichier</label>
-                    <input type="file" name="fichier" required>
+            </div>
+            <div class="resume-carte">
+                <div class="resume-icone vert"><i class="fa-solid fa-trophy"></i></div>
+                <div class="resume-info">
+                    <div class="resume-label">Jours actifs</div>
+                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
+                    <div class="resume-sous">jours de stage</div>
                 </div>
-
-                <button type="submit" class="bouton-principal">Deposer fichier</button>
-            </form>
+            </div>
         </div>
 
+        <!-- TIMELINE -->
+        <div class="timeline-section" th:if="${journaux != null and !journaux.isEmpty()}">
+            <div class="timeline-line"></div>
+
+            <div class="timeline-entree" th:each="journal : ${journaux}">
+                <div class="timeline-cercle"><i class="fa-solid fa-check"></i></div>
+                <div class="entree-carte">
+                    <div class="entree-header">
+                        <div class="entree-date-badge" th:text="${#temporals.format(journal.dateActivite, 'dd MMMM yyyy')}">-</div>
+                        <div class="entree-titre" th:text="${#strings.abbreviate(journal.travauxRealises, 60)}">-</div>
+                        <div class="entree-actions">
+                            <a th:href="@{/stagiaire/journal/{id}/modifier(id=${journal.id})}" class="entree-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                            <a th:href="@{/stagiaire/journal/{id}/supprimer(id=${journal.id})}" class="entree-action-btn rouge" title="Supprimer" onclick="return confirm('Supprimer cette entree ?')"><i class="fa-solid fa-trash"></i></a>
+                        </div>
+                    </div>
+                    <div class="entree-description" th:text="${journal.travauxRealises}">-</div>
+                    <div class="entree-difficultes" th:if="${journal.difficultes != null and !journal.difficultes.isEmpty()}">
+                        <h4><i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B;"></i> Difficultes rencontrees</h4>
+                        <div class="difficultes-encart" th:text="${journal.difficultes}">-</div>
+                    </div>
+                    <div class="entree-solutions" th:if="${journal.observations != null and !journal.observations.isEmpty()}">
+                        <h4><i class="fa-solid fa-lightbulb" style="color:#22C55E;"></i> Solutions apportees</h4>
+                        <div class="solutions-encart" th:text="${journal.observations}">-</div>
+                    </div>
+                    <div class="entree-footer">
+                        <span><i class="fa-regular fa-clock"></i> -</span>
+                        <span><i class="fa-solid fa-folder"></i> Stage</span>
+                        <span class="statut-badge valide"><i class="fa-solid fa-check"></i> Valide</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vide" th:if="${journaux == null or journaux.isEmpty()}">
+            Aucune entree dans le journal pour le moment.<br>
+            Cliquez sur "Nouvelle entree" pour commencer.
+        </div>
+
+        <!-- HISTORIQUE COMPLET -->
+        <div class="historique-section" th:if="${journaux != null and !journaux.isEmpty()}">
+            <h2 class="historique-titre"><i class="fa-solid fa-table"></i> Historique complet des activites</h2>
+            <div class="carte-tableau">
+                <table class="table-journal">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Titre</th>
+                            <th>Projet</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="journal : ${journaux}">
+                            <td th:text="${#temporals.format(journal.dateActivite, 'dd/MM/yyyy')}">-</td>
+                            <td class="titre-cell" th:text="${#strings.abbreviate(journal.travauxRealises, 50)}">-</td>
+                            <td>Stage</td>
+                            <td><span class="statut-badge valide">Valide</span></td>
+                            <td>
+                                <a th:href="@{/stagiaire/journal/{id}/modifier(id=${journal.id})}" class="action-icon-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="pagination-info" th:text="${nombreEntrees} + ' activites enregistrees'">-</div>
+                    <div class="pagination-btns">
+                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="page-btn actif">1</button>
+                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BARRE D'INFORMATION FINALE -->
+        <div class="info-banner">
+            <div class="info-banner-content">
+                <div class="info-banner-icon">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+                <div>
+                    <p class="info-banner-text">Le journal de bord constitue une preuve du travail realise durant votre stage.<br>Veillez a le completer regulierement.</p>
+                    <a href="#" class="info-banner-btn">Consulter le reglement</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- FORMULAIRE NOUVELLE ENTREE (MODAL) -->
+<div class="journal-modal-overlay" id="formNouveauJournal" style="display:none;" onclick="if(event.target==this)this.style.display='none'">
+    <div class="journal-modal">
+        <div class="modal-header">
+            <h2>Nouvelle entree</h2>
+            <button type="button" class="modal-close" onclick="document.getElementById('formNouveauJournal').style.display='none'">&times;</button>
+        </div>
+        <form th:action="@{/stagiaire/journal/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Date</label>
+                <input type="date" name="dateActivite" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Travaux realises</label>
+                <textarea name="travauxRealises" placeholder="Decrivez vos activites du jour..." required></textarea>
+            </div>
+            <div class="groupe-champ">
+                <label>Difficultes rencontrees</label>
+                <textarea name="difficultes" placeholder="Optionnel..."></textarea>
+            </div>
+            <div class="groupe-champ">
+                <label>Solutions apportees</label>
+                <textarea name="solutions" placeholder="Optionnel..."></textarea>
+            </div>
+            <button type="submit" class="bouton-principal">Enregistrer</button>
+        </form>
     </div>
 </div>
 

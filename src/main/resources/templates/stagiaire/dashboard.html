@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
@@ -12,98 +13,23 @@
 <body>
 
 <!-- ========== SIDEBAR ========== -->
-<!--<aside class="sidebar">
-    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-    <div class="sidebar-logo">
-        <div class="logo-titre">DTA Alliance</div>
-        <div class="logo-sous">Plateforme de gestion des stages</div>
-    </div>
 
-    <div class="sidebar-role-label">Stagiaire</div>
-
-    <nav class="sidebar-menu">
-        <a th:href="@{/stagiaire/dashboard}" class="menu-item actif">
-            <span class="icone">🏠</span> Tableau de bord
-        </a>
-        <a href="#" class="menu-item">
-            <span class="icone">👤</span> Mon profil
-        </a>
-        <a th:href="@{/stagiaire/taches}" class="menu-item">
-            <span class="icone">✅</span> Mes taches
-        </a>
-        <a th:href="@{/stagiaire/journal}" class="menu-item">
-            <span class="icone">📔</span> Journal
-        </a>
-        <a th:href="@{/stagiaire/livrables}" class="menu-item">
-            <span class="icone">📦</span> Livrables
-        </a>
-        <a th:href="@{/stagiaire/rapport}" class="menu-item">
-            <span class="icone">📄</span> Rapport final
-        </a>
-        <a href="#" class="menu-item">
-            <span class="icone">📅</span> Planning
-        </a>
-    </nav>
-
-    <div class="sidebar-bas">
-        <div th:if="${stage != null}">
-            <div class="profil-card">
-                <div class="profil-avatar"
-                     th:text="${initiales}">
-                    JC
-                    <div class="badge-online"></div>
-                </div>
-                <div>
-                    <div class="profil-nom" th:text="${nomComplet}">Nom</div>
-                    <div class="profil-role">Stagiaire</div>
-                </div>
-            </div>
-            <div class="infos-stage">
-                <div class="info-ligne">
-                    <span class="icone">⚙️</span>
-                    <span th:text="'Service : ' + ${stage.service.nom}">Service</span>
-                </div>
-                <div class="info-ligne">
-                    <span class="icone">👤</span>
-                    <span th:text="'Encadreur : ' + ${stage.encadreur.utilisateur.prenom}
-                                  + ' ' + ${stage.encadreur.utilisateur.nom}">
-                        Encadreur
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div th:if="${stage == null}">
-            <div class="profil-card">
-                <div class="profil-avatar" th:text="${initiales}">S</div>
-                <div>
-                    <div class="profil-nom" th:text="${nomComplet}">Nom</div>
-                    <div class="profil-role">Stagiaire</div>
-                </div>
-            </div>
-        </div>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn-deconnexion">
-                🚪 Se deconnecter
-            </button>
-        </form>
-    </div>
-</aside>-->
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 <!-- ========== MAIN ========== -->
 <div class="main">
 
     <!-- HEADER -->
-    <header class="header">
+    <!--<header class="header">
         <div class="header-recherche">
-            <span class="icone">🔍</span>
+            <span class="icone"><i class="fa-solid fa-magnifying-glass"></i></span>
             <input type="text" placeholder="Rechercher une tache, un document...">
         </div>
         <div class="header-droite">
             <div class="header-icone-btn">
-                🔔
+                <i class="fa-regular fa-bell"></i>
                 <div class="notif-badge">2</div>
             </div>
-            <div class="header-icone-btn">💬</div>
+            <div class="header-icone-btn"><i class="fa-regular fa-message"></i></div>
             <div class="header-profil">
                 <div>
                     <div class="nom" th:text="${nomComplet}">Nom</div>
@@ -113,10 +39,11 @@
                 <span style="color:#94A3B8; font-size:12px;">▼</span>
             </div>
         </div>
-    </header>
+    </header>-->
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
 
     <!-- CONTENU -->
-    <div class="contenu">
+        <div class="contenu-dashboard">
 
         <!-- TITRE + DATE/HEURE -->
         <div class="contenu-top">
@@ -131,14 +58,14 @@
             </div>
             <div class="date-heure">
                 <div class="date-bloc">
-                    <span class="icone">📅</span>
+                    <span class="icone"><i class="fa-solid fa-calendar-days"></i></span>
                     <div>
                         <div class="label">Aujourd'hui</div>
                         <div class="valeur" id="dateAujourdhui">--</div>
                     </div>
                 </div>
                 <div class="heure-bloc">
-                    <span class="icone">🕐</span>
+                    <span class="icone"><i class="fa-solid fa-clock"></i></span>
                     <div>
                         <div class="label">Il est</div>
                         <div class="valeur" id="heureActuelle">--:--</div>
@@ -150,7 +77,7 @@
         <!-- CARTES STATS -->
         <div class="grille-stats">
             <div class="carte-stat">
-                <div class="stat-icone-wrapper bleu">📋</div>
+                <div class="stat-icone-wrapper bleu"><i class="fa-solid fa-list-check"></i></div>
                 <div>
                     <div class="stat-valeur" th:text="${nombreTaches}">0</div>
                     <div class="stat-label">Taches</div>
@@ -159,7 +86,7 @@
                 </div>
             </div>
             <div class="carte-stat">
-                <div class="stat-icone-wrapper vert">📄</div>
+                <div class="stat-icone-wrapper vert"><i class="fa-solid fa-file-arrow-up"></i></div>
                 <div>
                     <div class="stat-valeur" th:text="${nombreLivrables}">0</div>
                     <div class="stat-label">Livrables</div>
@@ -170,7 +97,9 @@
                 </div>
             </div>
             <div class="carte-stat">
-                <div class="stat-icone-wrapper violet">🎯</div>
+                <div class="stat-icone-wrapper violet">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
                 <div>
                     <div class="stat-valeur" th:text="${nombreObjectifs}">0</div>
                     <div class="stat-label">Objectifs</div>
@@ -181,7 +110,7 @@
                 </div>
             </div>
             <div class="carte-stat">
-                <div class="stat-icone-wrapper orange">📈</div>
+                <div class="stat-icone-wrapper orange"><i class="fa-solid fa-chart-line"></i></div>
                 <div class="progression-barre-wrapper">
                     <div class="stat-valeur"
                          th:text="${progression} + '%'">0%</div>

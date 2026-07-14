@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Messages - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-messages.css}">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+<div class="messages-main">
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
+    <div class="messages-content">
+        <!-- En-tête -->
+        <div class="page-entete">
+            <div class="page-entete-gauche">
+                <div class="page-icon"><i class="fa-solid fa-comments"></i></div>
+                <div>
+                    <h1 class="page-titre">Messages</h1>
+                    <p class="page-sous-titre">Communiquez avec votre encadreur tout au long de votre stage.</p>
+                </div>
+            </div>
+            <div class="page-entete-droite">
+                <a href="#" class="btn-nouveau"><i class="fa-solid fa-plus"></i> Nouvelle conversation</a>
+                <button class="filtre-btn"><i class="fa-regular fa-bell"></i> Notifications</button>
+            </div>
+        </div>
+        <!-- Deux colonnes -->
+        <div class="messages-layout">
+            <!-- Colonne gauche : Liste conversations -->
+            <div class="conversations-list">
+                <div class="conversations-search">
+                    <div class="search-input">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Rechercher une conversation...">
+                    </div>
+                    <button class="filter-icon-btn"><i class="fa-solid fa-sliders"></i></button>
+                </div>
+                <div class="conversations-items">
+                    <div class="conversation-item active">
+                        <div class="conv-avatar">MN</div>
+                        <div class="conv-info">
+                            <div class="conv-nom">M. Nikoa</div>
+                            <div class="conv-fonction">Responsable Developpement logiciel</div>
+                            <div class="conv-dernier-msg">N'oubliez pas le depot du livrable...</div>
+                        </div>
+                        <div class="conv-meta">
+                            <span class="conv-heure">10:42</span>
+                            <span class="conv-notif">2</span>
+                        </div>
+                    </div>
+                    <div class="conversation-item">
+                        <div class="conv-avatar">JD</div>
+                        <div class="conv-info">
+                            <div class="conv-nom">M. Dupont</div>
+                            <div class="conv-fonction">Responsable RH</div>
+                            <div class="conv-dernier-msg">Votre convention est prete.</div>
+                        </div>
+                        <div class="conv-meta">
+                            <span class="conv-heure">Hier</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Colonne droite : Discussion -->
+            <div class="discussion-panel">
+                <div class="discussion-header">
+                    <div class="discussion-user">
+                        <div class="discussion-avatar">MN</div>
+                        <div>
+                            <div class="discussion-nom">M. Nikoa</div>
+                            <div class="discussion-statut"><span class="online-dot"></span> En ligne</div>
+                        </div>
+                    </div>
+                    <div class="discussion-actions">
+                        <button class="disc-action-btn"><i class="fa-solid fa-phone"></i></button>
+                        <button class="disc-action-btn"><i class="fa-solid fa-video"></i></button>
+                        <button class="disc-action-btn"><i class="fa-solid fa-circle-info"></i></button>
+                    </div>
+                </div>
+                <div class="discussion-messages">
+                    <div class="message recu">
+                        <div class="msg-avatar">MN</div>
+                        <div class="msg-bulle">
+                            <p>Bonjour Jason, avez-vous termine la tache sur Spring Boot ?</p>
+                            <span class="msg-heure">10:30</span>
+                        </div>
+                    </div>
+                    <div class="message envoye">
+                        <div class="msg-bulle envoye">
+                            <p>Bonjour, oui c'est termine. Je viens de deposer le livrable.</p>
+                            <span class="msg-heure">10:35</span>
+                        </div>
+                    </div>
+                    <div class="message recu">
+                        <div class="msg-avatar">MN</div>
+                        <div class="msg-bulle">
+                            <p>Parfait ! Je vais verifier cela.</p>
+                            <span class="msg-heure">10:42</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="discussion-input">
+                    <div class="input-actions">
+                        <button><i class="fa-solid fa-paperclip"></i></button>
+                        <button><i class="fa-solid fa-image"></i></button>
+                        <button><i class="fa-regular fa-face-smile"></i></button>
+                    </div>
+                    <input type="text" class="input-message" placeholder="Ecrire un message...">
+                    <button class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

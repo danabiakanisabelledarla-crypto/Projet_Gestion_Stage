@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="header" class="stagiaire-header">
+    <div class="header-gauche">
+        <div class="header-search">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" placeholder="Rechercher...">
+        </div>
+    </div>
+    <div class="header-droite">
+        <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
+            <i class="fa-regular fa-envelope"></i>
+        </a>
+        <div class="header-icon-btn" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="notif-dot">2</span>
+        </div>
+        <div class="header-user">
+            <div class="header-user-text">
+                <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
+                <span class="header-user-role">Stagiaire</span>
+            </div>
+            <div class="header-avatar" th:text="${initiales}">S</div>
+            <i class="fa-solid fa-chevron-down header-arrow"></i>
+        </div>
+    </div>
+</div>
+</body>
+</html>

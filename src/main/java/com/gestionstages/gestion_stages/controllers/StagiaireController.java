@@ -146,6 +146,12 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                                    @RequestParam(required = false) String succes) {
         Optional<Stage> stageOpt = getStage(userDetails);
         model.addAttribute("activePage", "journal");
+        String prenom = userDetails.getUtilisateur().getPrenom();
+        String nom = userDetails.getUtilisateur().getNom();
+        model.addAttribute("prenom", prenom);
+        model.addAttribute("nomComplet", prenom + " " + nom);
+        model.addAttribute("initiales", prenom.substring(0,1).toUpperCase()
+                + nom.substring(0,1).toUpperCase());
 
         if (stageOpt.isPresent()) {
             Stage stage = stageOpt.get();
@@ -159,7 +165,13 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                 livrables.addAll(livrableRepository.findByTacheId(t.getId()));
             }
             model.addAttribute("livrables", livrables);
+            List<JournalBord> journaux = journalBordRepository
+                    .findByStageIdOrderByDateActiviteDesc(stage.getId());
+            model.addAttribute("journaux", journaux);
+            model.addAttribute("nombreEntrees", journaux.size());
         } else {
+            model.addAttribute("journaux", new ArrayList<>());
+            model.addAttribute("nombreEntrees", 0);
             model.addAttribute("stage", null);
             model.addAttribute("taches", new ArrayList<>());
             model.addAttribute("livrables", new ArrayList<>());
@@ -173,12 +185,16 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
     public String ajouterJournal(@AuthenticationPrincipal CustomUserDetails userDetails,
                                   @RequestParam String dateActivite,
                                   @RequestParam String travauxRealises,
-                                  @RequestParam(required = false) String difficultes) {
+                                  @RequestParam(required = false) String difficultes,
+                                  @RequestParam(required = false) String solutions) {
         getStage(userDetails).ifPresent(stage -> {
             JournalBord journal = new JournalBord(stage,
                     LocalDate.parse(dateActivite), travauxRealises);
+
             journal.setDifficultes(difficultes);
+            journal.setObservations(solutions);
             journalBordRepository.save(journal);
+            journal.setObservations(solutions);
         });
         return "redirect:/stagiaire/journal?succes=Journal enregistre avec succes.";
     }
@@ -214,7 +230,19 @@ public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDeta
     if (stageOpt.isPresent()) {
         taches = tacheRepository.findByStageId(stageOpt.get().getId());
     }
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase()
+        + nom.substring(0,1).toUpperCase());
     model.addAttribute("taches", taches);
+    long tachesAFaire = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.a_faire).count();
+    long tachesEnCours = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.en_cours).count();
+    long tachesTerminees = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.terminee).count();
+    model.addAttribute("tachesAFaire", tachesAFaire);
+    model.addAttribute("tachesEnCours", tachesEnCours);
+    model.addAttribute("tachesTerminees", tachesTerminees);
     return "stagiaire/taches";
 
 }
@@ -227,6 +255,13 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
 
     model.addAttribute("activePage", "livrables");
 
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase()
+            + nom.substring(0,1).toUpperCase());
+
     if (stageOpt.isPresent()) {
         List<Tache> taches = tacheRepository.findByStageId(stageOpt.get().getId());
         for (Tache t : taches) {
@@ -234,6 +269,7 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
         }
     }
     model.addAttribute("livrables", livrables);
+    model.addAttribute("nombreLivrables", livrables.size());
     return "stagiaire/livrables";
 }
 
@@ -244,6 +280,14 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
     
     Optional<Stage> stageOpt = getStage(userDetails);
     model.addAttribute("stage", stageOpt.orElse(null));
+
+    model.addAttribute("activePage", "rapport");
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase()
+            + nom.substring(0,1).toUpperCase());
     
     stageOpt.ifPresent(stage -> {
         List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
@@ -255,6 +299,7 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
         
         if (!rapports.isEmpty()) {
             model.addAttribute("dernierRapport", rapports.get(0));
+            model.addAttribute("nombreVersions", rapports.size());
         }
     });
     
@@ -361,4 +406,17 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
 
     return "stagiaire/planning";
 }
+
+@GetMapping("/messages")
+public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "messages");
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase() + nom.substring(0,1).toUpperCase());
+    getStage(userDetails).ifPresent(s -> model.addAttribute("stage", s));
+    return "stagiaire/messages";
+}
+
 }

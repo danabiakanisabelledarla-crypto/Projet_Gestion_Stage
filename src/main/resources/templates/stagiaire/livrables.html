@@ -2,34 +2,162 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Mes livrables</title>
+    <title>Mes livrables - Stagiaire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-livrables.css}">
 </head>
 <body>
+
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Mes livrables</h1>
-        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
-    </div>
-    <div class="bloc-module">
-        <ul class="liste-fichiers">
-            <li th:each="livrable : ${livrables}">
-                <div style="font-weight:bold;" th:text="${livrable.titre}"></div>
-                <div style="font-size:12px; color:#777; margin-top:3px;"
-                     th:text="'Statut : ' + ${livrable.statut}"></div>
-                <div style="font-size:12px; color:#777;"
-                     th:text="'Depose le : ' + ${livrable.dateDepot}"></div>
-            </li>
-            <li th:if="${#lists.isEmpty(livrables)}"
-                style="color:#777;">
-                Aucun livrable depose pour le moment.
-            </li>
-        </ul>
+
+<div class="livrables-main">
+
+    <!-- ========== BARRE SUPERIEURE ========== -->
+    <header class="livrables-header">
+        <div class="header-gauche">
+            <div class="header-search">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" placeholder="Rechercher un document...">
+            </div>
+        </div>
+        <div class="header-droite">
+            <div class="header-icon-btn">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notif-dot">2</span>
+            </div>
+            <div class="header-icon-btn">
+                <i class="fa-regular fa-envelope"></i>
+            </div>
+            <div class="header-user">
+                <div class="header-user-text">
+                    <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
+                    <span class="header-user-role">Stagiaire</span>
+                </div>
+                <div class="header-avatar" th:text="${initiales}">S</div>
+                <i class="fa-solid fa-chevron-down header-arrow"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== CONTENU ========== -->
+    <div class="livrables-content">
+
+        <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+
+        <!-- EN-TETE PAGE -->
+        <div class="page-entete">
+            <div class="page-entete-gauche">
+                <div class="page-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div>
+                    <h1 class="page-titre">Livrables</h1>
+                    <p class="page-sous-titre">Deposez vos documents et consultez les retours de votre encadreur.</p>
+                </div>
+            </div>
+            <div class="page-entete-droite">
+                <div class="filtre-btn">
+                    <i class="fa-solid fa-filter"></i> Filtrer
+                </div>
+                <a href="#" class="btn-nouveau">
+                    <i class="fa-solid fa-upload"></i> Deposer un document
+                </a>
+            </div>
+        </div>
+
+        <!-- ========== CARTE TABLEAU ========== -->
+        <div class="carte-tableau">
+            <table class="table-livrables">
+                <thead>
+                    <tr>
+                        <th>Nom du document</th>
+                        <th>Type</th>
+                        <th>Date depot</th>
+                        <th>Version</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="ligne-livrable" th:each="livrable : ${livrables}">
+                        <td>
+                            <div class="doc-nom-cell">
+                                <div class="doc-icon">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div>
+                                    <div class="doc-nom" th:text="${livrable.titre}">-</div>
+                                    <div class="doc-desc" th:text="${livrable.description != null ? livrable.description : 'Document livrable'}">-</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-type rapport">Livrable</span>
+                        </td>
+                        <td>
+                            <div class="date-cell">
+                                <i class="fa-regular fa-calendar"></i>
+                                <div>
+                                    <div th:text="${#temporals.format(livrable.dateDepot, 'dd MMMM yyyy')}">-</div>
+                                    <div class="date-heure" th:text="${#temporals.format(livrable.dateDepot, 'HH:mm')}">-</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="version-text">1.0</span>
+                        </td>
+                        <td>
+                            <span th:class="'badge-statut ' + ${livrable.statut.name()}" th:text="${livrable.statut.name() == 'depose' ? 'Brouillon' : (livrable.statut.name() == 'valide' ? 'Valide' : (livrable.statut.name() == 'rejete' ? 'Refuse' : 'Correction'))}">-</span>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a th:href="@{'/uploads/' + ${livrable.fichier}}" class="action-icon-btn" title="Telecharger" download><i class="fa-solid fa-download"></i></a>
+                                <a th:href="@{/stagiaire/livrables/{id}/remplacer(id=${livrable.id})}" class="action-icon-btn" title="Remplacer"><i class="fa-solid fa-rotate"></i></a>
+                                <button class="action-icon-btn" title="Commentaires" onclick="toggleCommentaire('commentaire-${livrable.id}')"><i class="fa-solid fa-comment"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- LIGNE COMMENTAIRE (sous chaque livrable) -->
+                    <tr class="ligne-commentaire" th:each="livrable : ${livrables}" th:if="${livrable.commentaireEncadreur != null and !livrable.commentaireEncadreur.isEmpty()}">
+                        <td colspan="6">
+                            <div class="commentaire-encart">
+                                <div class="commentaire-icon"><i class="fa-regular fa-message"></i></div>
+                                <div>
+                                    <div class="commentaire-titre">Commentaire de l'encadreur</div>
+                                    <p class="commentaire-texte" th:text="${livrable.commentaireEncadreur}">-</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(livrables)}">
+                        <td colspan="6" class="vide">Aucun livrable depose pour le moment.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- PAGINATION -->
+            <div class="pagination" th:if="${!livrables.isEmpty()}">
+                <div class="pagination-info" th:text="'Affichage de 1 a ' + ${nombreLivrables} + ' sur ' + ${nombreLivrables} + ' livrables'">-</div>
+                <div class="pagination-btns">
+                    <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="page-btn actif">1</button>
+                    <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script>
+function toggleCommentaire(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+</script>
+
 </body>
 </html>
