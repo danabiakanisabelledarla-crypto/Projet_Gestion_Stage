@@ -220,7 +220,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="doc, iter : ${rapports}">
-                            <td><span class="version-badge" th:text="'v' + (${rapports.size()} - ${iter.index})">v1</span></td>
+                            <td><span class="version-badge" th:text="'v' + ${rapports.size() - iter.index})">v1</span></td>
                             <td th:text="${#temporals.format(doc.dateDepot, 'dd MMMM yyyy')}">-</td>
                             <td class="desc-cell" th:text="${doc.nomFichier}">-</td>
                             <td><span class="badge-statut-rapport" th:text="${doc.statut}">-</span></td>
