@@ -6,8 +6,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-fiche.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-profil.css}">
+
+    <style>
+    .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width:500px){ .form-row-2col { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
 
@@ -93,17 +98,84 @@
 
     <!-- EN BAS -->
     <div class="profil-boutons">
-        <a th:href="@{/profil}" class="btn-modifier">
+        <button type="button" class="btn-modifier" onclick="ouvrirModal('modalModifier')">
             <i class="fa-solid fa-pen"></i> Modifier certaines informations
-        </a>
-        <a th:href="@{/profil/mot-de-passe}" class="btn-mdp">
+        </button>
+        <button type="button" class="btn-mdp" onclick="ouvrirModal('modalMdp')">
             <i class="fa-solid fa-key"></i> Changer le mot de passe
-        </a>
+        </button>
         <button type="button" class="btn-telecharger" onclick="window.print()">
             <i class="fa-solid fa-download"></i> Telecharger la fiche stagiaire
         </button>
     </div>
 </div>
+<!-- MODAL MODIFIER INFOS -->
+<div class="modal-overlay" id="modalModifier" onclick="if(event.target===this)fermerModal('modalModifier')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Modifier mes informations</h2>
+            <button class="modal-close" onclick="fermerModal('modalModifier')">&times;</button>
+        </div>
+        <form th:action="@{/stagiaire/profil/modifier}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-row-2col">
+                <div class="groupe-champ">
+                    <label>Prénom</label>
+                    <input type="text" name="prenom" th:value="${utilisateur.prenom}" required>
+                </div>
+                <div class="groupe-champ">
+                    <label>Nom</label>
+                    <input type="text" name="nom" th:value="${utilisateur.nom}" required>
+                </div>
+            </div>
+            <div class="groupe-champ">
+                <label>Email</label>
+                <input type="email" name="email" th:value="${utilisateur.email}" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Téléphone</label>
+                <input type="tel" name="telephone" th:value="${utilisateur.telephone}">
+            </div>
+            <div class="groupe-champ">
+                <label>Adresse</label>
+                <input type="text" name="adresse" th:value="${utilisateur.adresse}">
+            </div>
+            <button type="submit" class="bouton-principal">Enregistrer les modifications</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CHANGER MOT DE PASSE -->
+<div class="modal-overlay" id="modalMdp" onclick="if(event.target===this)fermerModal('modalMdp')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Changer le mot de passe</h2>
+            <button class="modal-close" onclick="fermerModal('modalMdp')">&times;</button>
+        </div>
+        <p style="margin-bottom:20px;color:#64748B;"><i class="fa-solid fa-arrow-left"></i> <a href="#" onclick="fermerModal('modalMdp');return false;" style="color:#2563EB;">Retour au profil</a></p>
+        <form th:action="@{/stagiaire/profil/mot-de-passe}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Ancien mot de passe</label>
+                <input type="password" name="ancienMotDePasse" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Nouveau mot de passe</label>
+                <input type="password" name="nouveauMotDePasse" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Confirmer le nouveau mot de passe</label>
+                <input type="password" name="confirmerMotDePasse" required>
+            </div>
+            <button type="submit" class="bouton-principal">Modifier le mot de passe</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
 
 </body>
 </html>

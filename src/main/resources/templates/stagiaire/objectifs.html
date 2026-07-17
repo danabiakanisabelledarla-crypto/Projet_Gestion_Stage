@@ -5,18 +5,20 @@
     <title>Mes objectifs - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-objectifs.css}">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Mes objectifs</h1>
-        <span class="utilisateur-connecte">Stagiaire</span>
-    </div>
+<div class="app-main">
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
+    <div class="contenu-principal">
+        <div class="en-tete-page">
+            <h1>Mes objectifs</h1>
+            <span class="utilisateur-connecte">Stagiaire</span>
+        </div>
 
     <!-- EN HAUT : RESUME -->
     <div class="objectifs-resume">
@@ -88,6 +90,7 @@
         </ul>
     </div>
 </div>
+</div></div>
 
 </body>
 </html>

@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.gestionstages.gestion_stages.repositories.UtilisateurRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Controller
 @RequestMapping("/stagiaire")
 public class StagiaireController {
@@ -36,6 +39,9 @@ private final ObjectifRepository objectifRepository;
 private final EvaluationRepository evaluationRepository;
 //private final EvaluationRepository evaluationRepository;
 
+private final UtilisateurRepository utilisateurRepository;
+private final PasswordEncoder passwordEncoder;
+
 private static final String DOSSIER_UPLOAD = "uploads/";
 
 public StagiaireController(StageRepository stageRepository,
@@ -45,7 +51,9 @@ public StagiaireController(StageRepository stageRepository,
                            StagiaireRepository stagiaireRepository,
                            DocumentRepository documentRepository,
                            ObjectifRepository objectifRepository,
-                           EvaluationRepository evaluationRepository) {   // ← Ajoute cette ligne
+                           EvaluationRepository evaluationRepository,
+                           UtilisateurRepository utilisateurRepository,
+                           PasswordEncoder passwordEncoder) {   // ← Ajoute cette ligne
 
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
@@ -54,7 +62,9 @@ public StagiaireController(StageRepository stageRepository,
     this.stagiaireRepository = stagiaireRepository;
     this.documentRepository = documentRepository;
     this.objectifRepository = objectifRepository;
-    this.evaluationRepository = evaluationRepository;   // ← Ajoute cette ligne
+    this.evaluationRepository = evaluationRepository;
+    this.utilisateurRepository = utilisateurRepository;
+    this.passwordEncoder = passwordEncoder;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -410,13 +420,61 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
 @GetMapping("/messages")
 public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "messages");
-    String prenom = userDetails.getUtilisateur().getPrenom();
-    String nom = userDetails.getUtilisateur().getNom();
-    model.addAttribute("prenom", prenom);
-    model.addAttribute("nomComplet", prenom + " " + nom);
-    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase() + nom.substring(0,1).toUpperCase());
-    getStage(userDetails).ifPresent(s -> model.addAttribute("stage", s));
+    model.addAttribute("prenom", userDetails.getUtilisateur().getPrenom());
+    model.addAttribute("nomComplet", userDetails.getUtilisateur().getPrenom() + " " + userDetails.getUtilisateur().getNom());
+    model.addAttribute("initiales", userDetails.getUtilisateur().getPrenom().substring(0,1).toUpperCase()
+            + userDetails.getUtilisateur().getNom().substring(0,1).toUpperCase());
     return "stagiaire/messages";
 }
+@PostMapping("/profil/modifier")
+public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @RequestParam String prenom,
+                              @RequestParam String nom,
+                              @RequestParam String email,
+                              @RequestParam(required = false) String telephone,
+                              @RequestParam(required = false) String adresse) {
+    Utilisateur u = userDetails.getUtilisateur();
+    u.setPrenom(prenom);
+    u.setNom(nom);
+    u.setEmail(email);
+    u.setTelephone(telephone);
+    u.setAdresse(adresse);
+    utilisateurRepository.save(u);
+    return "redirect:/stagiaire/profil?succes=Profil modifie avec succes.";
+}
 
+@PostMapping("/profil/mot-de-passe")
+public String modifierMotDePasse(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                  @RequestParam String ancienMotDePasse,
+                                  @RequestParam String nouveauMotDePasse,
+                                  @RequestParam String confirmerMotDePasse) {
+    Utilisateur u = userDetails.getUtilisateur();
+    if (!passwordEncoder.matches(ancienMotDePasse, u.getMotDePasse())) {
+        return "redirect:/stagiaire/profil?erreur=Ancien mot de passe incorrect.";
+    }
+    if (!nouveauMotDePasse.equals(confirmerMotDePasse)) {
+        return "redirect:/stagiaire/profil?erreur=Les nouveaux mots de passe ne correspondent pas.";
+    }
+    u.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+    utilisateurRepository.save(u);
+    return "redirect:/stagiaire/profil?succes=Mot de passe modifie avec succes.";
+}
+
+@PostMapping("/taches/ajouter")
+public String ajouterTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                            @RequestParam String titre,
+                            @RequestParam(required = false) String description,
+                            @RequestParam String dateLimite,
+                            @RequestParam String priorite) {
+    getStage(userDetails).ifPresent(stage -> {
+        Tache tache = new Tache();
+        tache.setTitre(titre);
+        tache.setDescription(description);
+        tache.setDateLimite(LocalDate.parse(dateLimite));
+        tache.setStatut(Tache.StatutTache.a_faire);
+        tache.setStage(stage);
+        tacheRepository.save(tache);
+    });
+    return "redirect:/stagiaire/taches?succes=Tache cree avec succes.";
+}
 }

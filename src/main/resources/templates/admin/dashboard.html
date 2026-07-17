@@ -5,54 +5,218 @@
     <title>Tableau de bord - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-
 <div class="contenu-principal">
-
-    <div class="en-tete-page">
-        <h1>Tableau de bord</h1>
-        <span class="utilisateur-connecte">Admin</span>
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+    <!-- HERO -->
+    <div class="hero-card">
+        <div class="hero-texte">
+            <h2>Bienvenue, Administrateur 👋</h2>
+            <p>Voici un aperçu global de la plateforme de gestion des stages.</p>
+        </div>
+        <div class="hero-illustration"><i class="fa-solid fa-chart-line" style="font-size:64px;color:#2563EB;"></i></div>
     </div>
 
-    <div class="grille-cartes-stats">
+    <!-- STATS 6 CARTES -->
+    <div class="grille-cartes-stats-6">
         <div class="carte-stat bleu">
-            <div class="libelle">Demandes</div>
-            <div class="valeur" th:text="${nombreDemandes}">0</div>
+            <div class="icon-stat"><i class="fa-solid fa-user-graduate"></i></div>
+            <div class="libelle">Stagiaires</div>
+            <div class="valeur" th:text="${nombreStagiaires}">0</div>
+            <div class="mini-evolution">Total des stagiaires</div>
         </div>
         <div class="carte-stat vert">
-            <div class="libelle">En cours</div>
-            <div class="valeur" th:text="${stagesEnCours}">0</div>
+            <div class="icon-stat"><i class="fa-solid fa-chalkboard-user"></i></div>
+            <div class="libelle">Encadreurs</div>
+            <div class="valeur" th:text="${nombreEncadreurs}">0</div>
+            <div class="mini-evolution">Total des encadreurs</div>
         </div>
         <div class="carte-stat orange">
-            <div class="libelle">Termines</div>
-            <div class="valeur" th:text="${stagesTermines}">0</div>
+            <div class="icon-stat"><i class="fa-solid fa-building"></i></div>
+            <div class="libelle">Services</div>
+            <div class="valeur" th:text="${nombreServices}">0</div>
+            <div class="mini-evolution">Services actifs</div>
+        </div>
+        <div class="carte-stat rouge">
+            <div class="icon-stat"><i class="fa-solid fa-folder-open"></i></div>
+            <div class="libelle">Documents</div>
+            <div class="valeur" th:text="${nombreDocuments}">0</div>
+            <div class="mini-evolution">Documents déposés</div>
         </div>
         <div class="carte-stat violet">
-            <div class="libelle">Taches</div>
-            <div class="valeur" th:text="${nombreTaches}">0</div>
+            <div class="icon-stat"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="libelle">Demandes</div>
+            <div class="valeur" th:text="${nombreDemandes}">0</div>
+            <div class="mini-evolution" th:text="${demandesEnAttente} + ' en attente'">En attente</div>
+        </div>
+        <div class="carte-stat turquoise">
+            <div class="icon-stat"><i class="fa-solid fa-briefcase"></i></div>
+            <div class="libelle">Stages actifs</div>
+            <div class="valeur" th:text="${stagesActifs}">0</div>
+            <div class="mini-evolution">En cours actuellement</div>
         </div>
     </div>
 
-    <div class="grille-blocs">
-        <div class="bloc-blanc">
-            <h3>Stages par statut</h3>
-            <p style="color:#777; font-size: 14px;">
-                <span th:text="${stagesEnCours}">0</span> en cours,
-                <span th:text="${stagesTermines}">0</span> termines
-            </p>
+    <!-- ANALYTICS -->
+    <div class="grille-principale">
+        <div class="bloc">
+            <div class="bloc-entete"><h3>Évolution des inscriptions</h3><span class="chip">6 derniers mois</span></div>
+            <canvas id="chartInscriptions" height="200"></canvas>
         </div>
-
-        <div class="bloc-blanc">
-            <h3>Actions rapides</h3>
-            <a th:href="@{/admin/demandes}" class="bouton-action">Nouvelle demande</a>
-            <a th:href="@{/admin/encadreurs}" class="bouton-action">Ajouter encadreur</a>
+        <div class="bloc">
+            <div class="bloc-entete"><h3>Répartition des stages</h3></div>
+            <canvas id="chartRepartition" height="200"></canvas>
+        </div>
+        <div class="bloc">
+            <div class="bloc-entete"><h3>Activités récentes</h3></div>
+            <div class="timeline" th:if="${activitesRecentes != null}">
+                <div class="timeline-item" th:each="act : ${activitesRecentes}" th:if="${actStat.index < 6}">
+                    <span class="dot dot-bleu"></span>
+                    <div><p th:text="${act.action}">-</p></div>
+                    <span class="time" th:text="${#temporals.format(act.dateActivite, 'dd/MM HH:mm')}">-</span>
+                </div>
+            </div>
+            <div th:if="${activitesRecentes == null or activitesRecentes.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucune activité récente.</div>
         </div>
     </div>
 
+    <!-- INFORMATIONS -->
+    <div class="grille-secondaire-3">
+        <div class="bloc">
+            <h3>Répartition des services</h3>
+            <div th:each="svc : ${repartitionServices}">
+                <div class="service-item">
+                    <span class="service-name" th:text="${svc.nom}">Service</span>
+                    <div class="service-bar"><div class="service-bar-fill" th:style="'width:' + ${svc.pourcentage} + '%'" th:classappend="${svcStat.index == 0}?'fill-bleu':(${svcStat.index == 1}?'fill-vert':(${svcStat.index == 2}?'fill-orange':'fill-violet'))"></div></div>
+                    <span class="service-count" th:text="${svc.nombreStagiaires}">0</span>
+                </div>
+            </div>
+            <div th:if="${repartitionServices == null or repartitionServices.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucun service.</div>
+        </div>
+        <div class="bloc">
+            <h3>Top des encadreurs</h3>
+            <div th:each="enc : ${topEncadreurs}">
+                <div class="encadreur-item">
+                    <div class="encadreur-avatar" th:text="${enc.initiales}">E</div>
+                    <div><div style="font-weight:600;" th:text="${enc.nom}">-</div><div style="font-size:12px;color:#64748B;" th:text="${enc.nombreStagiaires} + ' stagiaires'">0</div></div>
+                    <div style="margin-left:auto;" class="encadreur-stars" th:text="${enc.etoiles}">★★★★★</div>
+                </div>
+            </div>
+        </div>
+        <div class="bloc">
+            <h3>Alertes</h3>
+            <div class="alert-card alert-rouge" th:if="${demandesEnAttente > 0}">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span th:text="${demandesEnAttente} + ' demandes en attente'">0 demandes en attente</span>
+            </div>
+            <div class="alert-card alert-orange">
+                <i class="fa-solid fa-clock"></i> 4 tâches en retard
+            </div>
+            <div class="alert-card alert-bleu">
+                <i class="fa-solid fa-database"></i> Sauvegarde effectuée
+            </div>
+            <div class="alert-card alert-vert">
+                <i class="fa-solid fa-check-circle"></i> Tout fonctionne correctement
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIONS RAPIDES -->
+    <div class="bloc">
+        <div class="bloc-entete"><h3>Actions rapides</h3></div>
+        <div class="raccourcis-grid">
+            <a th:href="@{/admin/stagiaires}" class="carte-raccourci"><span>👤</span> Ajouter un stagiaire</a>
+            <a th:href="@{/admin/utilisateurs}" class="carte-raccourci"><span>👥</span> Créer un utilisateur</a>
+            <a th:href="@{/admin/services}" class="carte-raccourci"><span>🏢</span> Ajouter un service</a>
+            <a th:href="@{/admin/notifications}" class="carte-raccourci"><span>📢</span> Créer une annonce</a>
+            <a th:href="@{/admin/rapports}" class="carte-raccourci"><span>📊</span> Exporter les données</a>
+            <a th:href="@{/admin/parametres}" class="carte-raccourci"><span>⚙️</span> Paramètres</a>
+        </div>
+    </div>
+
+    <!-- CALENDRIER + NOTIFICATIONS -->
+    <div class="grille-secondaire">
+        <div class="bloc">
+            <div class="bloc-entete">
+                <h3>Calendrier</h3>
+                <div><button class="chip" id="moisPrecAdmin">‹</button><span id="moisTitreAdmin" style="margin:0 10px;font-weight:600;">-</span><button class="chip" id="moisSuivAdmin">›</button></div>
+            </div>
+            <div class="calendrier-admin" id="calendrierAdminGrille"></div>
+            <div class="legende" style="margin-top:10px;gap:4px;">
+                <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#DBEAFE;border:1px solid #2563EB;"></span> Événement</div>
+                <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563EB;"></span> Aujourd'hui</div>
+            </div>
+        </div>
+        <div class="bloc">
+            <h3>Notifications système</h3>
+            <div th:each="notif : ${notificationsRecentes}" th:if="${notifStat.index < 5}">
+                <div class="timeline-item">
+                    <span class="dot" th:classappend="${notif.priorite == 'haute'}?'dot-rouge':(${notif.priorite == 'normale'}?'dot-bleu':'dot-vert')"></span>
+                    <div><p th:text="${notif.objet}" style="font-weight:500;">-</p></div>
+                    <span class="time" th:text="${#temporals.format(notif.dateEnvoi, 'dd/MM')}">-</span>
+                </div>
+            </div>
+            <div th:if="${notificationsRecentes == null or notificationsRecentes.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucune notification.</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-admin">
+        <span>© 2026 DTA Alliance</span>
+        <span>Version 1.0 · Dernière synchronisation · État serveur <i class="fa-solid fa-circle" style="color:#22C55E;font-size:8px;"></i></span>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Chart Inscriptions
+new Chart(document.getElementById('chartInscriptions'), {
+    type: 'line',
+    data: {
+        labels: /*[[${moisLabels}]]*/ ['Jan','Fév','Mar','Avr','Mai','Jun'],
+        datasets: [{ label: 'Inscriptions', data: /*[[${inscriptionsData}]]*/ [12,19,8,24,15,22], borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#2563EB' }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#F1F5F9' } }, x: { grid: { display: false } } } }
+});
+// Chart Donut
+new Chart(document.getElementById('chartRepartition'), {
+    type: 'doughnut',
+    data: {
+        labels: ['En cours','Terminés','Suspendus'],
+        datasets: [{ data: [/*[[${stagesEnCours}]]*/ 42, /*[[${stagesTermines}]]*/ 18, /*[[${stagesSuspendus}]]*/ 3], backgroundColor: ['#2563EB','#22C55E','#F59E0B'] }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+});
+// Calendrier
+const evenementsCal = /*[[${evenementsCalendrier}]]*/ [];
+let dateCal = new Date(); dateCal.setDate(1);
+const moisNom = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+function genererCalendrierAdmin(){
+    const grille = document.getElementById('calendrierAdminGrille');
+    grille.innerHTML = '';
+    document.getElementById('moisTitreAdmin').textContent = moisNom[dateCal.getMonth()] + ' ' + dateCal.getFullYear();
+    const joursSem = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    joursSem.forEach(j => { const d = document.createElement('div'); d.className='cal-admin-header'; d.textContent=j; grille.appendChild(d); });
+    const premier = new Date(dateCal.getFullYear(), dateCal.getMonth(), 1);
+    let decal = premier.getDay()-1; if(decal<0) decal=6;
+    for(let i=0;i<decal;i++){ const v=document.createElement('div'); v.className='cal-admin-cell'; grille.appendChild(v); }
+    const dern = new Date(dateCal.getFullYear(), dateCal.getMonth()+1, 0).getDate();
+    const ajd = new Date();
+    for(let j=1;j<=dern;j++){
+        const c = new Date(dateCal.getFullYear(), dateCal.getMonth(), j);
+        const d = document.createElement('div'); d.className='cal-admin-cell';
+        const key = c.getFullYear()+'-'+(c.getMonth()+1)+'-'+c.getDate();
+        if(evenementsCal.some(e=>e===key)) d.classList.add('avec-event');
+        if(c.getFullYear()===ajd.getFullYear()&&c.getMonth()===ajd.getMonth()&&c.getDate()===ajd.getDate()) d.classList.add('aujourdhui');
+        d.textContent=j; grille.appendChild(d);
+    }
+}
+genererCalendrierAdmin();
+document.getElementById('moisPrecAdmin').onclick = ()=>{ dateCal.setMonth(dateCal.getMonth()-1); genererCalendrierAdmin(); };
+document.getElementById('moisSuivAdmin').onclick = ()=>{ dateCal.setMonth(dateCal.getMonth()+1); genererCalendrierAdmin(); };
+</script>
 </body>
 </html>

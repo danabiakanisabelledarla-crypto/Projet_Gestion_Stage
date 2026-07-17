@@ -5,18 +5,26 @@
     <title>Planning - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-planning.css}">
 </head>
 <body>
-
+    
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-
-<div class="contenu-principal">
+<div class="app-main">
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
+    <div class="contenu-principal">
     <div class="en-tete-page">
+    <div style="display:flex;align-items:center;gap:20px;">
         <h1>Planning</h1>
-        <span class="utilisateur-connecte">Stagiaire</span>
+        <div class="countdown-badge" th:if="${stage != null and stage.dateFin != null}" id="countdownBadge">
+            <i class="fa-regular fa-clock"></i>
+            <span id="countdownText">--</span>
+        </div>
     </div>
+    <span class="utilisateur-connecte">Stagiaire</span>
+</div>
 
     <div class="planning-layout">
 
@@ -66,9 +74,9 @@
             </div>
         </div>
 
-    </div>
+        </div>
 </div>
-
+</div>
 <script th:inline="javascript">
     const evenements = [
         /*[# th:each="ev : ${evenements}"]*/
@@ -150,6 +158,22 @@
 
     genererCalendrier();
 </script>
-
+<script th:if="${stage != null and stage.dateFin != null}">
+const dateFin = new Date(/*[[${#temporals.format(stage.dateFin, 'yyyy-MM-dd')}]]*/ '2026-12-31T23:59:59');
+function updateCountdown() {
+    const now = new Date();
+    const diff = dateFin - now;
+    if (diff <= 0) { document.getElementById('countdownText').textContent = 'Termine'; return; }
+    const jours = Math.floor(diff / (1000*60*60*24));
+    const heures = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+    const secondes = Math.floor((diff % (1000*60)) / 1000);
+    document.getElementById('countdownText').textContent = jours + 'j ' + heures + 'h ' + minutes + 'm ' + secondes + 's';
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+</div>
+</div>
 </body>
 </html>

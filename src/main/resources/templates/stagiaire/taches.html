@@ -5,7 +5,9 @@
     <title>Mes taches - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-tache.css}">
+    
 </head>
 <body>
 
@@ -14,7 +16,7 @@
 <div class="taches-main">
 
     <!-- ========== BARRE SUPERIEURE ========== -->
-    <header class="taches-header">
+    <!--<header class="taches-header">
         <div class="header-gauche">
             <div class="header-search">
                 <i class="fa-solid fa-search"></i>
@@ -26,9 +28,9 @@
                 <i class="fa-regular fa-bell"></i>
                 <span class="notif-dot">2</span>
             </div>
-            <div class="header-icon-btn">
+            <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
                 <i class="fa-regular fa-envelope"></i>
-            </div>
+            </a>
             <div class="header-user">
                 <div class="header-user-text">
                     <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
@@ -38,7 +40,8 @@
                 <i class="fa-solid fa-chevron-down header-arrow"></i>
             </div>
         </div>
-    </header>
+    </header>-->
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
 
     <!-- ========== CONTENU ========== -->
     <div class="taches-content">
@@ -61,9 +64,9 @@
                 <div class="filtre-btn">
                     <i class="fa-solid fa-arrow-up-short-wide"></i> Trier par priorite
                 </div>
-                <a href="#" class="btn-nouveau">
+                <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalNouvelleTache')">
                     <i class="fa-solid fa-plus"></i> Nouvelle tache
-                </a>
+                </button>
             </div>
         </div>
 
@@ -110,7 +113,9 @@
                             <span class="badge-prio moyenne">-</span>
                         </td>
                         <td>
-                            <span th:class="'badge-statut ' + ${tache.statut.name()}" th:text="${tache.statut.name() == 'a_faire' ? 'A faire' : (${tache.statut.name() == 'en_cours'} ? 'En cours' : (${tache.statut.name() == 'terminee'} ? 'Terminee' : 'En retard'))}">-</span>
+                            <span th:text="${tache.statut.name() == 'a_faire' ? 'A faire' : (
+               tache.statut.name() == 'en_cours' ? 'En cours' : (
+               tache.statut.name() == 'terminee' ? 'Terminee' : 'En retard'))}">
                         </td>
                         <td>
                             <div class="actions-cell">
@@ -146,7 +151,7 @@
                 <div class="kanban-col">
                     <div class="kanban-col-header bleu">
                         <span>A faire</span>
-                        <span <span class="kanban-badge" th:text="${tachesAFaire}">0</span>
+                        <span class="kanban-badge" th:text="${tachesAFaire}">0</span>
                     </div>
                     <div class="kanban-cartes">
                         <div class="kanban-carte" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'a_faire'}">
@@ -206,6 +211,46 @@
 
     </div>
 </div>
+<!-- MODAL NOUVELLE TACHE -->
+<div class="modal-overlay" id="modalNouvelleTache" onclick="if(event.target===this)fermerModal('modalNouvelleTache')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Nouvelle tache</h2>
+            <button class="modal-close" onclick="fermerModal('modalNouvelleTache')">&times;</button>
+        </div>
+        <form th:action="@{/stagiaire/taches/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Titre</label>
+                <input type="text" name="titre" placeholder="Titre de la tache" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Description</label>
+                <textarea name="description" placeholder="Description de la tache..." rows="3"></textarea>
+            </div>
+            <div class="form-row-2col">
+                <div class="groupe-champ">
+                    <label>Date limite</label>
+                    <input type="date" name="dateLimite" required>
+                </div>
+                <div class="groupe-champ">
+                    <label>Priorité</label>
+                    <select name="priorite">
+                        <option value="basse">Basse</option>
+                        <option value="moyenne" selected>Moyenne</option>
+                        <option value="haute">Haute</option>
+                        <option value="critique">Critique</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="bouton-principal">Créer la tache</button>
+        </form>
+    </div>
+</div>
 
+<script>
+function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
 </body>
 </html>

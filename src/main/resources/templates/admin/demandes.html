@@ -2,50 +2,317 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Demandes - Administrateur</title>
+    <title>Demandes de stage - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-
 <div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Demandes de stage</h1>
-        <span class="utilisateur-connecte">Admin</span>
+
+    <!-- HEADER (fragment — le CSS cache .header-gauche) -->
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- PAGE TITLE -->
+    <div class="page-entete">
+        <div class="page-entete-gauche">
+            <div class="page-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div>
+                <h1>Demandes de stage</h1>
+                <p class="page-sous-titre">Gérez et suivez toutes les demandes de stage des candidats.</p>
+            </div>
+        </div>
+        <div class="page-entete-droite">
+            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button class="btn-primary"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
+        </div>
     </div>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Candidat</th>
-                <th>Niveau</th>
-                <th>Filiere</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="demande : ${demandes}">
-                <td th:text="${demande.prenom + ' ' + demande.nom}">Nom candidat</td>
-                <td th:text="${demande.niveau}">Niveau</td>
-                <td th:text="${demande.filiere}">Filiere</td>
-                <td>
-                    <span th:class="'badge ' + ${demande.statut.name().replace('_', '-')}"
-                          th:text="${demande.statut}">
-                        Statut
-                    </span>
-                </td>
-            </tr>
+    <!-- STATS CARDS -->
+    <div class="stats-demandes">
+        <div class="stat-card bleu">
+            <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Total des demandes</div>
+                <div class="stat-number" th:text="${totalDemandes}">0</div>
+                <div class="stat-desc">Toutes les demandes</div>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">En attente</div>
+                <div class="stat-number" th:text="${enAttente}">0</div>
+                <div class="stat-desc">À traiter</div>
+            </div>
+        </div>
+        <div class="stat-card vert">
+            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Acceptées</div>
+                <div class="stat-number" th:text="${acceptees}">0</div>
+                <div class="stat-desc">Validées</div>
+            </div>
+        </div>
+        <div class="stat-card rouge">
+            <div class="stat-icon"><i class="fa-solid fa-xmark-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Refusées</div>
+                <div class="stat-number" th:text="${refusees}">0</div>
+                <div class="stat-desc">Refusées</div>
+            </div>
+        </div>
+        <div class="stat-card violet">
+            <div class="stat-icon"><i class="fa-regular fa-calendar"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Ce mois</div>
+                <div class="stat-number" th:text="${ceMois}">0</div>
+                <div class="stat-desc">Nouvelles demandes</div>
+            </div>
+        </div>
+    </div>
 
-            <tr th:if="${#lists.isEmpty(demandes)}">
-                <td colspan="4" style="text-align:center; color:#777; padding: 30px;">
-                    Aucune demande trouvee.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- TABS + SORT -->
+    <div class="tabs-bar">
+        <div class="tabs">
+            <button class="tab actif" data-filtre="toutes" onclick="filtrerDemandes('toutes')">
+                Toutes <span class="tab-badge" th:text="${totalDemandes}">0</span>
+            </button>
+            <button class="tab" data-filtre="en_attente" onclick="filtrerDemandes('en_attente')">
+                En attente <span class="tab-badge orange" th:text="${enAttente}">0</span>
+            </button>
+            <button class="tab" data-filtre="acceptee" onclick="filtrerDemandes('acceptee')">
+                Acceptées <span class="tab-badge vert" th:text="${acceptees}">0</span>
+            </button>
+            <button class="tab" data-filtre="refusee" onclick="filtrerDemandes('refusee')">
+                Refusées <span class="tab-badge rouge" th:text="${refusees}">0</span>
+            </button>
+        </div>
+        <div class="sort-select">
+            <i class="fa-solid fa-arrow-up-short-wide"></i>
+            <select>
+                <option>Plus récent</option>
+                <option>Plus ancien</option>
+                <option>Nom</option>
+                <option>Statut</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+        <table class="table-demandes">
+            <thead>
+                <tr>
+                    <th>Stagiaire</th>
+                    <th>École</th>
+                    <th>Filière</th>
+                    <th>Niveau</th>
+                    <th>Date de demande</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="demande : ${demandes}" th:classappend="${demande.statut.name() == 'en_attente' ? 'ligne-attente' : ''}">
+                    <td>
+                        <div class="candidat-cell">
+                            <div class="candidat-avatar" th:text="${demande.prenom.substring(0,1).toUpperCase() + demande.nom.substring(0,1).toUpperCase()}">S</div>
+                            <div>
+                                <div class="candidat-nom" th:text="${demande.prenom + ' ' + demande.nom}">Nom</div>
+                                <div class="candidat-email" th:text="${demande.prenom.toLowerCase() + '.' + demande.nom.toLowerCase() + '@email.com'}">email</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td th:text="${demande.ecole}">École</td>
+                    <td th:text="${demande.filiere}">Filière</td>
+                    <td><span class="niveau-tag" th:text="${demande.niveau}">Niveau</span></td>
+                    <td>
+                        <div class="date-cell">
+                            <span th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy')}">date</span>
+                            <span class="date-heure" th:text="${#temporals.format(demande.dateDemande, 'HH:mm')}">heure</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:class="'badge-statut ' + ${demande.statut.name()}"
+                              th:text="${demande.statut.name() == 'en_attente' ? 'En attente' : (demande.statut.name() == 'acceptee' ? 'Acceptée' : 'Refusée')}">
+                            Statut
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn voir" th:onclick="'ouvrirDetails(' + ${demande.id} + ')'" title="Voir les détails">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(demandes)}">
+                    <td colspan="7" class="table-empty">Aucune demande trouvée.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination-bar">
+        <div class="pagination-info">
+            Affichage de 1 à <span th:text="${totalDemandes}">0</span> sur <span th:text="${totalDemandes}">0</span> demandes
+        </div>
+        <div class="pagination-btns">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn actif">1</button>
+            <button class="page-btn" th:if="${totalDemandes > 10}">2</button>
+            <button class="page-btn" th:if="${totalDemandes > 20}">3</button>
+            <span th:if="${totalDemandes > 30}" class="page-dots">...</span>
+            <button class="page-btn" th:if="${totalDemandes > 30}">13</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="page-size">
+            <select><option>10 par page</option><option>25 par page</option><option>50 par page</option></select>
+        </div>
+    </div>
 </div>
 
+<!-- ===== MODAL DÉTAILS DEMANDE ===== -->
+<div class="modal-overlay" id="modalDetails" onclick="if(event.target===this) fermerModal()">
+    <div class="modal-box">
+        <!-- HEADER -->
+        <div class="modal-details-header">
+            <h2>Détails de la demande</h2>
+            <button class="modal-close-btn" onclick="fermerModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <!-- BODY -->
+        <div class="modal-details-body" id="modalBody">
+            <!-- Rempli par JS -->
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+const demandesData = /*[[${demandesJson}]]*/ [];
+
+function ouvrirDetails(id) {
+    const d = demandesData.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('modalBody').innerHTML = `
+        <!-- PROFIL -->
+        <div class="profil-candidat">
+            <div class="profil-candidat-avatar">${d.initiale}</div>
+            <div class="profil-candidat-info">
+                <div class="profil-candidat-nom">${d.nomComplet}</div>
+                <div class="profil-candidat-email">${d.email}</div>
+                <div class="profil-candidat-date">Demande déposée le ${d.dateDemande}</div>
+            </div>
+            <span class="badge-statut-large ${d.statutCls}">${d.statutLabel}</span>
+        </div>
+
+        <!-- INFOS PERSONNELLES -->
+        <div class="sous-carte">
+            <div class="sous-carte-titre"><i class="fa-solid fa-user"></i> Informations personnelles</div>
+            <div class="grille-2-col">
+                <div><span class="info-icone bleu"><i class="fa-solid fa-calendar"></i></span><div><div class="info-label">Date de naissance</div><div class="info-valeur">—</div></div></div>
+                <div><span class="info-icone vert"><i class="fa-solid fa-phone"></i></span><div><div class="info-label">Téléphone</div><div class="info-valeur">—</div></div></div>
+                <div><span class="info-icone orange"><i class="fa-solid fa-location-dot"></i></span><div><div class="info-label">Adresse</div><div class="info-valeur">—</div></div></div>
+                <div><span class="info-icone violet"><i class="fa-solid fa-school"></i></span><div><div class="info-label">Université</div><div class="info-valeur">${d.ecole}</div></div></div>
+                <div><span class="info-icone bleu"><i class="fa-solid fa-graduation-cap"></i></span><div><div class="info-label">Filière</div><div class="info-valeur">${d.filiere}</div></div></div>
+                <div><span class="info-icone vert"><i class="fa-solid fa-layer-group"></i></span><div><div class="info-label">Niveau d'études</div><div class="info-valeur">${d.niveau}</div></div></div>
+            </div>
+        </div>
+
+        <!-- INFOS DEMANDE -->
+        <div class="sous-carte">
+            <div class="sous-carte-titre"><i class="fa-solid fa-file-invoice"></i> Informations sur la demande</div>
+            <div class="grille-2-col">
+                <div><span class="info-icone orange"><i class="fa-regular fa-calendar"></i></span><div><div class="info-label">Période souhaitée</div><div class="info-valeur">${d.dureeSouhaitee}</div></div></div>
+                <div><span class="info-icone violet"><i class="fa-solid fa-building"></i></span><div><div class="info-label">Service demandé</div><div class="info-valeur">—</div></div></div>
+            </div>
+            <div style="margin-top:12px;">
+                <div class="info-label">Motivation</div>
+                <div class="motivation-texte">${d.commentaire || 'Aucune motivation fournie.'}</div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS -->
+        <div class="sous-carte">
+            <div class="documents-header">
+                <div class="sous-carte-titre" style="margin:0;"><i class="fa-solid fa-paperclip"></i> Documents joints</div>
+                <span class="doc-count">${d.documentsCount || 0}</span>
+            </div>
+            ${d.documents && d.documents.length > 0 ? d.documents.map(doc => `
+                <div class="doc-item">
+                    <div class="doc-icon ${doc.cls}"><i class="${doc.icon}"></i></div>
+                    <div class="doc-info">
+                        <div class="doc-nom">${doc.nom}</div>
+                        <div class="doc-meta">${doc.taille} · ${doc.dateDepot}</div>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                        <button class="doc-btn" title="Prévisualiser"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                </div>
+            `).join('') : '<div class="observations-empty">Aucun document joint.</div>'}
+        </div>
+
+        <!-- HISTORIQUE -->
+        <div class="sous-carte">
+            <div class="sous-carte-titre"><i class="fa-solid fa-clock-rotate-left"></i> Historique</div>
+            <div class="timeline-vertical">
+                <div class="timeline-step">
+                    <div class="timeline-dot vert"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Demande déposée</div>
+                        <div class="timeline-date">${d.dateDemande}</div>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-dot ${d.statutCls === 'acceptee' ? 'vert' : 'active'}"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${d.statutLabel === 'En attente' ? 'En attente de validation' : (d.statutLabel === 'Acceptée' ? 'Demande acceptée' : 'Demande refusée')}</div>
+                        <div class="timeline-date">${d.statutLabel === 'En attente' ? "Aujourd'hui" : '—'}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OBSERVATIONS -->
+        <div class="sous-carte">
+            <div class="sous-carte-titre"><i class="fa-solid fa-comment"></i> Observations</div>
+            <div class="observations-empty"><i class="fa-regular fa-comment-dots"></i> Aucune observation enregistrée.</div>
+        </div>
+
+        <!-- ACTIONS ADMIN -->
+        <div class="sous-carte" style="border:2px solid #2563EB; background:white;">
+            <div class="sous-carte-titre"><i class="fa-solid fa-shield-halved"></i> Actions administratives</div>
+            <div class="actions-admin-grid">
+                <button class="btn-action-admin btn-accept"><i class="fa-solid fa-check"></i> Accepter la demande</button>
+                <button class="btn-action-admin btn-reject"><i class="fa-solid fa-xmark"></i> Refuser la demande</button>
+            </div>
+            <div class="actions-admin-secondaires">
+                <button class="btn-action-secondaire"><i class="fa-solid fa-circle-info"></i> Demander des informations</button>
+                <button class="btn-action-secondaire"><i class="fa-solid fa-envelope"></i> Envoyer un message</button>
+                <button class="btn-action-secondaire"><i class="fa-solid fa-folder"></i> Télécharger le dossier</button>
+                <button class="btn-action-secondaire"><i class="fa-solid fa-user-plus"></i> Créer un compte stagiaire</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalDetails').classList.add('open');
+}
+
+function fermerModal() {
+    document.getElementById('modalDetails').classList.remove('open');
+}
+
+function filtrerDemandes(filtre) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('actif'));
+    document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
+    document.querySelectorAll('.table-demandes tbody tr').forEach(row => {
+        if (filtre === 'toutes') { row.style.display = ''; return; }
+        const badge = row.querySelector('.badge-statut');
+        if (!badge) return;
+        const cls = Array.from(badge.classList).find(c => c !== 'badge-statut');
+        row.style.display = (cls === filtre) ? '' : 'none';
+    });
+}
+</script>
 </body>
 </html>

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
@@ -61,17 +62,61 @@ public class AdminManagementController {
 
     // ===== UTILISATEURS =====
     @GetMapping("/utilisateurs")
-    public String utilisateurs(Model model, @RequestParam(required = false) String succes) {
-        model.addAttribute("activePage", "utilisateurs");
-        model.addAttribute("utilisateurs", utilisateurRepository.findAll());
-        model.addAttribute("roles", roleRepository.findAll());
-        model.addAttribute("totalUsers", utilisateurRepository.count());
-        model.addAttribute("totalAdmin", utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size());
-        model.addAttribute("totalResp", utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size());
-        model.addAttribute("totalStag", utilisateurRepository.findByRole_Libelle("STAGIAIRE").size());
-        if (succes != null) model.addAttribute("succes", succes);
-        return "admin/utilisateurs";
-    }
+public String utilisateurs(Model model, @RequestParam(required = false) String succes) {
+    model.addAttribute("activePage", "utilisateurs");
+    model.addAttribute("nomComplet", "Administrateur");
+    model.addAttribute("initiales", "A");
+
+    List<Utilisateur> tousUtilisateurs = utilisateurRepository.findAll();
+    List<ServiceEntreprise> tousServices = serviceRepository.findAll();
+
+    model.addAttribute("utilisateurs", tousUtilisateurs);
+    model.addAttribute("roles", roleRepository.findAll());
+    model.addAttribute("services", tousServices);
+
+    long totalUsers = tousUtilisateurs.size();
+    long totalAdmin = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
+    long totalResp = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
+    long totalEncadreurs = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
+    long totalInactifs = tousUtilisateurs.stream().filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif).count();
+
+    model.addAttribute("totalUsers", totalUsers);
+    model.addAttribute("totalAdmin", totalAdmin);
+    model.addAttribute("totalResponsables", totalResp);
+    model.addAttribute("totalEncadreurs", totalEncadreurs);
+    model.addAttribute("totalInactifs", totalInactifs);
+
+    // JSON pour le panneau de détails
+    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+    List<Map<String, Object>> utilisateursJson = tousUtilisateurs.stream().map(u -> {
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("id", u.getId());
+        m.put("initiale", u.getPrenom().substring(0,1).toUpperCase() + u.getNom().substring(0,1).toUpperCase());
+        m.put("nomComplet", "M. " + u.getPrenom() + " " + u.getNom());
+        m.put("prenom", u.getPrenom());
+        m.put("nom", u.getNom());
+        m.put("email", u.getEmail());
+        m.put("telephone", u.getTelephone() != null ? u.getTelephone() : "—");
+        m.put("role", u.getRole().getLibelle());
+        m.put("roleLibelle", u.getRole().getLibelle());
+        m.put("fonction", u.getRole().getDescription());
+        m.put("statutCls", u.getStatut().name());
+        m.put("statutLabel", u.getStatut() == Utilisateur.StatutUtilisateur.actif ? "Actif" : "Inactif");
+        m.put("dateCreation", u.getDateCreation() != null ? sdf.format(java.sql.Timestamp.valueOf(u.getDateCreation())) : "—");
+        m.put("service", "—"); // could be enhanced
+        m.put("stagiairesCount", 0);
+        m.put("evaluationsCount", 0);
+        m.put("livrablesCount", 0);
+        m.put("tauxEvaluation", 0);
+        m.put("activites", new java.util.ArrayList<>());
+        return m;
+    }).collect(java.util.stream.Collectors.toList());
+
+    model.addAttribute("utilisateursJson", utilisateursJson);
+
+    if (succes != null) model.addAttribute("succes", succes);
+    return "admin/utilisateurs";
+}
 
     @PostMapping("/utilisateurs/ajouter")
     public String ajouterUtilisateur(@RequestParam String nom, @RequestParam String prenom,

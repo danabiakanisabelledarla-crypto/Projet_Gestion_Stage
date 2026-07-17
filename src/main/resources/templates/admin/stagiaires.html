@@ -4,49 +4,279 @@
     <meta charset="UTF-8">
     <title>Stagiaires - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaires.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
 <div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Stagiaires</h1>
-        <span class="utilisateur-connecte">Admin</span>
+
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="page-header-icon"><i class="fa-solid fa-user-graduate"></i></div>
+            <div>
+                <h1>Stagiaires</h1>
+                <p class="page-header-sub">Consultez, gérez et suivez tous les stagiaires de la plateforme.</p>
+            </div>
+        </div>
+        <div class="page-header-right">
+            <button class="btn-outline"><i class="fa-solid fa-download"></i> Importer</button>
+            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Ajouter un stagiaire</button>
+        </div>
     </div>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Matricule</th>
-                <th>Nom complet</th>
-                <th>Email</th>
-                <th>Date admission</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="stagiaire : ${stagiaires}">
-                <td th:text="${stagiaire.matricule}">STG-2026-001</td>
-                <td th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">
-                    Nom stagiaire
-                </td>
-                <td th:text="${stagiaire.utilisateur.email}">email</td>
-                <td th:text="${stagiaire.dateAdmission}">date</td>
-                <td>
-                    <span class="badge acceptee" th:text="${stagiaire.statut}">actif</span>
-                </td>
-            </tr>
+    <!-- STATS CARDS -->
+    <div class="stats-row">
+        <div class="stat-card bleu">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Total stagiaires</div>
+                <div class="stat-number" th:text="${totalStagiaires}">0</div>
+                <div class="stat-desc">Tous les stagiaires</div>
+            </div>
+        </div>
+        <div class="stat-card vert">
+            <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Stages en cours</div>
+                <div class="stat-number" th:text="${enCours}">0</div>
+                <div class="stat-desc">Actuellement actifs</div>
+            </div>
+        </div>
+        <div class="stat-card violet">
+            <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Stages terminés</div>
+                <div class="stat-number" th:text="${termines}">0</div>
+                <div class="stat-desc">Validés</div>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">En attente</div>
+                <div class="stat-number" th:text="${enAttente}">0</div>
+                <div class="stat-desc">Non affectés</div>
+            </div>
+        </div>
+        <div class="stat-card rouge">
+            <div class="stat-icon"><i class="fa-regular fa-calendar"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Ce mois</div>
+                <div class="stat-number" th:text="${ceMois}">0</div>
+                <div class="stat-desc">Nouveaux ce mois</div>
+            </div>
+        </div>
+    </div>
 
-            <tr th:if="${#lists.isEmpty(stagiaires)}">
-                <td colspan="5" style="text-align:center; color:#777; padding: 30px;">
-                    Aucun stagiaire trouve.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="filter-left">
+            <select class="filter-select" id="filterService" onchange="filterTable()">
+                <option value="">Tous les services</option>
+                <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.nom}">Service</option>
+            </select>
+            <select class="filter-select" id="filterEncadreur" onchange="filterTable()">
+                <option value="">Tous les encadreurs</option>
+                <option th:each="e : ${encadreurs}" th:value="${e.id}" th:text="${e.utilisateur.prenom + ' ' + e.utilisateur.nom}">Encadreur</option>
+            </select>
+            <select class="filter-select" id="filterStatut" onchange="filterTable()">
+                <option value="">Tous les statuts</option>
+                <option value="actif">Actif</option>
+                <option value="termine">Terminé</option>
+                <option value="abandonne">Abandonné</option>
+            </select>
+        </div>
+        <div class="filter-right">
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
+            <select>
+                <option>Plus récent</option>
+                <option>Plus ancien</option>
+                <option>Nom</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+        <table class="table-stagiaires">
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Stagiaire</th>
+                    <th>Matricule</th>
+                    <th>Service</th>
+                    <th>Encadreur</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s : ${stagiaires}" th:data-id="${s.id}">
+                    <td>
+                        <div class="stagiaire-avatar" th:text="${s.utilisateur.prenom.substring(0,1).toUpperCase() + s.utilisateur.nom.substring(0,1).toUpperCase()}">JD</div>
+                    </td>
+                    <td>
+                        <div class="stagiaire-cell">
+                            <div>
+                                <div class="stagiaire-nom" th:text="${s.utilisateur.prenom + ' ' + s.utilisateur.nom}">Nom</div>
+                                <div class="stagiaire-email" th:text="${s.utilisateur.email}">email</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="matricule-tag" th:text="${s.matricule}">STG-001</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>
+                        <span th:class="'badge-statut ' + ${s.statut.name()}" th:text="${s.statut.name() == 'actif' ? 'Actif' : (s.statut.name() == 'termine' ? 'Terminé' : 'Abandonné')}">Statut</span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" th:onclick="'ouvrirDetailsStagiaire(' + ${s.id} + ')'" title="Voir détails"><i class="fa-solid fa-eye"></i></button>
+                            <button class="action-btn" onclick="event.stopPropagation()" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn" onclick="event.stopPropagation()" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(stagiaires)}">
+                    <td colspan="9" class="empty-state">Aucun stagiaire trouvé.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        <div class="pagination-bar">
+            <div class="pagination-info">
+                Affichage de 1 à <span th:text="${totalStagiaires}">0</span> sur <span th:text="${totalStagiaires}">0</span> stagiaires
+            </div>
+            <div class="pagination-btns">
+                <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="page-btn actif">1</button>
+                <button class="page-btn" th:if="${totalStagiaires > 10}">2</button>
+                <button class="page-btn" th:if="${totalStagiaires > 20}">3</button>
+                <span th:if="${totalStagiaires > 30}" class="page-dots">...</span>
+                <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="page-size">
+                <select><option>10 par page</option><option>25 par page</option><option>50 par page</option></select>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- MODAL DÉTAILS STAGIAIRE -->
+<div class="modal-overlay" id="modalDetailsStagiaire" onclick="if(event.target===this) fermerModalStagiaire()">
+    <div class="modal-box modal-box-large">
+        <div class="modal-details-header">
+            <h2>Détails du stagiaire</h2>
+            <button class="modal-close-btn" onclick="fermerModalStagiaire()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-details-body" id="modalBodyStagiaire">
+            <!-- Rempli par JS -->
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const stagiairesData = /*[[${stagiairesJson}]]*/ [];
+
+    function ouvrirDetailsStagiaire(id) {
+        const s = stagiairesData.find(x => x.id === id);
+        if (!s) return;
+
+        document.getElementById('modalBodyStagiaire').innerHTML = `
+            <div class="profil-candidat" style="margin-bottom:24px;">
+                <div class="profil-candidat-avatar" style="width:78px;height:78px;font-size:28px;">\${s.initiale}</div>
+                <div class="profil-candidat-info">
+                    <div class="profil-candidat-nom" style="font-size:24px;">\${s.nomComplet}</div>
+                    <div class="profil-candidat-email">\${s.email}</div>
+                    <div style="font-size:12px;color:#94A3B8;margin-top:4px;"><i class="fa-solid fa-id-card"></i> \${s.matricule}</div>
+                </div>
+                <span class="badge-statut-large \${s.statutCls}">\${s.statutLabel}</span>
+            </div>
+
+            <div class="sous-carte">
+                <div class="sous-carte-titre"><i class="fa-solid fa-address-card"></i> Informations personnelles</div>
+                <div class="grille-2-col">
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-phone"></i></span><div><div class="info-label">Téléphone</div><div class="info-valeur">\${s.telephone || '—'}</div></div></div>
+                    <div><span class="info-icone vert"><i class="fa-regular fa-calendar"></i></span><div><div class="info-label">Date naissance</div><div class="info-valeur">—</div></div></div>
+                    <div><span class="info-icone orange"><i class="fa-solid fa-location-dot"></i></span><div><div class="info-label">Adresse</div><div class="info-valeur">\${s.adresse || '—'}</div></div></div>
+                    <div><span class="info-icone violet"><i class="fa-solid fa-school"></i></span><div><div class="info-label">Université</div><div class="info-valeur">\${s.universite || '—'}</div></div></div>
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-graduation-cap"></i></span><div><div class="info-label">Filière</div><div class="info-valeur">\${s.filiere || '—'}</div></div></div>
+                    <div><span class="info-icone vert"><i class="fa-solid fa-layer-group"></i></span><div><div class="info-label">Niveau</div><div class="info-valeur">\${s.niveau || '—'}</div></div></div>
+                </div>
+            </div>
+
+            <div class="sous-carte">
+                <div class="sous-carte-titre"><i class="fa-solid fa-briefcase"></i> Informations de stage</div>
+                <div class="grille-2-col">
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-building"></i></span><div><div class="info-label">Service</div><div class="info-valeur">\${s.service || '—'}</div></div></div>
+                    <div><span class="info-icone vert"><i class="fa-solid fa-chalkboard-user"></i></span><div><div class="info-label">Encadreur</div><div class="info-valeur">\${s.encadreur || '—'}</div></div></div>
+                    <div><span class="info-icone orange"><i class="fa-regular fa-calendar-check"></i></span><div><div class="info-label">Période</div><div class="info-valeur">\${s.dateDebut || '—'} → \${s.dateFin || '—'}</div></div></div>
+                    <div><span class="info-icone violet"><i class="fa-solid fa-hourglass-half"></i></span><div><div class="info-label">Durée restante</div><div class="info-valeur">\${s.dureeRestante || '—'}</div></div></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <div class="progress-header" style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Progression globale</span><span>\${s.progression || 0}%</span></div>
+                <div class="progress-bar" style="height:8px;background:#E2E8F0;border-radius:10px;overflow:hidden;"><div class="progress-fill" style="height:100%;border-radius:10px;background:linear-gradient(90deg,#2563EB,#3B82F6);transition:width 0.6s ease;width:\${s.progression || 0}%"></div></div>
+            </div>
+
+            <div class="sous-carte">
+                <div class="sous-carte-titre"><i class="fa-solid fa-paperclip"></i> Documents (\${s.documentsCount || 0})</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    \${s.documents && s.documents.length > 0 ? s.documents.map(d => `
+                        <div style="flex:1;min-width:80px;background:white;border:1px solid #E2E8F0;border-radius:10px;padding:12px;text-align:center;">
+                            <div style="font-size:24px;margin-bottom:6px;color:\${d.cls === 'pdf' ? '#DC2626' : (d.cls === 'word' ? '#2563EB' : (d.cls === 'image' ? '#22C55E' : '#64748B'))}"><i class="\${d.icon}"></i></div>
+                            <div style="font-size:11px;font-weight:600;color:#0f172a;word-break:break-all;">\${d.nom}</div>
+                            <div style="font-size:10px;color:#94A3B8;">\${d.taille}</div>
+                            <button style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #E2E8F0;background:white;color:#2563EB;cursor:pointer;font-family:'Poppins',sans-serif;"><i class="fa-solid fa-download"></i></button>
+                        </div>
+                    `).join('') : '<div style="font-size:12px;color:#94A3B8;">Aucun document</div>'}
+                </div>
+            </div>
+
+            <div class="sous-carte" style="border:2px solid #2563EB;background:white;">
+                <div class="sous-carte-titre"><i class="fa-solid fa-bolt"></i> Actions rapides</div>
+                <div class="actions-admin-grid" style="margin-bottom:0;">
+                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-folder-open"></i> Voir le dossier</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-list-check"></i> Voir les tâches</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-file-arrow-up"></i> Voir les livrables</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-book-open"></i> Voir le journal</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-user-pen"></i> Modifier la fiche</button>
+                </div>
+                <button style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <i class="fa-solid fa-flag-checkered"></i> Clôturer le stage
+                </button>
+            </div>
+        `;
+
+        document.getElementById('modalDetailsStagiaire').classList.add('open');
+    }
+
+    function fermerModalStagiaire() {
+        document.getElementById('modalDetailsStagiaire').classList.remove('open');
+    }
+
+    function filterTable() {
+        const svc = document.getElementById('filterService').value;
+        const enc = document.getElementById('filterEncadreur').value;
+        const st = document.getElementById('filterStatut').value;
+        document.querySelectorAll('.table-stagiaires tbody tr').forEach(row => {
+            if (row.querySelector('td[colspan]')) return;
+            const id = row.querySelector('.action-btn')?.getAttribute('th:onclick')?.match(/\d+/)?.[0];
+            if (!id) { row.style.display = ''; return; }
+        });
+    }
+</script>
 </body>
 </html>

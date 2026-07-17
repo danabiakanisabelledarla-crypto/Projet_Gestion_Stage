@@ -5,6 +5,7 @@
     <title>Mes livrables - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-livrables.css}">
 </head>
 <body>
@@ -14,7 +15,7 @@
 <div class="livrables-main">
 
     <!-- ========== BARRE SUPERIEURE ========== -->
-    <header class="livrables-header">
+    <!--<header class="livrables-header">
         <div class="header-gauche">
             <div class="header-search">
                 <i class="fa-solid fa-search"></i>
@@ -26,9 +27,9 @@
                 <i class="fa-regular fa-bell"></i>
                 <span class="notif-dot">2</span>
             </div>
-            <div class="header-icon-btn">
+            <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
                 <i class="fa-regular fa-envelope"></i>
-            </div>
+            </a>
             <div class="header-user">
                 <div class="header-user-text">
                     <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
@@ -38,7 +39,8 @@
                 <i class="fa-solid fa-chevron-down header-arrow"></i>
             </div>
         </div>
-    </header>
+    </header>-->
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
 
     <!-- ========== CONTENU ========== -->
     <div class="livrables-content">
@@ -60,9 +62,9 @@
                 <div class="filtre-btn">
                     <i class="fa-solid fa-filter"></i> Filtrer
                 </div>
-                <a href="#" class="btn-nouveau">
+                <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalDepotLivrable')">
                     <i class="fa-solid fa-upload"></i> Deposer un document
-                </a>
+                </button>
             </div>
         </div>
 
@@ -158,6 +160,27 @@ function toggleCommentaire(id) {
     if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
 }
 </script>
-
+<!-- MODAL DEPOT LIVRABLE -->
+<div class="modal-overlay" id="modalDepotLivrable" onclick="if(event.target===this)fermerModal('modalDepotLivrable')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Deposer un document</h2>
+            <button class="modal-close" onclick="fermerModal('modalDepotLivrable')">&times;</button>
+        </div>
+        <form th:action="@{/stagiaire/livrables/deposer}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Titre du document</label>
+                <input type="text" name="titre" placeholder="Ex: Rapport d'analyse" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Fichier</label>
+                <input type="file" name="fichier" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg,.txt,.xlsx,.pptx" required>
+                <small style="color:#94A3B8;">Formats acceptés : PDF, DOC, DOCX, ZIP, RAR, PNG, JPG, TXT, XLSX, PPTX</small>
+            </div>
+            <button type="submit" class="bouton-principal"><i class="fa-solid fa-upload"></i> Deposer</button>
+        </form>
+    </div>
+</div>
 </body>
 </html>

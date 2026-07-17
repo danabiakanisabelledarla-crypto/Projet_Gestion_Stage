@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="header" class="admin-header">
+    <div class="header-droite">
+        <div class="header-icon-btn">
+            <i class="fa-regular fa-bell"></i>
+            <span class="notif-dot">3</span>
+        </div>
+        <a th:href="@{/admin/messages}" class="header-icon-btn">
+            <i class="fa-regular fa-envelope"></i>
+        </a>
+        <div class="header-user">
+            <div class="header-avatar" th:text="${initiales}">A</div>
+            <div>
+                <div class="header-user-nom" th:text="${nomComplet}">Administrateur</div>
+                <div class="header-user-role">Administrateur</div>
+            </div>
+            <i class="fa-solid fa-chevron-down header-arrow"></i>
+        </div>
+    </div>
+</div>
+</body>
+</html>
