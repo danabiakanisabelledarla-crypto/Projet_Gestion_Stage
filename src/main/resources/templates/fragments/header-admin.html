@@ -3,22 +3,25 @@
 <body>
 <div th:fragment="header" class="admin-header">
     <div class="header-droite">
-        <div class="header-icon-btn">
+        <div class="header-icon-btn" onclick="toggleNotifDropdown(event)">
             <i class="fa-regular fa-bell"></i>
-            <span class="notif-dot">3</span>
+            <span class="notif-dot" th:text="${notificationsCount}">0</span>
+            <div class="notif-dropdown" id="notifDropdown">...</div>
         </div>
-        <a th:href="@{/admin/messages}" class="header-icon-btn">
-            <i class="fa-regular fa-envelope"></i>
-        </a>
-        <div class="header-user">
-            <div class="header-avatar" th:text="${initiales}">A</div>
-            <div>
-                <div class="header-user-nom" th:text="${nomComplet}">Administrateur</div>
-                <div class="header-user-role">Administrateur</div>
-            </div>
-            <i class="fa-solid fa-chevron-down header-arrow"></i>
-        </div>
+        <a th:href="@{/admin/messages}" class="header-icon-btn">...</a>
+        <div class="header-user">...</div>
     </div>
+    <script>
+        window.toggleNotifDropdown = function(event) {
+            event.stopPropagation();
+            var dd = document.getElementById('notifDropdown');
+            if (dd) dd.classList.toggle('open');
+        };
+        document.addEventListener('click', function() {
+            var dd = document.getElementById('notifDropdown');
+            if (dd) dd.classList.remove('open');
+        });
+    </script>
 </div>
 </body>
 </html>

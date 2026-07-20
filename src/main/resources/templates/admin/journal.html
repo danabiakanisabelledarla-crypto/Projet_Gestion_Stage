@@ -2,30 +2,255 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Journal — Admin</title>
+    <title>Journal de bord - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/journal.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="portal-body">
+<body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-    <div th:replace="~{fragments/admin-header :: header('Rechercher une activité...')}"></div>
-    <section class="portal-hero">
-        <div class="portal-hero-text">
-            <div class="portal-hero-eyebrow">Journal d'activités</div>
-            <h1>Historique des actions</h1>
-            <p>Toutes les actions importantes de la plateforme sont enregistrées ici.</p>
-        </div>
-    </section>
-    <div class="portal-card">
-        <div th:each="a : ${activites}" class="activity-item">
-            <div class="activity-time" th:text="${#temporals.format(a.dateActivite, 'HH:mm')}">09:40</div>
-            <div class="activity-text">
-                <strong th:text="${a.action}">Action</strong>
-                <span th:text="${a.details + ' — ' + a.utilisateurNom}">Détails</span>
+<div class="contenu-principal">
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- PAGE HEADER -->
+    <div class="journal-header">
+        <div class="journal-header-left">
+            <div class="journal-header-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div>
+                <h1>Journal de bord</h1>
+                <p class="journal-header-sub">Consultez et gérez toutes les activités enregistrées par les stagiaires, les encadreurs et les responsables.</p>
             </div>
         </div>
-        <p th:if="${activites.isEmpty()}" style="color:#94A3B8;padding:20px;">Aucune activité enregistrée.</p>
+        <div class="journal-header-right">
+            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <button class="btn-outline"><i class="fa-solid fa-print"></i> Imprimer</button>
+            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
+        </div>
+    </div>
+
+    <!-- 5 STATS CARDS -->
+    <div class="journal-stats">
+        <div class="jstat-card bleu">
+            <div class="jstat-icon"><i class="fa-solid fa-list"></i></div>
+            <div class="jstat-info">
+                <div class="jstat-label">Entrées totales</div>
+                <div class="jstat-number" th:text="${totalEntries}">0</div>
+                <div class="jstat-desc">Toutes périodes</div>
+            </div>
+        </div>
+        <div class="jstat-card vert">
+            <div class="jstat-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="jstat-info">
+                <div class="jstat-label">Stagiaires actifs</div>
+                <div class="jstat-number" th:text="${activeStagiaires}">0</div>
+                <div class="jstat-desc">Cette semaine</div>
+            </div>
+        </div>
+        <div class="jstat-card orange">
+            <div class="jstat-icon"><i class="fa-regular fa-calendar"></i></div>
+            <div class="jstat-info">
+                <div class="jstat-label">Entrées de la semaine</div>
+                <div class="jstat-number" th:text="${weekEntries}">0</div>
+                <div class="jstat-desc">Les 7 derniers jours</div>
+            </div>
+        </div>
+        <div class="jstat-card violet">
+            <div class="jstat-icon"><i class="fa-solid fa-check-double"></i></div>
+            <div class="jstat-info">
+                <div class="jstat-label">Tâches liées</div>
+                <div class="jstat-number" th:text="${linkedTasks}">0</div>
+                <div class="jstat-desc">Activités enregistrées</div>
+            </div>
+        </div>
+        <div class="jstat-card rouge">
+            <div class="jstat-icon"><i class="fa-solid fa-comment"></i></div>
+            <div class="jstat-info">
+                <div class="jstat-label">Commentaires</div>
+                <div class="jstat-number" th:text="${totalComments}">0</div>
+                <div class="jstat-desc">Commentaires publiés</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TWO-COLUMN LAYOUT -->
+    <div class="journal-layout">
+        <!-- LEFT COL -->
+        <div class="journal-layout-left">
+            <!-- FILTER BAR -->
+            <div class="journal-filter-bar">
+                <div class="journal-filter-left">
+                    <select class="journal-filter-select">
+                        <option value="">Tous les utilisateurs</option>
+                    </select>
+                    <select class="journal-filter-select">
+                        <option value="">Tous les services</option>
+                    </select>
+                    <select class="journal-filter-select">
+                        <option value="">Type d'activité</option>
+                        <option>Journal</option>
+                        <option>Commentaire</option>
+                        <option>Livrable</option>
+                        <option>Évaluation</option>
+                        <option>Réunion</option>
+                        <option>Note</option>
+                    </select>
+                    <select class="journal-filter-select">
+                        <option value="">Période</option>
+                        <option>Aujourd'hui</option>
+                        <option>Cette semaine</option>
+                        <option>Ce mois</option>
+                        <option>Cette année</option>
+                    </select>
+                </div>
+                <div class="journal-filter-right">
+                    <button class="btn-outline"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="journal-table-card">
+                <table class="journal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Utilisateur</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Lié à</th>
+                            <th>Pièces jointes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="a : ${activites}">
+                            <td>
+                                <div class="journal-date-cell">
+                                    <span class="jdate" th:text="${a.dateFormatted}">15/07/2026</span>
+                                    <span class="jtime" th:text="${a.timeFormatted}">14:30</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="journal-user-cell">
+                                    <div class="journal-user-avatar" th:text="${a.initiale}">A</div>
+                                    <div>
+                                        <div class="journal-user-name" th:text="${a.utilisateur}">Admin</div>
+                                        <div class="journal-user-role" th:text="${a.role}">Administrateur</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="journal-type-badge" th:classappend="${a.typeCls}" th:text="${a.typeLabel}">Journal</span>
+                            </td>
+                            <td>
+                                <div class="journal-desc" th:text="${a.description}">Description...</div>
+                            </td>
+                            <td>
+                                <div class="journal-linked" th:if="${a.linkedItem != null}">
+                                    <i class="fa-solid fa-link"></i>
+                                    <span th:text="${a.linkedItem}">Document X</span>
+                                </div>
+                                <span th:unless="${a.linkedItem != null}" style="color:#94A3B8;font-size:12px;">—</span>
+                            </td>
+                            <td>
+                                <div class="journal-attach" th:if="${a.attachmentsCount > 0}">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                    <span th:text="${a.attachmentsCount}">2</span>
+                                </div>
+                                <span th:unless="${a.attachmentsCount > 0}" style="color:#94A3B8;font-size:12px;">—</span>
+                            </td>
+                            <td>
+                                <button class="journal-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                <button class="journal-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                                <button class="journal-action-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(activites)}">
+                            <td colspan="7" class="journal-empty">Aucune activité enregistrée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- PAGINATION -->
+                <div class="journal-pagination">
+                    <button class="journal-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="journal-page-btn actif">1</button>
+                    <button class="journal-page-btn" th:if="${totalEntries > 10}">2</button>
+                    <button class="journal-page-btn" th:if="${totalEntries > 20}">3</button>
+                    <span th:if="${totalEntries > 30}" class="journal-page-dots">...</span>
+                    <button class="journal-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COL -->
+        <div class="journal-layout-right">
+            <!-- CARD 1: Activités récentes -->
+            <div class="journal-side-card">
+                <div class="journal-side-card-header">
+                    <span class="journal-side-card-title"><i class="fa-solid fa-bolt" style="color:#F59E0B;margin-right:8px;"></i>Activités récentes</span>
+                    <a href="#" class="journal-side-card-link">Voir tout</a>
+                </div>
+                <div class="journal-recent-list">
+                    <div th:each="r : ${recentActivities}" class="journal-recent-item">
+                        <div class="journal-recent-icon" th:classappend="${r.typeCls}">
+                            <i th:class="${r.icon}"></i>
+                        </div>
+                        <div class="journal-recent-content">
+                            <div class="journal-recent-title" th:text="${r.title}">Action</div>
+                            <div class="journal-recent-desc" th:text="${r.desc}">Détails</div>
+                            <div class="journal-recent-time" th:text="${r.time}">Il y a 5 min</div>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentActivities)}" class="journal-empty" style="padding:20px;">Aucune activité récente</div>
+                </div>
+            </div>
+
+            <!-- CARD 2: Répartition -->
+            <div class="journal-side-card">
+                <div class="journal-side-card-header">
+                    <span class="journal-side-card-title"><i class="fa-solid fa-chart-pie" style="color:#8B5CF6;margin-right:8px;"></i>Répartition</span>
+                </div>
+                <div class="journal-donut-wrapper">
+                    <div class="journal-donut">
+                        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
+                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"></circle>
+                            <circle th:each="s : ${distributionSegments}" cx="18" cy="18" r="15.9" fill="none"
+                                    th:stroke="${s.color}" stroke-width="3.5" stroke-dasharray="${s.dasharray}"
+                                    th:attr="stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)"
+                                    stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="journal-donut-center">
+                            <div class="journal-donut-number" th:text="${totalEntries}">0</div>
+                            <div class="journal-donut-label">Total</div>
+                        </div>
+                    </div>
+                    <div class="journal-donut-legend">
+                        <div th:each="d : ${distribution}" class="journal-legend-item">
+                            <span class="journal-legend-dot" th:classappend="${d.cls}"></span>
+                            <span class="journal-legend-name" th:text="${d.name}">Journal</span>
+                            <span class="journal-legend-pct" th:text="${d.pct + '%'}">42%</span>
+                            <span class="journal-legend-nb" th:text="${d.count}">522</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Types d'activités -->
+            <div class="journal-side-card">
+                <div class="journal-side-card-header">
+                    <span class="journal-side-card-title"><i class="fa-solid fa-list-check" style="color:#22C55E;margin-right:8px;"></i>Types d'activités</span>
+                </div>
+                <div class="journal-type-list">
+                    <div th:each="t : ${typeCounts}" class="journal-type-item">
+                        <div class="journal-type-item-icon" th:classappend="${t.cls}">
+                            <i th:class="${t.icon}"></i>
+                        </div>
+                        <span class="journal-type-item-name" th:text="${t.name}">Journaux quotidiens</span>
+                        <span class="journal-type-item-count" th:text="${t.count}">522</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

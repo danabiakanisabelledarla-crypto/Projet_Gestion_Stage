@@ -2,24 +2,248 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sauvegarde — Admin</title>
+    <title>Sauvegarde & restauration - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="portal-body">
+<body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-    <div th:replace="~{fragments/admin-header :: header('')}"></div>
-    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
-    <section class="portal-hero" style="min-height:160px;">
-        <div class="portal-hero-text"><div class="portal-hero-eyebrow">Sauvegarde</div><h1>Gestion des sauvegardes</h1><p>Sauvegardez et restaurez les données de la plateforme.</p></div>
-    </section>
-    <div class="portal-stats">
-        <div class="portal-card"><h3><i class="fa-solid fa-database"></i> Sauvegarder</h3><p style="color:#64748B;margin:12px 0;">Créer une sauvegarde complète de la base de données.</p>
-            <form th:action="@{/admin/sauvegarde}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-portal-primary"><i class="fa-solid fa-download"></i> Lancer la sauvegarde</button></form>
+<div class="contenu-principal">
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="sg-header">
+        <div class="sg-header-left">
+            <div class="sg-header-icon"><i class="fa-solid fa-database"></i></div>
+            <div>
+                <h1>Sauvegarde &amp; restauration</h1>
+                <p class="sg-header-sub">Gérez les sauvegardes automatiques, restaurez les données et surveillez l'état du système.</p>
+            </div>
         </div>
-        <div class="portal-card"><h3><i class="fa-solid fa-rotate-left"></i> Restaurer</h3><p style="color:#64748B;margin:12px 0;">Restaurer une sauvegarde précédente.</p><button class="btn-portal-secondary" disabled>Restaurer (bientôt)</button></div>
-        <div class="portal-card"><h3><i class="fa-solid fa-file-export"></i> Exporter</h3><p style="color:#64748B;margin:12px 0;">Exporter toutes les données au format CSV.</p><button class="btn-portal-secondary" disabled>Exporter (bientôt)</button></div>
+        <div class="sg-header-right">
+            <button class="sg-btn-primary"><i class="fa-solid fa-cloud-upload"></i> Nouvelle sauvegarde</button>
+            <button class="sg-btn-outline"><i class="fa-solid fa-rotate-left"></i> Restaurer</button>
+            <button class="sg-btn-ghost"><i class="fa-solid fa-gear"></i> Paramètres</button>
+        </div>
+    </div>
+
+    <!-- 5 STATS CARDS -->
+    <div class="sg-stats">
+        <div class="sg-stat-card bleu">
+            <div class="sg-stat-icon"><i class="fa-solid fa-database"></i></div>
+            <div class="sg-stat-info">
+                <div class="sg-stat-label">Sauvegardes</div>
+                <div class="sg-stat-number" th:text="${totalBackups}">0</div>
+                <div class="sg-stat-desc">Effectuées</div>
+            </div>
+        </div>
+        <div class="sg-stat-card vert">
+            <div class="sg-stat-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="sg-stat-info">
+                <div class="sg-stat-label">Dernière sauvegarde</div>
+                <div class="sg-stat-number" th:text="${lastBackupDate}">—</div>
+                <div class="sg-stat-desc" th:text="${lastBackupTime}">—</div>
+            </div>
+        </div>
+        <div class="sg-stat-card orange">
+            <div class="sg-stat-icon"><i class="fa-solid fa-hard-drive"></i></div>
+            <div class="sg-stat-info">
+                <div class="sg-stat-label">Stockage</div>
+                <div class="sg-stat-number" th:text="${storageUsed + ' Go'}">0</div>
+                <div class="sg-stat-desc" th:text="${storagePct + '% utilisé'}">—</div>
+            </div>
+        </div>
+        <div class="sg-stat-card violet">
+            <div class="sg-stat-icon"><i class="fa-solid fa-repeat"></i></div>
+            <div class="sg-stat-info">
+                <div class="sg-stat-label">Sauvegarde automatique</div>
+                <div class="sg-stat-number" th:text="${autoBackupStatus ? 'Activée' : 'Désactivée'}">—</div>
+                <div class="sg-stat-desc">Chaque nuit</div>
+            </div>
+        </div>
+        <div class="sg-stat-card rouge">
+            <div class="sg-stat-icon"><i class="fa-solid fa-rotate-left"></i></div>
+            <div class="sg-stat-info">
+                <div class="sg-stat-label">Restaurations</div>
+                <div class="sg-stat-number" th:text="${totalRestorations}">0</div>
+                <div class="sg-stat-desc">Historique</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TWO-COLUMN LAYOUT -->
+    <div class="sg-layout">
+        <!-- LEFT COLUMN -->
+        <div class="sg-layout-left">
+            <div class="sg-card">
+                <div class="sg-card-header">
+                    <span class="sg-card-title"><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px;color:#2563EB;"></i>Historique des sauvegardes</span>
+                    <div class="sg-card-actions">
+                        <button class="sg-card-btn"><i class="fa-solid fa-download"></i> Exporter</button>
+                        <button class="sg-card-btn"><i class="fa-solid fa-filter"></i> Filtrer</button>
+                    </div>
+                </div>
+                <table class="sg-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Type</th>
+                            <th>Taille</th>
+                            <th>Destination</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="b : ${backupHistory}">
+                            <td><span class="sgdate" th:text="${b.date}">17/07/2026</span></td>
+                            <td><span class="sgtime" th:text="${b.time}">09:30</span></td>
+                            <td><span class="sg-badge" th:classappend="${b.typeCls}" th:text="${b.typeLabel}">Automatique</span></td>
+                            <td><span class="sg-size" th:text="${b.size}">2.5 Go</span></td>
+                            <td><span class="sg-dest" th:text="${b.destination}">Cloud</span></td>
+                            <td><span class="sg-badge" th:classappend="${b.statutCls}" th:text="${b.statutLabel}">Réussie</span></td>
+                            <td>
+                                <button class="sg-action-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                <button class="sg-action-btn" title="Restaurer"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button class="sg-action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(backupHistory)}">
+                            <td colspan="7" class="sg-empty">Aucune sauvegarde trouvée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="sg-pagination">
+                    <button class="sg-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="sg-page-btn actif">1</button>
+                    <button class="sg-page-btn">2</button>
+                    <button class="sg-page-btn">3</button>
+                    <button class="sg-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="sg-layout-right">
+            <!-- CARD 1: Stockage -->
+            <div class="sg-side-card">
+                <div class="sg-side-card-header">
+                    <span class="sg-side-card-title"><i class="fa-solid fa-hard-drive" style="color:#2563EB;margin-right:8px;"></i>Utilisation du stockage</span>
+                </div>
+                <div class="sg-gauge-wrapper">
+                    <div class="sg-gauge">
+                        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
+                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"></circle>
+                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2563EB" stroke-width="3.5"
+                                    stroke-dasharray="${storagePct * 100 / 100 * 100} ${(100 - storagePct) * 100 / 100 * 100}"
+                                    stroke-dashoffset="0" transform="rotate(-90,18,18)" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="sg-gauge-center">
+                            <div class="sg-gauge-number" th:text="${storagePct + '%'}">76%</div>
+                            <div class="sg-gauge-label" th:text="${storageUsed + ' Go'}">245 Go</div>
+                        </div>
+                    </div>
+                    <div class="sg-gauge-bar-wrapper">
+                        <div class="sg-gauge-bar-bg">
+                            <div class="sg-gauge-bar-fill" th:style="'width:' + ${storagePct} + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: Répartition -->
+            <div class="sg-side-card">
+                <div class="sg-side-card-header">
+                    <span class="sg-side-card-title"><i class="fa-solid fa-chart-pie" style="color:#8B5CF6;margin-right:8px;"></i>Répartition</span>
+                </div>
+                <div class="sg-donut-wrapper">
+                    <div class="sg-donut">
+                        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
+                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"></circle>
+                            <circle th:each="s : ${distributionSegments}" cx="18" cy="18" r="15.9" fill="none"
+                                    th:stroke="${s.color}" stroke-width="3.5" stroke-dasharray="${s.dasharray}"
+                                    th:attr="stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)"
+                                    stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="sg-donut-center">
+                            <div class="sg-donut-number" th:text="${totalBackups}">42</div>
+                            <div class="sg-donut-label">Total</div>
+                        </div>
+                    </div>
+                    <div class="sg-donut-legend">
+                        <div th:each="d : ${distribution}" class="sg-legend-item">
+                            <span class="sg-legend-dot" th:classappend="${d.cls}"></span>
+                            <span class="sg-legend-name" th:text="${d.name}">Auto</span>
+                            <span class="sg-legend-pct" th:text="${d.pct + '%'}">65%</span>
+                            <span class="sg-legend-nb" th:text="${d.count}">28</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Activité récente -->
+            <div class="sg-side-card">
+                <div class="sg-side-card-header">
+                    <span class="sg-side-card-title"><i class="fa-solid fa-bolt" style="color:#F59E0B;margin-right:8px;"></i>Activité récente</span>
+                    <a href="#" class="sg-side-card-link">Voir tout</a>
+                </div>
+                <div class="sg-recent-list">
+                    <div th:each="r : ${recentActivity}" class="sg-recent-item">
+                        <div class="sg-recent-icon" th:classappend="${r.cls}">
+                            <i th:class="${r.icon}"></i>
+                        </div>
+                        <div class="sg-recent-content">
+                            <div class="sg-recent-title" th:text="${r.title}">Action</div>
+                            <div class="sg-recent-time" th:text="${r.date + ' · ' + r.time}">Aujourd'hui · 02:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM CARD: Évolution -->
+    <div class="sg-bottom-card">
+        <div class="sg-bottom-card-title"><i class="fa-solid fa-chart-line" style="color:#2563EB;margin-right:8px;"></i>Évolution des sauvegardes</div>
+        <div class="sg-chart-wrapper">
+            <svg class="sg-chart-svg" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid meet">
+                <!-- Grille horizontale -->
+                <line x1="60" y1="40" x2="760" y2="40" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="60" y1="90" x2="760" y2="90" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="60" y1="140" x2="760" y2="140" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="60" y1="190" x2="760" y2="190" stroke="#F1F5F9" stroke-width="1"/>
+                <text x="55" y="44" text-anchor="end" fill="#94A3B8" font-size="10">50 Go</text>
+                <text x="55" y="94" text-anchor="end" fill="#94A3B8" font-size="10">40 Go</text>
+                <text x="55" y="144" text-anchor="end" fill="#94A3B8" font-size="10">30 Go</text>
+                <text x="55" y="194" text-anchor="end" fill="#94A3B8" font-size="10">20 Go</text>
+
+                <!-- Axe X labels (mois) -->
+                <text th:each="m, iter : ${chartMonths}" th:x="${60 + (iter.index + 1) * 100}" y="220" text-anchor="middle" fill="#94A3B8" font-size="11" th:text="${m}">Jan</text>
+
+                <!-- Courbe auto (bleu) -->
+                <polyline th:attr="points=${chartAutoPoints}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle th:each="p, iter : ${chartAutoValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#2563EB" stroke="white" stroke-width="2"/>
+
+                <!-- Courbe manuelle (vert) -->
+                <polyline th:attr="points=${chartManualPoints}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle th:each="p, iter : ${chartManualValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#22C55E" stroke="white" stroke-width="2"/>
+
+                <!-- Courbe restauration (orange) -->
+                <polyline th:attr="points=${chartRestorePoints}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle th:each="p, iter : ${chartRestoreValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#F59E0B" stroke="white" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="sg-chart-legend">
+            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#2563EB;"></span> Automatiques</div>
+            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#22C55E;"></span> Manuelles</div>
+            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#F59E0B;"></span> Restaurations</div>
+        </div>
     </div>
 </div>
 </body>

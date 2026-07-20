@@ -2,56 +2,398 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Documents — Admin</title>
+    <title>Documents - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/documents.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="portal-body">
+<body>
+
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-    <div th:replace="~{fragments/admin-header :: header('Rechercher un document...')}"></div>
-    <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
 
-    <section class="portal-hero">
-        <div class="portal-hero-text">
-            <div class="portal-hero-eyebrow">Gestion documentaire</div>
-            <h1>Gestion des documents des stagiaires</h1>
-            <p>Centralisez, consultez, téléchargez et archivez les documents liés aux stages.</p>
+<div class="contenu-principal">
+
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="page-header-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <div>
+                <h1>Gestion documentaire</h1>
+                <p class="page-header-sub">Centralisez, gérez et archivez tous les documents de la plateforme.</p>
+            </div>
         </div>
-        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
-    </section>
-
-    <div class="portal-stats">
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-folder-open"></i></div><div class="number" th:text="${totalDocs}">0</div><div class="label">Documents</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-file-lines"></i></div><div class="number" th:text="${totalRapports}">0</div><div class="label">Rapports</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-shield-halved"></i></div><div class="number" th:text="${totalConventions}">0</div><div class="label">Conventions</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-box-archive"></i></div><div class="number" th:text="${totalArchives}">0</div><div class="label">Archivés</div></div>
     </div>
 
-    <div class="portal-table-card">
-        <table class="portal-table">
-            <thead><tr><th>Document</th><th>Stagiaire</th><th>Type</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody>
-            <tr th:each="doc : ${documents}">
-                <td>
-                    <div class="table-user-name" th:text="${doc.nomFichier}">fichier.pdf</div>
-                    <div class="table-user-id" th:text="'DOC-' + ${#strings.pad(doc.id, 3, '0')}">DOC-001</div>
-                </td>
-                <td th:text="${doc.stage != null ? doc.stage.stagiaire.utilisateur.prenom + ' ' + doc.stage.stagiaire.utilisateur.nom : '—'}">Stagiaire</td>
-                <td><span class="badge-role badge-cv" th:text="${doc.typeDocument}">type</span></td>
-                <td th:text="${#temporals.format(doc.dateDepot, 'dd/MM/yyyy')}">01/01/2026</td>
-                <td><span th:class="${doc.statut == 'archive'} ? 'badge-statut badge-archive' : 'badge-statut badge-actif'" th:text="${doc.statut}">disponible</span></td>
-                <td>
-                    <div class="table-actions">
-                        <a th:href="@{/documents/{id}(id=${doc.id})}" class="btn-action download"><i class="fa-solid fa-download"></i></a>
-                        <form th:action="@{/admin/documents/archiver/{id}(id=${doc.id})}" method="post" style="display:inline;"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action view"><i class="fa-solid fa-box-archive"></i></button></form>
-                        <form th:action="@{/admin/documents/supprimer/{id}(id=${doc.id})}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ?')"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/><button type="submit" class="btn-action delete"><i class="fa-solid fa-trash"></i></button></form>
+    <!-- ALERT -->
+    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
+    </div>
+
+    <!-- 6 STATS CARDS -->
+    <div class="stats-row">
+        <div class="stat-card bleu">
+            <div class="stat-icon"><i class="fa-solid fa-folder"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Documents</div>
+                <div class="stat-number" th:text="${totalDocs}">0</div>
+                <div class="stat-desc">Tous les documents</div>
+            </div>
+        </div>
+        <div class="stat-card vert">
+            <div class="stat-icon"><i class="fa-solid fa-file-pdf"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Rapports finaux</div>
+                <div class="stat-number" th:text="${totalRapports}">0</div>
+                <div class="stat-desc">Documents validés</div>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon"><i class="fa-solid fa-file-signature"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Rapports hebdo</div>
+                <div class="stat-number" th:text="${totalRapportsHebdo}">0</div>
+                <div class="stat-desc">Hebdomadaires</div>
+            </div>
+        </div>
+        <div class="stat-card violet">
+            <div class="stat-icon"><i class="fa-solid fa-file-circle-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Attestations</div>
+                <div class="stat-number" th:text="${totalAttestations}">0</div>
+                <div class="stat-desc">Documents officiels</div>
+            </div>
+        </div>
+        <div class="stat-card rouge">
+            <div class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Fiches notes</div>
+                <div class="stat-number" th:text="${totalFichesNotes}">0</div>
+                <div class="stat-desc">Évaluations</div>
+            </div>
+        </div>
+        <div class="stat-card gris">
+            <div class="stat-icon"><i class="fa-solid fa-box-archive"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Archives</div>
+                <div class="stat-number" th:text="${totalArchives}">0</div>
+                <div class="stat-desc">Documents archivés</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <div class="action-bar-left">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" placeholder="Rechercher un document..." id="searchDoc" onkeyup="filterTable()">
+            </div>
+        </div>
+        <div class="action-bar-right">
+            <button class="btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button class="btn-primary"><i class="fa-solid fa-upload"></i> Nouveau document</button>
+        </div>
+    </div>
+
+    <!-- TWO-COLUMN LAYOUT -->
+    <div class="page-layout">
+
+        <!-- LEFT -->
+        <div class="page-layout-left">
+            <div class="main-card">
+                <!-- TABS -->
+                <div class="tabs-bar">
+                    <div class="tabs">
+                        <button class="tab actif" data-filtre="toutes" onclick="filterTabs('toutes')">Tous <span class="tab-badge" th:text="${totalDocs}">0</span></button>
+                        <button class="tab" data-filtre="rapport_final" onclick="filterTabs('rapport_final')">Rapports <span class="tab-badge" th:text="${totalRapports}">0</span></button>
+                        <button class="tab" data-filtre="livrable" onclick="filterTabs('livrable')">Livrables <span class="tab-badge">0</span></button>
+                        <button class="tab" data-filtre="attestation" onclick="filterTabs('attestation')">Attestations <span class="tab-badge" th:text="${totalAttestations}">0</span></button>
+                        <button class="tab" data-filtre="fiche_note" onclick="filterTabs('fiche_note')">Fiches <span class="tab-badge" th:text="${totalFichesNotes}">0</span></button>
+                        <button class="tab" data-filtre="archive" onclick="filterTabs('archive')">Archives <span class="tab-badge" th:text="${totalArchives}">0</span></button>
                     </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                </div>
+
+                <!-- TABLE -->
+                <div class="table-wrapper">
+                    <table class="table-documents">
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>Catégorie</th>
+                                <th>Propriétaire</th>
+                                <th>Date</th>
+                                <th>Version</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="doc : ${documents}" th:data-type="${doc.typeDocument}" th:data-statut="${doc.statut}" th:onclick="'selectDoc(this, ' + ${doc.id} + ')'">
+                                <td>
+                                    <div class="doc-name-cell">
+                                        <div th:class="'doc-icon ' + ${#strings.substring(doc.nomFichier, #strings.indexOf(doc.nomFichier, '.') + 1, #strings.length(doc.nomFichier))}">
+                                            <i th:class="${#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.indexOf(doc.nomFichier, '.') + 1)) == 'pdf' ? 'fa-solid fa-file-pdf' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'doc' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'docx' ? 'fa-solid fa-file-word' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'png' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'jpg' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'jpeg' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'gif' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'svg' ? 'fa-solid fa-file-image' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'zip' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'rar' ? 'fa-solid fa-file-zipper' : 'fa-solid fa-file'))))"></i>
+                                        </div>
+                                        <div>
+                                            <div class="doc-name" th:text="${doc.nomFichier}">fichier.pdf</div>
+                                            <div class="doc-size">—</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${doc.typeDocument}">Rapport final</td>
+                                <td>
+                                    <div class="proprietaire-cell">
+                                        <div class="proprietaire-avatar" th:text="${doc.stage != null ? #strings.substring(doc.stage.stagiaire.utilisateur.prenom,0,1).toUpperCase() + #strings.substring(doc.stage.stagiaire.utilisateur.nom,0,1).toUpperCase() : '—'}">JD</div>
+                                        <div>
+                                            <div class="proprietaire-nom" th:text="${doc.stage != null ? doc.stage.stagiaire.utilisateur.prenom + ' ' + doc.stage.stagiaire.utilisateur.nom : '—'}">Nom</div>
+                                            <div class="proprietaire-role" th:text="${doc.demandeStage != null ? 'Candidat' : 'Stagiaire'}">Rôle</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-cell">
+                                        <span class="date" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'dd/MM/yyyy') : '—'}">date</span>
+                                        <span class="heure" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'HH:mm') : '—'}">heure</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge-version">v1</span></td>
+                                <td>
+                                    <span th:class="'badge-statut ' + (${doc.statut == 'archive'} ? 'archive' : (${doc.statut == 'en_attente'} ? 'en_attente' : 'disponible'))"
+                                          th:text="${doc.statut == 'archive' ? 'Archivé' : (doc.statut == 'en_attente' ? 'En attente' : 'Disponible')}">Statut</span>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="action-btn" th:onclick="'event.stopPropagation(); window.open(\'/documents/' + ${doc.id} + '\')'" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                        <button class="action-btn" th:onclick="'event.stopPropagation(); selectDoc(this, ' + ${doc.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                        <form th:action="@{/admin/documents/archiver/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="submit" class="action-btn" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
+                                        </form>
+                                        <form th:action="@{/admin/documents/supprimer/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()" onsubmit="return confirm('Supprimer ce document ?')">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="submit" class="action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(documents)}">
+                                <td colspan="7" class="empty-state">Aucun document trouvé.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="pagination-bar">
+                    <div class="pagination-info">
+                        Affichage de 1 à <span th:text="${totalDocs}">0</span> sur <span th:text="${totalDocs}">0</span> documents
+                    </div>
+                    <div class="pagination-btns">
+                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="page-btn actif">1</button>
+                        <button class="page-btn" th:if="${totalDocs > 10}">2</button>
+                        <button class="page-btn" th:if="${totalDocs > 20}">3</button>
+                        <span th:if="${totalDocs > 30}" class="page-dots">...</span>
+                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT — DETAIL PANEL -->
+        <div class="page-layout-right">
+            <div class="detail-panel" id="detailPanel">
+                <div class="detail-panel-header">
+                    <h2>Détails du document</h2>
+                    <button class="detail-panel-close" onclick="closeDetailDoc()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="detailContentDoc">
+                    <div class="empty-state" style="padding:40px 10px;">
+                        <i class="fa-solid fa-mouse-pointer" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+                        Cliquez sur un document pour voir ses détails
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script th:inline="javascript">
+    const docsData = /*[[${documentsJson}]]*/ [];
+</script>
+<script>
+    function getExtIcon(ext) {
+        ext = ext.toLowerCase();
+        if (ext === 'pdf') return { cls: 'pdf', icon: 'fa-solid fa-file-pdf' };
+        if (['doc','docx'].includes(ext)) return { cls: 'word', icon: 'fa-solid fa-file-word' };
+        if (['png','jpg','jpeg','gif','svg','webp'].includes(ext)) return { cls: 'image', icon: 'fa-solid fa-file-image' };
+        if (['zip','rar','7z','gz','tar'].includes(ext)) return { cls: 'zip', icon: 'fa-solid fa-file-zipper' };
+        if (['xls','xlsx','csv'].includes(ext)) return { cls: 'excel', icon: 'fa-solid fa-file-excel' };
+        return { cls: 'unknown', icon: 'fa-solid fa-file' };
+    }
+
+    function selectDoc(el, id) {
+        document.querySelectorAll('.table-documents tbody tr').forEach(r => r.classList.remove('selected'));
+        if (el.tagName === 'TR') el.classList.add('selected');
+        else el.closest('tr').classList.add('selected');
+        afficherDetailDoc(id);
+    }
+
+    function afficherDetailDoc(id) {
+        const d = docsData.find(x => x.id === id);
+        if (!d) return;
+        const ext = d.ext || 'unknown';
+        const ei = getExtIcon(ext);
+
+        document.getElementById('detailContentDoc').innerHTML = `
+            <div class="detail-preview">
+                <div class="detail-preview-icon ${ei.cls}" style="font-size:56px;"><i class="${ei.icon}"></i></div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fa-solid fa-circle-info"></i> Informations</div>
+                <div class="detail-grid-2">
+                    <div><span class="detail-info-icon bleu"><i class="fa-solid fa-file"></i></span><div><div class="detail-info-label">Nom</div><div class="detail-info-value mono">${d.nomFichier}</div></div></div>
+                    <div><span class="detail-info-icon vert"><i class="fa-solid fa-tag"></i></span><div><div class="detail-info-label">Type</div><div class="detail-info-value">${d.typeDocument}</div></div></div>
+                    <div><span class="detail-info-icon orange"><i class="fa-solid fa-weight"></i></span><div><div class="detail-info-label">Taille</div><div class="detail-info-value">—</div></div></div>
+                    <div><span class="detail-info-icon violet"><i class="fa-solid fa-code-branch"></i></span><div><div class="detail-info-label">Version</div><div class="detail-info-value">v1</div></div></div>
+                    <div><span class="detail-info-icon bleu"><i class="fa-regular fa-calendar-plus"></i></span><div><div class="detail-info-label">Créé le</div><div class="detail-info-value">${d.dateDepot}</div></div></div>
+                    <div><span class="detail-info-icon rouge"><i class="fa-regular fa-pen-to-square"></i></span><div><div class="detail-info-label">Modifié le</div><div class="detail-info-value">${d.dateDepot}</div></div></div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fa-solid fa-user"></i> Auteur</div>
+                <div class="auteur-card">
+                    <div class="auteur-avatar">${d.proprietaireInitiales || '—'}</div>
+                    <div>
+                        <div class="auteur-nom">${d.proprietaireNom || '—'}</div>
+                        <div class="auteur-role">${d.proprietaireRole || '—'}</div>
+                        <div class="auteur-service">${d.proprietaireService || ''}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title" style="display:flex;justify-content:space-between;">
+                    <span><i class="fa-solid fa-link"></i> Documents liés</span>
+                    <span style="font-size:11px;color:#64748B;">${d.documentsLiesCount || 0}</span>
+                </div>
+                <div class="doc-lies-list">
+                    ${d.documentsLies && d.documentsLies.length > 0 ? d.documentsLies.map(link => {
+                        const lei = getExtIcon(link.ext || 'pdf');
+                        return `<div class="doc-lie-item"><div class="doc-lie-icon ${lei.cls}"><i class="${lei.icon}"></i></div><div class="doc-lie-nom">${link.nom}</div></div>`;
+                    }).join('') : '<div style="font-size:12px;color:#94A3B8;text-align:center;padding:10px;">Aucun document lié</div>'}
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des versions</div>
+                <div class="history-timeline">
+                    <div class="history-step">
+                        <div class="history-dot vert"></div>
+                        <div class="history-content">
+                            <div class="history-version">v3 · Version finale</div>
+                            <div class="history-auteur">Par Stagiaire</div>
+                            <div class="history-date">15 juillet 2026</div>
+                        </div>
+                    </div>
+                    <div class="history-step">
+                        <div class="history-dot"></div>
+                        <div class="history-content">
+                            <div class="history-version">v2 · Correction</div>
+                            <div class="history-auteur">Par Encadreur</div>
+                            <div class="history-date">12 juillet 2026</div>
+                        </div>
+                    </div>
+                    <div class="history-step">
+                        <div class="history-dot"></div>
+                        <div class="history-content">
+                            <div class="history-version">v1 · Création</div>
+                            <div class="history-auteur">Par Stagiaire</div>
+                            <div class="history-date">10 juillet 2026</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fa-solid fa-arrow-down"></i> Historique des téléchargements</div>
+                <table class="downloads-table">
+                    <thead><tr><th>Utilisateur</th><th>Date</th><th>Action</th></tr></thead>
+                    <tbody>
+                        <tr><td>Admin</td><td>Aujourd'hui</td><td>Téléchargement</td></tr>
+                        <tr><td>Responsable</td><td>Hier</td><td>Consultation</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title"><i class="fa-solid fa-comments"></i> Commentaires</div>
+                <div class="comment-item">
+                    <div class="comment-avatar">A</div>
+                    <div class="comment-content">
+                        <div class="comment-header"><span class="comment-auteur">Admin</span><span class="comment-date">15/07/2026</span></div>
+                        <div class="comment-texte">Document validé. Merci de procéder à l'archivage.</div>
+                    </div>
+                </div>
+                <div class="comment-input-area">
+                    <input type="text" placeholder="Ajouter un commentaire...">
+                    <button><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <div class="detail-section" style="border:2px solid #2563EB;background:white;">
+                <div class="detail-section-title"><i class="fa-solid fa-shield-halved"></i> Actions administratives</div>
+                <div class="actions-admin-row">
+                    <button class="btn-action-admin primary"><i class="fa-solid fa-download"></i> Télécharger</button>
+                    <button class="btn-action-admin vert"><i class="fa-solid fa-box-archive"></i> Archiver</button>
+                    <button class="btn-action-admin"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
+                </div>
+                <div class="actions-admin-row">
+                    <button class="btn-action-admin"><i class="fa-solid fa-pen"></i> Modifier</button>
+                    <button class="btn-action-admin danger"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                    <button class="btn-action-admin"><i class="fa-solid fa-share-nodes"></i> Partager</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function closeDetailDoc() {
+        document.getElementById('detailContentDoc').innerHTML = `
+            <div class="empty-state" style="padding:40px 10px;">
+                <i class="fa-solid fa-mouse-pointer" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+                Cliquez sur un document pour voir ses détails
+            </div>
+        `;
+        document.querySelectorAll('.table-documents tbody tr').forEach(r => r.classList.remove('selected'));
+    }
+
+    function filterTabs(filtre) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('actif'));
+        document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
+        document.querySelectorAll('.table-documents tbody tr').forEach(row => {
+            if (row.querySelector('td[colspan]')) return;
+            if (filtre === 'toutes') { row.style.display = ''; return; }
+            if (filtre === 'archive') {
+                row.style.display = row.dataset.statut === 'archive' ? '' : 'none';
+                return;
+            }
+            row.style.display = row.dataset.type === filtre ? '' : 'none';
+        });
+    }
+
+    function filterTable() {
+        const q = document.getElementById('searchDoc').value.toLowerCase();
+        document.querySelectorAll('.table-documents tbody tr').forEach(row => {
+            if (row.querySelector('td[colspan]')) return;
+            const name = row.querySelector('.doc-name')?.textContent?.toLowerCase() || '';
+            row.style.display = name.includes(q) ? '' : 'none';
+        });
+    }
+</script>
 </body>
 </html>

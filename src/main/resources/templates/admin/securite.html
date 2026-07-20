@@ -2,34 +2,227 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sécurité — Admin</title>
+    <title>Sécurité - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/securite.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="portal-body">
+<body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-    <div th:replace="~{fragments/admin-header :: header('')}"></div>
-    <section class="portal-hero" style="min-height:160px;">
-        <div class="portal-hero-text"><div class="portal-hero-eyebrow">Sécurité</div><h1>Gestion de la sécurité</h1><p>Rôles, permissions et sessions actives.</p></div>
-    </section>
-    <div class="portal-table-card">
-        <h3 style="margin-bottom:16px;">Rôles et permissions</h3>
-        <table class="portal-table">
-            <thead><tr><th>Rôle</th><th>Description</th><th>Utilisateurs</th></tr></thead>
+<div class="contenu-principal">
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- HEADER -->
+    <div class="sec-header">
+        <div class="sec-header-left">
+            <div class="sec-header-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <h1>Sécurité de la plateforme</h1>
+                <p class="sec-header-sub">Surveillez les connexions, détectez les activités suspectes et protégez les comptes utilisateurs.</p>
+            </div>
+        </div>
+        <div class="sec-header-right">
+            <button class="sec-btn-primary"><i class="fa-solid fa-shield-virus"></i> Scanner le système</button>
+            <button class="sec-btn-outline"><i class="fa-solid fa-download"></i> Exporter le journal</button>
+            <button class="sec-btn-ghost"><i class="fa-solid fa-gear"></i> Paramètres</button>
+        </div>
+    </div>
+
+    <!-- 6 STATS CARDS -->
+    <div class="sec-stats">
+        <div class="sec-stat-card vert">
+            <div class="sec-stat-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            <div><div class="sec-stat-label">Connexions réussies</div><div class="sec-stat-number" th:text="${successfulLogins}">148</div><div class="sec-stat-desc">Aujourd'hui</div></div>
+        </div>
+        <div class="sec-stat-card rouge">
+            <div class="sec-stat-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <div><div class="sec-stat-label">Connexions échouées</div><div class="sec-stat-number" th:text="${failedLogins}">12</div><div class="sec-stat-desc">Aujourd'hui</div></div>
+        </div>
+        <div class="sec-stat-card bleu">
+            <div class="sec-stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div><div class="sec-stat-label">Sessions actives</div><div class="sec-stat-number" th:text="${activeSessions}">37</div><div class="sec-stat-desc">En ce moment</div></div>
+        </div>
+        <div class="sec-stat-card orange">
+            <div class="sec-stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div><div class="sec-stat-label">Alertes</div><div class="sec-stat-number" th:text="${totalAlerts}">1</div><div class="sec-stat-desc">Alerte critique</div></div>
+        </div>
+        <div class="sec-stat-card violet">
+            <div class="sec-stat-icon"><i class="fa-solid fa-lock"></i></div>
+            <div><div class="sec-stat-label">Comptes verrouillés</div><div class="sec-stat-number" th:text="${lockedAccounts}">2</div><div class="sec-stat-desc">En attente</div></div>
+        </div>
+        <div class="sec-stat-card global">
+            <div class="sec-stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div><div class="sec-stat-label">Indice sécurité</div><div class="sec-stat-number" th:text="${securityScore + '%'}">98%</div><div class="sec-stat-desc">Global</div></div>
+        </div>
+    </div>
+
+    <!-- 4 GRAPHS -->
+    <div class="sec-graphs-row">
+        <div class="sec-graph-card">
+            <div class="sec-graph-title">Évolution des connexions</div>
+            <svg width="100%" height="180" viewBox="0 0 400 180">
+                <line x1="40" y1="30" x2="380" y2="30" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="40" y1="80" x2="380" y2="80" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="40" y1="130" x2="380" y2="130" stroke="#F1F5F9" stroke-width="1"/>
+                <polyline th:attr="points=${chartLoginPoints}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline th:attr="points=${chartFailedPoints}" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="sec-chart-legend">
+                <span><span style="color:#22C55E;">●</span> Réussies</span>
+                <span><span style="color:#EF4444;">●</span> Échouées</span>
+            </div>
+        </div>
+        <div class="sec-graph-card">
+            <div class="sec-graph-title">Répartition utilisateurs</div>
+            <div class="sec-donut-wrapper">
+                <div class="sec-donut">
+                    <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"/>
+                        <circle th:each="s : ${userDistributionSegments}" cx="18" cy="18" r="15.9" fill="none" th:stroke="${s.color}" stroke-width="3.5" th:attr="stroke-dasharray=${s.dasharray}, stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)" stroke-linecap="round"/>
+                    </svg>
+                    <div class="sec-donut-center"><div class="sec-donut-nb" th:text="${totalUsers}">0</div><div class="sec-donut-lb">Total</div></div>
+                </div>
+                <div class="sec-donut-legend-side">
+                    <div th:each="d : ${userDistribution}" class="sec-legend-item"><span class="sec-legend-dot" th:classappend="${d.cls}"></span><span th:text="${d.name}">Admin</span><span th:text="${d.pct + '%'}" style="margin-left:auto;font-weight:700;color:#0f172a;">25%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="sec-graph-card">
+            <div class="sec-graph-title">Échecs par semaine</div>
+            <div style="display:flex;align-items:flex-end;gap:8px;height:150px;padding:10px 0;">
+                <div th:each="v, iter : ${weeklyFailures}" style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                    <div th:style="'height:' + (v * 18) + 'px;width:100%;background:#2563EB;border-radius:6px 6px 0 0;transition:all 0.3s;'" th:title="${v + ' échecs'}"></div>
+                    <span style="font-size:9px;color:#94A3B8;margin-top:4px;" th:text="${'S' + (iter.index + 1)}">S1</span>
+                </div>
+            </div>
+        </div>
+        <div class="sec-graph-card">
+            <div class="sec-graph-title">Évolution des alertes</div>
+            <svg width="100%" height="180" viewBox="0 0 400 180">
+                <line x1="40" y1="30" x2="380" y2="30" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="40" y1="80" x2="380" y2="80" stroke="#F1F5F9" stroke-width="1"/>
+                <line x1="40" y1="130" x2="380" y2="130" stroke="#F1F5F9" stroke-width="1"/>
+                <polyline th:attr="points=${chartAlertPoints}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="sec-chart-legend"><span><span style="color:#F59E0B;">●</span> Alertes</span></div>
+        </div>
+    </div>
+
+    <!-- CONNECTION HISTORY -->
+    <div class="sec-card">
+        <div class="sec-card-header">
+            <span class="sec-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:#2563EB;margin-right:8px;"></i>Historique des connexions</span>
+            <div class="sec-card-actions">
+                <select class="sec-filter-select"><option>Date</option></select>
+                <select class="sec-filter-select"><option>Utilisateur</option></select>
+                <select class="sec-filter-select"><option>Rôle</option></select>
+                <button class="sec-card-btn"><i class="fa-solid fa-download"></i> Export</button>
+            </div>
+        </div>
+        <table class="sec-table">
+            <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Date</th><th>Heure</th><th>Adresse IP</th><th>Navigateur</th><th>Statut</th><th>Actions</th></tr></thead>
             <tbody>
-            <tr th:each="r : ${roles}">
-                <td><span class="badge-role badge-admin" th:text="${r.libelle}">Role</span></td>
-                <td th:text="${r.description}">Description</td>
-                <td th:text="${#lists.size(utilisateurs.?[role.libelle == __${r.libelle}__])}">0</td>
-            </tr>
+                <tr th:each="c : ${connectionHistory}">
+                    <td><div class="sec-user-cell"><div class="sec-user-avatar" th:text="${c.initiale}">A</div><div><div class="sec-user-name" th:text="${c.nom}">Admin</div><div class="sec-user-email" th:text="${c.email}">admin@email.com</div></div></div></td>
+                    <td><span class="sec-role-badge" th:classappend="${c.roleCls}" th:text="${c.role}">Admin</span></td>
+                    <td th:text="${c.date}">17/07</td>
+                    <td th:text="${c.time}">09:30</td>
+                    <td style="font-family:monospace;font-size:12px;" th:text="${c.ip}">192.168.1.1</td>
+                    <td style="font-size:12px;" th:text="${c.browser}">Chrome 120</td>
+                    <td><span class="sec-badge" th:classappend="${c.statutCls}" th:text="${c.statutLabel}">Succès</span></td>
+                    <td><button class="sec-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button><button class="sec-action-btn" title="Déconnecter"><i class="fa-solid fa-right-from-bracket"></i></button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="sec-pagination"><button class="sec-page-btn actif">1</button><button class="sec-page-btn">2</button><button class="sec-page-btn">3</button><button class="sec-page-btn"><i class="fa-solid fa-chevron-right"></i></button></div>
+    </div>
+
+    <!-- TWO COLUMNS: Suspicious + Sessions -->
+    <div class="sec-two-col">
+        <div class="sec-card">
+            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444;margin-right:8px;"></i>Activités suspectes</span></div>
+            <div th:each="a : ${suspiciousActivities}" class="sec-suspect-item">
+                <div class="sec-suspect-icon rouge"><i class="fa-solid fa-bug"></i></div>
+                <div class="sec-suspect-content"><div class="sec-suspect-title" th:text="${a.title}">Connexion depuis plusieurs pays</div><div class="sec-suspect-desc" th:text="${a.desc}">Description</div><div class="sec-suspect-meta"><span th:text="${a.date}">15/07</span><span class="sec-level" th:classappend="${a.levelCls}" th:text="${a.level}">Critique</span></div></div>
+            </div>
+        </div>
+        <div class="sec-card">
+            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-users" style="color:#2563EB;margin-right:8px;"></i>Sessions ouvertes</span></div>
+            <div th:each="s : ${activeSessionsList}" class="sec-session-item">
+                <div class="sec-user-avatar" th:text="${s.initiale}">A</div>
+                <div class="sec-session-content"><div class="sec-session-name" th:text="${s.nom}">Admin</div><div class="sec-session-device" th:text="${s.appareil}">Chrome · Windows</div><div class="sec-session-meta" th:text="${'IP: ' + s.ip + ' · ' + s.lastActivity}">IP: 192.168.1.1 · Il y a 2 min</div></div>
+                <button class="sec-btn-sm danger"><i class="fa-solid fa-right-from-bracket"></i> Déconnecter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECURITY JOURNAL -->
+    <div class="sec-card">
+        <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-file-shield" style="color:#8B5CF6;margin-right:8px;"></i>Journal de sécurité</span><span style="font-size:12px;color:#64748B;">Toutes les actions sensibles de la plateforme sont enregistrées.</span></div>
+        <table class="sec-table">
+            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Description</th><th>Niveau</th></tr></thead>
+            <tbody>
+                <tr th:each="j : ${securityJournal}">
+                    <td><span class="sec-date" th:text="${j.date}">17/07</span><br><span class="sec-time" th:text="${j.time}">09:30</span></td>
+                    <td th:text="${j.user}">Admin</td>
+                    <td th:text="${j.action}">Connexion réussie</td>
+                    <td style="color:#64748B;font-size:12px;" th:text="${j.desc}">Description</td>
+                    <td><span class="sec-level-badge" th:classappend="${j.levelCls}" th:text="${j.level}">Info</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="sec-pagination"><button class="sec-page-btn actif">1</button><button class="sec-page-btn">2</button></div>
+    </div>
+
+    <!-- LOCKED ACCOUNTS -->
+    <div class="sec-card">
+        <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-lock" style="color:#EF4444;margin-right:8px;"></i>Comptes verrouillés</span><span style="font-size:12px;color:#64748B;">Les comptes ayant dépassé le nombre maximal de tentatives de connexion.</span></div>
+        <div th:if="${#lists.isEmpty(lockedAccountsList)}" class="sec-empty"><i class="fa-solid fa-lock-open" style="font-size:48px;display:block;margin-bottom:12px;color:#22C55E;"></i>Aucun compte verrouillé.</div>
+        <table th:unless="${#lists.isEmpty(lockedAccountsList)}" class="sec-table">
+            <thead><tr><th>Utilisateur</th><th>Tentatives</th><th>Date</th><th>Heure</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+                <tr th:each="l : ${lockedAccountsList}">
+                    <td><div class="sec-user-cell"><div class="sec-user-avatar" th:text="${l.initiale}">U</div><div th:text="${l.nom}">Utilisateur</div></div></td>
+                    <td><span class="sec-attempts" th:text="${l.attempts}">5</span></td>
+                    <td th:text="${l.date}">17/07</td>
+                    <td th:text="${l.time}">09:30</td>
+                    <td><span class="sec-badge rouge">Verrouillé</span></td>
+                    <td><button class="sec-btn-sm vert"><i class="fa-solid fa-lock-open"></i> Déverrouiller</button><button class="sec-btn-sm"><i class="fa-solid fa-key"></i> Réinitialiser</button><button class="sec-btn-sm danger"><i class="fa-solid fa-ban"></i> Désactiver</button></td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <div class="portal-card" style="margin-top:24px;">
-        <h3><i class="fa-solid fa-shield-halved"></i> Sessions actives</h3>
-        <p style="color:#64748B;margin-top:12px;">Authentification sécurisée par rôle. Les sessions expirent après inactivité.</p>
-        <div class="activity-item"><div class="activity-time">Actif</div><div class="activity-text"><strong>Session administrateur</strong><span>Connexion sécurisée SSL — Yaoundé</span></div></div>
+
+    <!-- BOTTOM THREE CARDS -->
+    <div class="sec-bottom-row">
+        <div class="sec-card">
+            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-key" style="color:#2563EB;margin-right:8px;"></i>Politique mot de passe</span></div>
+            <div class="sec-policy-list">
+                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Longueur minimale <strong>12 caractères</strong></div>
+                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Majuscule obligatoire</div>
+                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Chiffre obligatoire</div>
+                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Caractère spécial obligatoire</div>
+                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Expiration <strong>90 jours</strong></div>
+            </div>
+        </div>
+        <div class="sec-card">
+            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-fingerprint" style="color:#8B5CF6;margin-right:8px;"></i>Authentification 2FA</span></div>
+            <div class="sec-2fa-stats">
+                <div class="sec-2fa-number"><span th:text="${twoFactorEnabled}">24</span><small>activé</small></div>
+                <div class="sec-2fa-number gris"><span th:text="${twoFactorDisabled}">12</span><small>désactivé</small></div>
+            </div>
+            <div class="sec-2fa-bar"><div class="sec-2fa-fill" th:style="'width:' + (${twoFactorPct}) + '%'"></div></div>
+            <div class="sec-2fa-actions"><button class="sec-btn-sm vert"><i class="fa-solid fa-toggle-on"></i> Activer 2FA</button><button class="sec-btn-sm"><i class="fa-solid fa-arrows-rotate"></i> Réinitialiser codes</button></div>
+        </div>
+        <div class="sec-card">
+            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-user-shield" style="color:#F59E0B;margin-right:8px;"></i>Permissions des rôles</span></div>
+            <div class="sec-perms-grid">
+                <div class="sec-perm-col"><div class="sec-perm-title bleu"><i class="fa-solid fa-crown"></i> Administrateur</div><div class="sec-perm-item ok">✔ Ajouter utilisateur</div><div class="sec-perm-item ok">✔ Restaurer sauvegarde</div><div class="sec-perm-item ok">✔ Voir journaux</div></div>
+                <div class="sec-perm-col"><div class="sec-perm-title vert"><i class="fa-solid fa-user-tie"></i> Responsable</div><div class="sec-perm-item ok">✔ Affecter stages</div><div class="sec-perm-item ok">✔ Clôturer</div><div class="sec-perm-item ok">✔ Voir progression</div></div>
+                <div class="sec-perm-col"><div class="sec-perm-title orange"><i class="fa-solid fa-chalkboard-user"></i> Encadreur</div><div class="sec-perm-item ok">✔ Créer tâches</div><div class="sec-perm-item ok">✔ Corriger livrables</div><div class="sec-perm-item ok">✔ Évaluer</div></div>
+                <div class="sec-perm-col"><div class="sec-perm-title violet"><i class="fa-solid fa-user-graduate"></i> Stagiaire</div><div class="sec-perm-item ok">✔ Déposer rapport</div><div class="sec-perm-item ok">✔ Journal</div><div class="sec-perm-item ok">✔ Livrables</div></div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
