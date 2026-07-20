@@ -4,188 +4,280 @@
     <meta charset="UTF-8">
     <title>Tableau de bord - Responsable</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-dashboard.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
-<div class="contenu-principal">
+<div class="responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
 
-    <header class="en-tete-page">
-        <div class="header-gauche">
-            
+    <!-- STATS -->
+    <section class="stats-grid section-gap">
+        <div class="stat-card">
+            <div class="stat-icon bleu"><i class="fa-solid fa-file-circle-plus"></i></div>
+            <div class="stat-label">Demandes en attente</div>
+            <div class="stat-val" th:text="${demandesEnAttente}">24</div>
+            <div class="stat-trend">+12 % ce mois</div>
+            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#2563EB" stroke-width="2" points="0,22 20,18 40,20 60,12 80,14 100,6"/></svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon vert"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-label">Stagiaires actifs</div>
+            <div class="stat-val" th:text="${totalStagiairesActifs}">36</div>
+            <div class="stat-trend">+5 ce mois</div>
+            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#22C55E" stroke-width="2" points="0,20 20,16 40,18 60,10 80,12 100,4"/></svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-clipboard-check"></i></div>
+            <div class="stat-label">Stages en cours</div>
+            <div class="stat-val" th:text="${stagesEnCours}">18</div>
+            <div class="stat-trend">En progression</div>
+            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#F59E0B" stroke-width="2" points="0,18 20,20 40,14 60,16 80,8 100,10"/></svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon violet"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-label">Stages clôturés</div>
+            <div class="stat-val" th:text="${stagesTermines}">27</div>
+            <div class="stat-trend">Terminés</div>
+            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#8B5CF6" stroke-width="2" points="0,22 20,18 40,16 60,12 80,10 100,6"/></svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon rouge"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="stat-label">Échéances à venir</div>
+            <div class="stat-val" th:text="${echeancesCount}">7</div>
+            <div class="stat-trend">Prochains 30 jours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon turq"><i class="fa-solid fa-star"></i></div>
+            <div class="stat-label">Taux de réussite</div>
+            <div class="stat-val" th:text="${tauxReussite + '%'}">92%</div>
+            <div class="resp-progress"><span th:style="'width:' + ${tauxReussite} + '%'"></span></div>
+        </div>
+    </section>
+
+    <!-- GRAPHIQUE + DONUT -->
+    <section class="two-col section-gap">
+        <div class="resp-card">
+            <div class="graph-head">
+                <span class="graph-title"><i class="fa-solid fa-chart-line"></i> Vue d'ensemble</span>
+                <select class="graph-select"><option>6 derniers mois</option></select>
+            </div>
+            <canvas id="graphVue" height="120"></canvas>
+        </div>
+        <div class="resp-card">
+            <div class="graph-head"><span class="graph-title"><i class="fa-solid fa-chart-pie"></i> Répartition par filière</span></div>
+            <div style="display:flex;align-items:center;gap:18px;">
+                <div style="position:relative;width:140px;height:140px;">
+                    <canvas id="donutFiliere"></canvas>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                        <div class="donut-center-num" th:text="${totalStagiaires}">0</div>
+                        <div style="font-size:10px;color:#94A3B8;">Total</div>
+                    </div>
+                </div>
+                <div style="flex:1;" id="legendeFiliere"></div>
+            </div>
+            <a th:href="@{/responsable/stagiaires}" class="btn-principal-gradient" style="margin-top:16px;width:100%;justify-content:center;"><i class="fa-solid fa-users"></i> Voir tous les stagiaires</a>
+        </div>
+    </section>
+
+    <!-- ÉTAPES -->
+    <section class="resp-card section-gap">
+        <div class="graph-head"><span class="graph-title">Étapes des stages</span></div>
+        <div class="etapes-row">
+            <div class="etape">
+                <div class="etape-icone" style="background:#DBEAFE;color:#2563EB;"><i class="fa-solid fa-file-signature"></i></div>
+                <div class="etape-num" th:text="${totalDemandes}">0</div>
+                <div style="font-size:13px;font-weight:600;color:#1E293B;">Demandes</div>
+                <div class="etape-statut" style="color:#F59E0B;">En attente</div>
+            </div>
+            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="etape">
+                <div class="etape-icone" style="background:#DCFCE7;color:#22C55E;"><i class="fa-solid fa-user-check"></i></div>
+                <div class="etape-num" th:text="${acceptees}">0</div>
+                <div style="font-size:13px;font-weight:600;color:#1E293B;">Admissions</div>
+                <div class="etape-statut" style="color:#22C55E;">Validées</div>
+            </div>
+            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="etape">
+                <div class="etape-icone" style="background:#FEF3C7;color:#F59E0B;"><i class="fa-solid fa-people-arrows"></i></div>
+                <div class="etape-num" th:text="${totalStages}">0</div>
+                <div style="font-size:13px;font-weight:600;color:#1E293B;">Affectations</div>
+                <div class="etape-statut" style="color:#64748B;">En cours</div>
+            </div>
+            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="etape">
+                <div class="etape-icone" style="background:#EDE9FE;color:#8B5CF6;"><i class="fa-solid fa-chart-column"></i></div>
+                <div class="etape-num" th:text="${stagesEnCours}">0</div>
+                <div style="font-size:13px;font-weight:600;color:#1E293B;">Suivi</div>
+                <div class="etape-statut" style="color:#8B5CF6;">Actifs</div>
+            </div>
+            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="etape">
+                <div class="etape-icone" style="background:#CCFBF1;color:#14B8A6;"><i class="fa-solid fa-box-archive"></i></div>
+                <div class="etape-num" th:text="${stagesTermines}">0</div>
+                <div style="font-size:13px;font-weight:600;color:#1E293B;">Clôture</div>
+                <div class="etape-statut" style="color:#14B8A6;">Terminés</div>
+            </div>
+        </div>
+        <div class="process-bar"></div>
+    </section>
+
+    <!-- 3 COLONNES -->
+    <section class="three-col section-gap">
+        <div class="resp-card">
+            <div class="graph-head"><span class="graph-title">Statut des stages</span></div>
+            <div style="display:flex;align-items:center;gap:18px;">
+                <div style="position:relative;width:130px;height:130px;">
+                    <canvas id="donutStatut"></canvas>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                        <div class="donut-center-num" th:text="${totalStages}">0</div>
+                        <div style="font-size:10px;color:#94A3B8;">Total</div>
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#2563EB;"></span> En cours <b th:text="${stagesEnCours}" style="margin-left:auto;"></b></div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#22C55E;"></span> En attente <b th:text="${stagesSuspendus}" style="margin-left:auto;"></b></div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:3px;background:#F59E0B;"></span> Clôturés <b th:text="${stagesTermines}" style="margin-left:auto;"></b></div>
+                </div>
+            </div>
+        </div>
+        <div class="resp-card">
+            <div class="graph-head"><span class="graph-title">Progression moyenne</span></div>
+            <div class="jauge-wrap">
+                <div style="position:relative;width:110px;height:110px;">
+                    <canvas id="jaugeProg"></canvas>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                        <div style="font-size:22px;font-weight:800;color:#1E293B;" th:text="${progressionMoyenne + '%'}">65%</div>
+                        <div style="font-size:9px;color:#94A3B8;">Moyenne</div>
+                    </div>
+                </div>
+                <div class="bars-col">
+                    <div class="bar-item">
+                        <div class="bar-label"><span>Objectifs atteints</span><span th:text="${progressionMoyenne + '%'}">65%</span></div>
+                        <div class="bar-track"><span style="width:65%;background:#2563EB;"></span></div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label"><span>Livrables remis</span><span>58%</span></div>
+                        <div class="bar-track"><span style="width:58%;background:#22C55E;"></span></div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label"><span>Évaluations</span><span>72%</span></div>
+                        <div class="bar-track"><span style="width:72%;background:#F59E0B;"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="resp-card">
+            <div class="graph-head"><span class="graph-title"><i class="fa-solid fa-clock"></i> Échéances à venir</span></div>
+            <div th:if="${#lists.isEmpty(echeances)}" style="color:#94A3B8;font-size:13px;padding:10px 0;">Aucune échéance proche.</div>
+            <div th:each="e : ${echeances}" class="echeance-item">
+                <div class="echeance-date" style="background:#2563EB;">
+                    <span class="d" th:text="${#temporals.format(e.dateFin, 'dd')}">01</span>
+                    <span class="m" th:text="${#temporals.format(e.dateFin, 'MMM')}">Jan</span>
+                </div>
+                <div>
+                    <div class="echeance-nom" th:text="${e.nom}">Nom</div>
+                    <div class="echeance-serv" th:text="${e.service}">Service</div>
+                </div>
+                <span class="echeance-jours" th:text="${e.joursRestants + ' j'}">5 j</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACTIVITÉS -->
+    <section class="resp-card section-gap">
+        <div class="graph-head">
+            <span class="graph-title">Activités récentes</span>
+            <a th:href="@{/responsable/notifications}" style="font-size:13px;color:#2563EB;font-weight:600;text-decoration:none;">Voir tout →</a>
+        </div>
+        <div th:if="${#lists.isEmpty(activitesRecentes)}" style="color:#94A3B8;font-size:13px;padding:10px 0;">Aucune activité récente.</div>
+        <div th:each="a : ${activitesRecentes}" class="activ-item">
+            <div th:class="'activ-icone ' + (${a.priorite == 'urgente'} ? 'rouge' : (${a.priorite == 'importante'} ? 'orange' : 'bleu'))">
+                <i th:class="${a.priorite == 'urgente'} ? 'fa-solid fa-circle-exclamation' : (${a.priorite == 'importante'} ? 'fa-solid fa-circle-info' : 'fa-solid fa-bell')"></i>
+            </div>
             <div>
-                <h1>Bonjour, Responsable 👋</h1>
-                <p class="sous-titre">Voici un aperçu rapide de votre activité et des demandes à traiter.</p>
+                <div class="activ-titre" th:text="${a.objet}">Activité</div>
+                <div class="activ-desc" th:text="${a.message}">Description</div>
             </div>
-        </div>
-        <a th:href="@{/responsable/demandes}" class="btn-principal">Voir les demandes</a>
-    </header>
-
-    <section class="hero-card">
-        <div class="hero-texte">
-            <h2>Tableau de bord</h2>
-            <p>Bienvenue sur votre espace d'administration. Suivez les demandes, gérez les admissions et pilotez les stages depuis un tableau de bord unique.</p>
-        </div>
-        <div class="hero-illustration">
-            <img src="/images/hero-dashboard.png" alt="Illustration responsable" class="hero-image">
-        </div>
-    </section>
-
-    <section class="grille-cartes-stats">
-        <div class="carte-stat bleu">
-            <div class="icon-stat">📋</div>
-            <div class="libelle">Total demandes</div>
-            <div class="valeur" th:text="${totalDemandes}">0</div>
-            <div class="mini-evolution">Candidatures enregistrées</div>
-        </div>
-        <div class="carte-stat orange">
-            <div class="icon-stat">⏳</div>
-            <div class="libelle">En attente</div>
-            <div class="valeur" th:text="${demandesEnAttente}">0</div>
-            <div class="mini-evolution">À traiter</div>
-        </div>
-        <div class="carte-stat vert">
-            <div class="icon-stat">✅</div>
-            <div class="libelle">Acceptées</div>
-            <div class="valeur" th:text="${acceptees}">0</div>
-            <div class="mini-evolution">Admissions validées</div>
-        </div>
-        <div class="carte-stat rouge">
-            <div class="icon-stat">❌</div>
-            <div class="libelle">Refusées</div>
-            <div class="valeur" th:text="${refusees}">0</div>
-            <div class="mini-evolution">Non retenues</div>
-        </div>
-    </section>
-
-    <section class="grille-principale">
-        <div class="bloc bloc-activite">
-            <div class="bloc-entete">
-                <h3>Activité récente</h3>
-                <span class="chip">Aujourd'hui</span>
-            </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <span class="dot dot-vert"></span>
-                    <div>
-                        <strong>Nouvelle demande reçue</strong>
-                        <p>3 candidatures ont été enregistrées.</p>
-                    </div>
-                    <span class="time">10 min</span>
-                </div>
-                <div class="timeline-item">
-                    <span class="dot dot-bleu"></span>
-                    <div>
-                        <strong>Admission validée</strong>
-                        <p>Un stagiaire a été accepté.</p>
-                    </div>
-                    <span class="time">1h</span>
-                </div>
-                <div class="timeline-item">
-                    <span class="dot dot-orange"></span>
-                    <div>
-                        <strong>Échéance proche</strong>
-                        <p>Un stage arrive à terme dans 5 jours.</p>
-                    </div>
-                    <span class="time">3h</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="bloc bloc-actions">
-            <div class="bloc-entete">
-                <h3>Actions rapides</h3>
-            </div>
-            <a th:href="@{/responsable/demandes}" class="bouton-action">Consulter les demandes <span>→</span></a>
-            <a th:href="@{/responsable/admissions}" class="bouton-action">Gérer les admissions <span>→</span></a>
-            <a th:href="@{/responsable/affectations}" class="bouton-action">Gérer les affectations <span>→</span></a>
-            <a th:href="@{/responsable/cloture}" class="bouton-action">Voir la clôture <span>→</span></a>
-        </div>
-
-        <div class="bloc bloc-repartition">
-            <div class="bloc-entete">
-                <h3>Répartition</h3>
-            </div>
-            <div class="donut-wrap">
-                <div class="donut-chart"></div>
-                <div class="legende">
-                    <div><span class="dot dot-vert"></span> Acceptées (65%)</div>
-                    <div><span class="dot dot-orange"></span> En attente (20%)</div>
-                    <div><span class="dot dot-rouge"></span> Refusées (15%)</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="bloc bloc-tableau">
-        <div class="bloc-entete">
-            <h3>Candidatures récentes</h3>
-            <a th:href="@{/responsable/demandes}" class="text-link">Voir tout</a>
-        </div>
-        <div class="tableau">
-            <div class="ligne ligne-head">
-                <span>Candidat</span>
-                <span>Niveau</span>
-                <span>Filière</span>
-                <span>Statut</span>
-                <span>Date</span>
-            </div>
-
-            <div th:if="${#lists.isEmpty(demandesRecents)}" class="ligne">
-                <span>Aucune candidature récente</span>
-            </div>
-
-            <div th:each="demande : ${demandesRecents}" class="ligne">
-                <span class="candidat" th:text="${demande.prenom + ' ' + demande.nom}">Nom</span>
-                <span th:text="${demande.niveau}">Niveau</span>
-                <span th:text="${demande.filiere}">Filière</span>
-                <span class="badge"
-                      th:classappend="${demande.statut.name() == 'acceptee'} ? ' badge-vert' : (${demande.statut.name() == 'refusee'} ? ' badge-rouge' : ' badge-orange')"
-                      th:text="${demande.statut.name() == 'acceptee' ? 'Acceptée' : (demande.statut.name() == 'refusee' ? 'Refusée' : 'En attente')}">Statut</span>
-                <span th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy')}">Date</span>
-            </div>
-        </div>
-    </section>
-
-    <section class="grille-secondaire">
-        <div class="bloc bloc-repartition">
-            <div class="bloc-entete">
-                <h3>Répartition</h3>
-            </div>
-            <div class="donut-wrap">
-                <div class="donut-chart"></div>
-                <div class="legende">
-                    <div><span class="dot dot-vert"></span> Acceptées (<span th:text="${acceptees}">0</span>)</div>
-                    <div><span class="dot dot-orange"></span> En attente (<span th:text="${demandesEnAttente}">0</span>)</div>
-                    <div><span class="dot dot-rouge"></span> Refusées (<span th:text="${refusees}">0</span>)</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bloc bloc-calendrier">
-            <div class="bloc-entete">
-                <h3>Échéances importantes</h3>
-            </div>
-            <div class="echeance">
-                <div class="date-box">17</div>
-                <div>
-                    <strong>Entretien de sélection</strong>
-                    <p>Présentation des candidats retenus.</p>
-                </div>
-                <span class="pill">Dans 10 jours</span>
-            </div>
-            <div class="echeance">
-                <div class="date-box">22</div>
-                <div>
-                    <strong>Début des stages</strong>
-                    <p>Première affectation du mois.</p>
-                </div>
-                <span class="pill">Dans 15 jours</span>
+            <div class="activ-date">
+                <div th:text="${#temporals.format(a.dateEnvoi, 'dd/MM')}">01/01</div>
+                <div th:text="${#temporals.format(a.dateEnvoi, 'HH:mm')}">10:00</div>
             </div>
         </div>
     </section>
 </div>
+<div id="dash-data"
+     th:data-mois="${moisLabels}"
+     th:data-demandes="${dataDemandes}"
+     th:data-encours="${dataStagesEnCours}"
+     th:data-termines="${dataStagesTermines}"
+     th:data-filiere-labels="${filiereLabels}"
+     th:data-filiere-data="${filiereData}"
+     th:data-progression="${progressionMoyenne}"
+     th:data-stages-encours="${stagesEnCours}"
+     th:data-stages-suspendus="${stagesSuspendus}"
+     th:data-stages-termines="${stagesTermines}"
+     style="display:none;">
+</div>
+<script>
+    const d = document.getElementById('dash-data');
+    const moisLabels = JSON.parse(d.dataset.mois || '[]');
+    const dataDemandes = JSON.parse(d.dataset.demandes || '[]');
+    const dataStagesEnCours = JSON.parse(d.dataset.encours || '[]');
+    const dataStagesTermines = JSON.parse(d.dataset.termines || '[]');
+    const filiereLabels = JSON.parse(d.dataset.filiereLabels || '[]');
+    const filiereData = JSON.parse(d.dataset.filiereData || '[]');
+    const progressionMoyenne = parseInt(d.dataset.progression || '65', 10);
+
+        const filiereColors = ['#2563EB','#22C55E','#F59E0B','#8B5CF6','#EC4899','#14B8A6'];
+        const legendeFiliere = document.getElementById('legendeFiliere');
+        const totalFil = filiereData.reduce((a,b)=>a+b,0) || 1;
+    filiereLabels.forEach((l,i)=>{
+        const pct = Math.round(filiereData[i]*100/totalFil);
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;';
+        const dot = document.createElement('span');
+        dot.style.cssText = 'width:10px;height:10px;border-radius:3px;background:'+filiereColors[i%filiereColors.length]+';';
+        const txt = document.createElement('span');
+        txt.textContent = l + ' ';
+        const val = document.createElement('b');
+        val.style.marginLeft = 'auto';
+        val.textContent = pct + '% (' + filiereData[i] + ')';
+        div.appendChild(dot); div.appendChild(txt); div.appendChild(val);
+        legendeFiliere.appendChild(div);
+    });
+    
+
+    new Chart(document.getElementById('graphVue'), {
+        type:'line',
+        data:{ labels:moisLabels, datasets:[
+            {label:'Demandes',data:dataDemandes,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.1)',fill:true,tension:.4},
+            {label:'Stages en cours',data:dataStagesEnCours,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4},
+            {label:'Stages clôturés',data:dataStagesTermines,borderColor:'#8B5CF6',backgroundColor:'rgba(139,92,246,.1)',fill:true,tension:.4}
+        ]},
+        options:{ plugins:{legend:{position:'bottom'}}, scales:{x:{grid:{color:'#F1F5F9'}},y:{grid:{color:'#F1F5F9'}}} }
+    });
+
+    new Chart(document.getElementById('donutFiliere'), {
+        type:'doughnut',
+        data:{ labels:filiereLabels, datasets:[{data:filiereData,backgroundColor:filiereColors,cutout:'68%'}] },
+        options:{plugins:{legend:{display:false}}}
+    });
+
+    new Chart(document.getElementById('donutStatut'), {
+        type:'doughnut',
+        data:{ labels:['En cours','En attente','Clôturés'], datasets:[{data:[parseInt(d.dataset.stagesEncours||0), parseInt(d.dataset.stagesSuspendus||0), parseInt(d.dataset.stagesTermines||0)],backgroundColor:['#2563EB','#22C55E','#F59E0B'],cutout:'68%'}] },
+        options:{plugins:{legend:{display:false}}}
+    });
+
+    new Chart(document.getElementById('jaugeProg'), {
+        type:'doughnut',
+        data:{ labels:['Prog','Rest'], datasets:[{data:[progressionMoyenne,100-progressionMoyenne],backgroundColor:['#2563EB','#E5E7EB'],cutout:'72%'}] },
+        options:{plugins:{legend:{display:false}},rotation:-90,circumference:180}
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="header" class="resp-header">
+    <div class="header-droite">
+        <div class="header-icon-btn">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-dot" th:text="${notificationsCount}">5</span>
+        </div>
+        <a th:href="@{/responsable/notifications}" class="header-icon-btn">
+            <i class="fa-solid fa-envelope"></i>
+            <span class="notif-dot" th:text="${messagesCount}">3</span>
+        </a>
+        <div class="header-user">
+            <div class="avatar" style="width:55px;height:55px;background:linear-gradient(135deg,#2563EB,#3B82F6);">
+                <span style="font-size:18px;">MA</span>
+            </div>
+                <div class="info">
+                    <div class="name">Responsable</div>
+                    <div class="role">Connecté <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></div>
+                </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

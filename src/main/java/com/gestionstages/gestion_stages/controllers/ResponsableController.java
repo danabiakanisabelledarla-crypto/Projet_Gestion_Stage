@@ -18,6 +18,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+
+
 @Controller
 @RequestMapping("/responsable")
 public class ResponsableController {
@@ -31,6 +38,7 @@ public class ResponsableController {
     private final EncadreurRepository encadreurRepository;
     private final ServiceEntrepriseRepository serviceRepository;
     private final ProjetRepository projetRepository;
+    private final NotificationRepository notificationRepository;
     private final PasswordEncoder passwordEncoder;
 
     private final ArchiveRepository archiveRepository;
@@ -38,6 +46,25 @@ public class ResponsableController {
     private final EvaluationRepository evaluationRepository;
     
     private final EmailService emailService;
+
+    private static String toJson(Object o) {
+    if (o == null) return "null";
+    if (o instanceof List<?> l) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < l.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(quote(l.get(i)));
+        }
+        return sb.append("]").toString();
+    }
+    return quote(o);
+}
+
+private static String quote(Object v) {
+    if (v instanceof Number) return v.toString();
+    if (v instanceof Boolean) return v.toString();
+    return "\"" + v.toString().replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
+}
 
     public ResponsableController(DemandeStageRepository demandeStageRepository,
                               StagiaireRepository stagiaireRepository,
@@ -52,12 +79,14 @@ public class ResponsableController {
                               DocumentRepository documentRepository,
                               EvaluationRepository evaluationRepository,
                               EmailService emailService,
+                              NotificationRepository notificationRepository,
                               JavaMailSender mailSender) {
     this.demandeStageRepository = demandeStageRepository;
     this.stagiaireRepository = stagiaireRepository;
     this.stageRepository = stageRepository;
     this.utilisateurRepository = utilisateurRepository;
     this.roleRepository = roleRepository;
+    this.notificationRepository = notificationRepository;
     this.encadreurRepository = encadreurRepository;
     this.serviceRepository = serviceRepository;
     this.projetRepository = projetRepository;
@@ -69,58 +98,117 @@ public class ResponsableController {
     this.emailService = emailService;
 }
 
-    @GetMapping("/dashboard")
+        @GetMapping("/dashboard")
     public String afficherDashboard(Model model) {
         List<DemandeStage> demandes = demandeStageRepository.findAll();
 
         long demandesEnAttente = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente).count();
         long acceptees = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.acceptee)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.acceptee).count();
         long refusees = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.refusee)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.refusee).count();
         long totalDemandes = demandes.size();
-
-        List<DemandeStage> demandesRecents = demandes.stream()
-                .sorted(Comparator.comparing(DemandeStage::getDateDemande, Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(3)
-                .toList();
 
         long totalStagiaires = stagiaireRepository.count();
         long totalStages = stageRepository.count();
+        long totalStagiairesActifs = stagiaireRepository.countByStatut(Stagiaire.StatutStagiaire.actif);
+        long stagesEnCours = stageRepository.countByStatut(Stage.StatutStage.en_cours);
+        long stagesTermines = stageRepository.countByStatut(Stage.StatutStage.termine);
+        long stagesSuspendus = stageRepository.countByStatut(Stage.StatutStage.suspendu);
+
+        LocalDate aujourdHui = LocalDate.now();
+        LocalDate limite = aujourdHui.plusDays(30);
+        List<Stage> echeancesStages = stageRepository.findByDateFinBetween(aujourdHui, limite);
+        echeancesStages.sort(Comparator.comparing(Stage::getDateFin));
+        long echeancesCount = echeancesStages.size();
+        List<Map<String, Object>> echeances = echeancesStages.stream().limit(5).map(s -> {
+            Map<String, Object> m = new HashMap<>();
+            String nom = (s.getStagiaire() != null && s.getStagiaire().getUtilisateur() != null)
+                    ? s.getStagiaire().getUtilisateur().getPrenom() + " " + s.getStagiaire().getUtilisateur().getNom()
+                    : "Stagiaire";
+            m.put("nom", nom);
+            m.put("service", s.getService() != null ? s.getService().getNom() : "—");
+            m.put("dateFin", s.getDateFin());
+            m.put("joursRestants", Math.max(0, aujourdHui.until(s.getDateFin()).getDays()));
+            return m;
+        }).toList();
+
+        long tauxReussite = totalStages > 0 ? (stagesTermines * 100 / totalStages) : 0;
+        int progressionMoyenne = 65;
+
+        Map<String, Long> repartition = stagiaireRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        s -> (s.getDemandeStage() != null && s.getDemandeStage().getFiliere() != null)
+                                ? s.getDemandeStage().getFiliere() : "Autre",
+                        Collectors.counting()));
+        List<String> filiereLabels = new ArrayList<>(repartition.keySet());
+        List<Long> filiereData = new ArrayList<>(repartition.values());
+
+        List<Notification> activitesRecentes = notificationRepository.findAllByOrderByDateEnvoiDesc().stream().limit(6).toList();
+
+        List<String> moisLabels = List.of("Fév", "Mar", "Avr", "Mai", "Juin", "Juil");
+        List<Integer> dataDemandes = List.of(12, 19, 15, 25, 22, (int) demandesEnAttente);
+        List<Integer> dataStagesEnCours = List.of(8, 12, 14, 16, 17, (int) stagesEnCours);
+        List<Integer> dataStagesTermines = List.of(5, 9, 11, 15, 20, (int) stagesTermines);
 
         model.addAttribute("demandesEnAttente", demandesEnAttente);
         model.addAttribute("totalDemandes", totalDemandes);
         model.addAttribute("acceptees", acceptees);
         model.addAttribute("refusees", refusees);
-        model.addAttribute("demandesRecents", demandesRecents);
         model.addAttribute("totalStagiaires", totalStagiaires);
         model.addAttribute("totalStages", totalStages);
+        model.addAttribute("totalStagiairesActifs", totalStagiairesActifs);
+        model.addAttribute("stagesEnCours", stagesEnCours);
+        model.addAttribute("stagesTermines", stagesTermines);
+        model.addAttribute("stagesSuspendus", stagesSuspendus);
+        model.addAttribute("echeancesCount", echeancesCount);
+        model.addAttribute("echeances", echeances);
+        model.addAttribute("tauxReussite", tauxReussite);
+        model.addAttribute("progressionMoyenne", progressionMoyenne);
+        model.addAttribute("moisLabelsJson", toJson(moisLabels));
+        model.addAttribute("dataDemandesJson", toJson(dataDemandes));
+        model.addAttribute("dataStagesEnCoursJson", toJson(dataStagesEnCours));
+        model.addAttribute("dataStagesTerminesJson", toJson(dataStagesTermines));
+        model.addAttribute("filiereLabelsJson", toJson(filiereLabels));
+        model.addAttribute("filiereDataJson", toJson(filiereData));
+        model.addAttribute("notificationsCount", 5);
+        model.addAttribute("activitesRecentes", activitesRecentes);
+        model.addAttribute("messagesCount", 3);
 
         return "responsable/dashboard";
     }
 
-    @GetMapping("/demandes")
+        @GetMapping("/demandes")
     public String afficherDemandes(Model model) {
         List<DemandeStage> demandes = demandeStageRepository.findAll();
         long enAttente = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente).count();
         long acceptees = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.acceptee)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.acceptee).count();
         long refusees = demandes.stream()
-                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.refusee)
-                .count();
+                .filter(d -> d.getStatut() == DemandeStage.StatutDemande.refusee).count();
+        long total = demandes.size();
+        long aujourdHui = demandes.stream()
+                .filter(d -> d.getDateDemande() != null
+                        && d.getDateDemande().toLocalDate().equals(java.time.LocalDate.now())).count();
+        long taux = total > 0 ? (acceptees * 100 / total) : 0;
+
+        java.util.Map<Integer, Long> piecesParDemande = new java.util.HashMap<>();
+        for (DemandeStage d : demandes) {
+            piecesParDemande.put(d.getId(), (long) documentRepository.findByDemandeStageId(d.getId()).size());
+        }
 
         model.addAttribute("demandes", demandes);
-        model.addAttribute("totalDemandes", demandes.size());
+        model.addAttribute("totalDemandes", total);
         model.addAttribute("enAttente", enAttente);
         model.addAttribute("acceptees", acceptees);
         model.addAttribute("refusees", refusees);
+        model.addAttribute("aujourdHui", aujourdHui);
+        model.addAttribute("tauxAcceptation", taux);
+        model.addAttribute("piecesParDemande", piecesParDemande);
+        model.addAttribute("notificationsCount", 5);
+        model.addAttribute("messagesCount", 3);
         return "responsable/demandes";
     }
 
