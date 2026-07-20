@@ -78,7 +78,7 @@
                 <div class="sec-donut">
                     <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
                         <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"/>
-                        <circle th:each="s : ${userDistributionSegments}" cx="18" cy="18" r="15.9" fill="none" th:stroke="${s.color}" stroke-width="3.5" th:attr="stroke-dasharray=${s.dasharray}, stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)" stroke-linecap="round"/>
+                                                <circle th:each="s : ${userDistributionSegments}" cx="18" cy="18" r="15.9" fill="none" th:stroke="${s.color}" stroke-width="3.5"  th:attr="stroke-dasharray=${s.dasharray}, stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)" stroke-linecap="round"/>
                     </svg>
                     <div class="sec-donut-center"><div class="sec-donut-nb" th:text="${totalUsers}">0</div><div class="sec-donut-lb">Total</div></div>
                 </div>
@@ -90,8 +90,8 @@
         <div class="sec-graph-card">
             <div class="sec-graph-title">Échecs par semaine</div>
             <div style="display:flex;align-items:flex-end;gap:8px;height:150px;padding:10px 0;">
-                <div th:each="v, iter : ${weeklyFailures}" style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                    <div th:style="'height:' + (v * 18) + 'px;width:100%;background:#2563EB;border-radius:6px 6px 0 0;transition:all 0.3s;'" th:title="${v + ' échecs'}"></div>
+                                <div th:each="v, iter : ${weeklyFailures}" style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                    <div class="bar-weekly-failure" th:style="'height:' + ${v * 18} + 'px'" th:title="${v + ' échecs'}"></div>
                     <span style="font-size:9px;color:#94A3B8;margin-top:4px;" th:text="${'S' + (iter.index + 1)}">S1</span>
                 </div>
             </div>

@@ -188,63 +188,59 @@
 
 <script th:inline="javascript">
     const stagiairesData = /*[[${stagiairesJson}]]*/ [];
-
+</script>
+<script>
     function ouvrirDetailsStagiaire(id) {
         const s = stagiairesData.find(x => x.id === id);
         if (!s) return;
 
         document.getElementById('modalBodyStagiaire').innerHTML = `
             <div class="profil-candidat" style="margin-bottom:24px;">
-                <div class="profil-candidat-avatar" style="width:78px;height:78px;font-size:28px;">\${s.initiale}</div>
+                <div class="profil-candidat-avatar" style="width:78px;height:78px;font-size:28px;">${s.initiale}</div>
                 <div class="profil-candidat-info">
-                    <div class="profil-candidat-nom" style="font-size:24px;">\${s.nomComplet}</div>
-                    <div class="profil-candidat-email">\${s.email}</div>
-                    <div style="font-size:12px;color:#94A3B8;margin-top:4px;"><i class="fa-solid fa-id-card"></i> \${s.matricule}</div>
+                    <div class="profil-candidat-nom" style="font-size:24px;">${s.nomComplet}</div>
+                    <div class="profil-candidat-email">${s.email}</div>
+                    <div style="font-size:12px;color:#94A3B8;margin-top:4px;"><i class="fa-solid fa-id-card"></i> ${s.matricule}</div>
                 </div>
-                <span class="badge-statut-large \${s.statutCls}">\${s.statutLabel}</span>
+                <span class="badge-statut-large ${s.statutCls}">${s.statutLabel}</span>
             </div>
-
             <div class="sous-carte">
                 <div class="sous-carte-titre"><i class="fa-solid fa-address-card"></i> Informations personnelles</div>
                 <div class="grille-2-col">
-                    <div><span class="info-icone bleu"><i class="fa-solid fa-phone"></i></span><div><div class="info-label">Téléphone</div><div class="info-valeur">\${s.telephone || '—'}</div></div></div>
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-phone"></i></span><div><div class="info-label">Téléphone</div><div class="info-valeur">${s.telephone || '—'}</div></div></div>
                     <div><span class="info-icone vert"><i class="fa-regular fa-calendar"></i></span><div><div class="info-label">Date naissance</div><div class="info-valeur">—</div></div></div>
-                    <div><span class="info-icone orange"><i class="fa-solid fa-location-dot"></i></span><div><div class="info-label">Adresse</div><div class="info-valeur">\${s.adresse || '—'}</div></div></div>
-                    <div><span class="info-icone violet"><i class="fa-solid fa-school"></i></span><div><div class="info-label">Université</div><div class="info-valeur">\${s.universite || '—'}</div></div></div>
-                    <div><span class="info-icone bleu"><i class="fa-solid fa-graduation-cap"></i></span><div><div class="info-label">Filière</div><div class="info-valeur">\${s.filiere || '—'}</div></div></div>
-                    <div><span class="info-icone vert"><i class="fa-solid fa-layer-group"></i></span><div><div class="info-label">Niveau</div><div class="info-valeur">\${s.niveau || '—'}</div></div></div>
+                    <div><span class="info-icone orange"><i class="fa-solid fa-location-dot"></i></span><div><div class="info-label">Adresse</div><div class="info-valeur">${s.adresse || '—'}</div></div></div>
+                    <div><span class="info-icone violet"><i class="fa-solid fa-school"></i></span><div><div class="info-label">Université</div><div class="info-valeur">${s.universite || '—'}</div></div></div>
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-graduation-cap"></i></span><div><div class="info-label">Filière</div><div class="info-valeur">${s.filiere || '—'}</div></div></div>
+                    <div><span class="info-icone vert"><i class="fa-solid fa-layer-group"></i></span><div><div class="info-label">Niveau</div><div class="info-valeur">${s.niveau || '—'}</div></div></div>
                 </div>
             </div>
-
             <div class="sous-carte">
                 <div class="sous-carte-titre"><i class="fa-solid fa-briefcase"></i> Informations de stage</div>
                 <div class="grille-2-col">
-                    <div><span class="info-icone bleu"><i class="fa-solid fa-building"></i></span><div><div class="info-label">Service</div><div class="info-valeur">\${s.service || '—'}</div></div></div>
-                    <div><span class="info-icone vert"><i class="fa-solid fa-chalkboard-user"></i></span><div><div class="info-label">Encadreur</div><div class="info-valeur">\${s.encadreur || '—'}</div></div></div>
-                    <div><span class="info-icone orange"><i class="fa-regular fa-calendar-check"></i></span><div><div class="info-label">Période</div><div class="info-valeur">\${s.dateDebut || '—'} → \${s.dateFin || '—'}</div></div></div>
-                    <div><span class="info-icone violet"><i class="fa-solid fa-hourglass-half"></i></span><div><div class="info-label">Durée restante</div><div class="info-valeur">\${s.dureeRestante || '—'}</div></div></div>
+                    <div><span class="info-icone bleu"><i class="fa-solid fa-building"></i></span><div><div class="info-label">Service</div><div class="info-valeur">${s.service || '—'}</div></div></div>
+                    <div><span class="info-icone vert"><i class="fa-solid fa-chalkboard-user"></i></span><div><div class="info-label">Encadreur</div><div class="info-valeur">${s.encadreur || '—'}</div></div></div>
+                    <div><span class="info-icone orange"><i class="fa-regular fa-calendar-check"></i></span><div><div class="info-label">Période</div><div class="info-valeur">${s.dateDebut || '—'} → ${s.dateFin || '—'}</div></div></div>
+                    <div><span class="info-icone violet"><i class="fa-solid fa-hourglass-half"></i></span><div><div class="info-label">Durée restante</div><div class="info-valeur">${s.dureeRestante || '—'}</div></div></div>
                 </div>
             </div>
-
             <div style="margin-bottom:14px;">
-                <div class="progress-header" style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Progression globale</span><span>\${s.progression || 0}%</span></div>
-                <div class="progress-bar" style="height:8px;background:#E2E8F0;border-radius:10px;overflow:hidden;"><div class="progress-fill" style="height:100%;border-radius:10px;background:linear-gradient(90deg,#2563EB,#3B82F6);transition:width 0.6s ease;width:\${s.progression || 0}%"></div></div>
+                <div class="progress-header" style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Progression globale</span><span>${s.progression || 0}%</span></div>
+                <div class="progress-bar" style="height:8px;background:#E2E8F0;border-radius:10px;overflow:hidden;"><div class="progress-fill" style="height:100%;border-radius:10px;background:linear-gradient(90deg,#2563EB,#3B82F6);transition:width 0.6s ease;width:${s.progression || 0}%"></div></div>
             </div>
-
             <div class="sous-carte">
-                <div class="sous-carte-titre"><i class="fa-solid fa-paperclip"></i> Documents (\${s.documentsCount || 0})</div>
+                <div class="sous-carte-titre"><i class="fa-solid fa-paperclip"></i> Documents (${s.documentsCount || 0})</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    \${s.documents && s.documents.length > 0 ? s.documents.map(d => `
+                    ${s.documents && s.documents.length > 0 ? s.documents.map(d => `
                         <div style="flex:1;min-width:80px;background:white;border:1px solid #E2E8F0;border-radius:10px;padding:12px;text-align:center;">
-                            <div style="font-size:24px;margin-bottom:6px;color:\${d.cls === 'pdf' ? '#DC2626' : (d.cls === 'word' ? '#2563EB' : (d.cls === 'image' ? '#22C55E' : '#64748B'))}"><i class="\${d.icon}"></i></div>
-                            <div style="font-size:11px;font-weight:600;color:#0f172a;word-break:break-all;">\${d.nom}</div>
-                            <div style="font-size:10px;color:#94A3B8;">\${d.taille}</div>
+                            <div style="font-size:24px;margin-bottom:6px;color:${d.cls === 'pdf' ? '#DC2626' : (d.cls === 'word' ? '#2563EB' : (d.cls === 'image' ? '#22C55E' : '#64748B'))}"><i class="${d.icon}"></i></div>
+                            <div style="font-size:11px;font-weight:600;color:#0f172a;word-break:break-all;">${d.nom}</div>
+                            <div style="font-size:10px;color:#94A3B8;">${d.taille}</div>
                             <button style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #E2E8F0;background:white;color:#2563EB;cursor:pointer;font-family:'Poppins',sans-serif;"><i class="fa-solid fa-download"></i></button>
                         </div>
                     `).join('') : '<div style="font-size:12px;color:#94A3B8;">Aucun document</div>'}
                 </div>
             </div>
-
             <div class="sous-carte" style="border:2px solid #2563EB;background:white;">
                 <div class="sous-carte-titre"><i class="fa-solid fa-bolt"></i> Actions rapides</div>
                 <div class="actions-admin-grid" style="margin-bottom:0;">
@@ -259,14 +255,11 @@
                 </button>
             </div>
         `;
-
         document.getElementById('modalDetailsStagiaire').classList.add('open');
     }
-
     function fermerModalStagiaire() {
         document.getElementById('modalDetailsStagiaire').classList.remove('open');
     }
-
     function filterTable() {
         const svc = document.getElementById('filterService').value;
         const enc = document.getElementById('filterEncadreur').value;

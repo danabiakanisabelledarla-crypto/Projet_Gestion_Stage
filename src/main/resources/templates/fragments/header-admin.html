@@ -6,7 +6,34 @@
         <div class="header-icon-btn" onclick="toggleNotifDropdown(event)">
             <i class="fa-regular fa-bell"></i>
             <span class="notif-dot" th:text="${notificationsCount}">0</span>
-            <div class="notif-dropdown" id="notifDropdown">...</div>
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-dropdown-header">
+                    <span class="notif-dropdown-title">Notifications</span>
+                    <span class="notif-mark-read">Tout marquer comme lu</span>
+                </div>
+                <div class="notif-dropdown-list" th:if="${notificationsCount > 0}">
+                    <div th:each="n : ${recentNotifications}" class="notif-item" th:classappend="${n.statut == 'envoyee' ? 'unread' : ''}">
+                        <div class="notif-item-icon" th:classappend="${n.priorite == 'urgente' ? 'rouge' : (n.priorite == 'importante' ? 'orange' : 'bleu')}">
+                            <i th:class="${n.priorite == 'urgente' ? 'fa-solid fa-circle-exclamation' : (n.priorite == 'importante' ? 'fa-solid fa-circle-info' : 'fa-solid fa-bell')}"></i>
+                        </div>
+                        <div class="notif-item-content">
+                            <div class="notif-item-text" th:text="${n.objet}">Objet</div>
+                            <div class="notif-item-desc" th:text="${n.message}">Message</div>
+                            <div class="notif-item-time" th:text="${#temporals.format(n.dateEnvoi, 'dd/MM/yyyy HH:mm')}">Date</div>
+                        </div>
+                        <span class="notif-item-badge" th:if="${n.priorite == 'urgente'}" th:text="${n.priorite}">URGENT</span>
+                    </div>
+                </div>
+                <div class="notif-empty" th:if="${notificationsCount == 0}">
+                    <i class="fa-regular fa-bell-slash" style="font-size:24px;margin-bottom:8px;display:block;"></i>
+                    Aucune notification pour le moment
+                </div>
+                <div class="notif-dropdown-footer">
+                    <a th:href="@{/admin/notifications}" class="notif-footer-link">
+                        <i class="fa-solid fa-arrow-right"></i> Voir toutes les notifications
+                    </a>
+                </div>
+            </div>
         </div>
         <a th:href="@{/admin/messages}" class="header-icon-btn">...</a>
         <div class="header-user">...</div>

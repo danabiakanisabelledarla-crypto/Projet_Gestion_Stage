@@ -130,55 +130,65 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr th:each="doc : ${documents}" th:data-type="${doc.typeDocument}" th:data-statut="${doc.statut}" th:onclick="'selectDoc(this, ' + ${doc.id} + ')'">
-                                <td>
-                                    <div class="doc-name-cell">
-                                        <div th:class="'doc-icon ' + ${#strings.substring(doc.nomFichier, #strings.indexOf(doc.nomFichier, '.') + 1, #strings.length(doc.nomFichier))}">
-                                            <i th:class="${#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.indexOf(doc.nomFichier, '.') + 1)) == 'pdf' ? 'fa-solid fa-file-pdf' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'doc' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'docx' ? 'fa-solid fa-file-word' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'png' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'jpg' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'jpeg' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'gif' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'svg' ? 'fa-solid fa-file-image' : (#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'zip' || #strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.lastIndexOf(doc.nomFichier, '.') + 1)) == 'rar' ? 'fa-solid fa-file-zipper' : 'fa-solid fa-file'))))"></i>
+                                                 <tbody>
+                            <th:block th:each="doc : ${documents}">
+                                <tr th:if="${doc == null}">
+                                    <td colspan="7" style="padding:16px;text-align:center;color:#94A3B8;font-style:italic;">
+                                        <i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B;margin-right:8px;"></i>
+                                        Document introuvable (référence corrompue)
+                                    </td>
+                                </tr>
+                                <tr th:if="${doc != null}" th:data-type="${doc.typeDocument}" th:data-statut="${doc.statut}" th:onclick="'selectDoc(this, ' + ${doc.id} + ')'">
+                                    <td>
+                                        <div class="doc-name-cell">
+                                            <th:block th:with="ext=${#strings.toLowerCase(#strings.substring(doc.nomFichier, #strings.indexOf(doc.nomFichier, '.') + 1))}">
+                                                <div th:class="'doc-icon ' + ${ext}">
+                                                    <i th:class="${ext == 'pdf' ? 'fa-solid fa-file-pdf' : (ext == 'doc' || ext == 'docx' ? 'fa-solid fa-file-word' : (ext == 'png' || ext == 'jpg' || ext == 'jpeg' || ext == 'gif' || ext == 'svg' ? 'fa-solid fa-file-image' : (ext == 'zip' || ext == 'rar' ? 'fa-solid fa-file-zipper' : 'fa-solid fa-file')))}"></i>
+                                                </div>
+                                            </th:block>
+                                            <div>
+                                                <div class="doc-name" th:text="${doc.nomFichier}">fichier.pdf</div>
+                                                <div class="doc-size">—</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div class="doc-name" th:text="${doc.nomFichier}">fichier.pdf</div>
-                                            <div class="doc-size">—</div>
+                                    </td>
+                                    <td th:text="${doc.typeDocument}">Rapport final</td>
+                                    <td>
+                                        <div class="proprietaire-cell">
+                                            <div class="proprietaire-avatar" th:text="${doc.stage != null ? #strings.substring(doc.stage.stagiaire.utilisateur.prenom,0,1).toUpperCase() + #strings.substring(doc.stage.stagiaire.utilisateur.nom,0,1).toUpperCase() : '—'}">JD</div>
+                                            <div>
+                                                <div class="proprietaire-nom" th:text="${doc.stage != null ? doc.stage.stagiaire.utilisateur.prenom + ' ' + doc.stage.stagiaire.utilisateur.nom : '—'}">Nom</div>
+                                                <div class="proprietaire-role" th:text="${doc.demandeStage != null ? 'Candidat' : 'Stagiaire'}">Rôle</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td th:text="${doc.typeDocument}">Rapport final</td>
-                                <td>
-                                    <div class="proprietaire-cell">
-                                        <div class="proprietaire-avatar" th:text="${doc.stage != null ? #strings.substring(doc.stage.stagiaire.utilisateur.prenom,0,1).toUpperCase() + #strings.substring(doc.stage.stagiaire.utilisateur.nom,0,1).toUpperCase() : '—'}">JD</div>
-                                        <div>
-                                            <div class="proprietaire-nom" th:text="${doc.stage != null ? doc.stage.stagiaire.utilisateur.prenom + ' ' + doc.stage.stagiaire.utilisateur.nom : '—'}">Nom</div>
-                                            <div class="proprietaire-role" th:text="${doc.demandeStage != null ? 'Candidat' : 'Stagiaire'}">Rôle</div>
+                                    </td>
+                                    <td>
+                                        <div class="date-cell">
+                                            <span class="date" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'dd/MM/yyyy') : '—'}">date</span>
+                                            <span class="heure" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'HH:mm') : '—'}">heure</span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="date-cell">
-                                        <span class="date" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'dd/MM/yyyy') : '—'}">date</span>
-                                        <span class="heure" th:text="${doc.dateDepot != null ? #temporals.format(doc.dateDepot, 'HH:mm') : '—'}">heure</span>
-                                    </div>
-                                </td>
-                                <td><span class="badge-version">v1</span></td>
-                                <td>
-                                    <span th:class="'badge-statut ' + (${doc.statut == 'archive'} ? 'archive' : (${doc.statut == 'en_attente'} ? 'en_attente' : 'disponible'))"
-                                          th:text="${doc.statut == 'archive' ? 'Archivé' : (doc.statut == 'en_attente' ? 'En attente' : 'Disponible')}">Statut</span>
-                                </td>
-                                <td>
-                                    <div class="action-btns">
-                                        <button class="action-btn" th:onclick="'event.stopPropagation(); window.open(\'/documents/' + ${doc.id} + '\')'" title="Télécharger"><i class="fa-solid fa-download"></i></button>
-                                        <button class="action-btn" th:onclick="'event.stopPropagation(); selectDoc(this, ' + ${doc.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                                        <form th:action="@{/admin/documents/archiver/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()">
-                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                            <button type="submit" class="action-btn" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
-                                        </form>
-                                        <form th:action="@{/admin/documents/supprimer/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()" onsubmit="return confirm('Supprimer ce document ?')">
-                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                            <button type="submit" class="action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td><span class="badge-version">v1</span></td>
+                                    <td>
+                                        <span th:class="'badge-statut ' + (${doc.statut == 'archive'} ? 'archive' : (${doc.statut == 'en_attente'} ? 'en_attente' : 'disponible'))"
+                                              th:text="${doc.statut == 'archive' ? 'Archivé' : (doc.statut == 'en_attente' ? 'En attente' : 'Disponible')}">Statut</span>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn" th:onclick="'event.stopPropagation(); window.open(\'/documents/' + ${doc.id} + '\')'" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                            <button class="action-btn" th:onclick="'event.stopPropagation(); selectDoc(this, ' + ${doc.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                            <form th:action="@{/admin/documents/archiver/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                <button type="submit" class="action-btn" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
+                                            </form>
+                                            <form th:action="@{/admin/documents/supprimer/{id}(id=${doc.id})}" method="post" style="display:inline;" onclick="event.stopPropagation()" onsubmit="return confirm('Supprimer ce document ?')">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                <button type="submit" class="action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </th:block>
                             <tr th:if="${#lists.isEmpty(documents)}">
                                 <td colspan="7" class="empty-state">Aucun document trouvé.</td>
                             </tr>

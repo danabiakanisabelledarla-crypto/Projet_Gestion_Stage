@@ -174,3 +174,10 @@
 .sec-perm-item.ok { color: #15803D; }
 
 .sec-empty { text-align: center; padding: 50px 20px; color: #94A3B8; font-size: 14px; }
+
+.bar-weekly-failure{
+    width:100%;
+    background:#2563EB;
+    border-radius:6px 6px 0 0;
+    transition:all .3s;
+}
