@@ -1,0 +1,165 @@
+/* ===== RESPONSABLE STAGIAIRES ===== */
+.page-stagiaires { background: #F6F8FC; min-height: 100vh; padding: 0 30px 40px; }
+
+/* --- HERO CARD --- */
+.hero-card {
+    height: 100px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.08);
+    margin: 24px 0 0;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all .3s ease;
+}
+.hero-card:hover { transform: translateY(-3px); }
+.hero-gauche { display: flex; align-items: center; gap: 18px; }
+.hero-icone {
+    width: 70px; height: 70px; border-radius: 16px;
+    background: linear-gradient(135deg,#2563EB,#1D4ED8);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 30px; flex-shrink: 0;
+}
+.hero-titre { margin: 0; font-size: 34px; font-weight: 700; color: #1E293B; line-height: 1.1; }
+.hero-sous-titre { color: #64748B; font-size: 14px; margin-top: 4px; }
+.hero-droite { display: flex; align-items: center; gap: 12px; }
+
+.header-icon-btn {
+    position: relative;
+    width: 44px; height: 44px; border-radius: 12px;
+    background: #F5F7FB; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; color: #64748B;
+    transition: all .3s ease;
+}
+.header-icon-btn:hover { background: #EFF6FF; color: #2563EB; }
+.notif-dot {
+    position: absolute; top: 2px; right: 2px;
+    min-width: 18px; height: 18px; background: #EF4444; color: white;
+    border-radius: 50%; font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+}
+
+.header-user { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 10px 6px 14px; border-radius: 12px; transition: background .3s; }
+.header-user:hover { background: #F5F7FB; }
+.header-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#2563EB,#3B82F6); color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-user-nom { font-size: 13px; font-weight: 700; color: #0f172a; line-height: 1.3; }
+.header-user-role { font-size: 11px; color: #64748B; }
+.header-arrow { font-size: 11px; color: #94A3B8; margin-left: 4px; }
+
+/* --- GRILLE 5 STATS --- */
+.grille-stats { display: grid; grid-template-columns: repeat(5,1fr); gap: 20px; margin: 24px 0 30px; }
+@media (max-width:1400px){ .grille-stats { grid-template-columns: repeat(3,1fr); } }
+@media (max-width:900px){ .grille-stats { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:600px){ .grille-stats { grid-template-columns: 1fr; } }
+
+.carte-stat {
+    background: white; border-radius: 20px; padding: 20px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.08);
+    display: flex; align-items: center; gap: 14px;
+    transition: all .3s ease; position: relative; overflow: hidden; min-height: 150px;
+}
+.carte-stat:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(15,23,42,.12); }
+.stat-icone { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.stat-icone.bleu { background: #DBEAFE; color: #2563EB; }
+.stat-icone.orange { background: #FEF3C7; color: #F59E0B; }
+.stat-icone.vert { background: #DCFCE7; color: #22C55E; }
+.stat-icone.violet { background: #EDE9FE; color: #8B5CF6; }
+.stat-info { flex: 1; }
+.stat-libelle { font-size: 12px; color: #64748B; font-weight: 500; margin-bottom: 4px; }
+.stat-valeur { font-size: 26px; font-weight: 700; color: #1E293B; line-height: 1; margin-bottom: 4px; }
+.stat-evolution { font-size: 12px; color: #94A3B8; }
+.barre-progress { height: 8px; background: #E5E7EB; border-radius: 50px; margin-top: 8px; overflow: hidden; }
+.barre-progress span { display: block; height: 100%; background: linear-gradient(90deg,#2563EB,#8B5CF6); border-radius: 50px; transition: width .6s ease; }
+
+/* --- TABLEAU CARD --- */
+.tableau-card { background: white; border-radius: 20px; box-shadow: 0 8px 24px rgba(15,23,42,.08); padding: 25px; }
+.tableau-header-titre { margin-bottom: 20px; }
+.tableau-header-titre h2 { margin: 0; font-size: 28px; font-weight: 700; color: #1E293B; }
+.tableau-header-titre p { margin: 6px 0 0; color: #64748B; font-size: 14px; }
+
+/* --- BARRE FILTRES --- */
+.barre-filtres { display: flex; gap: 15px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+.champ-recherche { display: flex; align-items: center; gap: 10px; height: 48px; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 0 14px; background: white; transition: all .3s ease; width: 300px; }
+.champ-recherche:focus-within { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+.champ-recherche i { color: #94A3B8; }
+.champ-recherche input { border: none; outline: none; font-family: inherit; font-size: 14px; width: 100%; background: transparent; }
+.filtre-select { height: 48px; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 0 14px; font-family: inherit; font-size: 14px; color: #374151; background: white; outline: none; transition: all .3s ease; min-width: 160px; }
+.filtre-select:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+.btn-filtrer { height: 48px; padding: 0 22px; background: #2563EB; border: none; border-radius: 12px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all .3s ease; white-space: nowrap; }
+.btn-filtrer:hover { background: #1D4ED8; }
+
+/* --- TABLEAU --- */
+.tableau-wrapper { overflow-x: auto; }
+.table-stagiaires { width: 100%; border-collapse: collapse; min-width: 1100px; }
+.table-stagiaires thead th {
+    padding: 14px 16px; text-align: left;
+    font-size: 11px; font-weight: 700; color: #64748B;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 2px solid #E5E7EB; background: #F8FAFC; white-space: nowrap;
+}
+.table-stagiaires tbody tr { border-bottom: 1px solid #F1F5F9; transition: background .2s; height: 78px; }
+.table-stagiaires tbody tr:hover { background: #EFF6FF; }
+.table-stagiaires tbody tr:last-child { border-bottom: none; }
+.table-stagiaires tbody td { padding: 14px 16px; font-size: 13px; color: #334155; vertical-align: middle; }
+
+/* Colonne Stagiaire */
+.stagiaire-cell-td { display: flex; align-items: center; gap: 12px; min-width: 280px; }
+.stagiaire-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+.stagiaire-nom { font-weight: 600; color: #0f172a; font-size: 14px; }
+.stagiaire-email { font-size: 12px; color: #64748B; margin-top: 1px; }
+.stagiaire-matricule { font-family: monospace; font-size: 11px; color: #2563EB; margin-top: 2px; }
+
+/* Colonne Matricule */
+.matricule-cell { font-family: monospace; font-size: 12px; color: #2563EB; font-weight: 600; }
+
+/* Colonne Service */
+.service-cell { font-weight: 500; color: #334155; }
+
+/* Colonne Encadreur */
+.encadreur-cell { display: flex; align-items: center; gap: 6px; color: #334155; }
+.encadreur-cell i { color: #2563EB; font-size: 14px; }
+
+/* Colonne Progression */
+.progression-cell { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+.progression-bar-wrapper { flex: 1; max-width: 120px; height: 8px; background: #E5E7EB; border-radius: 50px; overflow: hidden; }
+.progression-bar { height: 100%; background: #2563EB; border-radius: 50px; transition: width .6s ease; }
+.progression-pct { font-size: 12px; font-weight: 600; color: #2563EB; white-space: nowrap; }
+
+/* Colonne Statut */
+.badge-statut { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; }
+.badge-actif { background: #DCFCE7; color: #16A34A; }
+.badge-actif::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #22C55E; }
+.badge-termine { background: #DBEAFE; color: #2563EB; }
+.badge-termine::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #2563EB; }
+.badge-abandonne { background: #FFF4E5; color: #D97706; }
+.badge-abandonne::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #F59E0B; }
+
+/* Colonne Actions */
+.actions-cell { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.btn-action {
+    width: 38px; height: 38px; border-radius: 10px;
+    border: 1.5px solid #E5E7EB; background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; cursor: pointer; transition: all .3s ease;
+    color: #64748B;
+}
+.btn-action:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(15,23,42,.15); border-color: #2563EB; color: #2563EB; }
+.btn-voir:hover { background: #DBEAFE; color: #2563EB; border-color: #2563EB; }
+.btn-affecter:hover { background: #DCFCE7; color: #22C55E; border-color: #22C55E; }
+.btn-suivi:hover { background: #EDE9FE; color: #8B5CF6; border-color: #8B5CF6; }
+.btn-cloturer:hover { background: #FEE2E2; color: #EF4444; border-color: #EF4444; }
+.btn-plus:hover { background: #F5F7FB; }
+
+/* --- PAGINATION --- */
+.pagination { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 0; margin-top: 20px; border-top: 1px solid #E5E7EB; flex-wrap: wrap; gap: 12px; }
+.pagination-info { font-size: 13px; color: #64748B; }
+.pagination-btns { display: flex; gap: 8px; align-items: center; }
+.page-btn { width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid #E5E7EB; background: white; color: #374151; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .3s ease; }
+.page-btn:hover { border-color: #2563EB; color: #2563EB; }
+.page-btn.actif { background: #2563EB; color: white; border-color: #2563EB; }
+.page-btn.prev-next { width: auto; padding: 0 14px; }
+.tableau-vide { padding: 50px; text-align: center; color: #64748B; font-size: 14px; }

@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.gestionstages.gestion_stages.security.CustomUserDetails;
+import java.util.stream.Collectors;
+
 
 
 @Controller
@@ -179,7 +183,7 @@ private static String quote(Object v) {
         return "responsable/dashboard";
     }
 
-        @GetMapping("/demandes")
+            @GetMapping("/demandes")
     public String afficherDemandes(Model model) {
         List<DemandeStage> demandes = demandeStageRepository.findAll();
         long enAttente = demandes.stream()
@@ -194,11 +198,6 @@ private static String quote(Object v) {
                         && d.getDateDemande().toLocalDate().equals(java.time.LocalDate.now())).count();
         long taux = total > 0 ? (acceptees * 100 / total) : 0;
 
-        java.util.Map<Integer, Long> piecesParDemande = new java.util.HashMap<>();
-        for (DemandeStage d : demandes) {
-            piecesParDemande.put(d.getId(), (long) documentRepository.findByDemandeStageId(d.getId()).size());
-        }
-
         model.addAttribute("demandes", demandes);
         model.addAttribute("totalDemandes", total);
         model.addAttribute("enAttente", enAttente);
@@ -206,7 +205,6 @@ private static String quote(Object v) {
         model.addAttribute("refusees", refusees);
         model.addAttribute("aujourdHui", aujourdHui);
         model.addAttribute("tauxAcceptation", taux);
-        model.addAttribute("piecesParDemande", piecesParDemande);
         model.addAttribute("notificationsCount", 5);
         model.addAttribute("messagesCount", 3);
         return "responsable/demandes";
@@ -420,13 +418,63 @@ public String afficherArchives(Model model) {
     return "responsable/archives";
 }
 
-@GetMapping("/stagiaires")
-public String afficherStagiairesResp(Model model) {
-    model.addAttribute("activePage", "stagiaires");
-    model.addAttribute("stagiaires", stagiaireRepository.findAll());
-    model.addAttribute("stages", stageRepository.findAll());
-    return "responsable/stagiaires";
-}
+       @GetMapping("/stagiaires")
+    public String afficherStagiaires(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<Stagiaire> stagiaires = stagiaireRepository.findAll();
+        List<Stage> stages = stageRepository.findAll();
+        
+        // Stats de base
+        long totalStagiaires = stagiaires.size();
+        long enCours = stagiaires.stream().filter(s -> s.getStatut() == Stagiaire.StatutStagiaire.actif).count();
+        long clotures = stagiaires.stream().filter(s -> s.getStatut() == Stagiaire.StatutStagiaire.termine).count();
+        long affectations = stages.stream().filter(s -> s.getService() != null && s.getEncadreur() != null).count();
+        
+        // Progression moyenne (depuis champ Stagiaire.progression)
+        int progressionMoyenne = (int) stagiaires.stream()
+            .filter(s -> s.getProgression() != null)
+            .mapToInt(Stagiaire::getProgression)
+            .average()
+            .orElse(0);
+        
+        // Notifications / Messages (depuis BDD)
+        long notificationsCount = notificationRepository.countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue");
+        long messagesCount = notificationRepository.countByDestinataireType("RESPONSABLE");
+        
+        // Filtres dynamiques : Service
+        List<String> servicesList = stages.stream()
+            .filter(s -> s.getService() != null)
+            .map(s -> s.getService().getNom())
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+        
+        // Filtres dynamiques : Encadreur
+        List<String> encadreursList = stages.stream()
+            .filter(s -> s.getEncadreur() != null && s.getEncadreur().getUtilisateur() != null)
+            .map(s -> s.getEncadreur().getUtilisateur().getPrenom() + " " + s.getEncadreur().getUtilisateur().getNom())
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+        
+        // Profil responsable connecté
+        Utilisateur responsable = userDetails.getUtilisateur();
+        
+        model.addAttribute("activePage", "stagiaires");
+        model.addAttribute("stagiaires", stagiaires);
+        model.addAttribute("stages", stages);
+        model.addAttribute("totalStagiaires", totalStagiaires);
+        model.addAttribute("enCours", enCours);
+        model.addAttribute("clotures", clotures);
+        model.addAttribute("affectations", affectations);
+        model.addAttribute("progressionMoyenne", progressionMoyenne);
+        model.addAttribute("notificationsCount", notificationsCount);
+        model.addAttribute("messagesCount", messagesCount);
+        model.addAttribute("servicesList", servicesList);
+        model.addAttribute("encadreursList", encadreursList);
+        model.addAttribute("responsable", responsable);
+        
+        return "responsable/stagiaires";
+    }
 
 @GetMapping("/dossiers")
 public String afficherDossiers(Model model) {

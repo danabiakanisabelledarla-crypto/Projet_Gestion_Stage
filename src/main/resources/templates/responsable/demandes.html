@@ -11,7 +11,7 @@
 
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
-<div class="contenu-principal">
+<div class="contenu-principal page-demandes">
     <div th:replace="~{fragments/header-responsable :: header}"></div>
 
     <!-- HERO -->
@@ -80,132 +80,209 @@
         </div>
     </section>
 
-    <!-- LISTE DES DEMANDES -->
-    <section class="tableau-wrapper">
-        <div class="bloc-entete">
-            <h3>Liste des demandes</h3>
-        </div>
+        <!-- WRAPPER TABLEAU -->
+    <div class="demandes-layout">
+        <div class="demandes-main">
+            <section class="tableau-wrapper">
+                <div class="bloc-entete">
+                    <h3>Liste des demandes</h3>
+                </div>
 
-        <div class="barre-filtres">
-            <div class="champ-recherche">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input class="filtre-input" type="text" id="filtreNom" placeholder="Rechercher un candidat..." oninput="filtrerTableau()">
-            </div>
-            <select class="filtre-select" id="filtreStatut" onchange="filtrerTableau()">
-                <option value="">Tous</option>
-                <option value="en_attente">En attente</option>
-                <option value="acceptee">Acceptée</option>
-                <option value="refusee">Refusée</option>
-            </select>
-            <select class="filtre-select" id="filtreFiliere" onchange="filtrerTableau()">
-                <option value="">Filière</option>
-                <option>Informatique</option>
-                <option>Réseaux & Télécommunications</option>
-                <option>Gestion / Finance</option>
-                <option>Communication</option>
-            </select>
-            <select class="filtre-select" id="filtreNiveau" onchange="filtrerTableau()">
-                <option value="">Niveau d'études</option>
-                <option>Licence 3</option>
-                <option>Master 1</option>
-                <option>Master 2</option>
-            </select>
-            <div class="champ-recherche">
-                <i class="fa-regular fa-calendar"></i>
-                <input class="filtre-input" type="text" id="filtrePeriode" placeholder="Période" oninput="filtrerTableau()">
-            </div>
-            <button class="btn-filtrer" onclick="filtrerTableau()"><i class="fa-solid fa-filter"></i> Filtrer</button>
-        </div>
-
-        <div class="tableau-header">
-            <div class="col-header">Candidat</div>
-            <div class="col-header">Filière</div>
-            <div class="col-header">Niveau</div>
-            <div class="col-header">Date de demande</div>
-            <div class="col-header">Statut</div>
-            <div class="col-header">Pièces jointes</div>
-            <div class="col-header">Actions</div>
-        </div>
-
-        <div id="corps-tableau">
-            <div th:each="demande, iter : ${demandes}"
-                 th:data-nom="${demande.prenom + ' ' + demande.nom}"
-                 th:data-statut="${demande.statut.name()}"
-                 th:data-filiere="${demande.filiere}"
-                 th:data-niveau="${demande.niveau}"
-                 class="tableau-ligne">
-                <div class="candidat-cell">
-                    <div class="candidat-avatar"
-                         th:style="${iter.index % 4 == 0 ? 'background:#2563EB' :
-                                    iter.index % 4 == 1 ? 'background:#7C3AED' :
-                                    iter.index % 4 == 2 ? 'background:#DB2777' :
-                                    'background:#059669'}"
-                         th:text="${#strings.substring(demande.prenom,0,1)}"></div>
-                    <div>
-                        <div class="candidat-nom" th:text="${demande.prenom + ' ' + demande.nom}">-</div>
-                        <div class="candidat-email"
-                             th:text="${demande.commentaire != null and demande.commentaire.startsWith('Email candidat : ')
-                                        ? demande.commentaire.replace('Email candidat : ','') : '—'}">-</div>
+                <div class="barre-filtres">
+                    <div class="champ-recherche">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input class="filtre-input" type="text" id="filtreNom" placeholder="Rechercher un candidat..." oninput="filtrerTableau()">
                     </div>
+                    <select class="filtre-select" id="filtreStatut" onchange="filtrerTableau()">
+                        <option value="">Tous</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="acceptee">Acceptée</option>
+                        <option value="refusee">Refusée</option>
+                    </select>
+                    <select class="filtre-select" id="filtreFiliere" onchange="filtrerTableau()">
+                        <option value="">Filière</option>
+                        <option>Informatique</option>
+                        <option>Réseaux & Télécommunications</option>
+                        <option>Gestion / Finance</option>
+                        <option>Communication</option>
+                    </select>
+                    <select class="filtre-select" id="filtreNiveau" onchange="filtrerTableau()">
+                        <option value="">Niveau d'études</option>
+                        <option>Licence 3</option>
+                        <option>Master 1</option>
+                        <option>Master 2</option>
+                    </select>
+                    <div class="champ-recherche">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input class="filtre-input" type="text" id="filtrePeriode" placeholder="Période" oninput="filtrerTableau()">
+                    </div>
+                    <button class="btn-filtrer" onclick="filtrerTableau()"><i class="fa-solid fa-filter"></i> Filtrer</button>
                 </div>
-                <div class="col-text" th:text="${demande.filiere}">-</div>
-                <div class="col-text"><span class="badge-niveau" th:text="${demande.niveau}">-</span></div>
-                <div class="col-date">
-                    <div th:text="${#temporals.format(demande.dateDemande,'dd/MM/yyyy')}">-</div>
-                    <div th:text="${#temporals.format(demande.dateDemande,'HH:mm')}">-</div>
+
+                <div class="tableau-header">
+                    <div class="col-header">Candidat</div>
+                    <div class="col-header">Filière</div>
+                    <div class="col-header">Niveau</div>
+                    <div class="col-header">Date de demande</div>
+                    <div class="col-header">Statut</div>
+                    <div class="col-header">Actions</div>
                 </div>
-                <div>
-                    <span th:class="'badge-statut badge-' + ${demande.statut.name()}">
-                        <span class="point"></span>
-                        <span th:text="${demande.statut == T(com.gestionstages.gestion_stages.entities.DemandeStage.StatutDemande).en_attente ? 'En attente' :
-                                     demande.statut == T(com.gestionstages.gestion_stages.entities.DemandeStage.StatutDemande).acceptee ? 'Acceptée' : 'Refusée'}">-</span>
-                    </span>
+
+                <div id="corps-tableau">
+                    <div th:each="demande, iter : ${demandes}"
+                         th:data-id="${demande.id}"
+                         th:data-nom="${demande.prenom + ' ' + demande.nom}"
+                         th:data-prenom="${demande.prenom}"
+                         th:data-statut="${demande.statut.name()}"
+                         th:data-statut-label="${demande.statut.name() == 'en_attente' ? 'En attente' : (demande.statut.name() == 'acceptee' ? 'Acceptée' : 'Refusée')}"
+                         th:data-filiere="${demande.filiere}"
+                         th:data-niveau="${demande.niveau}"
+                         th:data-ecole="${demande.ecole}"
+                         th:data-duree="${demande.dureeSouhaitee}"
+                         th:data-date="${#temporals.format(demande.dateDemande,'dd/MM/yyyy')}"
+                         th:data-email="${demande.commentaire != null and demande.commentaire.startsWith('Email candidat : ') ? demande.commentaire.replace('Email candidat : ','') : '—'}"
+                         th:data-commentaire="${demande.commentaire}"
+                         class="tableau-ligne">
+                        <div class="candidat-cell">
+                            <div class="candidat-avatar"
+                                 th:style="${iter.index % 4 == 0 ? 'background:#2563EB' :
+                                            iter.index % 4 == 1 ? 'background:#7C3AED' :
+                                            iter.index % 4 == 2 ? 'background:#DB2777' :
+                                            'background:#059669'}"
+                                 th:text="${#strings.substring(demande.prenom,0,1)}"></div>
+                            <div>
+                                <div class="candidat-nom" th:text="${demande.prenom + ' ' + demande.nom}">-</div>
+                                <div class="candidat-email" th:text="${demande.commentaire != null and demande.commentaire.startsWith('Email candidat : ') ? demande.commentaire.replace('Email candidat : ','') : '—'}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-text" th:text="${demande.filiere}">-</div>
+                        <div class="col-text"><span class="badge-niveau" th:text="${demande.niveau}">-</span></div>
+                        <div class="col-date">
+                            <div th:text="${#temporals.format(demande.dateDemande,'dd/MM/yyyy')}">-</div>
+                            <div th:text="${#temporals.format(demande.dateDemande,'HH:mm')}">-</div>
+                        </div>
+                        <div>
+                            <span th:class="'badge-statut badge-' + ${demande.statut.name()}">
+                                <span class="point"></span>
+                                <span th:text="${demande.statut.name() == 'en_attente' ? 'En attente' : (demande.statut.name() == 'acceptee' ? 'Acceptée' : 'Refusée')}">-</span>
+                            </span>
+                        </div>
+                        <div class="actions-cell">
+                            <button class="btn-action btn-voir" title="Voir" onclick="ouvrirDetail(this)"><i class="fa-solid fa-eye"></i></button>
+                            <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}" class="btn-action btn-accepter" title="Accepter"><i class="fa-solid fa-check"></i></a>
+                            <a th:href="@{/responsable/demandes/refuser/{id}(id=${demande.id})}" class="btn-action btn-refuser" title="Refuser"><i class="fa-solid fa-xmark"></i></a>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(demandes)}" class="tableau-vide">Aucune demande pour le moment.</div>
                 </div>
-                <div>
-                    <a class="lien-pieces" th:with="n=${piecesParDemande.get(demande.id)}">
-                        <i class="fa-solid fa-file"></i>
-                        <span th:text="${n} + ' fichiers'">0 fichiers</span>
-                    </a>
+
+                <div class="pagination">
+                    <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="page-btn actif">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
+                    <span class="pagination-texte" th:text="'Affichage de 1 à ' + ${#lists.isEmpty(demandes) ? 0 : (demandes.size() < 8 ? demandes.size() : 8)} + ' sur ' + ${totalDemandes} + ' demandes'">Affichage de 1 à 8 sur 24 demandes</span>
                 </div>
-                <div class="actions-cell">
-                    <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}" class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                    <a th:href="@{/responsable/demandes/accepter/{id}(id=${demande.id})}" class="btn-action btn-accepter" title="Accepter"><i class="fa-solid fa-check"></i></a>
-                    <a th:href="@{/responsable/demandes/refuser/{id}(id=${demande.id})}" class="btn-action btn-refuser" title="Refuser"><i class="fa-solid fa-xmark"></i></a>
-                    <a href="#" class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></a>
+            </section>
+        </div>
+    </div>
+
+    <!-- MODAL DÉTAIL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="fermerDetail()">
+        <aside class="detail-panel" id="detailPanel" onclick="event.stopPropagation()">
+            <div class="panel-header">
+                <h2>Détail de la demande</h2>
+                <button class="panel-close" onclick="fermerDetail()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Infos candidat -->
+            <div class="panel-section">
+                <div class="panel-candidat-top">
+                    <div class="panel-avatar" id="panelAvatar">K</div>
+                    <div>
+                        <div class="panel-nom" id="panelNom">—</div>
+                        <div class="panel-email"><i class="fa-regular fa-envelope"></i> <span id="panelEmail">—</span></div>
+                        <div class="panel-tel"><i class="fa-solid fa-phone"></i> <span id="panelTel">—</span></div>
+                        <div class="panel-local"><i class="fa-solid fa-location-dot"></i> Yaoundé, Cameroun</div>
+                    </div>
+                    <span class="badge-statut badge-en_attente panel-badge" id="panelBadge"><span class="point"></span> <span id="panelStatut">En attente</span></span>
                 </div>
             </div>
 
-            <div th:if="${#lists.isEmpty(demandes)}" class="tableau-vide">Aucune demande pour le moment.</div>
-        </div>
+            <!-- Infos académiques -->
+            <div class="panel-section">
+                <h3 class="panel-sect-titre"><i class="fa-solid fa-graduation-cap"></i> Informations académiques</h3>
+                <div class="panel-grid-2">
+                    <div><div class="panel-label">Filière</div><div class="panel-val" id="panelFiliere">—</div></div>
+                    <div><div class="panel-label">Niveau d'études</div><div class="panel-val" id="panelNiveau">—</div></div>
+                    <div><div class="panel-label">Établissement</div><div class="panel-val" id="panelEcole">—</div></div>
+                    <div><div class="panel-label">Année académique</div><div class="panel-val" id="panelAnnee">—</div></div>
+                </div>
+            </div>
 
-        <div class="pagination">
-            <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="page-btn actif">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
-            <span class="pagination-texte" th:text="'Affichage de 1 à ' + ${#lists.isEmpty(demandes) ? 0 : (demandes.size() < 8 ? demandes.size() : 8)} + ' sur ' + ${totalDemandes} + ' demandes'">Affichage de 1 à 8 sur 24 demandes</span>
-        </div>
-    </section>
-</div>
+            <!-- Infos de la demande -->
+            <div class="panel-section">
+                <h3 class="panel-sect-titre"><i class="fa-solid fa-calendar-days"></i> Informations de la demande</h3>
+                <div class="panel-infos-ligne"><span class="panel-label">Date de la demande</span><span class="panel-val" id="panelDate">—</span></div>
+                <div class="panel-infos-ligne"><span class="panel-label">Type de stage</span><span class="panel-val" id="panelType">Stage académique</span></div>
+                <div class="panel-infos-ligne"><span class="panel-label">Période souhaitée</span><span class="panel-val" id="panelPeriode">—</span></div>
+                <div class="panel-infos-ligne"><span class="panel-label">Durée</span><span class="panel-val" id="panelDuree">—</span></div>
+                <div class="panel-infos-ligne"><span class="panel-label">Service souhaité</span><span class="panel-val">Non spécifié</span></div>
+                <div class="panel-infos-ligne"><span class="panel-label">Motivation</span></div>
+                <div class="panel-motiv" id="panelMotiv">—</div>
+            </div>
+        </aside>
+    </div>
 
 <script>
-    function filtrerTableau() {
-        const nom = document.getElementById('filtreNom').value.toLowerCase();
-        const statut = document.getElementById('filtreStatut').value.toLowerCase();
-        const filiere = document.getElementById('filtreFiliere').value.toLowerCase();
-        const niveau = document.getElementById('filtreNiveau').value.toLowerCase();
-        const periode = document.getElementById('filtrePeriode').value.toLowerCase();
+function filtrerTableau() {
+    const nom = document.getElementById('filtreNom').value.toLowerCase();
+    const statut = document.getElementById('filtreStatut').value.toLowerCase();
+    const filiere = document.getElementById('filtreFiliere').value.toLowerCase();
+    const niveau = document.getElementById('filtreNiveau').value.toLowerCase();
+    const periode = document.getElementById('filtrePeriode').value.toLowerCase();
 
-        document.querySelectorAll('#corps-tableau .tableau-ligne').forEach(ligne => {
-            const ok = (!nom || (ligne.dataset.nom||'').toLowerCase().includes(nom))
-                    && (!statut || (ligne.dataset.statut||'').toLowerCase() === statut)
-                    && (!filiere || (ligne.dataset.filiere||'').toLowerCase().includes(filiere))
-                    && (!niveau || (ligne.dataset.niveau||'').toLowerCase().includes(niveau))
-                    && (!periode || (ligne.dataset.nom||'').toLowerCase().includes(periode));
-            ligne.style.display = ok ? '' : 'none';
-        });
-    }
+    document.querySelectorAll('#corps-tableau .tableau-ligne').forEach(ligne => {
+        const ok = (!nom || (ligne.dataset.nom||'').toLowerCase().includes(nom))
+                && (!statut || (ligne.dataset.statut||'').toLowerCase() === statut)
+                && (!filiere || (ligne.dataset.filiere||'').toLowerCase().includes(filiere))
+                && (!niveau || (ligne.dataset.niveau||'').toLowerCase().includes(niveau))
+                && (!periode || (ligne.dataset.nom||'').toLowerCase().includes(periode));
+        ligne.style.display = ok ? '' : 'none';
+    });
+}
+
+function ouvrirDetail(btn) {
+    const ligne = btn.closest('.tableau-ligne');
+    const d = ligne.dataset;
+
+    document.getElementById('panelAvatar').textContent = (d.prenom || '?')[0].toUpperCase();
+    document.getElementById('panelAvatar').style.background = window.getComputedStyle(ligne.querySelector('.candidat-avatar')).background;
+    document.getElementById('panelNom').textContent = d.nom;
+    document.getElementById('panelEmail').textContent = d.email;
+    document.getElementById('panelTel').textContent = '+237 6XX XXX XXX';
+    document.getElementById('panelStatut').textContent = d.statutLabel;
+    document.getElementById('panelFiliere').textContent = d.filiere;
+    document.getElementById('panelNiveau').textContent = d.niveau;
+    document.getElementById('panelEcole').textContent = d.ecole;
+    document.getElementById('panelAnnee').textContent = new Date().getFullYear() + '/' + (new Date().getFullYear()+1);
+    document.getElementById('panelDate').textContent = d.date;
+    document.getElementById('panelType').textContent = 'Stage académique';
+    document.getElementById('panelPeriode').textContent = d.date + ' (' + d.duree + ')';
+    document.getElementById('panelDuree').textContent = d.duree;
+    document.getElementById('panelMotiv').textContent = d.commentaire && !d.commentaire.startsWith('Email candidat') ? d.commentaire : 'Aucune motivation fournie.';
+
+    const badge = document.getElementById('panelBadge');
+    badge.className = 'badge-statut badge-' + d.statut + ' panel-badge';
+
+    document.getElementById('modalOverlay').classList.add('ouvert');
+}
+
+function fermerDetail() {
+    document.getElementById('modalOverlay').classList.remove('ouvert');
+}
 </script>
 </body>
 </html>

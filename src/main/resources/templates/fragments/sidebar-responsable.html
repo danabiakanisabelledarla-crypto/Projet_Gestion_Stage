@@ -8,9 +8,6 @@
     <nav>
         <a th:href="@{/responsable/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
         <a th:href="@{/responsable/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
-        <a th:href="@{/responsable/admissions}" th:classappend="${activePage == 'admissions'} ? ' actif'"><i class="fa-solid fa-user-check"></i> Admissions</a>
-        <a th:href="@{/responsable/affectations}" th:classappend="${activePage == 'affectations'} ? ' actif'"><i class="fa-solid fa-sitemap"></i> Affectations</a>
-        <a th:href="@{/responsable/cloture}" th:classappend="${activePage == 'cloture'} ? ' actif'"><i class="fa-solid fa-box-archive"></i> Clôture</a>
         <a th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
         <a th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
         <a th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>

@@ -1,11 +1,214 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Stagiaires</title>
-<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
-<body class="portal-body">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des stagiaires</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-stagiaires.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Gestion</div><h1>Stagiaires</h1><p>Consultez et suivez tous les stagiaires admis.</p></div></section>
-<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Matricule</th><th>Nom</th><th>École</th><th>Statut</th></tr></thead>
-<tbody><tr th:each="s : ${stagiaires}"><td th:text="${s.matricule}">STG</td><td th:text="${s.utilisateur.prenom + ' ' + s.utilisateur.nom}">Nom</td><td th:text="${s.demandeStage.ecole}">Ecole</td><td><span class="badge-statut badge-actif" th:text="${s.statut}">actif</span></td></tr></tbody></table></div>
-</div></body></html>
+
+<div class="contenu-principal page-stagiaires">
+    <!-- 1. HERO HEADER -->
+    <section class="hero-card">
+        <div class="hero-gauche">
+            <div class="hero-icone"><i class="fa-solid fa-user-graduate"></i></div>
+            <div>
+                <h1 class="hero-titre">Gestion des stagiaires</h1>
+                <div class="hero-sous-titre">Gérez les affectations, le suivi et la clôture des stages.</div>
+            </div>
+        </div>
+        <div class="hero-droite">
+            <button class="header-icon-btn" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notif-dot" th:text="${notificationsCount}">3</span>
+            </button>
+            <button class="header-icon-btn" title="Messages">
+                <i class="fa-regular fa-envelope"></i>
+                <span class="notif-dot" th:text="${messagesCount}">5</span>
+            </button>
+            <div class="header-user">
+                <div class="header-avatar" th:text="${responsable.prenom.substring(0,1).toUpperCase()}">R</div>
+                <div>
+                    <div class="header-user-nom" th:text="${responsable.prenom + ' ' + responsable.nom}">Responsable</div>
+                    <div class="header-user-role">Responsable</div>
+                </div>
+                <i class="fa-solid fa-chevron-down header-arrow"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. GRILLE 5 STATS -->
+    <section class="grille-stats">
+        <div class="carte-stat bleu">
+            <div class="stat-icone bleu"><i class="fa-solid fa-user-graduate"></i></div>
+            <div class="stat-info">
+                <div class="stat-libelle">Total des stagiaires</div>
+                <div class="stat-valeur" th:text="${totalStagiaires}">38</div>
+                <div class="stat-evolution">Inscrits</div>
+            </div>
+        </div>
+        <div class="carte-stat orange">
+            <div class="stat-icone orange"><i class="fa-solid fa-spinner"></i></div>
+            <div class="stat-info">
+                <div class="stat-libelle">Stages en cours</div>
+                <div class="stat-valeur" th:text="${enCours}">21</div>
+                <div class="stat-evolution">Actifs</div>
+            </div>
+        </div>
+        <div class="carte-stat vert">
+            <div class="stat-icone vert"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-libelle">Stages clôturés</div>
+                <div class="stat-valeur" th:text="${clotures}">17</div>
+                <div class="stat-evolution">Terminés</div>
+            </div>
+        </div>
+        <div class="carte-stat bleu">
+            <div class="stat-icone bleu"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="stat-info">
+                <div class="stat-libelle">Affectations</div>
+                <div class="stat-valeur" th:text="${affectations}">38</div>
+                <div class="stat-evolution">Réalisées</div>
+            </div>
+        </div>
+        <div class="carte-stat violet">
+            <div class="stat-icone violet"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="stat-info">
+                <div class="stat-libelle">Progression moyenne</div>
+                <div class="stat-valeur" th:text="${progressionMoyenne + '%'}">82%</div>
+                <div class="barre-progress"><span th:style="'width:' + ${progressionMoyenne} + '%'"></span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. GRANDE CARTE TABLEAU -->
+    <section class="tableau-card">
+        <div class="tableau-header-titre">
+            <h2>Liste des stagiaires</h2>
+            <p>Consultez les affectations, le suivi et la clôture de tous les stages.</p>
+        </div>
+
+        <!-- 4. BARRE DE FILTRES -->
+        <div class="barre-filtres">
+            <div class="champ-recherche">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="filtreRecherche" placeholder="Rechercher un stagiaire..." oninput="filtrerTableau()">
+            </div>
+            <select class="filtre-select" id="filtreService" onchange="filtrerTableau()">
+                <option value="">Service</option>
+                <option th:each="s : ${servicesList}" th:value="${s}" th:text="${s}">Service</option>
+            </select>
+            <select class="filtre-select" id="filtreEncadreur" onchange="filtrerTableau()">
+                <option value="">Encadreur</option>
+                <option th:each="e : ${encadreursList}" th:value="${e}" th:text="${e}">Encadreur</option>
+            </select>
+            <select class="filtre-select" id="filtreStatut" onchange="filtrerTableau()">
+                <option value="">Statut</option>
+                <option value="actif">En cours</option>
+                <option value="termine">Clôturé</option>
+                <option value="abandonne">Suspendu</option>
+            </select>
+            <button class="btn-filtrer" onclick="filtrerTableau()"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        </div>
+
+        <!-- 5. TABLEAU -->
+        <div class="tableau-wrapper">
+            <table class="table-stagiaires">
+                <thead>
+                    <tr>
+                        <th>Stagiaire</th>
+                        <th>Matricule</th>
+                        <th>Service</th>
+                        <th>Encadreur</th>
+                        <th>Progression</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-tableau">
+                    <tr th:each="stagiaire, iter : ${stagiaires}"
+                        th:data-nom="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}"
+                        th:data-email="${stagiaire.utilisateur.email}"
+                        th:data-matricule="${stagiaire.matricule}"
+                        th:data-service="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).service?.nom ?: '—') : '—'}"
+                        th:data-encadreur="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.prenom + ' ' + stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.nom ?: '—') : '—'}"
+                        th:data-progression="${stagiaire.progression}"
+                        th:data-statut="${stagiaire.statut.name()}">
+                        <td class="stagiaire-cell-td">
+                            <div class="stagiaire-avatar" 
+                                 th:style="${iter.index % 4 == 0 ? 'background:#2563EB' : iter.index % 4 == 1 ? 'background:#7C3AED' : iter.index % 4 == 2 ? 'background:#DB2777' : 'background:#059669'}"
+                                 th:text="${#strings.substring(stagiaire.utilisateur.prenom,0,1)}"></div>
+                            <div>
+                                <div class="stagiaire-nom" th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">-</div>
+                                <div class="stagiaire-email" th:text="${stagiaire.utilisateur.email}">-</div>
+                                <div class="stagiaire-matricule" th:text="${stagiaire.matricule}">STG-2026-001</div>
+                            </div>
+                        </td>
+                        <td class="matricule-cell" th:text="${stagiaire.matricule}">STG-2026-001</td>
+                        <td class="service-cell">
+                            <span th:text="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).service?.nom ?: '—') : '—'}">—</span>
+                        </td>
+                        <td class="encadreur-cell">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <span th:text="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.prenom + ' ' + stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.nom ?: '—') : '—'}">—</span>
+                        </td>
+                        <td class="progression-cell">
+                            <div class="progression-bar-wrapper">
+                                <div class="progression-bar" th:style="'width:' + ${stagiaire.progression} + '%'"></div>
+                            </div>
+                            <span class="progression-pct" th:text="${stagiaire.progression + '%'}">80%</span>
+                        </td>
+                        <td class="statut-cell">
+                            <span th:class="'badge-statut badge-' + ${stagiaire.statut.name()}"
+                                  th:text="${stagiaire.statut == 'actif' ? 'En cours' : (stagiaire.statut == 'termine' ? 'Clôturé' : 'Suspendu')}">En cours</span>
+                        </td>
+                        <td class="actions-cell">
+                            <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                            <button class="btn-action btn-affecter" title="Affecter"><i class="fa-solid fa-user-plus"></i></button>
+                            <button class="btn-action btn-suivi" title="Suivi"><i class="fa-solid fa-chart-line"></i></button>
+                            <button class="btn-action btn-cloturer" title="Clôturer"><i class="fa-solid fa-box-archive"></i></button>
+                            <button class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(stagiaires)}" class="tableau-vide">Aucun stagiaire pour le moment.</div>
+        </div>
+
+        <!-- 6. PAGINATION -->
+        <div class="pagination">
+            <span class="pagination-info" th:text="'Affichage de 1 à ' + ${#lists.isEmpty(stagiaires) ? 0 : (stagiaires.size() < 8 ? stagiaires.size() : 8)} + ' sur ' + ${totalStagiaires} + ' stagiaires'">Affichage de 1 à 8 sur 38 stagiaires</span>
+            <div class="pagination-btns">
+                <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="page-btn actif">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+function filtrerTableau() {
+    const recherche = document.getElementById('filtreRecherche').value.toLowerCase();
+    const service = document.getElementById('filtreService').value.toLowerCase();
+    const encadreur = document.getElementById('filtreEncadreur').value.toLowerCase();
+    const statut = document.getElementById('filtreStatut').value.toLowerCase();
+
+    document.querySelectorAll('#corps-tableau tr').forEach(ligne => {
+        const ok = (!recherche || (ligne.dataset.nom||'').toLowerCase().includes(recherche) 
+                              || (ligne.dataset.email||'').toLowerCase().includes(recherche)
+                              || (ligne.dataset.matricule||'').toLowerCase().includes(recherche))
+                && (!service || (ligne.dataset.service||'').toLowerCase().includes(service))
+                && (!encadreur || (ligne.dataset.encadreur||'').toLowerCase().includes(encadreur))
+                && (!statut || (ligne.dataset.statut||'').toLowerCase() === statut);
+        ligne.style.display = ok ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>

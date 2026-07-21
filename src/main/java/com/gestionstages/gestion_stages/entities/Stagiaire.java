@@ -29,11 +29,13 @@ public class Stagiaire {
     @Column(nullable = false)
     private StatutStagiaire statut = StatutStagiaire.actif;
 
+    @Column(name = "progression")
+    private Integer progression = 0;
+
     public enum StatutStagiaire {
         actif, termine, abandonne
     }
 
-    // Constructeurs
     public Stagiaire() {
     }
 
@@ -44,7 +46,6 @@ public class Stagiaire {
         this.dateAdmission = dateAdmission;
     }
 
-    // Getters et Setters
     public Integer getId() {
         return id;
     }
@@ -91,5 +92,13 @@ public class Stagiaire {
 
     public void setStatut(StatutStagiaire statut) {
         this.statut = statut;
+    }
+
+    public Integer getProgression() {
+        return progression;
+    }
+
+    public void setProgression(Integer progression) {
+        this.progression = progression;
     }
 }
