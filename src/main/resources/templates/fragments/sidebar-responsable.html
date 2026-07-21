@@ -11,10 +11,7 @@
         <a th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
         <a th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
         <a th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
-        <a th:href="@{/responsable/suivi}" th:classappend="${activePage == 'suivi'} ? ' actif'"><i class="fa-solid fa-chart-line"></i> Suivi</a>
-        <a th:href="@{/responsable/notifications}" th:classappend="${activePage == 'notifications'} ? ' actif'"><i class="fa-solid fa-bell"></i> Notifications</a>
-        <a th:href="@{/responsable/rapports}" th:classappend="${activePage == 'rapports'} ? ' actif'"><i class="fa-solid fa-chart-pie"></i> Rapports</a>
-        <a th:href="@{/responsable/parametres}" th:classappend="${activePage == 'parametres'} ? ' actif'"><i class="fa-solid fa-gear"></i> Paramètres</a>
+        
         <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
     </nav>
     <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">

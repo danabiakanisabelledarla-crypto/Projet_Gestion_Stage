@@ -1,11 +1,525 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Planning</title>
-<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
-<body class="portal-body">
+<head>
+    <meta charset="UTF-8">
+    <title>Planning des activités</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-planning.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Calendrier</div><h1>Planning des stages</h1></div></section>
-<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Stagiaire</th><th>Début</th><th>Fin</th><th>Service</th></tr></thead>
-<tbody><tr th:each="s : ${stages}"><td th:text="${s.stagiaire.utilisateur.prenom + ' ' + s.stagiaire.utilisateur.nom}">Nom</td><td th:text="${s.dateDebut}">debut</td><td th:text="${s.dateFin}">fin</td><td th:text="${s.service.nom}">service</td></tr></tbody></table></div>
-</div></body></html>
+
+<div class="contenu-principal page-planning">
+    <!-- 1. HEADER -->
+    <section class="page-header">
+        <div class="header-gauche">
+            <div class="header-icon-wrapper">
+                <i class="fa-solid fa-calendar-days"></i>
+            </div>
+            <div class="header-titre-section">
+                <h1 class="page-titre">Planning des activités</h1>
+                <p class="page-description">Suivez le calendrier des stages, des réunions, des livrables et des échéances.</p>
+                <div class="fil-ariane">
+                    <a th:href="@{/responsable/dashboard}" class="ariane-link">Accueil</a>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Responsable</span>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Planning</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-droite">
+            <button class="header-icon-btn" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notif-dot">5</span>
+            </button>
+            <button class="header-icon-btn" title="Messages">
+                <i class="fa-regular fa-envelope"></i>
+                <span class="notif-dot">3</span>
+            </button>
+            <div class="header-user">
+                <div class="header-avatar">M</div>
+                <div class="header-user-info">
+                    <div class="header-user-nom">Marie Abomo</div>
+                    <div class="header-user-role">Responsable</div>
+                </div>
+                <i class="fa-solid fa-chevron-down header-arrow"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. CARTES STATISTIQUES -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon bleu"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Activités du mois</div>
+                <div class="stat-value">24</div>
+                <div class="stat-sub">Ce mois</div>
+            </div>
+            <svg class="mini-chart bleu" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,20 20,22 T40,18 T60,15 T80,12 T100,8" fill="none" stroke="#2563EB" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon vert"><i class="fa-solid fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Échéances</div>
+                <div class="stat-value">8</div>
+                <div class="stat-sub">À venir</div>
+            </div>
+            <svg class="mini-chart vert" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,22 20,20 T40,15 T60,12 T80,10 T100,5" fill="none" stroke="#22C55E" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Réunions</div>
+                <div class="stat-value">5</div>
+                <div class="stat-sub">Cette semaine</div>
+            </div>
+            <svg class="mini-chart orange" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,18 20,15 T40,10 T60,8 T80,5 T100,3" fill="none" stroke="#F59E0B" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon violet"><i class="fa-solid fa-clipboard-check"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Évaluations</div>
+                <div class="stat-value">3</div>
+                <div class="stat-sub">En attente</div>
+            </div>
+            <svg class="mini-chart violet" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,22 20,20 T40,15 T60,12 T80,10 T100,8" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon vert-clair"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Livrables</div>
+                <div class="stat-value">12</div>
+                <div class="stat-sub">À rendre</div>
+            </div>
+            <svg class="mini-chart vert-clair" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,20 20,18 T40,12 T60,10 T80,8 T100,5" fill="none" stroke="#10B981" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon rouge"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Retards</div>
+                <div class="stat-value">2</div>
+                <div class="stat-sub">Critiques</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. ZONE CENTRALE -->
+    <section class="zone-centrale">
+        <!-- COLONNE GAUCHE - CALENDRIER -->
+        <div class="colonne-gauche">
+            <div class="calendrier-card">
+                <!-- Barre d'actions du calendrier -->
+                <div class="calendrier-actions">
+                    <div class="calendrier-gauche">
+                        <button class="btn-calendrier btn-aujourd'hui">Aujourd'hui</button>
+                        <div class="calendrier-nav">
+                            <button class="btn-nav"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="btn-nav"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="calendrier-centre">
+                        <span class="mois-actuel">Juillet 2026 <i class="fa-solid fa-chevron-down"></i></span>
+                    </div>
+                    <div class="calendrier-droite">
+                        <div class="vue-boutons">
+                            <button class="btn-vue actif">Mois</button>
+                            <button class="btn-vue">Semaine</button>
+                            <button class="btn-vue">Jour</button>
+                        </div>
+                        <button class="btn-nouveau"><i class="fa-solid fa-plus"></i> Nouvel événement</button>
+                    </div>
+                </div>
+
+                <!-- Grille du calendrier -->
+                <div class="calendrier-grille">
+                    <div class="calendrier-entetes">
+                        <div class="jour-entete">Lun</div>
+                        <div class="jour-entete">Mar</div>
+                        <div class="jour-entete">Mer</div>
+                        <div class="jour-entete">Jeu</div>
+                        <div class="jour-entete">Ven</div>
+                        <div class="jour-entete">Sam</div>
+                        <div class="jour-entete">Dim</div>
+                    </div>
+                    <div class="calendrier-jours">
+                        <!-- Semaine 1 -->
+                        <div class="jour-cellule">
+                            <span class="jour-numero">1</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">2</span>
+                            <div class="evenement evenement-bleu">
+                                <span class="evenement-heure">09:00</span>
+                                <span class="evenement-titre">Réunion équipe</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">3</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">4</span>
+                            <div class="evenement evenement-vert">
+                                <span class="evenement-heure">14:00</span>
+                                <span class="evenement-titre">Échéance rapport</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">5</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">6</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">7</span>
+                        </div>
+                        <!-- Semaine 2 -->
+                        <div class="jour-cellule">
+                            <span class="jour-numero">8</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">9</span>
+                            <div class="evenement evenement-orange">
+                                <span class="evenement-heure">10:00</span>
+                                <span class="evenement-titre">Entretien stagiaire</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">10</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">11</span>
+                            <div class="evenement evenement-violet">
+                                <span class="evenement-heure">15:00</span>
+                                <span class="evenement-titre">Évaluation mensuelle</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">12</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">13</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">14</span>
+                        </div>
+                        <!-- Semaine 3 -->
+                        <div class="jour-cellule">
+                            <span class="jour-numero">15</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">16</span>
+                            <div class="evenement evenement-rouge">
+                                <span class="evenement-heure">18:00</span>
+                                <span class="evenement-titre">Livrable final</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule jour-actif">
+                            <span class="jour-numero">17</span>
+                            <div class="evenement evenement-bleu">
+                                <span class="evenement-heure">09:00</span>
+                                <span class="evenement-titre">Réunion planning</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">18</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">19</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">20</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">21</span>
+                        </div>
+                        <!-- Semaine 4 -->
+                        <div class="jour-cellule">
+                            <span class="jour-numero">22</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">23</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">24</span>
+                            <div class="evenement evenement-vert">
+                                <span class="evenement-heure">14:00</span>
+                                <span class="evenement-titre">Échéance projet</span>
+                            </div>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">25</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">26</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">27</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">28</span>
+                        </div>
+                        <!-- Semaine 5 -->
+                        <div class="jour-cellule">
+                            <span class="jour-numero">29</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">30</span>
+                        </div>
+                        <div class="jour-cellule">
+                            <span class="jour-numero">31</span>
+                        </div>
+                        <div class="jour-cellule vide"></div>
+                        <div class="jour-cellule vide"></div>
+                        <div class="jour-cellule vide"></div>
+                        <div class="jour-cellule vide"></div>
+                    </div>
+                </div>
+
+                <!-- Légende -->
+                <div class="calendrier-legende">
+                    <div class="legende-item">
+                        <span class="legende-pastille bleu"></span>
+                        <span class="legende-texte">Réunion</span>
+                    </div>
+                    <div class="legende-item">
+                        <span class="legende-pastille vert"></span>
+                        <span class="legende-texte">Échéance</span>
+                    </div>
+                    <div class="legende-item">
+                        <span class="legende-pastille orange"></span>
+                        <span class="legende-texte">Entretien</span>
+                    </div>
+                    <div class="legende-item">
+                        <span class="legende-pastille violet"></span>
+                        <span class="legende-texte">Évaluation</span>
+                    </div>
+                    <div class="legende-item">
+                        <span class="legende-pastille rouge"></span>
+                        <span class="legende-texte">Livrable</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNE DROITE -->
+        <div class="colonne-droite">
+            <!-- ÉVÉNEMENTS DU JOUR -->
+            <div class="card-laterale evenements-jour-card">
+                <h3>Événements du 17 juillet 2026</h3>
+                <div class="evenements-liste">
+                    <div class="evenement-jour-item">
+                        <span class="evenement-heure">09:00</span>
+                        <span class="evenement-pastille bleu"></span>
+                        <div class="evenement-info">
+                            <div class="evenement-titre">Réunion planning</div>
+                            <div class="evenement-desc">Réunion mensuelle avec l'équipe</div>
+                        </div>
+                        <span class="badge-type bleu">Réunion</span>
+                    </div>
+                    <div class="evenement-jour-item">
+                        <span class="evenement-heure">11:00</span>
+                        <span class="evenement-pastille vert"></span>
+                        <div class="evenement-info">
+                            <div class="evenement-titre">Échéance rapport</div>
+                            <div class="evenement-desc">Rapport hebdo à rendre</div>
+                        </div>
+                        <span class="badge-type vert">Échéance</span>
+                    </div>
+                    <div class="evenement-jour-item">
+                        <span class="evenement-heure">14:30</span>
+                        <span class="evenement-pastille orange"></span>
+                        <div class="evenement-info">
+                            <div class="evenement-titre">Entretien stagiaire</div>
+                            <div class="evenement-desc">Point avec Jean Dupont</div>
+                        </div>
+                        <span class="badge-type orange">Entretien</span>
+                    </div>
+                </div>
+                <button class="btn-voir-tout">Voir tout le jour</button>
+            </div>
+
+            <!-- PROCHAINS ÉVÉNEMENTS -->
+            <div class="card-laterale prochains-card">
+                <div class="card-header">
+                    <h3>Prochains événements</h3>
+                    <a href="#" class="voir-tout">Voir tout</a>
+                </div>
+                <div class="prochains-liste">
+                    <div class="prochain-item">
+                        <div class="prochain-date">
+                            <span class="prochain-jour">18</span>
+                            <span class="prochain-mois">Juil</span>
+                        </div>
+                        <div class="prochain-info">
+                            <div class="prochain-titre">Évaluation mensuelle</div>
+                            <div class="prochain-desc">Évaluation de Marie Curie</div>
+                        </div>
+                        <div class="prochain-droite">
+                            <span class="badge-type violet">Évaluation</span>
+                            <span class="prochain-delai">Demain</span>
+                        </div>
+                    </div>
+                    <div class="prochain-item">
+                        <div class="prochain-date">
+                            <span class="prochain-jour">20</span>
+                            <span class="prochain-mois">Juil</span>
+                        </div>
+                        <div class="prochain-info">
+                            <div class="prochain-titre">Livrable final</div>
+                            <div class="prochain-desc">Projet de Pierre Martin</div>
+                        </div>
+                        <div class="prochain-droite">
+                            <span class="badge-type rouge">Livrable</span>
+                            <span class="prochain-delai">Dans 3 jours</span>
+                        </div>
+                    </div>
+                    <div class="prochain-item">
+                        <div class="prochain-date">
+                            <span class="prochain-jour">22</span>
+                            <span class="prochain-mois">Juil</span>
+                        </div>
+                        <div class="prochain-info">
+                            <div class="prochain-titre">Réunion équipe</div>
+                            <div class="prochain-desc">Point hebdomadaire</div>
+                        </div>
+                        <div class="prochain-droite">
+                            <span class="badge-type bleu">Réunion</span>
+                            <span class="prochain-delai">Dans 5 jours</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILTRES D'AFFICHAGE -->
+            <div class="card-laterale filtres-card">
+                <h3>Filtres d'affichage</h3>
+                <div class="filtres-grid">
+                    <div class="filtre-groupe">
+                        <label class="filtre-label">Type d'événement</label>
+                        <select class="filtre-select">
+                            <option value="">Tous</option>
+                            <option>Réunion</option>
+                            <option>Échéance</option>
+                            <option>Entretien</option>
+                            <option>Évaluation</option>
+                            <option>Livrable</option>
+                        </select>
+                    </div>
+                    <div class="filtre-groupe">
+                        <label class="filtre-label">Encadreur</label>
+                        <select class="filtre-select">
+                            <option value="">Tous</option>
+                            <option>M. Dupont</option>
+                            <option>Mme. Martin</option>
+                            <option>M. Bernard</option>
+                        </select>
+                    </div>
+                    <div class="filtre-groupe">
+                        <label class="filtre-label">Service</label>
+                        <select class="filtre-select">
+                            <option value="">Tous</option>
+                            <option>Développement</option>
+                            <option>Marketing</option>
+                            <option>RH</option>
+                        </select>
+                    </div>
+                    <div class="filtre-groupe">
+                        <label class="filtre-label">Statut</label>
+                        <select class="filtre-select">
+                            <option value="">Tous</option>
+                            <option>À venir</option>
+                            <option>En cours</option>
+                            <option>Terminé</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. BLOC INFÉRIEUR -->
+    <section class="bloc-inferieur">
+        <!-- ÉCHÉANCES À VENIR -->
+        <div class="bloc-card echeances-card">
+            <div class="card-header">
+                <h3>Échéances à venir</h3>
+                <a href="#" class="voir-tout">Voir tout</a>
+            </div>
+            <div class="echeances-liste">
+                <div class="echeance-item">
+                    <div class="echeance-icone pdf"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div class="echeance-info">
+                        <div class="echeance-nom">Rapport final</div>
+                        <div class="echeance-date">18/07/2026</div>
+                    </div>
+                    <span class="echeance-delai urgent">Demain</span>
+                </div>
+                <div class="echeance-item">
+                    <div class="echeance-icone word"><i class="fa-solid fa-file-word"></i></div>
+                    <div class="echeance-info">
+                        <div class="echeance-nom">Plan de projet</div>
+                        <div class="echeance-date">20/07/2026</div>
+                    </div>
+                    <span class="echeance-delai moyen">Dans 3 jours</span>
+                </div>
+                <div class="echeance-item">
+                    <div class="echeance-icone excel"><i class="fa-solid fa-file-excel"></i></div>
+                    <div class="echeance-info">
+                        <div class="echeance-nom">Feuille de temps</div>
+                        <div class="echeance-date">22/07/2026</div>
+                    </div>
+                    <span class="echeance-delai normal">Dans 5 jours</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVITÉS RÉCENTES -->
+        <div class="bloc-card activites-card">
+            <div class="card-header">
+                <h3>Activités récentes</h3>
+                <a href="#" class="voir-tout">Voir tout</a>
+            </div>
+            <div class="activites-liste">
+                <div class="activite-item">
+                    <div class="activite-icone vert"><i class="fa-solid fa-check"></i></div>
+                    <div class="activite-content">
+                        <div class="activite-titre">Rapport validé</div>
+                        <div class="activite-meta">Marie Abomo • 17/07/2026 14:30</div>
+                        <div class="activite-desc">Validation du rapport de Jean Dupont</div>
+                    </div>
+                </div>
+                <div class="activite-item">
+                    <div class="activite-icone bleu"><i class="fa-solid fa-calendar-plus"></i></div>
+                    <div class="activite-content">
+                        <div class="activite-titre">Réunion planifiée</div>
+                        <div class="activite-meta">Système • 17/07/2026 09:00</div>
+                        <div class="activite-desc">Réunion planning ajoutée au calendrier</div>
+                    </div>
+                </div>
+                <div class="activite-item">
+                    <div class="activite-icone orange"><i class="fa-solid fa-file-upload"></i></div>
+                    <div class="activite-content">
+                        <div class="activite-titre">Document déposé</div>
+                        <div class="activite-meta">Marie Curie • 16/07/2026 16:45</div>
+                        <div class="activite-desc">Livraison du rapport hebdo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

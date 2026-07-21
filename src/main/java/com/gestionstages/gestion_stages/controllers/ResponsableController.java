@@ -472,8 +472,55 @@ public String afficherArchives(Model model) {
         model.addAttribute("servicesList", servicesList);
         model.addAttribute("encadreursList", encadreursList);
         model.addAttribute("responsable", responsable);
-        
+
+        // Échéances des 7 prochains jours
+        LocalDate aujourdHui = LocalDate.now();
+
+        List<Stage> echeances = stages.stream()
+            .filter(s -> s.getDateFin() != null)
+            .sorted(Comparator.comparing(Stage::getDateFin))
+            .limit(5)
+            .collect(Collectors.toList());
+
+        model.addAttribute("echeances", echeances);
+
+        // Activités récentes
+        List<Notification> activitesRecentes =
+            notificationRepository.findAllByOrderByDateEnvoiDesc()
+            .stream()
+            .limit(5)
+            .collect(Collectors.toList());
+
+        model.addAttribute("activitesRecentes", activitesRecentes);
+
+        // Répartition par service
+        Map<String, Long> repartitionServices =
+            stages.stream()
+                .filter(s -> s.getService() != null)
+                .collect(Collectors.groupingBy(
+                    s -> s.getService().getNom(),
+                    Collectors.counting()
+                ));
+
+        model.addAttribute("repartitionServices", repartitionServices);
+
+        // Affectations par encadreur
+        Map<String, Long> affectationsParEncadreur =
+            stages.stream()
+                .filter(s -> s.getEncadreur() != null)
+                .collect(Collectors.groupingBy(
+                    s -> s.getEncadreur().getUtilisateur().getPrenom()
+                        + " "
+                        + s.getEncadreur().getUtilisateur().getNom(),
+                    Collectors.counting()
+                ));
+
+        model.addAttribute(
+            "affectationsParEncadreur",
+            affectationsParEncadreur
+        );
         return "responsable/stagiaires";
+
     }
 
 @GetMapping("/dossiers")
@@ -490,30 +537,5 @@ public String afficherPlanning(Model model) {
     return "responsable/planning";
 }
 
-@GetMapping("/suivi")
-public String afficherSuivi(Model model) {
-    model.addAttribute("activePage", "suivi");
-    model.addAttribute("stages", stageRepository.findByStatut(Stage.StatutStage.en_cours));
-    return "responsable/suivi";
-}
 
-@GetMapping("/notifications")
-public String afficherNotificationsResp(Model model) {
-    model.addAttribute("activePage", "notifications");
-    return "responsable/notifications";
-}
-
-@GetMapping("/rapports")
-public String afficherRapportsResp(Model model) {
-    model.addAttribute("activePage", "rapports");
-    model.addAttribute("totalStagiaires", stagiaireRepository.count());
-    model.addAttribute("totalStages", stageRepository.count());
-    return "responsable/rapports";
-}
-
-@GetMapping("/parametres")
-public String afficherParametresResp(Model model) {
-    model.addAttribute("activePage", "parametres");
-    return "responsable/parametres";
-}
 }

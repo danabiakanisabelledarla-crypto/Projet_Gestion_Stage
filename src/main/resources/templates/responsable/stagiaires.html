@@ -11,28 +11,37 @@
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 
 <div class="contenu-principal page-stagiaires">
-    <!-- 1. HERO HEADER -->
-    <section class="hero-card">
-        <div class="hero-gauche">
-            <div class="hero-icone"><i class="fa-solid fa-user-graduate"></i></div>
-            <div>
-                <h1 class="hero-titre">Gestion des stagiaires</h1>
-                <div class="hero-sous-titre">Gérez les affectations, le suivi et la clôture des stages.</div>
+    <!-- 1. HEADER -->
+    <section class="page-header">
+        <div class="header-gauche">
+            <div class="header-icon-wrapper">
+                <i class="fa-solid fa-users-gear"></i>
+            </div>
+            <div class="header-titre-section">
+                <h1 class="page-titre">Gestion des stagiaires</h1>
+                <p class="page-description">Suivez, affectez, accompagnez et clôturez les stages en toute efficacité.</p>
+                <div class="fil-ariane">
+                    <a th:href="@{/responsable/dashboard}" class="ariane-link">Accueil</a>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Responsable</span>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Stagiaires</span>
+                </div>
             </div>
         </div>
-        <div class="hero-droite">
+        <div class="header-droite">
             <button class="header-icon-btn" title="Notifications">
                 <i class="fa-regular fa-bell"></i>
-                <span class="notif-dot" th:text="${notificationsCount}">3</span>
+                <span class="notif-dot">3</span>
             </button>
             <button class="header-icon-btn" title="Messages">
                 <i class="fa-regular fa-envelope"></i>
-                <span class="notif-dot" th:text="${messagesCount}">5</span>
+                <span class="notif-dot">5</span>
             </button>
             <div class="header-user">
-                <div class="header-avatar" th:text="${responsable.prenom.substring(0,1).toUpperCase()}">R</div>
-                <div>
-                    <div class="header-user-nom" th:text="${responsable.prenom + ' ' + responsable.nom}">Responsable</div>
+                <div class="header-avatar">M</div>
+                <div class="header-user-info">
+                    <div class="header-user-nom">Marie Abomo</div>
                     <div class="header-user-role">Responsable</div>
                 </div>
                 <i class="fa-solid fa-chevron-down header-arrow"></i>
@@ -40,175 +49,367 @@
         </div>
     </section>
 
-    <!-- 2. GRILLE 5 STATS -->
-    <section class="grille-stats">
-        <div class="carte-stat bleu">
-            <div class="stat-icone bleu"><i class="fa-solid fa-user-graduate"></i></div>
-            <div class="stat-info">
-                <div class="stat-libelle">Total des stagiaires</div>
-                <div class="stat-valeur" th:text="${totalStagiaires}">38</div>
-                <div class="stat-evolution">Inscrits</div>
+    <!-- 2. CARTES STATISTIQUE -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon bleu"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Total des stagiaires</div>
+                <div class="stat-value" th:text="${totalStagiaires}">36</div>
+                <div class="stat-sub">Toutes périodes</div>
             </div>
         </div>
-        <div class="carte-stat orange">
-            <div class="stat-icone orange"><i class="fa-solid fa-spinner"></i></div>
-            <div class="stat-info">
-                <div class="stat-libelle">Stages en cours</div>
-                <div class="stat-valeur" th:text="${enCours}">21</div>
-                <div class="stat-evolution">Actifs</div>
+        <div class="stat-card">
+            <div class="stat-icon vert"><i class="fa-solid fa-user-check"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Stages en cours</div>
+                <div class="stat-value" th:text="${enCours}">18</div>
+                <div class="stat-sub">50 % du total</div>
             </div>
         </div>
-        <div class="carte-stat vert">
-            <div class="stat-icone vert"><i class="fa-solid fa-circle-check"></i></div>
-            <div class="stat-info">
-                <div class="stat-libelle">Stages clôturés</div>
-                <div class="stat-valeur" th:text="${clotures}">17</div>
-                <div class="stat-evolution">Terminés</div>
+        <div class="stat-card">
+            <div class="stat-icon violet"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Stages clôturés</div>
+                <div class="stat-value" th:text="${clotures}">16</div>
+                <div class="stat-sub">Terminés</div>
             </div>
         </div>
-        <div class="carte-stat bleu">
-            <div class="stat-icone bleu"><i class="fa-solid fa-user-tie"></i></div>
-            <div class="stat-info">
-                <div class="stat-libelle">Affectations</div>
-                <div class="stat-valeur" th:text="${affectations}">38</div>
-                <div class="stat-evolution">Réalisées</div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-calendar-plus"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">À affecter</div>
+                <div class="stat-value">4</div>
+                <div class="stat-sub">En attente d'encadreur</div>
             </div>
         </div>
-        <div class="carte-stat violet">
-            <div class="stat-icone violet"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="stat-info">
-                <div class="stat-libelle">Progression moyenne</div>
-                <div class="stat-valeur" th:text="${progressionMoyenne + '%'}">82%</div>
-                <div class="barre-progress"><span th:style="'width:' + ${progressionMoyenne} + '%'"></span></div>
+        <div class="stat-card">
+            <div class="stat-icon rouge"><i class="fa-regular fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Échéances à venir</div>
+                <div class="stat-value">7</div>
+                <div class="stat-sub">Dans les 7 prochains jours</div>
             </div>
         </div>
     </section>
 
-    <!-- 3. GRANDE CARTE TABLEAU -->
-    <section class="tableau-card">
-        <div class="tableau-header-titre">
-            <h2>Liste des stagiaires</h2>
-            <p>Consultez les affectations, le suivi et la clôture de tous les stages.</p>
-        </div>
+    <!-- 3. GRANDE ZONE CENTRALE -->
+    <section class="zone-centrale">
+        <!-- COLONNE GAUCHE - TABLEAU -->
+        <div class="colonne-gauche">
+            <div class="tableau-card">
+                <div class="tableau-header">
+                    <h2>Liste des stagiaires</h2>
+                </div>
 
-        <!-- 4. BARRE DE FILTRES -->
-        <div class="barre-filtres">
-            <div class="champ-recherche">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="filtreRecherche" placeholder="Rechercher un stagiaire..." oninput="filtrerTableau()">
+                <!-- BARRE DE FILTRES -->
+                <div class="barre-filtres">
+                    <div class="champ-recherche">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="filtreRecherche" placeholder="Rechercher un stagiaire...">
+                    </div>
+                    <select class="filtre-select" id="filtreStatut">
+                        <option value="">Statut</option>
+                        <option value="actif">En cours</option>
+                        <option value="termine">Clôturé</option>
+                        <option value="abandonne">Suspendu</option>
+                    </select>
+                    <select class="filtre-select" id="filtreFiliere">
+                        <option value="">Filière</option>
+                    </select>
+                    <select class="filtre-select" id="filtreEncadreur">
+                        <option value="">Encadreur</option>
+                    </select>
+                    <select class="filtre-select" id="filtreNiveau">
+                        <option value="">Niveau</option>
+                        <option value="Licence 3">Licence 3</option>
+                        <option value="Master 1">Master 1</option>
+                        <option value="Master 2">Master 2</option>
+                    </select>
+                    
+                    <button class="btn-filtrer"><i class="fa-solid fa-filter"></i> Filtrer</button>
+                </div>
+
+                <!-- TABLEAU -->
+                <div class="tableau-wrapper">
+                    <table class="table-stagiaires">
+                        <thead>
+                            <tr>
+                                <th>Stagiaire</th>
+                                <th>Filière</th>
+                                <th>Niveau</th>
+                                <th>Encadreur</th>
+                                <th>Service</th>
+                                <th>Statut</th>
+                                <th>Début</th>
+                                <th>Fin</th>
+                                <th>Progression</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corps-tableau">
+                            <tr th:each="stagiaire, iter : ${stagiaires}">
+                                <td class="stagiaire-cell">
+                                    <div class="stagiaire-avatar">A</div>
+                                    <div class="stagiaire-info">
+                                        <div class="stagiaire-nom" th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">-</div>
+                                        <div class="stagiaire-email" th:text="${stagiaire.utilisateur.email}">-</div>
+                                    </div>
+                                </td>
+                                <td class="filiere-cell">—</td>
+                                <td class="niveau-cell">—</td>
+                                <td class="encadreur-cell">—</td>
+                                <td class="service-cell">—</td>
+                                <td class="statut-cell">
+                                    <span class="badge-statut badge-actif">En cours</span>
+                                </td>
+                                <td class="date-cell">—</td>
+                                <td class="date-cell">—</td>
+                                <td class="progression-cell">
+                                    <div class="progression-bar-wrapper">
+                                        <div class="progression-bar" style="width: 50%"></div>
+                                    </div>
+                                    <span class="progression-pct">50%</span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn-action btn-plus" title="Autres"><i class="fa-solid fa-ellipsis"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${#lists.isEmpty(stagiaires)}" class="tableau-vide">Aucun stagiaire pour le moment.</div>
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="pagination">
+                    <span class="pagination-info">Affichage de 1 à 8 sur 36 stagiaires</span>
+                    <div class="pagination-btns">
+                        <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="page-btn actif">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
-            <select class="filtre-select" id="filtreService" onchange="filtrerTableau()">
-                <option value="">Service</option>
-                <option th:each="s : ${servicesList}" th:value="${s}" th:text="${s}">Service</option>
-            </select>
-            <select class="filtre-select" id="filtreEncadreur" onchange="filtrerTableau()">
-                <option value="">Encadreur</option>
-                <option th:each="e : ${encadreursList}" th:value="${e}" th:text="${e}">Encadreur</option>
-            </select>
-            <select class="filtre-select" id="filtreStatut" onchange="filtrerTableau()">
-                <option value="">Statut</option>
-                <option value="actif">En cours</option>
-                <option value="termine">Clôturé</option>
-                <option value="abandonne">Suspendu</option>
-            </select>
-            <button class="btn-filtrer" onclick="filtrerTableau()"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
 
-        <!-- 5. TABLEAU -->
-        <div class="tableau-wrapper">
-            <table class="table-stagiaires">
-                <thead>
-                    <tr>
-                        <th>Stagiaire</th>
-                        <th>Matricule</th>
-                        <th>Service</th>
-                        <th>Encadreur</th>
-                        <th>Progression</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="corps-tableau">
-                    <tr th:each="stagiaire, iter : ${stagiaires}"
-                        th:data-nom="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}"
-                        th:data-email="${stagiaire.utilisateur.email}"
-                        th:data-matricule="${stagiaire.matricule}"
-                        th:data-service="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).service?.nom ?: '—') : '—'}"
-                        th:data-encadreur="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.prenom + ' ' + stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.nom ?: '—') : '—'}"
-                        th:data-progression="${stagiaire.progression}"
-                        th:data-statut="${stagiaire.statut.name()}">
-                        <td class="stagiaire-cell-td">
-                            <div class="stagiaire-avatar" 
-                                 th:style="${iter.index % 4 == 0 ? 'background:#2563EB' : iter.index % 4 == 1 ? 'background:#7C3AED' : iter.index % 4 == 2 ? 'background:#DB2777' : 'background:#059669'}"
-                                 th:text="${#strings.substring(stagiaire.utilisateur.prenom,0,1)}"></div>
-                            <div>
-                                <div class="stagiaire-nom" th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">-</div>
-                                <div class="stagiaire-email" th:text="${stagiaire.utilisateur.email}">-</div>
-                                <div class="stagiaire-matricule" th:text="${stagiaire.matricule}">STG-2026-001</div>
-                            </div>
-                        </td>
-                        <td class="matricule-cell" th:text="${stagiaire.matricule}">STG-2026-001</td>
-                        <td class="service-cell">
-                            <span th:text="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).service?.nom ?: '—') : '—'}">—</span>
-                        </td>
-                        <td class="encadreur-cell">
-                            <i class="fa-solid fa-user-tie"></i>
-                            <span th:text="${stagiaire.statut == 'actif' ? (stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.prenom + ' ' + stages.?[s.getStagiaire().getId() == stagiaire.id].get(0).encadreur?.utilisateur?.nom ?: '—') : '—'}">—</span>
-                        </td>
-                        <td class="progression-cell">
-                            <div class="progression-bar-wrapper">
-                                <div class="progression-bar" th:style="'width:' + ${stagiaire.progression} + '%'"></div>
-                            </div>
-                            <span class="progression-pct" th:text="${stagiaire.progression + '%'}">80%</span>
-                        </td>
-                        <td class="statut-cell">
-                            <span th:class="'badge-statut badge-' + ${stagiaire.statut.name()}"
-                                  th:text="${stagiaire.statut == 'actif' ? 'En cours' : (stagiaire.statut == 'termine' ? 'Clôturé' : 'Suspendu')}">En cours</span>
-                        </td>
-                        <td class="actions-cell">
-                            <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                            <button class="btn-action btn-affecter" title="Affecter"><i class="fa-solid fa-user-plus"></i></button>
-                            <button class="btn-action btn-suivi" title="Suivi"><i class="fa-solid fa-chart-line"></i></button>
-                            <button class="btn-action btn-cloturer" title="Clôturer"><i class="fa-solid fa-box-archive"></i></button>
-                            <button class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div th:if="${#lists.isEmpty(stagiaires)}" class="tableau-vide">Aucun stagiaire pour le moment.</div>
+        <!-- COLONNE DROITE - ACTIONS -->
+        <div class="colonne-droite">
+            <!-- ACTIONS RAPIDES -->
+            <div class="card-laterale actions-rapides">
+                <h3>Actions rapides</h3>
+                <div class="actions-grid">
+                    <div class="action-card bleu">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Affecter un stagiaire</div>
+                            <div class="action-desc">Assigner un encadreur</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right action-arrow"></i>
+                    </div>
+                    <div class="action-card vert">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Clôturer un stage</div>
+                            <div class="action-desc">Finaliser le stage</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right action-arrow"></i>
+                    </div>
+                    <div class="action-card orange">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Suivi des stagiaires</div>
+                            <div class="action-desc">Voir la progression</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right action-arrow"></i>
+                    </div>
+                    <div class="action-card violet">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Rapports & statistiques</div>
+                            <div class="action-desc">Analyser les données</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right action-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉCHÉANCES -->
+            <div class="card-laterale echeances-card">
+                <div class="card-header">
+                    <h3>Échéances des stages à venir</h3>
+                    <a href="#" class="voir-tout">Voir tout</a>
+                </div>
+                <div class="echeances-liste">
+                    <div class="echeance-item">
+                        <div class="calendrier-badge bleu">
+                            <span class="cal-jour">15</span>
+                            <span class="cal-mois">Juil</span>
+                        </div>
+                        <div class="echeance-info">
+                            <div class="echeance-nom">Jean Dupont</div>
+                            <div class="echeance-service">Développement</div>
+                        </div>
+                        <div class="echeance-delai">Fin dans 11 jours</div>
+                    </div>
+                    <div class="echeance-item">
+                        <div class="calendrier-badge orange">
+                            <span class="cal-jour">18</span>
+                            <span class="cal-mois">Juil</span>
+                        </div>
+                        <div class="echeance-info">
+                            <div class="echeance-nom">Marie Curie</div>
+                            <div class="echeance-service">Marketing</div>
+                        </div>
+                        <div class="echeance-delai">Fin dans 14 jours</div>
+                    </div>
+                    <div class="echeance-item">
+                        <div class="calendrier-badge rouge">
+                            <span class="cal-jour">20</span>
+                            <span class="cal-mois">Juil</span>
+                        </div>
+                        <div class="echeance-info">
+                            <div class="echeance-nom">Pierre Martin</div>
+                            <div class="echeance-service">RH</div>
+                        </div>
+                        <div class="echeance-delai">Fin dans 16 jours</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVITÉS RÉCENTES -->
+            <div class="card-laterale activites-card">
+                <div class="card-header">
+                    <h3>Activités récentes</h3>
+                    <a href="#" class="voir-tout">Voir tout</a>
+                </div>
+                <div class="activites-liste">
+                    <div class="activite-item">
+                        <div class="activite-icone vert">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="activite-content">
+                            <div class="activite-titre">Stage clôturé</div>
+                            <div class="activite-desc">Stage de Sophie Bernard finalisé</div>
+                        </div>
+                        <div class="activite-date">Il y a 2h</div>
+                    </div>
+                    <div class="activite-item">
+                        <div class="activite-icone bleu">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div class="activite-content">
+                            <div class="activite-titre">Affectation effectuée</div>
+                            <div class="activite-desc">Lucas Durand affecté à M. Dupont</div>
+                        </div>
+                        <div class="activite-date">Il y a 5h</div>
+                    </div>
+                    <div class="activite-item">
+                        <div class="activite-icone orange">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div class="activite-content">
+                            <div class="activite-titre">Nouvelle évaluation</div>
+                            <div class="activite-desc">Évaluation mensuelle disponible</div>
+                        </div>
+                        <div class="activite-date">Hier</div>
+                    </div>
+                    <div class="activite-item">
+                        <div class="activite-icone violet">
+                            <i class="fa-solid fa-file-upload"></i>
+                        </div>
+                        <div class="activite-content">
+                            <div class="activite-titre">Nouveau livrable</div>
+                            <div class="activite-desc">Rapport hebdo déposé par Emma</div>
+                        </div>
+                        <div class="activite-date">Il y a 2j</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. BLOC INFÉRIEUR -->
+    <section class="bloc-inferieur">
+        <!-- AFFECTATIONS PAR ENCADREUR -->
+        <div class="bloc-card affectations-card">
+            <h3>Affectations par encadreur</h3>
+            <div class="affectations-liste">
+                <div class="affectation-item">
+                    <div class="affectation-nom">M. Dupont Jean</div>
+                    <div class="affectation-bar-wrapper">
+                        <div class="affectation-bar bleu" style="width: 85%"></div>
+                    </div>
+                    <div class="affectation-nombre">8 stagiaires</div>
+                </div>
+                <div class="affectation-item">
+                    <div class="affectation-nom">Mme. Martin Sophie</div>
+                    <div class="affectation-bar-wrapper">
+                        <div class="affectation-bar vert" style="width: 70%"></div>
+                    </div>
+                    <div class="affectation-nombre">6 stagiaires</div>
+                </div>
+                <div class="affectation-item">
+                    <div class="affectation-nom">M. Bernard Pierre</div>
+                    <div class="affectation-bar-wrapper">
+                        <div class="affectation-bar orange" style="width: 55%"></div>
+                    </div>
+                    <div class="affectation-nombre">5 stagiaires</div>
+                </div>
+                <div class="affectation-item">
+                    <div class="affectation-nom">Non affecté</div>
+                    <div class="affectation-bar-wrapper">
+                        <div class="affectation-bar rouge" style="width: 25%"></div>
+                    </div>
+                    <div class="affectation-nombre">4 stagiaires</div>
+                </div>
+            </div>
         </div>
 
-        <!-- 6. PAGINATION -->
-        <div class="pagination">
-            <span class="pagination-info" th:text="'Affichage de 1 à ' + ${#lists.isEmpty(stagiaires) ? 0 : (stagiaires.size() < 8 ? stagiaires.size() : 8)} + ' sur ' + ${totalStagiaires} + ' stagiaires'">Affichage de 1 à 8 sur 38 stagiaires</span>
-            <div class="pagination-btns">
-                <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
-                <button class="page-btn actif">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
+        <!-- SUIVI GLOBAL -->
+        <div class="bloc-card suivi-card">
+            <h3>Suivi global des stages</h3>
+            <div class="suivi-content">
+                <div class="donut-chart-wrapper">
+                    <svg class="donut-chart" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#2563EB" stroke-width="8" 
+                                stroke-dasharray="251.2" stroke-dashoffset="87.92" 
+                                transform="rotate(-90 50 50)" class="donut-progress"/>
+                    </svg>
+                    <div class="donut-center">
+                        <div class="donut-value">65%</div>
+                        <div class="donut-label">Moyenne</div>
+                    </div>
+                </div>
+                <div class="suivi-indicateurs">
+                    <div class="indicateur-item">
+                        <div class="indicateur-label">Objectifs atteints</div>
+                        <div class="indicateur-bar-wrapper">
+                            <div class="indicateur-bar bleu" style="width: 78%"></div>
+                        </div>
+                        <div class="indicateur-pct">78%</div>
+                    </div>
+                    <div class="indicateur-item">
+                        <div class="indicateur-label">Livrables remis</div>
+                        <div class="indicateur-bar-wrapper">
+                            <div class="indicateur-bar vert" style="width: 85%"></div>
+                        </div>
+                        <div class="indicateur-pct">85%</div>
+                    </div>
+                    <div class="indicateur-item">
+                        <div class="indicateur-label">Évaluations réalisées</div>
+                        <div class="indicateur-bar-wrapper">
+                            <div class="indicateur-bar violet" style="width: 62%"></div>
+                        </div>
+                        <div class="indicateur-pct">62%</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 </div>
-
-<script>
-function filtrerTableau() {
-    const recherche = document.getElementById('filtreRecherche').value.toLowerCase();
-    const service = document.getElementById('filtreService').value.toLowerCase();
-    const encadreur = document.getElementById('filtreEncadreur').value.toLowerCase();
-    const statut = document.getElementById('filtreStatut').value.toLowerCase();
-
-    document.querySelectorAll('#corps-tableau tr').forEach(ligne => {
-        const ok = (!recherche || (ligne.dataset.nom||'').toLowerCase().includes(recherche) 
-                              || (ligne.dataset.email||'').toLowerCase().includes(recherche)
-                              || (ligne.dataset.matricule||'').toLowerCase().includes(recherche))
-                && (!service || (ligne.dataset.service||'').toLowerCase().includes(service))
-                && (!encadreur || (ligne.dataset.encadreur||'').toLowerCase().includes(encadreur))
-                && (!statut || (ligne.dataset.statut||'').toLowerCase() === statut);
-        ligne.style.display = ok ? '' : 'none';
-    });
-}
-</script>
 </body>
 </html>

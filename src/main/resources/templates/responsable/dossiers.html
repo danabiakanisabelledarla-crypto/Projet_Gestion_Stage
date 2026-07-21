@@ -1,12 +1,553 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Dossiers</title>
-<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/admin-portal.css}"></head>
-<body class="portal-body">
+<head>
+    <meta charset="UTF-8">
+    <title>Dossiers des stagiaires</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-dossiers.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-<section class="portal-hero"><div class="portal-hero-text"><div class="portal-hero-eyebrow">Documents</div><h1>Gestion des dossiers</h1><p>Tous les documents administratifs et pédagogiques.</p></div></section>
-<div class="portal-table-card"><table class="portal-table"><thead><tr><th>Document</th><th>Type</th><th>Date</th><th>Actions</th></tr></thead>
-<tbody><tr th:each="d : ${documents}"><td th:text="${d.nomFichier}">doc</td><td th:text="${d.typeDocument}">type</td><td th:text="${#temporals.format(d.dateDepot,'dd/MM/yyyy')}">date</td>
-<td><a th:href="@{/documents/{id}(id=${d.id})}" class="btn-action download"><i class="fa-solid fa-download"></i></a></td></tr></tbody></table></div>
-</div></body></html>
+
+<div class="contenu-principal page-dossiers">
+    <!-- 1. HEADER -->
+    <section class="page-header">
+        <div class="header-gauche">
+            <div class="header-icon-wrapper">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <div class="header-titre-section">
+                <h1 class="page-titre">Dossiers des stagiaires</h1>
+                <p class="page-description">Gérez tous les documents administratifs et pédagogiques des stagiaires.</p>
+                <div class="fil-ariane">
+                    <a th:href="@{/responsable/dashboard}" class="ariane-link">Accueil</a>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Responsable</span>
+                    <span class="ariane-separateur">></span>
+                    <span class="ariane-courant">Dossiers</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-droite">
+            <button class="header-icon-btn" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notif-dot">5</span>
+            </button>
+            <button class="header-icon-btn" title="Messages">
+                <i class="fa-regular fa-envelope"></i>
+                <span class="notif-dot">3</span>
+            </button>
+            <div class="header-user">
+                <div class="header-avatar">M</div>
+                <div class="header-user-info">
+                    <div class="header-user-nom">Marie Abomo</div>
+                    <div class="header-user-role">Responsable</div>
+                </div>
+                <i class="fa-solid fa-chevron-down header-arrow"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. CARTES STATISTIQUES -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon bleu"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Total documents</div>
+                <div class="stat-value">245</div>
+                <div class="stat-sub">Tous types</div>
+            </div>
+            <svg class="mini-chart bleu" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,20 20,22 T40,18 T60,15 T80,12 T100,8" fill="none" stroke="#2563EB" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon vert"><i class="fa-solid fa-file-pdf"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Documents PDF</div>
+                <div class="stat-value">180</div>
+                <div class="stat-sub">73 % du total</div>
+            </div>
+            <svg class="mini-chart vert" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,22 20,20 T40,15 T60,12 T80,10 T100,5" fill="none" stroke="#22C55E" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon vert-clair"><i class="fa-solid fa-file-word"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Documents Word</div>
+                <div class="stat-value">35</div>
+                <div class="stat-sub">14 % du total</div>
+            </div>
+            <svg class="mini-chart vert-clair" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,20 20,18 T40,12 T60,10 T80,8 T100,5" fill="none" stroke="#10B981" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-file-excel"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Documents Excel</div>
+                <div class="stat-value">20</div>
+                <div class="stat-sub">8 % du total</div>
+            </div>
+            <svg class="mini-chart orange" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,18 20,15 T40,10 T60,8 T80,5 T100,3" fill="none" stroke="#F59E0B" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon violet"><i class="fa-solid fa-file-image"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Images</div>
+                <div class="stat-value">8</div>
+                <div class="stat-sub">3 % du total</div>
+            </div>
+            <svg class="mini-chart violet" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path d="M0,25 Q10,22 20,20 T40,15 T60,12 T80,10 T100,8" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon rouge"><i class="fa-solid fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">En attente</div>
+                <div class="stat-value">2</div>
+                <div class="stat-sub">À vérifier</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. ZONE CENTRALE -->
+    <section class="zone-centrale">
+        <!-- COLONNE GAUCHE - LISTE DES DOSSIERS -->
+        <div class="colonne-gauche">
+            <div class="tableau-card">
+                <div class="tableau-header">
+                    <h2>Liste des dossiers</h2>
+                </div>
+
+                <!-- BARRE D'OUTILS -->
+                <div class="barre-outils">
+                    <div class="champ-recherche">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Rechercher un stagiaire...">
+                    </div>
+                    <select class="filtre-select">
+                        <option value="">Service</option>
+                        <option>Développement</option>
+                        <option>Marketing</option>
+                        <option>RH</option>
+                    </select>
+                    <select class="filtre-select">
+                        <option value="">Encadreur</option>
+                        <option>M. Dupont</option>
+                        <option>Mme. Martin</option>
+                    </select>
+                    <select class="filtre-select">
+                        <option value="">Statut</option>
+                        <option>Complet</option>
+                        <option>Incomplet</option>
+                        <option>En attente</option>
+                    </select>
+                    <select class="filtre-select">
+                        <option value="">Année académique</option>
+                        <option>2025-2026</option>
+                        <option>2024-2025</option>
+                    </select>
+                    <button class="btn-filtrer"><i class="fa-solid fa-filter"></i> Filtrer</button>
+                    <button class="btn-exporter"><i class="fa-solid fa-download"></i> Exporter</button>
+                </div>
+
+                <!-- TABLEAU -->
+                <div class="tableau-wrapper">
+                    <table class="table-dossiers">
+                        <thead>
+                            <tr>
+                                <th>Stagiaire</th>
+                                <th>Matricule</th>
+                                <th>Service</th>
+                                <th>Encadreur</th>
+                                <th>Documents</th>
+                                <th>Dernière mise à jour</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="stagiaire-cell">
+                                    <div class="stagiaire-avatar" style="background: #2563EB">J</div>
+                                    <div class="stagiaire-info">
+                                        <div class="stagiaire-nom">Jean Dupont</div>
+                                        <div class="stagiaire-email">jean.dupont@email.com</div>
+                                    </div>
+                                </td>
+                                <td class="matricule-cell">STG-2025-001</td>
+                                <td class="service-cell">Développement</td>
+                                <td class="encadreur-cell">M. Dupont</td>
+                                <td class="documents-cell">
+                                    <span class="documents-count">10 documents</span>
+                                </td>
+                                <td class="date-cell">
+                                    <div class="date-principale">15/07/2026</div>
+                                    <div class="date-heure">14:30</div>
+                                </td>
+                                <td class="statut-cell">
+                                    <span class="badge-statut badge-complet">
+                                        <i class="fa-solid fa-check"></i> Complet
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn-action btn-download" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                    <button class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="stagiaire-cell">
+                                    <div class="stagiaire-avatar" style="background: #7C3AED">M</div>
+                                    <div class="stagiaire-info">
+                                        <div class="stagiaire-nom">Marie Curie</div>
+                                        <div class="stagiaire-email">marie.curie@email.com</div>
+                                    </div>
+                                </td>
+                                <td class="matricule-cell">STG-2025-002</td>
+                                <td class="service-cell">Marketing</td>
+                                <td class="encadreur-cell">Mme. Martin</td>
+                                <td class="documents-cell">
+                                    <span class="documents-count">8 documents</span>
+                                </td>
+                                <td class="date-cell">
+                                    <div class="date-principale">14/07/2026</div>
+                                    <div class="date-heure">10:15</div>
+                                </td>
+                                <td class="statut-cell">
+                                    <span class="badge-statut badge-incomplet">
+                                        <i class="fa-solid fa-exclamation"></i> Incomplet
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn-action btn-download" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                    <button class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="stagiaire-cell">
+                                    <div class="stagiaire-avatar" style="background: #DB2777">P</div>
+                                    <div class="stagiaire-info">
+                                        <div class="stagiaire-nom">Pierre Martin</div>
+                                        <div class="stagiaire-email">pierre.martin@email.com</div>
+                                    </div>
+                                </td>
+                                <td class="matricule-cell">STG-2025-003</td>
+                                <td class="service-cell">RH</td>
+                                <td class="encadreur-cell">M. Bernard</td>
+                                <td class="documents-cell">
+                                    <span class="documents-count">12 documents</span>
+                                </td>
+                                <td class="date-cell">
+                                    <div class="date-principale">13/07/2026</div>
+                                    <div class="date-heure">16:45</div>
+                                </td>
+                                <td class="statut-cell">
+                                    <span class="badge-statut badge-attente">
+                                        <i class="fa-solid fa-clock"></i> En attente
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-voir" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn-action btn-download" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                                    <button class="btn-action btn-plus" title="Plus"><i class="fa-solid fa-ellipsis"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="pagination">
+                    <span class="pagination-info">Affichage de 1 à 3 sur 45 dossiers</span>
+                    <div class="pagination-btns">
+                        <button class="page-btn prev-next"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="page-btn actif">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn prev-next"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNE DROITE -->
+        <div class="colonne-droite">
+            <!-- DÉTAILS DU DOSSIER -->
+            <div class="card-laterale details-card">
+                <div class="card-header">
+                    <h3>Détails du dossier</h3>
+                    <a href="#" class="voir-tout">Voir tout</a>
+                </div>
+                <div class="details-content">
+                    <div class="details-header">
+                        <div class="details-avatar" style="background: #2563EB">J</div>
+                        <div class="details-info">
+                            <div class="details-nom">Jean Dupont</div>
+                            <div class="details-email">jean.dupont@email.com</div>
+                        </div>
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Matricule</span>
+                            <span class="detail-value">STG-2025-001</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Service</span>
+                            <span class="detail-value">Développement</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Encadreur</span>
+                            <span class="detail-value">M. Dupont</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Statut</span>
+                            <span class="badge-statut badge-complet">
+                                <i class="fa-solid fa-check"></i> Complet
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="documents-liste">
+                    <div class="documents-header">
+                        <h4>Documents du dossier (10)</h4>
+                    </div>
+                    <div class="document-item">
+                        <div class="doc-icone pdf"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div class="doc-info">
+                            <div class="doc-nom">Convention de stage.pdf</div>
+                            <div class="doc-meta">15/07/2026 • v1.0 • 2.5 MB</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="doc-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                            <button class="doc-btn" title="Prévisualiser"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="document-item">
+                        <div class="doc-icone word"><i class="fa-solid fa-file-word"></i></div>
+                        <div class="doc-info">
+                            <div class="doc-nom">Rapport hebdo.docx</div>
+                            <div class="doc-meta">14/07/2026 • v2.1 • 1.2 MB</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="doc-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                            <button class="doc-btn" title="Prévisualiser"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="document-item">
+                        <div class="doc-icone excel"><i class="fa-solid fa-file-excel"></i></div>
+                        <div class="doc-info">
+                            <div class="doc-nom">Feuille de temps.xlsx</div>
+                            <div class="doc-meta">13/07/2026 • v1.0 • 0.8 MB</div>
+                        </div>
+                        <div class="doc-actions">
+                            <button class="doc-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                            <button class="doc-btn" title="Prévisualiser"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIONS RAPIDES -->
+            <div class="card-laterale actions-rapides">
+                <h3>Actions rapides</h3>
+                <div class="actions-grid">
+                    <div class="action-card bleu">
+                        <i class="fa-solid fa-upload"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Uploader un document</div>
+                        </div>
+                    </div>
+                    <div class="action-card bleu-clair">
+                        <i class="fa-solid fa-file-export"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Exporter le dossier</div>
+                        </div>
+                    </div>
+                    <div class="action-card rouge">
+                        <i class="fa-solid fa-trash"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Supprimer un document</div>
+                        </div>
+                    </div>
+                    <div class="action-card violet">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Partager le dossier</div>
+                        </div>
+                    </div>
+                    <div class="action-card orange">
+                        <i class="fa-solid fa-envelope"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Envoyer un rappel</div>
+                        </div>
+                    </div>
+                    <div class="action-card vert">
+                        <i class="fa-solid fa-check-double"></i>
+                        <div class="action-content">
+                            <div class="action-titre">Valider le dossier</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORIQUE -->
+            <div class="card-laterale historique-card">
+                <div class="card-header">
+                    <h3>Historique du dossier</h3>
+                    <a href="#" class="voir-tout">Voir tout</a>
+                </div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker vert">
+                            <i class="fa-solid fa-upload"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">15/07/2026 14:30</div>
+                            <div class="timeline-user">Marie Abomo</div>
+                            <div class="timeline-desc">Document "Convention de stage.pdf" ajouté</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bleu">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">14/07/2026 10:15</div>
+                            <div class="timeline-user">Jean Dupont</div>
+                            <div class="timeline-desc">Rapport hebdo téléchargé</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker violet">
+                            <i class="fa-solid fa-pen"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">13/07/2026 16:45</div>
+                            <div class="timeline-user">M. Dupont</div>
+                            <div class="timeline-desc">Feuille de temps modifiée</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker orange">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">12/07/2026 09:00</div>
+                            <div class="timeline-user">Système</div>
+                            <div class="timeline-desc">Dossier validé automatiquement</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. BLOC INFÉRIEUR -->
+    <section class="bloc-inferieur">
+        <!-- DERNIERS DÉPÔTS -->
+        <div class="bloc-card depots-card">
+            <div class="card-header">
+                <h3>Derniers dépôts</h3>
+                <a href="#" class="voir-tout">Voir tout</a>
+            </div>
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Stagiaire</th>
+                        <th>Date</th>
+                        <th>Heure</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-pdf doc-icon pdf"></i>
+                            <span>Convention.pdf</span>
+                        </td>
+                        <td>Jean Dupont</td>
+                        <td>15/07/2026</td>
+                        <td>14:30</td>
+                    </tr>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-word doc-icon word"></i>
+                            <span>Rapport.docx</span>
+                        </td>
+                        <td>Marie Curie</td>
+                        <td>14/07/2026</td>
+                        <td>10:15</td>
+                    </tr>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-excel doc-icon excel"></i>
+                            <span>Temps.xlsx</span>
+                        </td>
+                        <td>Pierre Martin</td>
+                        <td>13/07/2026</td>
+                        <td>16:45</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DOCUMENTS À VÉRIFIER -->
+        <div class="bloc-card verifier-card">
+            <div class="card-header">
+                <h3>Documents à vérifier</h3>
+                <a href="#" class="voir-tout">Voir tout</a>
+            </div>
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Stagiaire</th>
+                        <th>Échéance</th>
+                        <th>Priorité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-pdf doc-icon pdf"></i>
+                            <span>Attestation.pdf</span>
+                        </td>
+                        <td>Sophie Bernard</td>
+                        <td>16/07/2026</td>
+                        <td><span class="badge-priorite eleve">🔴 Élevée</span></td>
+                    </tr>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-word doc-icon word"></i>
+                            <span>Plan.docx</span>
+                        </td>
+                        <td>Lucas Durand</td>
+                        <td>18/07/2026</td>
+                        <td><span class="badge-priorite moyenne">🟠 Moyenne</span></td>
+                    </tr>
+                    <tr>
+                        <td class="doc-cell">
+                            <i class="fa-solid fa-file-pdf doc-icon pdf"></i>
+                            <span>Bilan.pdf</span>
+                        </td>
+                        <td>Emma Lemaire</td>
+                        <td>20/07/2026</td>
+                        <td><span class="badge-priorite faible">🟢 Faible</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+</body>
+</html>
