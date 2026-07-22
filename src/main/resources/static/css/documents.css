@@ -44,9 +44,9 @@
 
 /* ===== TWO-COLUMN LAYOUT ===== */
 .page-layout { display: flex; gap: 25px; align-items: flex-start; }
-.page-layout-left { flex: 1; min-width: 0; }
+.page-layout-left { flex: 1; min-width: 0; max-width: 65%; }
 .page-layout-right { width: 380px; flex-shrink: 0; }
-@media (max-width:1300px){ .page-layout { flex-direction: column; } .page-layout-right { width: 100%; } }
+@media (max-width:1300px){ .page-layout { flex-direction: column; } .page-layout-right { width: 100%; } .page-layout-left { max-width: 100%; } }
 
 /* ===== MAIN CARD ===== */
 .main-card { background: white; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); overflow: hidden; }

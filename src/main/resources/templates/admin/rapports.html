@@ -4,28 +4,125 @@
     <meta charset="UTF-8">
     <title>Rapports — Admin</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-rapports.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="portal-body">
+<body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
-    <div th:replace="~{fragments/admin-header :: header('')}"></div>
-    <section class="portal-hero">
-        <div class="portal-hero-text">
-            <div class="portal-hero-eyebrow">Analytique</div>
-            <h1>Rapports et statistiques</h1>
-            <p>Exportez les données et consultez les indicateurs clés de la plateforme.</p>
-            <div class="portal-hero-btns">
-                <a href="#" class="btn-hero-primary"><i class="fa-solid fa-file-pdf"></i> Export PDF</a>
-                <a href="#" class="btn-hero-outline"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
+<div class="contenu-principal">
+    <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- HEADER -->
+    <div class="rap-header">
+        <div class="rap-header-left">
+            <div class="rap-header-icon"><i class="fa-solid fa-chart-simple"></i></div>
+            <div>
+                <h1>Rapports et statistiques</h1>
+                <p class="rap-header-sub">Exportez les données et consultez les documents déjà générés.</p>
             </div>
         </div>
-    </section>
-    <div class="portal-stats">
-        <div class="portal-stat-card"><div class="number" th:text="${totalStagiaires}">0</div><div class="label">Stagiaires</div></div>
-        <div class="portal-stat-card"><div class="number" th:text="${totalStages}">0</div><div class="label">Stages</div></div>
-        <div class="portal-stat-card"><div class="number" th:text="${stagesTermines}">0</div><div class="label">Terminés</div></div>
-        <div class="portal-stat-card"><div class="number" th:text="${totalDocuments}">0</div><div class="label">Documents</div></div>
+        <div class="rap-header-right">
+            <button class="rap-btn-primary" onclick="alert('Export PDF en cours...')"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+            <button class="rap-btn-outline" onclick="alert('Export Excel en cours...')"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="rap-stats">
+        <div class="rap-stat-card bleu">
+            <div class="rap-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+            <div>
+                <div class="rap-stat-label">Stagiaires</div>
+                <div class="rap-stat-number" th:text="${totalStagiaires}">0</div>
+                <div class="rap-stat-desc">Total inscrits</div>
+            </div>
+        </div>
+        <div class="rap-stat-card vert">
+            <div class="rap-stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <div>
+                <div class="rap-stat-label">Stages</div>
+                <div class="rap-stat-number" th:text="${totalStages}">0</div>
+                <div class="rap-stat-desc">Tous statuts</div>
+            </div>
+        </div>
+        <div class="rap-stat-card violet">
+            <div class="rap-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+                <div class="rap-stat-label">Terminés</div>
+                <div class="rap-stat-number" th:text="${stagesTermines}">0</div>
+                <div class="rap-stat-desc">Stages clôturés</div>
+            </div>
+        </div>
+        <div class="rap-stat-card orange">
+            <div class="rap-stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <div>
+                <div class="rap-stat-label">Documents</div>
+                <div class="rap-stat-number" th:text="${totalDocuments}">0</div>
+                <div class="rap-stat-desc">Déposés</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOCUMENTS EXPORTÉS -->
+    <div class="rap-card">
+        <div class="rap-card-header">
+            <span class="rap-card-title"><i class="fa-solid fa-file-export" style="color:#2563EB;margin-right:8px;"></i>Documents exportés</span>
+            <div class="rap-card-actions">
+                <select class="rap-filter-select">
+                    <option>Tous les types</option>
+                    <option>Rapports finaux</option>
+                    <option>Rapports hebdomadaires</option>
+                    <option>Attestations</option>
+                    <option>Fiches de note</option>
+                </select>
+                <button class="rap-card-btn"><i class="fa-solid fa-download"></i> Tout exporter</button>
+            </div>
+        </div>
+        <table class="rap-table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Stagiaire</th>
+                    <th>Type</th>
+                    <th>Date d'export</th>
+                    <th>Taille</th>
+                    <th>Format</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="d : ${documentsExportes}">
+                    <td>
+                        <div class="rap-doc-cell">
+                            <i class="fa-solid fa-file-pdf" style="color:#EF4444;font-size:20px;"></i>
+                            <span class="rap-doc-name" th:text="${d.nom}">rapport.pdf</span>
+                        </div>
+                    </td>
+                    <td th:text="${d.stagiaire}">Jean Dupont</td>
+                    <td><span class="rap-type-badge" th:classappend="${d.typeCls}" th:text="${d.typeLabel}">Rapport</span></td>
+                    <td class="rap-date-cell" th:text="${d.dateExport}">17/07/2026</td>
+                    <td th:text="${d.taille}">2.5 Mo</td>
+                    <td><span class="rap-format-badge" th:classappend="${d.formatCls}"><i class="fa-solid fa-file-pdf"></i> PDF</span></td>
+                    <td class="rap-actions-cell">
+                        <button class="rap-action-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                        <button class="rap-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                        <button class="rap-action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(documentsExportes)}">
+                    <td colspan="7" class="rap-empty">Aucun document exporté pour le moment. Utilisez les boutons ci-dessus pour générer un rapport.</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="rap-pagination">
+            <span class="rap-pagination-info">1 à 5 sur <span th:text="${totalDocuments}">0</span> documents</span>
+            <div class="rap-pagination-btns">
+                <button class="rap-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="rap-page-btn actif">1</button>
+                <button class="rap-page-btn">2</button>
+                <button class="rap-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
     </div>
 </div>
 </body>

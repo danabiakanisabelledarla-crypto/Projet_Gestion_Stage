@@ -1,0 +1,62 @@
+/* ===== ADMIN RAPPORTS ===== */
+.rap-header { background: white; border-radius: 20px; padding: 28px 32px; box-shadow: 0 8px 24px rgba(15,23,42,0.08); display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.rap-header-left { display: flex; align-items: center; gap: 20px; }
+.rap-header-icon { width: 70px; height: 70px; border-radius: 18px; background: linear-gradient(135deg,#DBEAFE,#EFF6FF); display: flex; align-items: center; justify-content: center; font-size: 32px; color: #2563EB; flex-shrink: 0; box-shadow: 0 4px 12px rgba(37,99,235,0.15); }
+.rap-header h1 { font-size: 34px; font-weight: 800; color: #0f172a; margin: 0; }
+.rap-header-sub { color: #64748B; font-size: 16px; margin-top: 4px; }
+.rap-header-right { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.rap-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; border: none; background: #2563EB; color: white; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all 0.3s; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+.rap-btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); }
+.rap-btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; border: 1.5px solid #2563EB; background: white; color: #2563EB; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all 0.3s; }
+.rap-btn-outline:hover { background: #EFF6FF; transform: translateY(-2px); }
+
+.rap-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+@media (max-width:1200px){ .rap-stats { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:700px){ .rap-stats { grid-template-columns: 1fr; } }
+.rap-stat-card { background: white; border-radius: 18px; padding: 22px; box-shadow: 0 8px 24px rgba(15,23,42,0.08); display: flex; gap: 16px; align-items: center; transition: all 0.3s; }
+.rap-stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,0,0,0.1); }
+.rap-stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.rap-stat-card.bleu .rap-stat-icon { background: #DBEAFE; color: #2563EB; }
+.rap-stat-card.vert .rap-stat-icon { background: #DCFCE7; color: #22C55E; }
+.rap-stat-card.violet .rap-stat-icon { background: #EDE9FE; color: #8B5CF6; }
+.rap-stat-card.orange .rap-stat-icon { background: #FEF3C7; color: #F59E0B; }
+.rap-stat-label { font-size: 11px; color: #64748B; font-weight: 500; margin-bottom: 4px; }
+.rap-stat-number { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.rap-stat-desc { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+
+.rap-card { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
+.rap-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.rap-card-title { font-size: 18px; font-weight: 700; color: #0f172a; }
+.rap-card-actions { display: flex; gap: 10px; align-items: center; }
+.rap-card-btn { padding: 8px 16px; border-radius: 10px; border: 1.5px solid #E2E8F0; background: white; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
+.rap-card-btn:hover { border-color: #2563EB; color: #2563EB; }
+.rap-filter-select { height: 40px; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 0 14px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; transition: all 0.3s; background: white; }
+.rap-filter-select:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+.rap-table { width: 100%; border-collapse: collapse; }
+.rap-table thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #E2E8F0; background: #F8FAFC; white-space: nowrap; }
+.rap-table tbody tr { border-bottom: 1px solid #F1F5F9; transition: background 0.2s; }
+.rap-table tbody tr:hover { background: #EFF6FF; }
+.rap-table tbody td { padding: 14px 16px; font-size: 13px; color: #334155; vertical-align: middle; }
+.rap-doc-cell { display: flex; align-items: center; gap: 10px; }
+.rap-doc-name { font-weight: 600; color: #0f172a; font-size: 14px; }
+.rap-type-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 600; }
+.rap-type-badge.rapport { background: #DBEAFE; color: #2563EB; }
+.rap-type-badge.hebdo { background: #FEF3C7; color: #D97706; }
+.rap-type-badge.attestation { background: #DCFCE7; color: #16A34A; }
+.rap-type-badge.fiche { background: #EDE9FE; color: #7C3AED; }
+.rap-format-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.rap-format-badge.pdf { background: #FEF2F2; color: #DC2626; }
+.rap-format-badge.excel { background: #F0FDF4; color: #16A34A; }
+.rap-date-cell { color: #64748B; font-size: 13px; }
+.rap-actions-cell { display: flex; gap: 6px; }
+.rap-action-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: white; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all 0.3s; color: #64748B; }
+.rap-action-btn:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+.rap-action-btn.danger:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+.rap-empty { text-align: center; padding: 40px 20px; color: #94A3B8; font-size: 14px; }
+.rap-pagination { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #E2E8F0; flex-wrap: wrap; gap: 12px; }
+.rap-pagination-info { font-size: 13px; color: #64748B; }
+.rap-pagination-btns { display: flex; gap: 6px; }
+.rap-page-btn { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: white; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.rap-page-btn:hover { border-color: #2563EB; color: #2563EB; }
+.rap-page-btn.actif { background: #2563EB; color: white; border-color: #2563EB; }

@@ -35,7 +35,10 @@
                 </div>
             </div>
         </div>
-        <a th:href="@{/admin/messages}" class="header-icon-btn">...</a>
+        <a th:href="@{/admin/messages}" class="header-icon-btn" title="Messages">
+            <i class="fa-regular fa-envelope"></i>
+            <span class="notif-dot" th:text="${messagesCount}">0</span>
+        </a>
         <div class="header-user">...</div>
     </div>
     <script>

@@ -18,11 +18,10 @@ body.portal-body {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    position: relative;
     overflow: hidden;
 }
 
-.portal-sidebar .logo-app {
+.portal-sidebar .sidebar-brand .logo-app {
     font-size: 20px;
     font-weight: 700;
     margin-bottom: 4px;
@@ -656,6 +655,7 @@ body.portal-body {
 
 @media (max-width: 768px) {
     .portal-body { flex-direction: column; }
-    .barre-laterale.portal-sidebar { width: 100%; min-height: auto; }
-    .contenu-principal.portal-main { padding: 20px; }
+    .barre-laterale.portal-sidebar { width: 100%; min-height: auto; position: relative; }
+    .contenu-principal.portal-main { padding: 20px; margin-left: 0; }
+    .contenu-principal { margin-left: 0; }
 }

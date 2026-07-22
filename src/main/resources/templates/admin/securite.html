@@ -91,7 +91,7 @@
             <div class="sec-graph-title">Échecs par semaine</div>
             <div style="display:flex;align-items:flex-end;gap:8px;height:150px;padding:10px 0;">
                                 <div th:each="v, iter : ${weeklyFailures}" style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                    <div class="bar-weekly-failure" th:style="'height:' + ${v * 18} + 'px'" th:title="${v + ' échecs'}"></div>
+                    <div class="bar-weekly-failure" th:style="'height:' + ${weeklyFailureHeights[iter.index]} + 'px'" th:title="${v + ' échecs'}"></div>
                     <span style="font-size:9px;color:#94A3B8;margin-top:4px;" th:text="${'S' + (iter.index + 1)}">S1</span>
                 </div>
             </div>

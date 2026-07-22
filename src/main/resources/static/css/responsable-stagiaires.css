@@ -131,6 +131,8 @@
 .mini-chart.bleu { stroke: #2563EB; }
 .mini-chart.vert { stroke: #22C55E; }
 .mini-chart.violet { stroke: #8B5CF6; }
+.mini-chart.orange { stroke: #F59E0B; }
+.mini-chart.rouge { stroke: #EF4444; }
 
 /* ===== 3. ZONE CENTRALE ===== */
 .zone-centrale { 
@@ -293,10 +295,12 @@
 }
 .badge-actif { background: #DCFCE7; color: #16A34A; }
 .badge-actif::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #22C55E; }
-.badge-termine { background: #DBEAFE; color: #2563EB; }
-.badge-termine::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #2563EB; }
-.badge-abandonne { background: #FFF4E5; color: #D97706; }
-.badge-abandonne::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #F59E0B; }
+.badge-attente { background: #FFF4E5; color: #D97706; }
+.badge-attente::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #F59E0B; }
+.badge-termine { background: #EDE9FE; color: #7C3AED; }
+.badge-termine::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #7C3AED; }
+.badge-abandonne { background: #FEE2E2; color: #B91C1C; }
+.badge-abandonne::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #EF4444; }
 
 .progression-cell { 
     display: flex; 

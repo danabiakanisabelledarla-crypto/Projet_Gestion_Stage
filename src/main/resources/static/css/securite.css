@@ -43,6 +43,7 @@
 @media (max-width:700px){ .sec-graphs-row { grid-template-columns: 1fr; } }
 .sec-graph-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
 .sec-graph-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
+.bar-weekly-failure { width: 100%; max-width: 32px; min-height: 4px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg,#EF4444,#FCA5A5); transition: height 0.6s ease; max-height: 130px; }
 .sec-chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; font-size: 12px; color: #64748B; }
 
 /* Donut in graph */

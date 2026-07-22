@@ -336,7 +336,7 @@
 .badge-statut.rejete { background: #FEE2E2; color: #DC2626; }
 .badge-statut.correction_demandee { background: #FFF7ED; color: #F59E0B; }
 
-.app-main { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.app-main { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-left: 260px; }
 
 .modal-overlay {
     display: none; position: fixed; inset: 0;

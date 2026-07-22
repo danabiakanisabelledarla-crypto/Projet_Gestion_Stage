@@ -58,6 +58,7 @@
                 <div class="stat-value" th:text="${totalStagiaires}">36</div>
                 <div class="stat-sub">Toutes périodes</div>
             </div>
+            <svg class="mini-chart bleu" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,25 10,20 20,22 30,15 40,18 50,10 60,12 70,5 80,8 90,3 100,0" fill="none" stroke-width="2"/></svg>
         </div>
         <div class="stat-card">
             <div class="stat-icon vert"><i class="fa-solid fa-user-check"></i></div>
@@ -66,6 +67,7 @@
                 <div class="stat-value" th:text="${enCours}">18</div>
                 <div class="stat-sub">50 % du total</div>
             </div>
+            <svg class="mini-chart vert" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,28 10,25 20,20 30,18 40,15 50,10 60,12 70,8 80,5 90,6 100,2" fill="none" stroke-width="2"/></svg>
         </div>
         <div class="stat-card">
             <div class="stat-icon violet"><i class="fa-solid fa-circle-check"></i></div>
@@ -74,6 +76,7 @@
                 <div class="stat-value" th:text="${clotures}">16</div>
                 <div class="stat-sub">Terminés</div>
             </div>
+            <svg class="mini-chart violet" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,5 10,8 20,3 30,10 40,7 50,15 60,12 70,18 80,14 90,20 100,22" fill="none" stroke-width="2"/></svg>
         </div>
         <div class="stat-card">
             <div class="stat-icon orange"><i class="fa-solid fa-calendar-plus"></i></div>
@@ -82,6 +85,7 @@
                 <div class="stat-value">4</div>
                 <div class="stat-sub">En attente d'encadreur</div>
             </div>
+            <svg class="mini-chart orange" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,20 10,22 20,18 30,25 40,15 50,18 60,10 70,12 80,5 90,8 100,3" fill="none" stroke-width="2"/></svg>
         </div>
         <div class="stat-card">
             <div class="stat-icon rouge"><i class="fa-regular fa-clock"></i></div>
@@ -90,6 +94,7 @@
                 <div class="stat-value">7</div>
                 <div class="stat-sub">Dans les 7 prochains jours</div>
             </div>
+            <svg class="mini-chart rouge" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,15 10,12 20,18 30,10 40,20 50,8 60,25 70,5 80,28 90,10 100,22" fill="none" stroke-width="2"/></svg>
         </div>
     </section>
 
@@ -126,7 +131,14 @@
                         <option value="Master 1">Master 1</option>
                         <option value="Master 2">Master 2</option>
                     </select>
-                    
+                    <div class="champ-date">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="date" id="filtreDateDebut" title="Période début">
+                    </div>
+                    <div class="champ-date">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="date" id="filtreDateFin" title="Période fin">
+                    </div>
                     <button class="btn-filtrer"><i class="fa-solid fa-filter"></i> Filtrer</button>
                 </div>
 

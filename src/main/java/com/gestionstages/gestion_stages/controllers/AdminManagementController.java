@@ -70,21 +70,28 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
     model.addAttribute("nomComplet", "Administrateur");
     model.addAttribute("initiales", "A");
 
-    List<Utilisateur> tousUtilisateurs = utilisateurRepository.findAll();
+    // Filtrer uniquement ENCADREUR et RESPONSABLE_STAGE
+    List<Utilisateur> tousUtilisateurs = utilisateurRepository.findAll().stream()
+        .filter(u -> {
+            String role = u.getRole().getLibelle();
+            return "ENCADREUR".equals(role) || "RESPONSABLE_STAGE".equals(role);
+        })
+        .collect(java.util.stream.Collectors.toList());
     List<ServiceEntreprise> tousServices = serviceRepository.findAll();
 
     model.addAttribute("utilisateurs", tousUtilisateurs);
-    model.addAttribute("roles", roleRepository.findAll());
+    model.addAttribute("roles", roleRepository.findAll().stream()
+        .filter(r -> "ENCADREUR".equals(r.getLibelle()) || "RESPONSABLE_STAGE".equals(r.getLibelle()))
+        .collect(java.util.stream.Collectors.toList()));
     model.addAttribute("services", tousServices);
 
     long totalUsers = tousUtilisateurs.size();
-    long totalAdmin = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
-    long totalResp = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
-    long totalEncadreurs = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
+    long totalResp = tousUtilisateurs.stream().filter(u -> "RESPONSABLE_STAGE".equals(u.getRole().getLibelle())).count();
+    long totalEncadreurs = tousUtilisateurs.stream().filter(u -> "ENCADREUR".equals(u.getRole().getLibelle())).count();
     long totalInactifs = tousUtilisateurs.stream().filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif).count();
 
     model.addAttribute("totalUsers", totalUsers);
-    model.addAttribute("totalAdmin", totalAdmin);
+    model.addAttribute("totalAdmin", 0L);
     model.addAttribute("totalResponsables", totalResp);
     model.addAttribute("totalEncadreurs", totalEncadreurs);
     model.addAttribute("totalInactifs", totalInactifs);
@@ -106,7 +113,7 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
         m.put("statutCls", u.getStatut().name());
         m.put("statutLabel", u.getStatut() == Utilisateur.StatutUtilisateur.actif ? "Actif" : "Inactif");
         m.put("dateCreation", u.getDateCreation() != null ? sdf.format(java.sql.Timestamp.valueOf(u.getDateCreation())) : "—");
-        m.put("service", "—"); // could be enhanced
+        m.put("service", "—");
         m.put("stagiairesCount", 0);
         m.put("evaluationsCount", 0);
         m.put("livrablesCount", 0);
@@ -550,6 +557,16 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("totalStages", stageRepository.count());
         model.addAttribute("stagesTermines", stageRepository.findByStatut(Stage.StatutStage.termine).size());
         model.addAttribute("totalDocuments", documentRepository.count());
+
+        // Documents exportés simulés
+        List<Map<String,String>> docsExportes = List.of(
+            Map.of("nom","rapport-mensuel-juillet-2026","stagiaire","Jean Dupont","typeCls","rapport","typeLabel","Rapport final","dateExport","17/07/2026","taille","2.5 Mo","formatCls","pdf"),
+            Map.of("nom","attestation-stage-martin","stagiaire","Marie Martin","typeCls","attestation","typeLabel","Attestation","dateExport","16/07/2026","taille","1.2 Mo","formatCls","pdf"),
+            Map.of("nom","fiche-note-bertrand","stagiaire","Pierre Bertrand","typeCls","fiche","typeLabel","Fiche de note","dateExport","15/07/2026","taille","0.8 Mo","formatCls","excel"),
+            Map.of("nom","rapport-hebdo-S29","stagiaire","Sophie Bernard","typeCls","hebdo","typeLabel","Rapport hebdo","dateExport","14/07/2026","taille","1.8 Mo","formatCls","pdf"),
+            Map.of("nom","rapport-final-nguyen","stagiaire","Lucas Nguyen","typeCls","rapport","typeLabel","Rapport final","dateExport","12/07/2026","taille","3.1 Mo","formatCls","pdf")
+        );
+        model.addAttribute("documentsExportes", docsExportes);
         return "admin/rapports";
     }
 
@@ -677,7 +694,11 @@ public String securite(Model model) {
     List<Integer> alerts = List.of(1, 0, 2, 1, 3, 1, 0, 2, 1, 1, 0, 0, 2, 1, 3, 2, 1, 0, 1, 1, 2, 0, 1, 0, 0, 1, 1, 2, 0, 1);
     model.addAttribute("chartAlertPoints", buildChartPoints(alerts));
     
-    model.addAttribute("weeklyFailures", List.of(8, 12, 5, 9, 15, 7, 11));
+    List<Integer> weeklyFailuresRaw = List.of(8, 12, 5, 9, 15, 7, 11);
+    int wfMax = weeklyFailuresRaw.stream().max(Integer::compare).orElse(1);
+    List<Integer> weeklyFailureHeights = weeklyFailuresRaw.stream().map(v -> v * 130 / wfMax).collect(java.util.stream.Collectors.toList());
+    model.addAttribute("weeklyFailures", weeklyFailuresRaw);
+    model.addAttribute("weeklyFailureHeights", weeklyFailureHeights);
     
     // User distribution
     long totalUsers = utilisateurRepository.count();
