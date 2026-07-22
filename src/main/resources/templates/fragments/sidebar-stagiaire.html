@@ -7,7 +7,6 @@
     <div class="sidebar-role">Stagiaire</div>
     <nav>
         <a th:href="@{/stagiaire/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
-        <a th:href="@{/stagiaire/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Mon profil</a>
         <a th:href="@{/stagiaire/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
         <a th:href="@{/stagiaire/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Mes tâches</a>
         <a th:href="@{/stagiaire/journal}" th:classappend="${activePage == 'journal'} ? ' actif'"><i class="fa-solid fa-book"></i> Journal</a>

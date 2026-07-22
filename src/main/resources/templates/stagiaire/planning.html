@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Planning - Stagiaire</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
@@ -36,6 +37,9 @@
                     <button type="button" id="moisPrecedent" class="btn-nav-mois">&lsaquo;</button>
                     <div id="calendrierTitre" class="calendrier-titre">-</div>
                     <button type="button" id="moisSuivant" class="btn-nav-mois">&rsaquo;</button>
+                    <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalAjoutEvenement')" style="margin-left:auto;padding:8px 16px;font-size:12px;">
+                        <i class="fa-solid fa-plus"></i> Ajouter un evenement
+                    </button>
                 </div>
                 <div class="calendrier-jours-semaine">
                     <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
@@ -48,8 +52,11 @@
                 <div class="legende-item"><span class="pastille-legende tache"></span> Dates limites des taches</div>
                 <div class="legende-item"><span class="pastille-legende evaluation"></span> Evaluations</div>
                 <div class="legende-item"><span class="pastille-legende fin_stage"></span> Fin du stage</div>
-                <div class="legende-item legende-desactive"><span class="pastille-legende reunion"></span> Reunions <em>(a venir)</em></div>
-                <div class="legende-item legende-desactive"><span class="pastille-legende livrable"></span> Depot des livrables <em>(a venir)</em></div>
+                <div class="legende-item"><span class="pastille-legende reunion"></span> Reunions</div>
+                <div class="legende-item"><span class="pastille-legende livrable"></span> Depot des livrables</div>
+                <div class="legende-item"><span class="pastille-legende personnel"></span> Evenements personnels</div>
+                <div class="legende-item"><span class="pastille-legende conges"></span> Conges</div>
+                <div class="legende-item"><span class="pastille-legende important"></span> Important</div>
             </div>
 
         </div>
@@ -76,6 +83,51 @@
 
         </div>
 </div>
+</div>
+<script>
+function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
+
+<!-- MODAL AJOUT EVENEMENT -->
+<div class="modal-overlay" id="modalAjoutEvenement" onclick="if(event.target===this)fermerModal('modalAjoutEvenement')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Ajouter un evenement</h2>
+            <button class="modal-close" onclick="fermerModal('modalAjoutEvenement')">&times;</button>
+        </div>
+        <form th:action="@{/stagiaire/planning/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="groupe-champ">
+                <label>Motif de l'evenement</label>
+                <select name="motif" required>
+                    <option value="">Choisir un motif...</option>
+                    <option value="Permission">Permission</option>
+                    <option value="Evaluation">Evaluation</option>
+                    <option value="Conge">Conge</option>
+                    <option value="Reunion">Reunion</option>
+                    <option value="Depot livrable">Depot livrable</option>
+                    <option value="Soutenance">Soutenance</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+            <div class="groupe-champ">
+                <label>Date de l'evenement</label>
+                <input type="date" name="date" required>
+            </div>
+            <div class="groupe-champ">
+                <label>Couleur</label>
+                <select name="typeCouleur" required>
+                    <option value="personnel" selected>Bleu</option>
+                    <option value="evaluation">Orange</option>
+                    <option value="conges">Vert</option>
+                    <option value="reunion">Violet</option>
+                    <option value="important">Rouge</option>
+                </select>
+            </div>
+            <button type="submit" class="bouton-principal">Ajouter l'evenement</button>
+        </form>
+    </div>
 </div>
 <script th:inline="javascript">
     const evenements = [

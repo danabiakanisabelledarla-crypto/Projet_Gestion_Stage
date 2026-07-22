@@ -2,12 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="header" class="stagiaire-header">
-    <div class="header-gauche">
-        <div class="header-search">
-            <i class="fa-solid fa-search"></i>
-            <input type="text" placeholder="Rechercher...">
-        </div>
-    </div>
     <div class="header-droite">
         <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
             <i class="fa-regular fa-envelope"></i>

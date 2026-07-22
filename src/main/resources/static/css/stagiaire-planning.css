@@ -90,6 +90,10 @@
 .pastille-evenement.tache { background: #2563eb; }
 .pastille-evenement.evaluation { background: #f59e0b; }
 .pastille-evenement.fin_stage { background: #dc2626; }
+.pastille-evenement.personnel { background: #3B82F6; }
+.pastille-evenement.conges { background: #22C55E; }
+.pastille-evenement.reunion { background: #A855F7; }
+.pastille-evenement.important { background: #EF4444; }
 
 .legende-item {
     display: flex;
@@ -115,6 +119,9 @@
 .pastille-legende.fin_stage { background: #dc2626; }
 .pastille-legende.reunion { background: #a855f7; }
 .pastille-legende.livrable { background: #14b8a6; }
+.pastille-legende.personnel { background: #3B82F6; }
+.pastille-legende.conges { background: #22C55E; }
+.pastille-legende.important { background: #EF4444; }
 
 .liste-evenements {
     margin-top: 15px;

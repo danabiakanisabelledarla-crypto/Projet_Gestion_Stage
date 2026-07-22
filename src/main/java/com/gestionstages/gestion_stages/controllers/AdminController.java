@@ -382,6 +382,14 @@ public String afficherEncadreurs(Model model) {
     return "admin/encadreurs";
 }
 
+@GetMapping("/messages")
+public String afficherMessages(Model model) {
+    model.addAttribute("activePage", "messages");
+    model.addAttribute("nomComplet", "Administrateur");
+    model.addAttribute("initiales", "A");
+    return "admin/messages";
+}
+
 @GetMapping("/statistiques")
 public String afficherStatistiques(Model model) {
     model.addAttribute("activePage", "statistiques");

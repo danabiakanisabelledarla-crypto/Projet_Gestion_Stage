@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Rapport final - Stagiaire</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
@@ -161,50 +162,27 @@
             <div class="carte-section">
                 <h2 class="section-titre"><i class="fa-solid fa-code"></i> Projet realise</h2>
                 <p class="section-sous-titre">Ajoutez le projet developpe durant votre stage afin de permettre sa consultation et son archivage.</p>
-                <div class="projet-layout">
-                    <div class="projet-infos">
-                        <div class="info-ligne-projet">
-                            <span class="info-label">Nom du projet</span>
-                            <span class="info-valeur">Plateforme de Gestion des Stages</span>
+                <form class="projet-form">
+                    <div class="projet-infos" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div class="groupe-champ">
+                            <label>Nom du projet</label>
+                            <input type="text" name="nomProjet" placeholder="Ex: Plateforme de Gestion des Stages" value="Plateforme de Gestion des Stages">
                         </div>
-                        <div class="info-ligne-projet">
-                            <span class="info-label">Type</span>
-                            <span class="info-valeur">Application Web Spring Boot</span>
+                        <div class="groupe-champ">
+                            <label>Type</label>
+                            <input type="text" name="type" placeholder="Ex: Application Web" value="Application Web Spring Boot">
                         </div>
-                        <div class="info-ligne-projet">
-                            <span class="info-label">Technologies</span>
-                            <div class="tech-badges">
-                                <span class="tech-badge">Java</span>
-                                <span class="tech-badge">Spring Boot</span>
-                                <span class="tech-badge">Thymeleaf</span>
-                                <span class="tech-badge">PostgreSQL</span>
-                            </div>
+                        <div class="groupe-champ">
+                            <label>Technologies</label>
+                            <input type="text" name="technologies" placeholder="Ex: Java, Spring Boot, Thymeleaf" value="Java, Spring Boot, Thymeleaf">
                         </div>
-                        <div class="info-ligne-projet">
-                            <span class="info-label">Version</span>
-                            <span class="info-valeur">v1.0</span>
-                        </div>
-                        <div class="info-ligne-projet">
-                            <span class="info-label">Lien GitHub</span>
-                            <div class="github-lien">
-                                <i class="fa-brands fa-github"></i>
-                                <span>https://github.com/...</span>
-                            </div>
+                        <div class="groupe-champ">
+                            <label>Lien GitHub</label>
+                            <input type="url" name="lienGithub" placeholder="https://github.com/votre-projet" value="https://github.com/...">
                         </div>
                     </div>
-                    <div class="projet-depot">
-                        <div class="depot-zone">
-                            <i class="fa-solid fa-cloud-upload-alt"></i>
-                            <p>Deposez votre projet</p>
-                            <small>Formats acceptes : ZIP, RAR, Lien GitHub, Lien GitLab</small>
-                        </div>
-                        <div class="depot-boutons">
-                            <button class="btn-depot"><i class="fa-solid fa-file-zipper"></i> Importer un fichier ZIP</button>
-                            <button class="btn-depot"><i class="fa-brands fa-github"></i> Cloner depuis GitHub</button>
-                            <button class="btn-depot"><i class="fa-solid fa-link"></i> Ajouter un lien Git</button>
-                        </div>
-                    </div>
-                </div>
+                    <button type="submit" class="btn-submit" style="margin-top:20px;"><i class="fa-solid fa-save"></i> Enregistrer</button>
+                </form>
             </div>
 
             <!-- ========== HISTORIQUE DES VERSIONS ========== -->

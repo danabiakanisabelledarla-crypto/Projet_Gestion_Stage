@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mes taches - Stagiaire</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
@@ -58,16 +59,30 @@
                 </div>
             </div>
             <div class="page-entete-droite">
-                <div class="filtre-btn">
-                    <i class="fa-solid fa-filter"></i> Filtrer
-                </div>
-                <div class="filtre-btn">
-                    <i class="fa-solid fa-arrow-up-short-wide"></i> Trier par priorite
-                </div>
                 <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalNouvelleTache')">
                     <i class="fa-solid fa-plus"></i> Nouvelle tache
                 </button>
             </div>
+        </div>
+
+        <!-- ========== BARRE RECHERCHE / FILTRE / TRI ========== -->
+        <div class="filtres-barre">
+            <div class="recherche-barre">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="rechercheTache" placeholder="Rechercher une tache..." onkeyup="filtrerTaches()">
+            </div>
+            <select id="filtreStatut" class="filtre-select" onchange="filtrerTaches()">
+                <option value="">Tous les statuts</option>
+                <option value="a_faire">A faire</option>
+                <option value="en_cours">En cours</option>
+                <option value="terminee">Terminee</option>
+            </select>
+            <select id="triTaches" class="filtre-select" onchange="filtrerTaches()">
+                <option value="">Trier par...</option>
+                <option value="date">Date limite</option>
+                <option value="statut">Statut</option>
+                <option value="priorite">Priorite</option>
+            </select>
         </div>
 
         <!-- ========== CARTE TABLEAU ========== -->
@@ -86,8 +101,8 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr class="ligne-tache" th:each="tache : ${taches}">
+                <tbody id="tableTachesBody">
+                    <tr class="ligne-tache" th:each="tache : ${taches}" th:attr="data-statut=${tache.statut.name()}, data-date=${#temporals.format(tache.dateLimite, 'yyyy-MM-dd')}, data-priorite='moyenne'">
                         <td>
                             <div class="tache-titre-cell">
                                 <span class="tache-dot" th:classappend="${tache.statut.name() == 'a_faire'} ? 'dot-violet' : (${tache.statut.name() == 'en_cours'} ? 'dot-orange' : 'dot-vert')"></span>
@@ -113,15 +128,25 @@
                             <span class="badge-prio moyenne">-</span>
                         </td>
                         <td>
-                            <span th:text="${tache.statut.name() == 'a_faire' ? 'A faire' : (
-               tache.statut.name() == 'en_cours' ? 'En cours' : (
-               tache.statut.name() == 'terminee' ? 'Terminee' : 'En retard'))}">
+                            <span th:text="${tache.statut.name() == 'a_faire' ? 'A faire' : (tache.statut.name() == 'en_cours' ? 'En cours' : 'Terminee')}">
                         </td>
                         <td>
                             <div class="actions-cell">
-                                <button class="action-icon-btn" title="Voir le detail"><i class="fa-solid fa-eye"></i></button>
-                                <a th:href="@{/stagiaire/taches/{id}/terminer(id=${tache.id})}" class="action-icon-btn vert" title="Marquer comme termine"><i class="fa-solid fa-check"></i></a>
-                                <button class="action-icon-btn" title="Ajouter un commentaire"><i class="fa-solid fa-comment"></i></button>
+                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="hidden" name="statut" value="a_faire"/>
+                                    <button type="submit" class="btn-statut afaire" th:classappend="${tache.statut.name() == 'a_faire'} ? ' actif'">A faire</button>
+                                </form>
+                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="hidden" name="statut" value="en_cours"/>
+                                    <button type="submit" class="btn-statut encours" th:classappend="${tache.statut.name() == 'en_cours'} ? ' actif'">En cours</button>
+                                </form>
+                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="hidden" name="statut" value="terminee"/>
+                                    <button type="submit" class="btn-statut termine" th:classappend="${tache.statut.name() == 'terminee'} ? ' actif'">Termine</button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -251,6 +276,45 @@
 <script>
 function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
 function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function filtrerTaches() {
+    var recherche = document.getElementById('rechercheTache').value.toLowerCase();
+    var filtreStatut = document.getElementById('filtreStatut').value;
+    var tri = document.getElementById('triTaches').value;
+    var lignes = document.querySelectorAll('#tableTachesBody tr.ligne-tache');
+    var lignesArray = Array.from(lignes);
+
+    lignesArray.forEach(function(row) {
+        var titre = row.querySelector('.tache-nom').textContent.toLowerCase();
+        var statut = row.getAttribute('data-statut');
+        var match = true;
+        if (recherche && !titre.includes(recherche)) match = false;
+        if (filtreStatut && statut !== filtreStatut) match = false;
+        row.style.display = match ? '' : 'none';
+    });
+
+    if (tri === 'date') {
+        lignesArray.sort(function(a, b) {
+            return a.getAttribute('data-date').localeCompare(b.getAttribute('data-date'));
+        });
+    } else if (tri === 'statut') {
+        var ordre = { 'a_faire': 1, 'en_cours': 2, 'terminee': 3 };
+        lignesArray.sort(function(a, b) {
+            return (ordre[a.getAttribute('data-statut')] || 0) - (ordre[b.getAttribute('data-statut')] || 0);
+        });
+    } else if (tri === 'priorite') {
+        var ordreP = { 'haute': 1, 'moyenne': 2, 'basse': 3 };
+        lignesArray.sort(function(a, b) {
+            return (ordreP[a.getAttribute('data-priorite')] || 0) - (ordreP[b.getAttribute('data-priorite')] || 0);
+        });
+    }
+    var tbody = document.getElementById('tableTachesBody');
+    lignesArray.forEach(function(row) { tbody.appendChild(row); });
+
+    var visible = lignesArray.filter(function(r) { return r.style.display !== 'none'; }).length;
+    var info = document.querySelector('.pagination-info');
+    if (info) info.textContent = 'Affichage de 1 a ' + visible + ' sur ' + visible + ' taches';
+}
 </script>
 </body>
 </html>

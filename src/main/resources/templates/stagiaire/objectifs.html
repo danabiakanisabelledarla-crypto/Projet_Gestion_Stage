@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mes objectifs - Stagiaire</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
@@ -14,83 +15,332 @@
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 <div class="app-main">
     <div th:replace="~{fragments/header-stagiaire :: header}"></div>
-    <div class="contenu-principal">
-        <div class="en-tete-page">
-            <h1>Mes objectifs</h1>
-            <span class="utilisateur-connecte">Stagiaire</span>
-        </div>
+    <div class="objectifs-page">
 
-    <!-- EN HAUT : RESUME -->
-    <div class="objectifs-resume">
-        <div class="resume-carte">
-            <div class="resume-valeur" th:text="${nombreObjectifs}">0</div>
-            <div class="resume-label">Objectifs au total</div>
-        </div>
-        <div class="resume-carte">
-            <div class="resume-valeur" th:text="${objectifsNonCommences}">0</div>
-            <div class="resume-label">Non commences</div>
-        </div>
-        <div class="resume-carte">
-            <div class="resume-valeur" th:text="${objectifsEnCours}">0</div>
-            <div class="resume-label">En cours</div>
-        </div>
-        <div class="resume-carte vert">
-            <div class="resume-valeur" th:text="${objectifsAtteints}">0</div>
-            <div class="resume-label">Atteints</div>
-        </div>
-    </div>
-
-    <!-- AU CENTRE : CARTES OBJECTIFS -->
-    <div class="grille-objectifs">
-        <div class="carte-objectif" th:each="objectif : ${objectifs}">
-            <div class="carte-objectif-entete">
-                <div class="carte-objectif-titre" th:text="${objectif.libelle}">Titre</div>
-                <span th:class="'badge-priorite ' + ${objectif.priorite.name()}"
-                      th:text="${objectif.priorite}">Priorite</span>
-            </div>
-            <p class="carte-objectif-description"
-               th:text="${objectif.description != null ? objectif.description : 'Aucune description.'}">
-                Description
-            </p>
-            <div class="carte-objectif-echeance" th:if="${objectif.dateLimite != null}">
-                <i class="fa-regular fa-calendar"></i>
-                Echeance : <span th:text="${#temporals.format(objectif.dateLimite, 'dd/MM/yyyy')}">-</span>
-            </div>
-            <div class="carte-objectif-progression">
-                <div class="progression-entete">
-                    <span>Progression</span>
-                    <span th:text="${objectif.progression} + '%'">0%</span>
+        <!-- ========== BARRE SUPERIEURE ========== -->
+        <div class="objectifs-topbar">
+            <div class="objectifs-topbar-left">
+                <div class="objectifs-icon-box">
+                    <i class="fa-solid fa-bullseye"></i>
                 </div>
-                <div class="progression-barre">
-                    <div class="progression-remplissage" th:style="'width:' + ${objectif.progression} + '%'"></div>
-                </div>
-            </div>
-            <span th:class="'badge-statut ' + ${objectif.statut.name()}"
-                  th:text="${objectif.statut}">Statut</span>
-        </div>
-
-        <div class="objectif-vide" th:if="${#lists.isEmpty(objectifs)}">
-            Aucun objectif defini par ton encadreur pour le moment.
-        </div>
-    </div>
-
-    <!-- EN BAS : OBJECTIFS TERMINES -->
-    <div class="bloc-module" style="margin-top:25px;" th:if="${objectifsAtteints > 0}">
-        <h2>Objectifs termines</h2>
-        <ul class="liste-taches">
-            <li th:each="objectif : ${objectifs}" th:if="${objectif.statut.name() == 'atteint'}">
                 <div>
-                    <div class="objectif-titre" th:text="${objectif.libelle}">-</div>
-                    <div class="objectif-detail"
-                         th:text="${objectif.dateLimite != null ? 'Echeance : ' + #temporals.format(objectif.dateLimite,'dd/MM/yyyy') : ''}">
+                    <h1 class="objectifs-titre">Objectifs de stage</h1>
+                    <p class="objectifs-sous-titre">Consultez les objectifs definis par votre encadreur et suivez votre progression tout au long du stage.</p>
+                    <div class="objectifs-breadcrumb">
+                        <a href="#">Accueil</a>
+                        <span class="breadcrumb-sep">></span>
+                        <a href="#">Stagiaire</a>
+                        <span class="breadcrumb-sep">></span>
+                        <span>Objectifs</span>
                     </div>
                 </div>
-                <span class="badge-statut atteint" th:text="${objectif.statut}">Atteint</span>
-            </li>
-        </ul>
+            </div>
+        </div>
+
+        <!-- ========== CARTES STATISTIQUES ========== -->
+        <div class="objectifs-stats">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-bleu"><i class="fa-solid fa-bullseye"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${nombreObjectifs}">0</div>
+                    <div class="stat-label">Total des objectifs</div>
+                    <div class="stat-sous">Objectifs attribues</div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#2563EB" stroke-width="2" points="0,25 10,20 20,22 30,10 40,15 50,5"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-vert"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${objectifsAtteints}">0</div>
+                    <div class="stat-label">Termines</div>
+                    <div class="stat-sous">Objectifs atteints</div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#22C55E" stroke-width="2" points="0,25 10,18 20,20 30,8 40,12 50,3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-orange"><i class="fa-solid fa-spinner"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${objectifsEnCours}">0</div>
+                    <div class="stat-label">En cours</div>
+                    <div class="stat-sous">Objectifs en cours</div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#F59E0B" stroke-width="2" points="0,28 10,22 20,25 30,15 40,18 50,12"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-rouge"><i class="fa-solid fa-clock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${objectifsNonCommences}">0</div>
+                    <div class="stat-label">En attente</div>
+                    <div class="stat-sous">Non commences</div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#EF4444" stroke-width="2" points="0,28 10,26 20,27 30,24 40,25 50,22"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-violet"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${progressionMoyenne} + '%'">0%</div>
+                    <div class="stat-label">Progression moyenne</div>
+                    <div class="stat-barre">
+                        <div class="stat-barre-remplissage" th:style="'width:' + ${progressionMoyenne} + '%'"></div>
+                    </div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#8B5CF6" stroke-width="2" points="0,25 10,20 20,18 30,12 40,8 50,4"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-bleu"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="stat-info">
+                    <div class="stat-valeur" th:text="${#lists.size(echeancesProches)}">0</div>
+                    <div class="stat-label">Echeances proches</div>
+                    <div class="stat-sous">Cette semaine</div>
+                </div>
+                <div class="stat-chart">
+                    <svg width="50" height="30" viewBox="0 0 50 30">
+                        <polyline fill="none" stroke="#3B82F6" stroke-width="2" points="0,20 10,15 20,18 30,8 40,10 50,6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== BOARD KANBAN ========== -->
+        <div class="kanban-header">
+            <h2 class="kanban-titre">
+                <i class="fa-solid fa-bullseye"></i> Mes objectifs
+                <span class="kanban-compteur" th:text="${objectifs.size()}">0</span>
+            </h2>
+            <button class="kanban-btn-ajouter" onclick="openModal()">
+                <i class="fa-solid fa-plus"></i> Nouvel objectif
+            </button>
+        </div>
+
+        <div class="kanban-board">
+            <!-- COLONNE: EN ATTENTE -->
+            <div class="kanban-colonne" data-colonne="non_commence">
+                <div class="kanban-col-header">
+                    <div class="kanban-col-titre">
+                        <span class="kanban-dot gris"></span>
+                        <span>En attente</span>
+                    </div>
+                    <span class="kanban-col-compteur" th:text="${objectifsNonCommences}">0</span>
+                </div>
+                <div class="kanban-cartes" id="col-non_commence">
+                    <div class="kanban-carte" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'non_commence'}"
+                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
+                        <div class="kanban-carte-bande" th:classappend="${obj.priorite.name() == 'haute'} ? 'bande-rouge' : (${obj.priorite.name() == 'moyenne'} ? 'bande-orange' : 'bande-vert')"></div>
+                        <div class="kanban-carte-contenu">
+                            <div class="kanban-carte-header">
+                                <span th:class="'kanban-badge-prio ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
+                                <span th:if="${obj.dateLimite != null}" class="kanban-carte-date"><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(obj.dateLimite, 'dd/MM')}">-</span></span>
+                            </div>
+                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
+                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
+                            <div class="kanban-carte-progression" th:if="${obj.progression != null && obj.progression > 0}">
+                                <div class="kanban-barre">
+                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
+                                </div>
+                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">0%</span>
+                            </div>
+                            <div class="kanban-carte-actions">
+                                <button class="kanban-action-btn avancer" th:if="${obj.statut.name() == 'non_commence'}" onclick="changerStatut(${obj.id}, 'en_cours')"><i class="fa-solid fa-play"></i> Demarrer</button>
+                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-carte-vide" th:if="${objectifsNonCommences == 0}">
+                        <i class="fa-regular fa-circle"></i>
+                        <p>Aucun objectif en attente</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNE: EN COURS -->
+            <div class="kanban-colonne" data-colonne="en_cours">
+                <div class="kanban-col-header">
+                    <div class="kanban-col-titre">
+                        <span class="kanban-dot orange"></span>
+                        <span>En cours</span>
+                    </div>
+                    <span class="kanban-col-compteur" th:text="${objectifsEnCours}">0</span>
+                </div>
+                <div class="kanban-cartes" id="col-en_cours">
+                    <div class="kanban-carte" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'en_cours'}"
+                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
+                        <div class="kanban-carte-bande" th:classappend="${obj.priorite.name() == 'haute'} ? 'bande-rouge' : (${obj.priorite.name() == 'moyenne'} ? 'bande-orange' : 'bande-vert')"></div>
+                        <div class="kanban-carte-contenu">
+                            <div class="kanban-carte-header">
+                                <span th:class="'kanban-badge-prio ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
+                                <span th:if="${obj.dateLimite != null}" class="kanban-carte-date"><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(obj.dateLimite, 'dd/MM')}">-</span></span>
+                            </div>
+                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
+                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
+                            <div class="kanban-carte-progression" th:if="${obj.progression != null && obj.progression > 0}">
+                                <div class="kanban-barre">
+                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
+                                </div>
+                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">0%</span>
+                            </div>
+                            <div class="kanban-carte-actions">
+                                <button class="kanban-action-btn terminer" onclick="changerStatut(${obj.id}, 'atteint')"><i class="fa-solid fa-check"></i> Terminer</button>
+                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-carte-vide" th:if="${objectifsEnCours == 0}">
+                        <i class="fa-regular fa-circle"></i>
+                        <p>Aucun objectif en cours</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNE: TERMINE -->
+            <div class="kanban-colonne" data-colonne="atteint">
+                <div class="kanban-col-header">
+                    <div class="kanban-col-titre">
+                        <span class="kanban-dot vert"></span>
+                        <span>Termine</span>
+                    </div>
+                    <span class="kanban-col-compteur" th:text="${objectifsAtteints}">0</span>
+                </div>
+                <div class="kanban-cartes" id="col-atteint">
+                    <div class="kanban-carte completed" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'atteint'}"
+                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
+                        <div class="kanban-carte-bande bande-vert"></div>
+                        <div class="kanban-carte-contenu">
+                            <div class="kanban-carte-header">
+                                <span class="kanban-badge-prio" th:classappend="' ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
+                                <span class="kanban-carte-termine-badge"><i class="fa-solid fa-check-circle"></i> Termine</span>
+                            </div>
+                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
+                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
+                            <div class="kanban-carte-progression">
+                                <div class="kanban-barre">
+                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
+                                </div>
+                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">100%</span>
+                            </div>
+                            <div class="kanban-carte-actions">
+                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-carte-vide" th:if="${objectifsAtteints == 0}">
+                        <i class="fa-regular fa-circle-check"></i>
+                        <p>Aucun objectif termine</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== BARRE DE PROGRESSION GLOBALE ========== -->
+        <div class="kanban-progression-barre">
+            <div class="kanban-progression-label">
+                <span>Progression globale du stage</span>
+                <strong th:text="${progressionMoyenne} + '%'">0%</strong>
+            </div>
+            <div class="kanban-progression-track">
+                <div class="kanban-progression-remplissage" th:style="'width:' + ${progressionMoyenne} + '%'"></div>
+            </div>
+        </div>
+
     </div>
 </div>
-</div></div>
+
+<!-- ========== MODAL AJOUT OBJECTIF ========== -->
+<div class="modal-overlay" id="modalObjectif" onclick="closeModalOutside(event)">
+    <div class="modal-contenu">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-bullseye"></i> Nouvel objectif</h3>
+            <button class="modal-fermer" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="formObjectif" th:action="@{/stagiaire/objectifs/creer}" method="POST">
+            <div class="modal-body">
+                <div class="modal-groupe">
+                    <label>Titre de l'objectif</label>
+                    <input type="text" name="libelle" placeholder="Ex: Apprendre Spring Boot" required>
+                </div>
+                <div class="modal-groupe">
+                    <label>Description (optionnelle)</label>
+                    <textarea name="description" rows="3" placeholder="Decrivez votre objectif..."></textarea>
+                </div>
+                <div class="modal-row">
+                    <div class="modal-groupe">
+                        <label>Priorite</label>
+                        <select name="priorite">
+                            <option value="haute">Haute</option>
+                            <option value="moyenne" selected>Moyenne</option>
+                            <option value="basse">Faible</option>
+                        </select>
+                    </div>
+                    <div class="modal-groupe">
+                        <label>Date limite (optionnelle)</label>
+                        <input type="date" name="dateLimite">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn-annuler" onclick="closeModal()">Annuler</button>
+                <button type="submit" class="modal-btn-creer"><i class="fa-solid fa-plus"></i> Creer l'objectif</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openModal() {
+    document.getElementById('modalObjectif').classList.add('ouvert');
+}
+
+function closeModal() {
+    document.getElementById('modalObjectif').classList.remove('ouvert');
+}
+
+function closeModalOutside(e) {
+    if (e.target === e.currentTarget) closeModal();
+}
+
+function changerStatut(id, nouveauStatut) {
+    if (!confirm('Confirmer le changement de statut ?')) return;
+    fetch('/stagiaire/objectifs/statut', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + id + '&statut=' + nouveauStatut
+    }).then(function(r) {
+        if (r.ok) window.location.reload();
+        else alert('Erreur lors du changement de statut');
+    });
+}
+
+function supprimerObjectif(id) {
+    if (!confirm('Supprimer cet objectif ?')) return;
+    fetch('/stagiaire/objectifs/supprimer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + id
+    }).then(function(r) {
+        if (r.ok) window.location.reload();
+        else alert('Erreur lors de la suppression');
+    });
+}
+</script>
 
 </body>
 </html>

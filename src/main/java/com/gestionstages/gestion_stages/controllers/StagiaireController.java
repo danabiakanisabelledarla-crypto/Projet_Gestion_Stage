@@ -37,7 +37,7 @@ private final StagiaireRepository stagiaireRepository;
 private final DocumentRepository documentRepository;
 private final ObjectifRepository objectifRepository;
 private final EvaluationRepository evaluationRepository;
-//private final EvaluationRepository evaluationRepository;
+private final EvenementPersonnelRepository evenementPersonnelRepository;
 
 private final UtilisateurRepository utilisateurRepository;
 private final PasswordEncoder passwordEncoder;
@@ -52,6 +52,7 @@ public StagiaireController(StageRepository stageRepository,
                            DocumentRepository documentRepository,
                            ObjectifRepository objectifRepository,
                            EvaluationRepository evaluationRepository,
+                           EvenementPersonnelRepository evenementPersonnelRepository,
                            UtilisateurRepository utilisateurRepository,
                            PasswordEncoder passwordEncoder) {   // ← Ajoute cette ligne
 
@@ -63,6 +64,7 @@ public StagiaireController(StageRepository stageRepository,
     this.documentRepository = documentRepository;
     this.objectifRepository = objectifRepository;
     this.evaluationRepository = evaluationRepository;
+    this.evenementPersonnelRepository = evenementPersonnelRepository;
     this.utilisateurRepository = utilisateurRepository;
     this.passwordEncoder = passwordEncoder;
 }
@@ -359,22 +361,92 @@ public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails
 public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "objectifs");
     Optional<Stage> stageOpt = getStage(userDetails);
-    model.addAttribute("stage", stageOpt.orElse(null));
+    Stage stage = stageOpt.orElse(null);
+    model.addAttribute("stage", stage);
+    model.addAttribute("activePage", "objectifs");
+
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0,1).toUpperCase()
+            + nom.substring(0,1).toUpperCase());
 
     List<Objectif> objectifs = stageOpt.isPresent()
             ? objectifRepository.findByStageIdOrderByOrdreAsc(stageOpt.get().getId())
             : new ArrayList<>();
 
     model.addAttribute("objectifs", objectifs);
-    model.addAttribute("nombreObjectifs", objectifs.size());
-    model.addAttribute("objectifsAtteints", objectifs.stream()
-            .filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
-    model.addAttribute("objectifsEnCours", objectifs.stream()
-            .filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
-    model.addAttribute("objectifsNonCommences", objectifs.stream()
-            .filter(o -> o.getStatut() == Objectif.StatutObjectif.non_commence).count());
+    long total = objectifs.size();
+    long atteints = objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count();
+    long enCours = objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count();
+    long enAttente = objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.non_commence).count();
+
+    model.addAttribute("nombreObjectifs", total);
+    model.addAttribute("objectifsAtteints", atteints);
+    model.addAttribute("objectifsEnCours", enCours);
+    model.addAttribute("objectifsNonCommences", enAttente);
+
+    double progressionMoyenne = objectifs.stream().mapToInt(Objectif::getProgression).average().orElse(0);
+    model.addAttribute("progressionMoyenne", (int) Math.round(progressionMoyenne));
+
+    LocalDate aujourdHui = LocalDate.now();
+    List<Objectif> echeancesProches = objectifs.stream()
+            .filter(o -> o.getDateLimite() != null
+                    && !o.getDateLimite().isBefore(aujourdHui)
+                    && o.getDateLimite().isBefore(aujourdHui.plusDays(7))
+                    && o.getStatut() != Objectif.StatutObjectif.atteint)
+            .toList();
+    model.addAttribute("echeancesProches", echeancesProches);
+
+    if (stage != null && stage.getEncadreur() != null) {
+        model.addAttribute("encadreurNom", stage.getEncadreur().getUtilisateur().getPrenom()
+                + " " + stage.getEncadreur().getUtilisateur().getNom());
+        model.addAttribute("serviceNom", stage.getService().getNom());
+    }
 
     return "stagiaire/objectifs";
+}
+
+@PostMapping("/objectifs/creer")
+public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                            @RequestParam String libelle,
+                            @RequestParam(required = false) String description,
+                            @RequestParam(defaultValue = "moyenne") String priorite,
+                            @RequestParam(required = false) String dateLimite) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    if (stageOpt.isPresent()) {
+        Objectif obj = new Objectif();
+        obj.setStage(stageOpt.get());
+        obj.setLibelle(libelle);
+        obj.setDescription(description);
+        obj.setPriorite(Objectif.Priorite.valueOf(priorite));
+        if (dateLimite != null && !dateLimite.isEmpty())
+            obj.setDateLimite(LocalDate.parse(dateLimite));
+        obj.setOrdre(0);
+        obj.setProgression(0);
+        obj.setStatut(Objectif.StatutObjectif.non_commence);
+        objectifRepository.save(obj);
+    }
+    return "redirect:/stagiaire/objectifs";
+}
+
+@PostMapping("/objectifs/statut")
+public String changerStatutObjectif(@RequestParam Integer id,
+                                    @RequestParam String statut) {
+    Objectif obj = objectifRepository.findById(id).orElse(null);
+    if (obj != null) {
+        obj.setStatut(Objectif.StatutObjectif.valueOf(statut));
+        if (statut.equals("atteint")) obj.setProgression(100);
+        objectifRepository.save(obj);
+    }
+    return "redirect:/stagiaire/objectifs";
+}
+
+@PostMapping("/objectifs/supprimer")
+public String supprimerObjectif(@RequestParam Integer id) {
+    objectifRepository.deleteById(id);
+    return "redirect:/stagiaire/objectifs";
 }
 
 @GetMapping("/planning")
@@ -385,26 +457,31 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
 
     List<EvenementPlanning> evenements = new ArrayList<>();
 
-    if (stageOpt.isPresent()) {
-        Stage stage = stageOpt.get();
+        if (stageOpt.isPresent()) {
+            Stage stage = stageOpt.get();
 
-        List<Tache> taches = tacheRepository.findByStageId(stage.getId());
-        for (Tache t : taches) {
-            if (t.getDateLimite() != null) {
+            List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+            for (Tache t : taches) {
+                if (t.getDateLimite() != null) {
+                    evenements.add(new EvenementPlanning(
+                            t.getDateLimite(), "Echeance : " + t.getTitre(), "tache"));
+                }
+            }
+
+            List<Evaluation> evaluations = evaluationRepository.findByStageId(stage.getId());
+            for (Evaluation e : evaluations) {
                 evenements.add(new EvenementPlanning(
-                        t.getDateLimite(), "Echeance : " + t.getTitre(), "tache"));
+                        e.getDateEvaluation(), "Evaluation (" + e.getTypeEvaluation() + ")", "evaluation"));
+            }
+            if (stage.getDateFin() != null) {
+                evenements.add(new EvenementPlanning(stage.getDateFin(), "Fin du stage", "fin_stage"));
+            }
+
+            List<EvenementPersonnel> evenementsPerso = evenementPersonnelRepository.findByStageId(stage.getId());
+            for (EvenementPersonnel ep : evenementsPerso) {
+                evenements.add(new EvenementPlanning(ep.getDate(), ep.getMotif(), ep.getTypeCouleur()));
             }
         }
-
-        List<Evaluation> evaluations = evaluationRepository.findByStageId(stage.getId());
-        for (Evaluation e : evaluations) {
-            evenements.add(new EvenementPlanning(
-                    e.getDateEvaluation(), "Evaluation (" + e.getTypeEvaluation() + ")", "evaluation"));
-        }
-        if (stage.getDateFin() != null) {
-            evenements.add(new EvenementPlanning(stage.getDateFin(), "Fin du stage", "fin_stage"));
-        }
-    }
 
     evenements.sort(Comparator.comparing(EvenementPlanning::getDate));
     model.addAttribute("evenements", evenements);
@@ -415,6 +492,18 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
             .toList());
 
     return "stagiaire/planning";
+}
+
+@PostMapping("/planning/ajouter")
+public String ajouterEvenementPlanning(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                        @RequestParam String motif,
+                                        @RequestParam String date,
+                                        @RequestParam String typeCouleur) {
+    getStage(userDetails).ifPresent(stage -> {
+        EvenementPersonnel evt = new EvenementPersonnel(stage, motif, LocalDate.parse(date), typeCouleur);
+        evenementPersonnelRepository.save(evt);
+    });
+    return "redirect:/stagiaire/planning?succes=Evenement ajoute avec succes.";
 }
 
 @GetMapping("/messages")
@@ -460,7 +549,16 @@ public String modifierMotDePasse(@AuthenticationPrincipal CustomUserDetails user
     return "redirect:/stagiaire/profil?succes=Mot de passe modifie avec succes.";
 }
 
-@PostMapping("/taches/ajouter")
+    @PostMapping("/taches/{id}/statut")
+    public String changerStatutTache(@PathVariable Integer id, @RequestParam String statut) {
+        tacheRepository.findById(id).ifPresent(tache -> {
+            tache.setStatut(Tache.StatutTache.valueOf(statut));
+            tacheRepository.save(tache);
+        });
+        return "redirect:/stagiaire/taches";
+    }
+
+    @PostMapping("/taches/ajouter")
 public String ajouterTache(@AuthenticationPrincipal CustomUserDetails userDetails,
                             @RequestParam String titre,
                             @RequestParam(required = false) String description,
