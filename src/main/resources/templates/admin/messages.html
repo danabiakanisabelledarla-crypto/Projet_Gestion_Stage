@@ -12,113 +12,197 @@
     <div th:replace="~{fragments/header-admin :: header}"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
         <h2 style="margin:0;font-size:22px;color:#1E3A8A;"><i class="fa-solid fa-comments" style="color:#2563EB;"></i> Messagerie</h2>
+        <a href="#" class="btn-nouveau" onclick="ouvrirModalContacts(); return false;" style="padding:10px 20px;background:#2563EB;color:white;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;">
+            <i class="fa-solid fa-plus"></i> Nouvelle conversation
+        </a>
     </div>
-    <div class="messages-layout">
-        <!-- Colonne gauche -->
-        <div class="conversations-list">
-            <div class="conversations-header">
-                <h2>Conversations</h2>
-                <span class="conversations-count" th:text="${#lists.size(conversations)}">0</span>
-            </div>
-            <div class="conversations-search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Rechercher...">
-            </div>
-            <div class="conversations-items">
-                <a th:each="conv : ${conversations}"
-                   th:href="@{/admin/messages(convId=${conv.id})}"
-                   style="text-decoration:none;display:block;">
-                    <div class="conversation-item" th:classappend="${conv.id == activeConversation?.id} ? 'active' : ''">
-                        <div class="conv-avatar">C</div>
-                        <div class="conv-info">
-                            <div class="conv-nom" th:text="${conv.sujet != null ? conv.sujet : 'Sans sujet'}">Sujet</div>
-                            <div class="conv-fonction">
-                                <span th:each="p : ${conv.participants}" th:text="${p.prenom + ' ' + p.nom + ' '}">participant</span>
+        <!-- MODAL CHOIX CONTACT -->
+        <div class="modal-overlay" id="modalContacts" onclick="fermerModalContacts(event)">
+            <div class="modal-contenu">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-user-plus"></i> Nouvelle conversation</h3>
+                    <button class="modal-fermer" onclick="fermerModalContactsDirect()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="color:#64748B;font-size:14px;margin:0 0 12px;">Choisissez le destinataire :</p>
+                    <div class="contacts-liste">
+                        <form th:action="@{/admin/messages/nouveau}" method="POST" id="formNouveauMsg">
+                            <input type="hidden" name="destinataireId" id="destinataireId">
+                            <div class="contact-item" th:each="c : ${contacts}" th:attr="data-id=${c.id}"
+                                 th:onclick="'selectionnerContact(this, ' + ${c.id} + ')'">
+                                <div class="contact-avatar" th:text="${c.prenom.substring(0,1).toUpperCase() + c.nom.substring(0,1).toUpperCase()}">A</div>
+                                <div class="contact-info">
+                                    <div class="contact-nom" th:text="${c.prenom + ' ' + c.nom}">Nom</div>
+                                    <div class="contact-role" th:text="${c.role != null ? c.role.libelle : 'Utilisateur'}">Role</div>
+                                </div>
+                                <i class="fa-solid fa-circle-check contact-check" style="display:none;"></i>
                             </div>
-                            <div class="conv-dernier-msg">
-                                <span th:if="${conv.dernierMessage != null}" th:text="${#temporals.format(conv.dernierMessage, 'dd/MM HH:mm')}">date</span>
-                                <span th:if="${conv.dernierMessage == null}">Aucun message</span>
+                            <div class="contact-item" th:if="${#lists.isEmpty(contacts)}">
+                                <div style="padding:20px;text-align:center;color:#94A3B8;width:100%;">
+                                    <i class="fa-regular fa-face-frown" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+                                    Aucun contact disponible
+                                </div>
+                            </div>
+                            <div class="modal-groupe" style="margin-top:12px;display:none;" id="msgGroup">
+                                <label>Votre message</label>
+                                <textarea name="message" rows="3" placeholder="Ecrivez un message..." required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modal-btn-annuler" onclick="fermerModalContactsDirect()">Annuler</button>
+                    <button type="submit" class="modal-btn-creer" form="formNouveauMsg" id="btnEnvoyerMsg" style="display:none;">
+                        <i class="fa-solid fa-paper-plane"></i> Envoyer
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Deux colonnes -->
+        <div class="messages-layout" style="display:flex;height:calc(100vh - 140px);gap:0;margin-top:16px;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+            <!-- Colonne gauche -->
+            <div class="conversations-list" style="width:340px;flex-shrink:0;border-right:1px solid #F1F5F9;display:flex;flex-direction:column;background:#FAFBFC;">
+                <div class="conversations-search" style="display:flex;align-items:center;gap:8px;padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+                    <div class="search-input" style="display:flex;align-items:center;gap:8px;flex:1;background:white;border:1px solid #E5E7EB;border-radius:10px;padding:0 12px;height:40px;">
+                        <i class="fa-solid fa-magnifying-glass" style="color:#94A3B8;font-size:14px;"></i>
+                        <input type="text" placeholder="Rechercher une conversation..." style="border:none;background:transparent;outline:none;flex:1;font-family:'Poppins',sans-serif;font-size:13px;">
+                    </div>
+                    <button class="filter-icon-btn" style="width:40px;height:40px;border-radius:10px;border:1px solid #E5E7EB;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748B;"><i class="fa-solid fa-sliders"></i></button>
+                </div>
+                <div class="conversations-items" style="flex:1;overflow-y:auto;">
+                    <a th:each="conv : ${conversations}"
+                       th:href="@{/admin/messages(convId=${conv.id})}"
+                       class="conversation-item-link" style="text-decoration:none;display:block;">
+                        <div class="conversation-item" th:classappend="${conv.id == activeConversation?.id} ? 'active' : ''" style="display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;border-bottom:1px solid #F8FAFC;">
+                            <div class="conv-avatar" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#3B82F6);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">C</div>
+                            <div class="conv-info" style="flex:1;min-width:0;">
+                                <div class="conv-nom" style="font-size:13px;font-weight:700;color:#1E293B;" th:text="${conv.sujet != null ? conv.sujet : 'Sans sujet'}">Sujet</div>
+                                <div class="conv-fonction" style="font-size:11px;color:#64748B;">
+                                    <span th:each="p : ${conv.participants}" th:text="${p.prenom + ' ' + p.nom + ' '}">participant</span>
+                                </div>
+                                <div class="conv-dernier-msg" style="font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <span th:if="${conv.dernierMessage != null}" th:text="${#temporals.format(conv.dernierMessage, 'dd/MM HH:mm')}">date</span>
+                                    <span th:if="${conv.dernierMessage == null}">Aucun message</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <div th:if="${#lists.isEmpty(conversations)}" style="text-align:center;padding:40px 20px;color:#94A3B8;">
+                        <i class="fa-regular fa-comment-dots" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+                        Aucune conversation<br>
+                        <a href="#" onclick="ouvrirModalContacts();return false;" style="color:#2563EB;font-size:13px;">Demarrer une nouvelle conversation</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Colonne droite -->
+            <div class="discussion-panel" th:if="${activeConversation != null}" style="flex:1;display:flex;flex-direction:column;">
+                <div class="discussion-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #F1F5F9;">
+                    <div class="discussion-user" style="display:flex;align-items:center;gap:12px;">
+                        <div class="discussion-avatar" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#3B82F6);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">C</div>
+                        <div>
+                            <div class="discussion-nom" style="font-size:15px;font-weight:700;color:#1E293B;" th:text="${activeConversation.sujet}">Sujet</div>
+                            <div class="discussion-statut" style="font-size:12px;color:#64748B;">
+                                <span th:each="p : ${activeConversation.participants}"
+                                      th:if="${p.id != user.id}"
+                                      th:text="${p.prenom + ' ' + p.nom}">participant</span>
                             </div>
                         </div>
                     </div>
-                </a>
-                <div th:if="${#lists.isEmpty(conversations)}" style="text-align:center;padding:40px 20px;color:#94A3B8;">
-                    <i class="fa-regular fa-comment-dots" style="font-size:28px;display:block;margin-bottom:8px;"></i>
-                    Aucune conversation
+                    <div class="discussion-actions" style="display:flex;gap:8px;">
+                        <button class="disc-action-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid #E5E7EB;background:white;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-phone"></i></button>
+                        <button class="disc-action-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid #E5E7EB;background:white;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-video"></i></button>
+                        <button class="disc-action-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid #E5E7EB;background:white;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-circle-info"></i></button>
+                    </div>
                 </div>
-            </div>
-            <div class="conversations-footer" th:text="${#lists.size(conversations)} + ' conversation(s)'">0</div>
-        </div>
-        <!-- Colonne droite -->
-        <div class="discussion-panel" th:if="${activeConversation != null}">
-            <div class="discussion-header">
-                <div class="discussion-user">
-                    <div class="discussion-avatar">C</div>
-                    <div>
-                        <div class="discussion-nom" th:text="${activeConversation.sujet}">Sujet</div>
-                        <div class="discussion-statut">
-                            <span th:each="p : ${activeConversation.participants}" th:text="${p.prenom + ' ' + p.nom}">participant</span>
+                <div class="discussion-messages" id="discussionMessages" style="flex:1;padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;">
+                    <div class="message" th:each="msg : ${messages}"
+                         th:classappend="${msg.expediteur.id == user.id} ? 'envoye' : 'recu'" style="display:flex;gap:10px;max-width:70%;">
+                        <div class="msg-avatar" th:if="${msg.expediteur.id != user.id}" th:text="${msg.expediteur.prenom.substring(0,1).toUpperCase() + msg.expediteur.nom.substring(0,1).toUpperCase()}" style="width:36px;height:36px;border-radius:50%;background:#E5E7EB;color:#64748B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">E</div>
+                        <div class="msg-bulle" th:classappend="${msg.expediteur.id == user.id} ? 'envoye' : ''" style="background:#F1F5F9;padding:12px 16px;border-radius:16px;border-bottom-left-radius:4px;">
+                            <p th:text="${msg.contenu}" style="margin:0;font-size:13px;line-height:1.5;">Message</p>
+                            <span class="msg-heure" th:text="${#temporals.format(msg.dateEnvoi, 'HH:mm')}" style="font-size:11px;color:#94A3B8;margin-top:4px;display:block;">heure</span>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="discussion-messages">
-                <div class="message" th:each="msg : ${messages}"
-                     th:classappend="${msg.expediteur.id == 1} ? 'envoye' : 'recu'">
-                    <div class="msg-avatar" th:if="${msg.expediteur.id != 1}" th:text="${msg.expediteur.prenom.substring(0,1).toUpperCase() + msg.expediteur.nom.substring(0,1).toUpperCase()}">E</div>
-                    <div class="msg-bulle" th:classappend="${msg.expediteur.id == 1} ? 'envoye' : ''">
-                        <p th:text="${msg.contenu}">Message</p>
-                        <span class="msg-heure" th:text="${#temporals.format(msg.dateEnvoi, 'HH:mm')}">heure</span>
+                    <div th:if="${#lists.isEmpty(messages)}" style="margin:40px auto;text-align:center;color:#94A3B8;">
+                        Aucun message. Envoyez le premier message !
                     </div>
                 </div>
+                <form class="discussion-input" th:action="@{/admin/messages/envoyer}" method="POST" style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid #F1F5F9;">
+                    <input type="hidden" name="convId" th:value="${activeConversation.id}">
+                    <div class="input-actions" style="display:flex;gap:8px;">
+                        <button type="button" style="width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:#94A3B8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;"><i class="fa-solid fa-paperclip"></i></button>
+                        <button type="button" style="width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:#94A3B8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;"><i class="fa-solid fa-image"></i></button>
+                        <button type="button" style="width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:#94A3B8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;"><i class="fa-regular fa-face-smile"></i></button>
+                    </div>
+                    <input type="text" name="contenu" class="input-message" placeholder="Ecrire un message..." required style="flex:1;padding:10px 16px;border:1.5px solid #E5E7EB;border-radius:24px;font-family:'Poppins',sans-serif;font-size:13px;color:#1E293B;outline:none;">
+                    <button type="submit" class="send-btn" style="width:42px;height:42px;border-radius:50%;border:none;background:#2563EB;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
             </div>
-            <form class="discussion-input" th:action="@{/admin/messages/envoyer}" method="POST">
-                <input type="hidden" name="convId" th:value="${activeConversation.id}">
-                <div class="input-actions">
-                    <button type="button"><i class="fa-solid fa-paperclip"></i></button>
-                    <button type="button"><i class="fa-solid fa-image"></i></button>
-                    <button type="button"><i class="fa-regular fa-face-smile"></i></button>
+            <div class="discussion-panel" th:if="${activeConversation == null}"
+                 style="display:flex;align-items:center;justify-content:center;color:#94A3B8;">
+                <div style="text-align:center;">
+                    <i class="fa-regular fa-comment-dots" style="font-size:48px;margin-bottom:12px;"></i>
+                    <p>Selectionnez une conversation ou <a href="#" onclick="ouvrirModalContacts();return false;" style="color:#2563EB;">demarrez-en une nouvelle</a></p>
                 </div>
-                <input type="text" name="contenu" class="input-message" placeholder="Ecrire un message..." required>
-                <button type="submit" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
-        </div>
-        <div class="discussion-panel" th:if="${activeConversation == null}"
-             style="display:flex;align-items:center;justify-content:center;color:#94A3B8;">
-            <div style="text-align:center;">
-                <i class="fa-regular fa-comment-dots" style="font-size:48px;margin-bottom:12px;"></i>
-                <p>Selectionnez une conversation</p>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+function ouvrirModalContacts() {
+    document.getElementById('modalContacts').classList.add('ouvert');
+    document.getElementById('destinataireId').value = '';
+    document.getElementById('msgGroup').style.display = 'none';
+    document.getElementById('btnEnvoyerMsg').style.display = 'none';
+    document.querySelectorAll('.contact-check').forEach(function(c) { c.style.display = 'none'; });
+}
+function fermerModalContacts(e) {
+    if (e && e.target === e.currentTarget) fermerModalContactsDirect();
+}
+function fermerModalContactsDirect() {
+    document.getElementById('modalContacts').classList.remove('ouvert');
+}
+function selectionnerContact(el, id) {
+    document.querySelectorAll('.contact-item').forEach(function(c) { c.classList.remove('selectionne'); });
+    document.querySelectorAll('.contact-check').forEach(function(c) { c.style.display = 'none'; });
+    el.classList.add('selectionne');
+    el.querySelector('.contact-check').style.display = 'block';
+    document.getElementById('destinataireId').value = id;
+    document.getElementById('msgGroup').style.display = 'flex';
+    document.getElementById('btnEnvoyerMsg').style.display = 'inline-flex';
+}
+</script>
+
 <style>
-.messages-layout { display: flex; height: calc(100vh - 140px); gap: 0; margin-top: 16px; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-.conversations-list { width: 360px; flex-shrink: 0; border-right: 1px solid #F1F5F9; display: flex; flex-direction: column; background: #FAFBFC; }
-.conversations-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #F1F5F9; }
-.conversations-header h2 { margin: 0; font-size: 16px; color: #1E293B; }
-.conversations-count { background: #DBEAFE; color: #2563EB; padding: 2px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; }
-.conversations-search { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #F1F5F9; }
-.conversations-search i { color: #94A3B8; font-size: 14px; }
-.conversations-search input { border: none; background: transparent; outline: none; font-family: 'Poppins', sans-serif; font-size: 13px; color: #0f172a; flex: 1; }
-.conversations-search input::placeholder { color: #94A3B8; }
-.conversations-items { flex: 1; overflow-y: auto; }
+.conversation-item-link { text-decoration: none; display: block; }
+.conversation-item-link:hover { background: #F1F5F9; }
 .conversation-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #F8FAFC; }
-.conversation-item:hover { background: #F1F5F9; }
 .conversation-item.active { background: #DBEAFE; }
+.messages-layout { display: flex; height: calc(100vh - 120px); gap: 0; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.conversations-list { width: 340px; flex-shrink: 0; border-right: 1px solid #F1F5F9; display: flex; flex-direction: column; background: #FAFBFC; }
+.conversations-search { display: flex; align-items: center; gap: 8px; padding: 16px 20px; border-bottom: 1px solid #F1F5F9; }
+.search-input { display: flex; align-items: center; gap: 8px; flex: 1; background: white; border: 1px solid #E5E7EB; border-radius: 10px; padding: 0 12px; height: 40px; }
+.search-input input { border: none; background: transparent; outline: none; flex: 1; font-family: 'Poppins', sans-serif; font-size: 13px; }
+.search-input i { color: #94A3B8; font-size: 14px; }
+.filter-icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #E5E7EB; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748B; }
+.filter-icon-btn:hover { border-color: #2563EB; color: #2563EB; }
+.conversations-items { flex: 1; overflow-y: auto; }
 .conv-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
 .conv-info { flex: 1; min-width: 0; }
 .conv-nom { font-size: 13px; font-weight: 700; color: #1E293B; }
 .conv-fonction { font-size: 11px; color: #64748B; }
 .conv-dernier-msg { font-size: 12px; color: #94A3B8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conversations-footer { padding: 12px 20px; border-top: 1px solid #F1F5F9; font-size: 12px; color: #94A3B8; text-align: center; }
 .discussion-panel { flex: 1; display: flex; flex-direction: column; }
 .discussion-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #F1F5F9; }
 .discussion-user { display: flex; align-items: center; gap: 12px; }
 .discussion-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
 .discussion-nom { font-size: 15px; font-weight: 700; color: #1E293B; }
-.discussion-statut { font-size: 12px; color: #64748B; }
+.discussion-statut { font-size: 12px; color: #64748B; display: flex; align-items: center; gap: 6px; }
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; display: inline-block; }
+.discussion-actions { display: flex; gap: 8px; }
+.disc-action-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #E5E7EB; background: white; color: #64748B; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.disc-action-btn:hover { border-color: #2563EB; color: #2563EB; }
 .discussion-messages { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
 .message { display: flex; gap: 10px; max-width: 70%; }
 .message.envoye { align-self: flex-end; flex-direction: row-reverse; }
@@ -136,6 +220,38 @@
 .input-message:focus { border-color: #2563EB; }
 .send-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: #2563EB; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .send-btn:hover { background: #1d4ed8; transform: scale(1.05); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.ouvert { display: flex; }
+.modal-contenu { background: white; border-radius: 20px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalIn 0.3s ease; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #F1F5F9; }
+.modal-header h3 { margin: 0; font-size: 18px; color: #1E293B; display: flex; align-items: center; gap: 10px; }
+.modal-header h3 i { color: #2563EB; }
+.modal-fermer { width: 36px; height: 36px; border-radius: 50%; border: none; background: #F1F5F9; font-size: 20px; color: #64748B; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-fermer:hover { background: #FEE2E2; color: #EF4444; }
+.modal-body { padding: 20px 24px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #F1F5F9; }
+.modal-btn-annuler { padding: 10px 20px; border-radius: 10px; border: 1.5px solid #E5E7EB; background: white; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: #64748B; cursor: pointer; }
+.modal-btn-annuler:hover { border-color: #94A3B8; }
+.modal-btn-creer { padding: 10px 24px; border-radius: 10px; border: none; background: linear-gradient(135deg, #2563EB, #1d4ed8); color: white; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.modal-btn-creer:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+.modal-groupe { display: flex; flex-direction: column; gap: 6px; }
+.modal-groupe label { font-size: 13px; font-weight: 600; color: #475569; }
+.modal-groupe textarea { padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #1E293B; outline: none; resize: vertical; }
+.modal-groupe textarea:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+/* Contacts */
+.contacts-liste { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+.contact-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; border: 1.5px solid transparent; }
+.contact-item:hover { background: #F1F5F9; }
+.contact-item.selectionne { background: #DBEAFE; border-color: #2563EB; }
+.contact-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.contact-info { flex: 1; }
+.contact-nom { font-size: 14px; font-weight: 600; color: #1E293B; }
+.contact-role { font-size: 12px; color: #64748B; }
+.contact-check { color: #2563EB; font-size: 18px; }
 </style>
 
 </body>

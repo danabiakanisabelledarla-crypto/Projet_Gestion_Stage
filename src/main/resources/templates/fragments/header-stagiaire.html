@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body>
 <div th:fragment="header" class="stagiaire-header">
     <div class="header-droite">
         <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
             <i class="fa-regular fa-envelope"></i>
         </a>
-        <div class="header-icon-btn" title="Notifications">
+        <button class="header-icon-btn" title="Notifications" onclick="toggleNotifications()">
             <i class="fa-regular fa-bell"></i>
-            <span class="notif-dot">2</span>
+            <span class="notif-dot">3</span>
+        </button>
+        <div class="notif-dropdown">
+            <!-- Contenu des notifications -->
         </div>
         <div class="header-user">
             <div class="header-user-text">
@@ -20,5 +20,33 @@
         </div>
     </div>
 </div>
-</body>
-</html>
+<script>
+// Toggle notification dropdown
+function toggleNotifications() {
+    const dropdown = document.querySelector('.notif-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('open');
+    }
+}
+
+// Fermer le dropdown quand on clique ailleurs
+document.addEventListener('click', function(e) {
+    const notifBtn = document.querySelector('.header-icon-btn[title="Notifications"]');
+    const dropdown = document.querySelector('.notif-dropdown');
+    
+    if (dropdown && dropdown.classList.contains('open')) {
+        if (!notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
+        }
+    }
+});
+
+// Attacher l'événement au bouton notification
+document.addEventListener('DOMContentLoaded', function() {
+    const notifBtn = document.querySelector('.header-icon-btn[title="Notifications"]');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', toggleNotifications);
+    }
+});
+</script>
+</div>

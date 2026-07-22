@@ -13,15 +13,11 @@
         <a th:href="@{/admin/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
         <a th:href="@{/admin/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
         <a th:href="@{/admin/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Stagiaires</a>
+       
         <a th:href="@{/admin/utilisateurs}" th:classappend="${activePage == 'utilisateurs'} ? ' actif'"><i class="fa-solid fa-users"></i> Utilisateurs</a>
         <a th:href="@{/admin/documents}" th:classappend="${activePage == 'documents'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Documents</a>
         
-        <a th:href="@{/admin/journal}" th:classappend="${activePage == 'journal'} ? ' actif'"><i class="fa-solid fa-clock-rotate-left"></i> Journal</a>
-        
-        
         <a th:href="@{/admin/parametres}" th:classappend="${activePage == 'parametres'} ? ' actif'"><i class="fa-solid fa-gear"></i> Paramètres</a>
-        <a th:href="@{/admin/sauvegarde}" th:classappend="${activePage == 'sauvegarde'} ? ' actif'"><i class="fa-solid fa-database"></i> Sauvegarde</a>
-        <a th:href="@{/admin/securite}" th:classappend="${activePage == 'securite'} ? ' actif'"><i class="fa-solid fa-shield-halved"></i> Sécurité</a>
     </nav>
 
     <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">

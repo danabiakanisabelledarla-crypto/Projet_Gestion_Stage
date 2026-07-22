@@ -398,7 +398,9 @@ public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDe
     model.addAttribute("initiales", "A");
     model.addAttribute("notificationsCount", 0);
     model.addAttribute("recentNotifications", new ArrayList<>());
-    Integer userId = userDetails.getUtilisateur().getId();
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    model.addAttribute("user", currentUser);
+    Integer userId = currentUser.getId();
     List<Conversation> conversations = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
     model.addAttribute("conversations", conversations);
     Conversation active = null;
@@ -413,6 +415,10 @@ public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDe
     } else {
         model.addAttribute("messages", new ArrayList<>());
     }
+    // Contacts disponibles (tous les utilisateurs sauf l'admin)
+    List<Utilisateur> contacts = utilisateurRepository.findAll();
+    contacts.remove(currentUser);
+    model.addAttribute("contacts", contacts);
     return "admin/messages";
 }
 
@@ -432,6 +438,46 @@ public String envoyerMessageAdmin(@AuthenticationPrincipal CustomUserDetails use
     conversationRepository.save(conv);
     messageRepository.save(msg);
     return "redirect:/admin/messages?convId=" + convId;
+}
+
+@PostMapping("/messages/nouveau")
+public String nouvelleConversationAdmin(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                       @RequestParam Integer destinataireId,
+                                       @RequestParam String message) {
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    Utilisateur destinataire = utilisateurRepository.findById(destinataireId).orElse(null);
+    if (destinataire == null) return "redirect:/admin/messages";
+    List<Conversation> existing = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(currentUser.getId());
+    for (Conversation c : existing) {
+        boolean hasDest = c.getParticipants().stream().anyMatch(p -> p.getId().equals(destinataireId));
+        if (hasDest) {
+            Message msg = new Message();
+            msg.setConversation(c);
+            msg.setExpediteur(currentUser);
+            msg.setContenu(message);
+            msg.setDateEnvoi(java.time.LocalDateTime.now());
+            msg.setLu(false);
+            c.setDernierMessage(java.time.LocalDateTime.now());
+            conversationRepository.save(c);
+            messageRepository.save(msg);
+            return "redirect:/admin/messages?convId=" + c.getId();
+        }
+    }
+    Conversation conv = new Conversation();
+    conv.setSujet("Discussion avec " + destinataire.getPrenom() + " " + destinataire.getNom());
+    conv.setDateCreation(java.time.LocalDateTime.now());
+    conv.setDernierMessage(java.time.LocalDateTime.now());
+    conv.getParticipants().add(currentUser);
+    conv.getParticipants().add(destinataire);
+    conv = conversationRepository.save(conv);
+    Message msg = new Message();
+    msg.setConversation(conv);
+    msg.setExpediteur(currentUser);
+    msg.setContenu(message);
+    msg.setDateEnvoi(java.time.LocalDateTime.now());
+    msg.setLu(false);
+    messageRepository.save(msg);
+    return "redirect:/admin/messages?convId=" + conv.getId();
 }
 
 @GetMapping("/statistiques")

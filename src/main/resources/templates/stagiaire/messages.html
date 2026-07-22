@@ -39,7 +39,7 @@
                         <form th:action="@{/stagiaire/messages/nouveau}" method="POST" id="formNouveauMsg">
                             <input type="hidden" name="destinataireId" id="destinataireId">
                             <div class="contact-item" th:each="c : ${contacts}" th:attr="data-id=${c.id}"
-                                 onclick="selectionnerContact(this, ${c.id})">
+                                 th:onclick="'selectionnerContact(this, ' + ${c.id} + ')'">
                                 <div class="contact-avatar" th:text="${c.prenom.substring(0,1).toUpperCase() + c.nom.substring(0,1).toUpperCase()}">A</div>
                                 <div class="contact-info">
                                     <div class="contact-nom" th:text="${c.prenom + ' ' + c.nom}">Nom</div>
@@ -53,7 +53,7 @@
                                     Aucun contact disponible
                                 </div>
                             </div>
-                            <div class="modal-groupe" style="margin-top:12px;" id="msgGroup" style="display:none;">
+                            <div class="modal-groupe" style="margin-top:12px;display:none;" id="msgGroup">
                                 <label>Votre message</label>
                                 <textarea name="message" rows="3" placeholder="Ecrivez un message..." required></textarea>
                             </div>

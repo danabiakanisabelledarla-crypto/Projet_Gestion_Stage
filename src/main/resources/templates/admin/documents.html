@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>Documents - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/documents.css}">
+    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/documents.css}">>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
@@ -16,12 +17,12 @@
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
     <!-- PAGE HEADER -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="page-header-icon"><i class="fa-solid fa-folder-open"></i></div>
+    <div class="page-entete">
+        <div class="page-entete-gauche">
+            <div class="page-icon"><i class="fa-solid fa-folder-open"></i></div>
             <div>
                 <h1>Gestion documentaire</h1>
-                <p class="page-header-sub">Centralisez, gérez et archivez tous les documents de la plateforme.</p>
+                <p class="page-sous-titre">Centralisez, gérez et archivez tous les documents de la plateforme.</p>
             </div>
         </div>
     </div>

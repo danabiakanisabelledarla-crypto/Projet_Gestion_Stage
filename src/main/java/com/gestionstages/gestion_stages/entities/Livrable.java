@@ -12,8 +12,12 @@ public class Livrable {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "tache_id", nullable = false)
+    @JoinColumn(name = "tache_id")
     private Tache tache;
+
+    @ManyToOne
+    @JoinColumn(name = "stage_id")
+    private Stage stage;
 
     @Column(nullable = false, length = 200)
     private String titre;
@@ -64,6 +68,14 @@ public class Livrable {
 
     public void setTache(Tache tache) {
         this.tache = tache;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 
     public String getTitre() {

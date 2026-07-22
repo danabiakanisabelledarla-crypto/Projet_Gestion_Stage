@@ -218,25 +218,33 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
     }
 
     @PostMapping("/livrables/deposer")
-public String deposerLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
-                               @RequestParam Integer tacheId,
-                               @RequestParam String titre,
-                               @RequestParam MultipartFile fichier) {
-    try {
-        Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
-        String nomFichier = "livrable_" + tacheId + "_" + fichier.getOriginalFilename();
-        Path chemin = Paths.get(DOSSIER_UPLOAD + nomFichier);
-        Files.write(chemin, fichier.getBytes());
+    public String deposerLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam String titre,
+                                @RequestParam MultipartFile fichier) {
+        try {
+            Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
+            String nomFichier = "livrable_" + userDetails.getUtilisateur().getId() 
+                    + "_" + System.currentTimeMillis() + "_" + fichier.getOriginalFilename();
+            Path chemin = Paths.get(DOSSIER_UPLOAD + nomFichier);
+            Files.write(chemin, fichier.getBytes());
 
-        tacheRepository.findById(tacheId).ifPresent(tache -> {
-            Livrable livrable = new Livrable(tache, titre, null, chemin.toString());
-            livrableRepository.save(livrable);
-        });
-    } catch (IOException e) {
-        System.err.println("Erreur upload livrable : " + e.getMessage());
+            Optional<Stage> stageOpt = getStage(userDetails);
+            if (stageOpt.isPresent()) {
+                Stage stage = stageOpt.get();
+                Livrable livrable = new Livrable();
+                livrable.setTitre(titre);
+                livrable.setFichier(chemin.toString());
+                livrable.setStage(stage);
+                livrable.setStatut(Livrable.StatutLivrable.depose);
+                livrable.setDateDepot(java.time.LocalDateTime.now());
+                livrableRepository.save(livrable);
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur upload livrable : " + e.getMessage());
+            return "redirect:/stagiaire/livrables?erreur=Erreur lors du depot du document.";
+        }
+        return "redirect:/stagiaire/livrables?succes=Document depose avec succes.";
     }
-    return "redirect:/stagiaire/journal?succes=Livrable depose avec succes.";
-}
 
 @GetMapping("/taches")
 public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -537,18 +545,8 @@ public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDe
     } else {
         model.addAttribute("messages", new ArrayList<>());
     }
-    List<Utilisateur> contacts = new ArrayList<>();
-    Optional<Stage> stageOpt = getStage(userDetails);
-    if (stageOpt.isPresent()) {
-        Stage stage = stageOpt.get();
-        if (stage.getEncadreur() != null) {
-            contacts.add(stage.getEncadreur().getUtilisateur());
-        }
-    }
-    List<Utilisateur> admins = utilisateurRepository.findByRole_Libelle("ADMIN");
-    for (Utilisateur admin : admins) {
-        if (!contacts.contains(admin)) contacts.add(admin);
-    }
+    // Contacts disponibles (tous les utilisateurs sauf le stagiaire)
+    List<Utilisateur> contacts = utilisateurRepository.findAll();
     contacts.remove(currentUser);
     model.addAttribute("contacts", contacts);
     return "stagiaire/messages";
