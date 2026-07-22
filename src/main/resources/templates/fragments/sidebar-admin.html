@@ -13,7 +13,10 @@
         <a th:href="@{/admin/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
         <a th:href="@{/admin/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
         <a th:href="@{/admin/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Stagiaires</a>
-       
+        <a th:href="@{/admin/service}" th:classappend="${activePage == 'services'} ? ' actif'"><i class="fa-solid fa-building"></i> Services</a>
+        <a th:href="@{/admin/roles-permissions}" th:classappend="${activePage == 'roles-permissions'} ? ' actif'">
+            <i class="fa-solid fa-lock"></i> Rôles & Permissions
+        </a>
         <a th:href="@{/admin/utilisateurs}" th:classappend="${activePage == 'utilisateurs'} ? ' actif'"><i class="fa-solid fa-users"></i> Utilisateurs</a>
         <a th:href="@{/admin/documents}" th:classappend="${activePage == 'documents'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Documents</a>
         

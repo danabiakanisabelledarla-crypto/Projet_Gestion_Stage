@@ -2,223 +2,295 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de bord - Administrateur</title>
+    <title>Dashboard - Nouveau Design</title>
+    
+    <!-- CSS existants (conservés) -->
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    
+    <!-- NOUVEAU CSS pour ce dashboard -->
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
-    <div th:replace="~{fragments/header-admin :: header}"></div>
-    <div class="page-entete">
-        <div class="page-entete-gauche">
-            <div class="page-icon"><i class="fa-solid fa-gauge-high"></i></div>
-            <div>
-                <h1>Tableau de bord</h1>
-                <p class="page-sous-titre">Aperçu global de la plateforme de gestion des stages.</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- STATS 6 CARTES -->
-    <div class="grille-cartes-stats-6">
-        <div class="carte-stat bleu">
-            <div class="icon-stat"><i class="fa-solid fa-user-graduate"></i></div>
-            <div class="libelle">Stagiaires</div>
-            <div class="valeur" th:text="${nombreStagiaires}">0</div>
-            <div class="mini-evolution">Total des stagiaires</div>
-        </div>
-        <div class="carte-stat vert">
-            <div class="icon-stat"><i class="fa-solid fa-chalkboard-user"></i></div>
-            <div class="libelle">Encadreurs</div>
-            <div class="valeur" th:text="${nombreEncadreurs}">0</div>
-            <div class="mini-evolution">Total des encadreurs</div>
-        </div>
-        <div class="carte-stat orange">
-            <div class="icon-stat"><i class="fa-solid fa-building"></i></div>
-            <div class="libelle">Services</div>
-            <div class="valeur" th:text="${nombreServices}">0</div>
-            <div class="mini-evolution">Services actifs</div>
-        </div>
-        <div class="carte-stat rouge">
-            <div class="icon-stat"><i class="fa-solid fa-folder-open"></i></div>
-            <div class="libelle">Documents</div>
-            <div class="valeur" th:text="${nombreDocuments}">0</div>
-            <div class="mini-evolution">Documents déposés</div>
-        </div>
-        <div class="carte-stat violet">
-            <div class="icon-stat"><i class="fa-solid fa-file-lines"></i></div>
-            <div class="libelle">Demandes</div>
-            <div class="valeur" th:text="${nombreDemandes}">0</div>
-            <div class="mini-evolution" th:text="${demandesEnAttente} + ' en attente'">En attente</div>
-        </div>
-        <div class="carte-stat turquoise">
-            <div class="icon-stat"><i class="fa-solid fa-briefcase"></i></div>
-            <div class="libelle">Stages actifs</div>
-            <div class="valeur" th:text="${stagesActifs}">0</div>
-            <div class="mini-evolution">En cours actuellement</div>
-        </div>
-    </div>
+    <!-- Sidebar existante -->
+    <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-    <!-- ANALYTICS -->
-    <div class="grille-principale">
-        <div class="bloc">
-            <div class="bloc-entete"><h3>Évolution des inscriptions</h3><span class="chip">6 derniers mois</span></div>
-            <canvas id="chartInscriptions" height="200"></canvas>
-        </div>
-        <div class="bloc">
-            <div class="bloc-entete"><h3>Répartition des stages</h3></div>
-            <canvas id="chartRepartition" height="200"></canvas>
-        </div>
-        <div class="bloc">
-            <div class="bloc-entete"><h3>Activités récentes</h3></div>
-            <div class="timeline" th:if="${activitesRecentes != null}">
-                <div class="timeline-item" th:each="act : ${activitesRecentes}" th:if="${actStat.index < 6}">
-                    <span class="dot dot-bleu"></span>
-                    <div><p th:text="${act.action}">-</p></div>
-                    <span class="time" th:text="${#temporals.format(act.dateActivite, 'dd/MM HH:mm')}">-</span>
+    <div class="contenu-principal">
+        
+        <!-- Header existant -->
+        <div th:replace="~{fragments/header-admin :: header}"></div>
+
+    <!-- ======================================== -->
+    <!-- NOUVEAU CONTENU DU DASHBOARD             -->
+    <!-- ======================================== -->
+    <div class="dashboard-container">
+
+            <!-- 1. STATISTIQUES (6 cartes) -->
+            <section class="stats-grid-new">
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-bleu"><i class="fas fa-users"></i></div>
+                    <div class="stat-valeur" th:text="${statUtilisateurs}">0</div>
+                    <div class="stat-label">Utilisateurs <span class="stat-tendance positive">+12 ce mois</span></div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,15 20,10 40,18 60,5 80,12 100,8" fill="none" stroke="#2563EB" stroke-width="2"/>
+                    </svg>
                 </div>
-            </div>
-            <div th:if="${activitesRecentes == null or activitesRecentes.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucune activité récente.</div>
-        </div>
-    </div>
 
-    <!-- INFORMATIONS -->
-    <div class="grille-secondaire-3">
-        <div class="bloc">
-            <h3>Répartition des services</h3>
-            <div th:each="svc : ${repartitionServices}">
-                <div class="service-item">
-                    <span class="service-name" th:text="${svc.nom}">Service</span>
-                    <div class="service-bar"><div class="service-bar-fill" th:style="'width:' + ${svc.pourcentage} + '%'" th:classappend="${svcStat.index == 0}?'fill-bleu':(${svcStat.index == 1}?'fill-vert':(${svcStat.index == 2}?'fill-orange':'fill-violet'))"></div></div>
-                    <span class="service-count" th:text="${svc.nombreStagiaires}">0</span>
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-vert"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-valeur" th:text="${statStagiaires}">0</div>
+                    <div class="stat-label">Stagiaires</div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,12 20,18 40,8 60,14 80,4 100,10" fill="none" stroke="#22C55E" stroke-width="2"/>
+                    </svg>
                 </div>
-            </div>
-            <div th:if="${repartitionServices == null or repartitionServices.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucun service.</div>
-        </div>
-        <div class="bloc">
-            <h3>Top des encadreurs</h3>
-            <div th:each="enc : ${topEncadreurs}">
-                <div class="encadreur-item">
-                    <div class="encadreur-avatar" th:text="${enc.initiales}">E</div>
-                    <div><div style="font-weight:600;" th:text="${enc.nom}">-</div><div style="font-size:12px;color:#64748B;" th:text="${enc.nombreStagiaires} + ' stagiaires'">0</div></div>
-                    <div style="margin-left:auto;" class="encadreur-stars" th:text="${enc.etoiles}">★★★★★</div>
+
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-orange"><i class="fas fa-user-tie"></i></div>
+                    <div class="stat-valeur" th:text="${statEncadreurs}">0</div>
+                    <div class="stat-label">Encadreurs</div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,16 20,12 40,19 60,10 80,14 100,6" fill="none" stroke="#F59E0B" stroke-width="2"/>
+                    </svg>
                 </div>
-            </div>
-        </div>
-        <div class="bloc">
-            <h3>Alertes</h3>
-            <div class="alert-card alert-rouge" th:if="${demandesEnAttente > 0}">
-                <i class="fa-solid fa-circle-exclamation"></i>
-                <span th:text="${demandesEnAttente} + ' demandes en attente'">0 demandes en attente</span>
-            </div>
-            <div class="alert-card alert-orange">
-                <i class="fa-solid fa-clock"></i> 4 tâches en retard
-            </div>
-            <div class="alert-card alert-bleu">
-                <i class="fa-solid fa-database"></i> Sauvegarde effectuée
-            </div>
-            <div class="alert-card alert-vert">
-                <i class="fa-solid fa-check-circle"></i> Tout fonctionne correctement
-            </div>
-        </div>
-    </div>
 
-    <!-- ACTIONS RAPIDES -->
-    <div class="bloc">
-        <div class="bloc-entete"><h3>Actions rapides</h3></div>
-        <div class="raccourcis-grid">
-            <a th:href="@{/admin/stagiaires}" class="carte-raccourci"><span>👤</span> Ajouter un stagiaire</a>
-            <a th:href="@{/admin/utilisateurs}" class="carte-raccourci"><span>👥</span> Créer un utilisateur</a>
-            <a th:href="@{/admin/services}" class="carte-raccourci"><span>🏢</span> Ajouter un service</a>
-            <a th:href="@{/admin/notifications}" class="carte-raccourci"><span>📢</span> Créer une annonce</a>
-            <a th:href="@{/admin/rapports}" class="carte-raccourci"><span>📊</span> Exporter les données</a>
-            <a th:href="@{/admin/parametres}" class="carte-raccourci"><span>⚙️</span> Paramètres</a>
-        </div>
-    </div>
-
-    <!-- CALENDRIER + NOTIFICATIONS -->
-    <div class="grille-secondaire">
-        <div class="bloc">
-            <div class="bloc-entete">
-                <h3>Calendrier</h3>
-                <div><button class="chip" id="moisPrecAdmin">‹</button><span id="moisTitreAdmin" style="margin:0 10px;font-weight:600;">-</span><button class="chip" id="moisSuivAdmin">›</button></div>
-            </div>
-            <div class="calendrier-admin" id="calendrierAdminGrille"></div>
-            <div class="legende" style="margin-top:10px;gap:4px;">
-                <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#DBEAFE;border:1px solid #2563EB;"></span> Événement</div>
-                <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563EB;"></span> Aujourd'hui</div>
-            </div>
-        </div>
-        <div class="bloc">
-            <h3>Notifications système</h3>
-            <div th:each="notif : ${notificationsRecentes}" th:if="${notifStat.index < 5}">
-                <div class="timeline-item">
-                    <span class="dot" th:classappend="${notif.priorite == 'haute'}?'dot-rouge':(${notif.priorite == 'normale'}?'dot-bleu':'dot-vert')"></span>
-                    <div><p th:text="${notif.objet}" style="font-weight:500;">-</p></div>
-                    <span class="time" th:text="${#temporals.format(notif.dateEnvoi, 'dd/MM')}">-</span>
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-violet"><i class="fas fa-user-shield"></i></div>
+                    <div class="stat-valeur" th:text="${statResponsables}">0</div>
+                    <div class="stat-label">Responsables</div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,8 20,14 40,6 60,18 80,10 100,4" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+                    </svg>
                 </div>
-            </div>
-            <div th:if="${notificationsRecentes == null or notificationsRecentes.isEmpty()}" style="color:#94A3B8;padding:20px 0;">Aucune notification.</div>
+
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-turquoise"><i class="fas fa-folder-open"></i></div>
+                    <div class="stat-valeur" th:text="${statDocuments}">0</div>
+                    <div class="stat-label">Documents</div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,10 20,16 40,4 60,12 80,18 100,6" fill="none" stroke="#06B6D4" stroke-width="2"/>
+                    </svg>
+                </div>
+
+                <div class="stat-card-new">
+                    <div class="stat-icon stat-icon-rouge"><i class="fas fa-shield-halved"></i></div>
+                    <div class="stat-valeur" th:text="${statActivites}">0</div>
+                    <div class="stat-label">Activités</div>
+                    <svg class="sparkline" viewBox="0 0 100 20">
+                        <polyline points="0,14 20,8 40,16 60,6 80,12 100,18" fill="none" stroke="#EF4444" stroke-width="2"/>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 2. ZONE CENTRALE (2 colonnes) -->
+            <section class="zone-centrale-new">
+                
+                <!-- Aperçu plateforme -->
+                <div class="carte-blanche-new">
+                    <div class="en-tete-carte">
+                        <h3>Aperçu de la plateforme</h3>
+                        <select class="select-filtre-new" onchange="changerPeriode(this.value)">
+                            <option value="7">7 derniers jours</option>
+                            <option value="30">30 derniers jours</option>
+                        </select>
+                    </div>
+                    <div class="graphiques-new">
+                        
+                        <!-- Graphique courbes -->
+                        <div class="graphique-courbes">
+                            <h4>Connexions <span class="valeur-chiffre" th:text="${totalConnexions}">0</span> <span class="tendance-positive">+18%</span></h4>
+                            <svg viewBox="0 0 300 100" class="courbe-new">
+                                <polyline points="0,80 40,60 80,90 120,40 160,70 200,20 240,50 280,30" fill="none" stroke="#2563EB" stroke-width="3"/>
+                                <circle cx="40" cy="60" r="4" fill="#2563EB"/>
+                                <circle cx="120" cy="40" r="4" fill="#2563EB"/>
+                                <circle cx="200" cy="20" r="4" fill="#2563EB"/>
+                                <circle cx="280" cy="30" r="4" fill="#2563EB"/>
+                                <text x="0" y="95" font-size="10" fill="#6B7280">Lun</text>
+                                <text x="40" y="95" font-size="10" fill="#6B7280">Mar</text>
+                                <text x="80" y="95" font-size="10" fill="#6B7280">Mer</text>
+                                <text x="120" y="95" font-size="10" fill="#6B7280">Jeu</text>
+                                <text x="160" y="95" font-size="10" fill="#6B7280">Ven</text>
+                                <text x="200" y="95" font-size="10" fill="#6B7280">Sam</text>
+                                <text x="240" y="95" font-size="10" fill="#6B7280">Dim</text>
+                            </svg>
+                        </div>
+                        
+                        <!-- Donut -->
+                        <div class="graphique-donut">
+                            <h4>Répartition des utilisateurs</h4>
+                            <div class="donut-container-new">
+                                <svg viewBox="0 0 100 100" class="donut-new">
+                                    <!-- Stagiaires 56% -->
+                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#2563EB" stroke-width="15" 
+                                            stroke-dasharray="70.37 129.63" stroke-dashoffset="0"/>
+                                    <!-- Encadreurs 24% -->
+                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22C55E" stroke-width="15" 
+                                            stroke-dasharray="30.16 169.84" stroke-dashoffset="-70.37"/>
+                                    <!-- Responsables 12% -->
+                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F59E0B" stroke-width="15" 
+                                            stroke-dasharray="15.08 184.92" stroke-dashoffset="-100.53"/>
+                                    <!-- Admins 8% -->
+                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8B5CF6" stroke-width="15" 
+                                            stroke-dasharray="10.05 189.95" stroke-dashoffset="-115.61"/>
+                                    <text x="50" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#1E3A8A">128</text>
+                                    <text x="50" y="58" text-anchor="middle" font-size="8" fill="#6B7280">Total</text>
+                                </svg>
+                                <div class="legende-donut-new">
+                                    <span><span class="couleur-bleue"></span> Stagiaires (56%)</span>
+                                    <span><span class="couleur-verte"></span> Encadreurs (24%)</span>
+                                    <span><span class="couleur-orange"></span> Responsables (12%)</span>
+                                    <span><span class="couleur-violette"></span> Admins (8%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activités récentes -->
+                <div class="carte-blanche-new">
+                    <div class="en-tete-carte">
+                        <h3>Activités récentes</h3>
+                        <a href="#" class="voir-tout" th:href="@{/admin/activites}">Voir tout</a>
+                    </div>
+                    <ul class="liste-activites-new">
+                        <li th:each="activite : ${activitesRecentes}" th:if="${activiteStat.index < 5}">
+                            <span th:class="'icone-ronde ' + ${activite.couleur}">
+                                <i th:class="${activite.icone}"></i>
+                            </span>
+                            <span th:text="${activite.message}">Nouvel utilisateur créé</span>
+                            <span class="temps" th:text="${activite.temps}">Il y a 2 min</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 3. PARTIE INFÉRIEURE (3 cartes) -->
+            <section class="partie-inferieure-new">
+                
+                <!-- Statut système -->
+                <div class="carte-blanche-new">
+                    <h3>Statut du système</h3>
+                    <ul class="liste-statut-new">
+                        <li th:each="item : ${statutSysteme}">
+                            <i th:class="${item.icone}"></i>
+                            <span th:text="${item.nom}">Serveur</span>
+                            <span th:class="'pastille-' + ${item.couleur}" th:text="${item.statut}">Opérationnel</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Utilisateurs récents -->
+                <div class="carte-blanche-new">
+                    <div class="en-tete-carte">
+                        <h3>Utilisateurs récents</h3>
+                        <a href="#" class="voir-tout" th:href="@{/admin/utilisateurs}">Voir tous</a>
+                    </div>
+                    <ul class="liste-utilisateurs-new">
+                        <li th:each="user : ${utilisateursRecents}" th:if="${userStat.index < 4}">
+                            <img class="avatar-user" th:src="@{'/images/' + ${user.avatar}}" th:alt="${user.nom}">
+                            <span th:text="${user.nom}">Marie Dupont</span>
+                            <span th:class="'badge-' + ${user.role}" th:text="${user.role}">Encadreur</span>
+                            <span class="temps" th:text="${user.temps}">2h</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="carte-blanche-new">
+                    <h3>Actions rapides</h3>
+                    <div class="grid-actions-new">
+                        <div class="action-card-new" onclick="executerAction('ajouter-utilisateur')">
+                            <i class="fas fa-user-plus couleur-bleue"></i>
+                            <span>Ajouter utilisateur</span>
+                        </div>
+                        <div class="action-card-new" onclick="executerAction('gerer-roles')">
+                            <i class="fas fa-user-shield couleur-violette"></i>
+                            <span>Gérer rôles</span>
+                        </div>
+                        <div class="action-card-new" onclick="executerAction('ajouter-service')">
+                            <i class="fas fa-building couleur-turquoise"></i>
+                            <span>Ajouter service</span>
+                        </div>
+                        <div class="action-card-new" onclick="executerAction('gerer-documents')">
+                            <i class="fas fa-folder-open couleur-orange"></i>
+                            <span>Gérer documents</span>
+                        </div>
+                        <div class="action-card-new" onclick="executerAction('sauvegarder')">
+                            <i class="fas fa-hard-drive couleur-rouge"></i>
+                            <span>Sauvegarder</span>
+                        </div>
+                        <div class="action-card-new" onclick="executerAction('voir-logs')">
+                            <i class="fas fa-file-lines couleur-bleue"></i>
+                            <span>Voir les logs</span>
+                        </div>
+                    </div>
+                    <button class="btn-notification-new" onclick="envoyerNotification()">
+                        <i class="fas fa-paper-plane"></i> Envoyer notification
+                    </button>
+                </div>
+            </section>
+
+            <!-- Pied de page -->
+            <footer class="pied-page-new">
+                <span>© 2026 Gestion des Stages - Tous droits réservés</span>
+                <span>Version 1.0.0</span>
+            </footer>
+
         </div>
+        <!-- FIN NOUVEAU CONTENU -->
+
     </div>
 
-    <!-- FOOTER -->
-    <div class="footer-admin">
-        <span>© 2026 DTA Alliance</span>
-        <span>Version 1.0 · Dernière synchronisation · État serveur <i class="fa-solid fa-circle" style="color:#22C55E;font-size:8px;"></i></span>
-    </div>
-</div>
+    <!-- ======================================== -->
+    <!-- SCRIPTS                                  -->
+    <!-- ======================================== -->
+    <script>
+        function ouvrirNotifications() {
+            window.location.href = '/admin/notifications';
+        }
+        
+        function ouvrirMessages() {
+            window.location.href = '/admin/messages';
+        }
+        
+        function envoyerNotification() {
+            alert('Ouvrir le formulaire d\'envoi de notification');
+            // À remplacer par un vrai modal ou une redirection
+        }
+        
+        function executerAction(actionId) {
+            console.log('Action : ' + actionId);
+            switch(actionId) {
+                case 'ajouter-utilisateur':
+                    window.location.href = '/admin/utilisateurs/ajouter';
+                    break;
+                case 'gerer-roles':
+                    window.location.href = '/admin/roles-permissions';
+                    break;
+                case 'ajouter-service':
+                    window.location.href = '/admin/service';
+                    break;
+                case 'gerer-documents':
+                    window.location.href = '/admin/documents';
+                    break;
+                case 'sauvegarder':
+                    alert('Sauvegarde en cours...');
+                    break;
+                case 'voir-logs':
+                    window.location.href = '/admin/logs';
+                    break;
+                default:
+                    alert('Action non reconnue');
+            }
+        }
+        
+        function changerPeriode(periode) {
+            window.location.href = '/admin/dashboard?periode=' + periode;
+        }
+    </script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Chart Inscriptions
-new Chart(document.getElementById('chartInscriptions'), {
-    type: 'line',
-    data: {
-        labels: /*[[${moisLabels}]]*/ ['Jan','Fév','Mar','Avr','Mai','Jun'],
-        datasets: [{ label: 'Inscriptions', data: /*[[${inscriptionsData}]]*/ [12,19,8,24,15,22], borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#2563EB' }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#F1F5F9' } }, x: { grid: { display: false } } } }
-});
-// Chart Donut
-new Chart(document.getElementById('chartRepartition'), {
-    type: 'doughnut',
-    data: {
-        labels: ['En cours','Terminés','Suspendus'],
-        datasets: [{ data: [/*[[${stagesEnCours}]]*/ 42, /*[[${stagesTermines}]]*/ 18, /*[[${stagesSuspendus}]]*/ 3], backgroundColor: ['#2563EB','#22C55E','#F59E0B'] }]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
-});
-// Calendrier
-const evenementsCal = /*[[${evenementsCalendrier}]]*/ [];
-let dateCal = new Date(); dateCal.setDate(1);
-const moisNom = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-function genererCalendrierAdmin(){
-    const grille = document.getElementById('calendrierAdminGrille');
-    grille.innerHTML = '';
-    document.getElementById('moisTitreAdmin').textContent = moisNom[dateCal.getMonth()] + ' ' + dateCal.getFullYear();
-    const joursSem = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-    joursSem.forEach(j => { const d = document.createElement('div'); d.className='cal-admin-header'; d.textContent=j; grille.appendChild(d); });
-    const premier = new Date(dateCal.getFullYear(), dateCal.getMonth(), 1);
-    let decal = premier.getDay()-1; if(decal<0) decal=6;
-    for(let i=0;i<decal;i++){ const v=document.createElement('div'); v.className='cal-admin-cell'; grille.appendChild(v); }
-    const dern = new Date(dateCal.getFullYear(), dateCal.getMonth()+1, 0).getDate();
-    const ajd = new Date();
-    for(let j=1;j<=dern;j++){
-        const c = new Date(dateCal.getFullYear(), dateCal.getMonth(), j);
-        const d = document.createElement('div'); d.className='cal-admin-cell';
-        const key = c.getFullYear()+'-'+(c.getMonth()+1)+'-'+c.getDate();
-        if(evenementsCal.some(e=>e===key)) d.classList.add('avec-event');
-        if(c.getFullYear()===ajd.getFullYear()&&c.getMonth()===ajd.getMonth()&&c.getDate()===ajd.getDate()) d.classList.add('aujourdhui');
-        d.textContent=j; grille.appendChild(d);
-    }
-}
-genererCalendrierAdmin();
-document.getElementById('moisPrecAdmin').onclick = ()=>{ dateCal.setMonth(dateCal.getMonth()-1); genererCalendrierAdmin(); };
-document.getElementById('moisSuivAdmin').onclick = ()=>{ dateCal.setMonth(dateCal.getMonth()+1); genererCalendrierAdmin(); };
-</script>
 </body>
 </html>

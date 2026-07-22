@@ -2,170 +2,563 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Services - Administrateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Administration</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/admin-services.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
+
+<main class="contenu-principal svc-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
-        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
+    <div class="svc-alert" th:if="${succes}">
+        <i class="fa-solid fa-circle-check"></i>
+        <span th:text="${succes}">Opération effectuée.</span>
+        <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-    <!-- PAGE HEADER -->
-    <div class="svc-header">
-        <div class="svc-header-left">
-            <div class="svc-header-icon"><i class="fa-solid fa-building"></i></div>
+    <section class="svc-page-heading">
+        <div class="svc-title-group">
+            <div class="svc-title-icon"><i class="fa-solid fa-sitemap"></i></div>
             <div>
-                <h1>Gestion des services</h1>
-                <p class="svc-header-sub">Créez, modifiez et supprimez les services de l'entreprise.</p>
+                <h1>Services</h1>
+                <nav class="svc-breadcrumb" aria-label="Fil d'Ariane">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Services</strong>
+                </nav>
             </div>
         </div>
-        <div class="svc-header-right">
-            <button class="svc-btn-primary" onclick="document.getElementById('modalAjout').style.display='flex'"><i class="fa-solid fa-plus"></i> Nouveau service</button>
-            <button class="svc-btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+        <div class="svc-heading-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="globalServiceSearch" placeholder="Rechercher dans les services..."
+                   aria-label="Rechercher dans les services">
+            <kbd>Ctrl K</kbd>
         </div>
-    </div>
+    </section>
 
-    <!-- STATS CARDS -->
-    <div class="svc-stats">
-        <div class="svc-stat-card bleu">
-            <div class="svc-stat-icon"><i class="fa-solid fa-building"></i></div>
-            <div>
-                <div class="svc-stat-label">Services</div>
-                <div class="svc-stat-number" th:text="${totalServices}">0</div>
-                <div class="svc-stat-desc">Actifs</div>
+    <section class="svc-stats" aria-label="Statistiques des services">
+        <article class="svc-stat-card bleu">
+            <div class="svc-stat-top">
+                <div class="svc-stat-icon"><i class="fa-solid fa-building"></i></div>
+                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 8%</span>
             </div>
-        </div>
-        <div class="svc-stat-card vert">
-            <div class="svc-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
-            <div>
-                <div class="svc-stat-label">Encadreurs</div>
-                <div class="svc-stat-number" th:text="${totalEncadreurs}">0</div>
-                <div class="svc-stat-desc">Répartis</div>
-            </div>
-        </div>
-        <div class="svc-stat-card orange">
-            <div class="svc-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
-            <div>
-                <div class="svc-stat-label">Stagiaires</div>
-                <div class="svc-stat-number" th:text="${totalStagiaires}">0</div>
-                <div class="svc-stat-desc">Affectés</div>
-            </div>
-        </div>
-        <div class="svc-stat-card violet">
-            <div class="svc-stat-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <div>
-                <div class="svc-stat-label">Stages en cours</div>
-                <div class="svc-stat-number" th:text="${stagesEnCours}">0</div>
-                <div class="svc-stat-desc">Actuellement</div>
-            </div>
-        </div>
-    </div>
+            <div class="svc-stat-label">Total des services</div>
+            <div class="svc-stat-number" th:text="${totalServices}">0</div>
+            <div class="svc-stat-desc">Départements enregistrés</div>
+            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C24 29,34 31,52 23 S85 26,104 16 S140 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C24 29,34 31,52 23 S85 26,104 16 S140 20,180 5"></path>
+            </svg>
+        </article>
 
-    <!-- TABLEAU DES SERVICES -->
-    <div class="svc-card">
-        <div class="svc-card-header">
-            <span class="svc-card-title"><i class="fa-solid fa-list" style="margin-right:8px;color:#2563EB;"></i>Liste des services</span>
-            <div class="svc-card-actions">
-                <input type="text" id="svcSearch" class="svc-input-search" placeholder="Rechercher un service..." oninput="filtrerServices()">
-                <button class="svc-card-btn"><i class="fa-solid fa-rotate-right"></i> Actualiser</button>
+        <article class="svc-stat-card vert">
+            <div class="svc-stat-top">
+                <div class="svc-stat-icon"><i class="fa-solid fa-user-tie"></i></div>
+                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 4%</span>
             </div>
-        </div>
-        <table class="svc-table" id="servicesTable">
-            <thead>
-                <tr>
-                    <th>Nom du service</th>
-                    <th>Description</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="s : ${services}" th:attr="data-nom=*{s.nom.toLowerCase()}">
-                    <td><span class="svc-name" th:text="${s.nom}">Service</span></td>
-                    <td><span class="svc-desc" th:text="${s.description}">Description</span></td>
-                    <td><span class="svc-badge actif">Actif</span></td>
-                    <td class="svc-actions-cell">
-                        <button class="svc-action-btn" title="Modifier" onclick="ouvrirModification('${s.id}', '${s.nom}', '${s.description}')"><i class="fa-solid fa-pen"></i></button>
-                        <form th:action="@{/admin/services/supprimer/{id}(id=${s.id})}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ce service ?')">
-                            <button class="svc-action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                        </form>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(services)}">
-                    <td colspan="4" class="svc-empty">Aucun service trouvé. Cliquez sur "Nouveau service" pour en créer un.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+            <div class="svc-stat-label">Responsables</div>
+            <div class="svc-stat-number" th:text="${totalResponsables}">0</div>
+            <div class="svc-stat-desc">Responsables de stage</div>
+            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8"></path>
+            </svg>
+        </article>
 
-<!-- MODAL AJOUT -->
-<div id="modalAjout" class="svc-modal" style="display:none;">
-    <div class="svc-modal-content">
-        <div class="svc-modal-header">
-            <h2><i class="fa-solid fa-plus-circle" style="color:#2563EB;"></i> Ajouter un service</h2>
-            <button class="svc-modal-close" onclick="document.getElementById('modalAjout').style.display='none'">&times;</button>
+        <article class="svc-stat-card orange">
+            <div class="svc-stat-top">
+                <div class="svc-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 12%</span>
+            </div>
+            <div class="svc-stat-label">Encadreurs</div>
+            <div class="svc-stat-number" th:text="${totalEncadreurs}">0</div>
+            <div class="svc-stat-desc">Encadreurs disponibles</div>
+            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4"></path>
+            </svg>
+        </article>
+
+        <article class="svc-stat-card rouge">
+            <div class="svc-stat-top">
+                <div class="svc-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 16%</span>
+            </div>
+            <div class="svc-stat-label">Stagiaires</div>
+            <div class="svc-stat-number" th:text="${totalStagiaires}">0</div>
+            <div class="svc-stat-desc">Tous statuts confondus</div>
+            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7"></path>
+            </svg>
+        </article>
+    </section>
+
+    <section class="svc-workspace">
+        <div class="svc-list-card">
+            <header class="svc-card-heading">
+                <div>
+                    <h2>Liste des services</h2>
+                    <p><span id="visibleServiceCount" th:text="${totalServices}">0</span> services affichés</p>
+                </div>
+                <div class="svc-view-switch" role="group" aria-label="Mode d'affichage">
+                    <button type="button" class="active" title="Vue tableau"><i class="fa-solid fa-list"></i></button>
+                    <button type="button" title="Vue grille"><i class="fa-solid fa-table-cells-large"></i></button>
+                </div>
+            </header>
+
+            <div class="svc-toolbar">
+                <div class="svc-toolbar-primary">
+                    <button type="button" class="svc-btn svc-btn-primary" onclick="ouvrirModal('modalAjout')">
+                        <i class="fa-solid fa-plus"></i> Ajouter un service
+                    </button>
+                    <button type="button" class="svc-btn svc-btn-secondary" onclick="exporterServices()">
+                        <i class="fa-solid fa-file-export"></i> Exporter
+                    </button>
+                </div>
+                <label class="svc-table-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="svcSearch" placeholder="Rechercher un service..." oninput="appliquerFiltres()">
+                </label>
+            </div>
+
+            <div class="svc-filters">
+                <label>
+                    <span>Responsable</span>
+                    <select id="filterResponsable" onchange="appliquerFiltres()">
+                        <option value="">Tous</option>
+                        <option th:each="row : ${serviceRows}"
+                                th:if="${row.responsable != null}"
+                                th:value="${row.responsable.utilisateur.prenom + ' ' + row.responsable.utilisateur.nom}"
+                                th:text="${row.responsable.utilisateur.prenom + ' ' + row.responsable.utilisateur.nom}">
+                            Responsable
+                        </option>
+                        <option value="Non attribué">Non attribué</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Statut</span>
+                    <select id="filterStatut" onchange="appliquerFiltres()">
+                        <option value="">Tous</option>
+                        <option value="Actif">Actif</option>
+                        <option value="Désactivé">Désactivé</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Localisation</span>
+                    <select id="filterLocalisation" onchange="appliquerFiltres()">
+                        <option value="">Toutes</option>
+                        <option th:each="row : ${serviceRows}" th:value="${row.localisation}"
+                                th:text="${row.localisation}">Bâtiment A</option>
+                    </select>
+                </label>
+                <button type="button" class="svc-filter-btn" onclick="appliquerFiltres()">
+                    <i class="fa-solid fa-filter"></i> Filtrer
+                </button>
+                <button type="button" class="svc-reset-btn" title="Réinitialiser les filtres" onclick="reinitialiserFiltres()">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+
+            <div class="svc-table-wrap">
+                <table class="svc-table" id="servicesTable">
+                    <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Responsable</th>
+                        <th>Encadreurs</th>
+                        <th>Stagiaires</th>
+                        <th>Capacité</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="svc-service-row"
+                        th:each="row : ${serviceRows}"
+                        th:attr="data-id=${row.service.id},
+                                 data-nom=${row.service.nom},
+                                 data-description=${row.service.description},
+                                 data-responsable=${row.responsable != null ? row.responsable.utilisateur.prenom + ' ' + row.responsable.utilisateur.nom : 'Non attribué'},
+                                 data-encadreurs=${row.encadreurNoms},
+                                 data-fonctions=${row.encadreurFonctions},
+                                 data-capacite=${row.capacite},
+                                 data-localisation=${row.localisation},
+                                 data-statut=${row.statut},
+                                 data-total=${row.totalStagiaires},
+                                 data-encours=${row.stagesEnCours},
+                                 data-clotures=${row.stagesClotures},
+                                 data-livrables=${row.livrables},
+                                 data-rapports=${row.rapports},
+                                 data-couleur=${row.couleur}"
+                        onclick="selectionnerService(this)">
+                        <td>
+                            <div class="svc-service-cell">
+                                <div class="svc-service-icon" th:classappend="${row.couleur}">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <div>
+                                    <strong th:text="${row.service.nom}">Service</strong>
+                                    <span th:text="${row.service.description ?: 'Aucune description renseignée'}">Description</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="svc-person" th:if="${row.responsable != null}">
+                                <div class="svc-avatar"
+                                     th:text="${#strings.substring(row.responsable.utilisateur.prenom, 0, 1) + #strings.substring(row.responsable.utilisateur.nom, 0, 1)}">JD</div>
+                                <div>
+                                    <strong th:text="${row.responsable.utilisateur.prenom + ' ' + row.responsable.utilisateur.nom}">Responsable</strong>
+                                    <span th:text="${row.responsable.fonction ?: 'Encadreur principal'}">Fonction</span>
+                                </div>
+                            </div>
+                            <span class="svc-unassigned" th:if="${row.responsable == null}">
+                                <i class="fa-regular fa-circle-user"></i> Non attribué
+                            </span>
+                        </td>
+                        <td>
+                            <div class="svc-avatar-stack" th:if="${!#lists.isEmpty(row.encadreurs)}">
+                                <div class="svc-mini-avatar" th:each="encadreur, stat : ${row.encadreurs}"
+                                     th:if="${stat.index < 3}"
+                                     th:title="${encadreur.utilisateur.prenom + ' ' + encadreur.utilisateur.nom}"
+                                     th:text="${#strings.substring(encadreur.utilisateur.prenom, 0, 1) + #strings.substring(encadreur.utilisateur.nom, 0, 1)}">EN</div>
+                                <span th:if="${#lists.size(row.encadreurs) > 3}"
+                                      th:text="${'+' + (#lists.size(row.encadreurs) - 3)}">+2</span>
+                            </div>
+                            <span class="svc-muted" th:if="${#lists.isEmpty(row.encadreurs)}">Aucun</span>
+                        </td>
+                        <td>
+                            <div class="svc-stage-counts">
+                                <span><strong th:text="${row.totalStagiaires}">0</strong>Total</span>
+                                <span class="current"><strong th:text="${row.stagesEnCours}">0</strong>En cours</span>
+                                <span class="closed"><strong th:text="${row.stagesClotures}">0</strong>Clôturés</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="svc-capacity">
+                                <strong th:text="${row.totalStagiaires + '/' + row.capacite}">0/10</strong>
+                                <div><span th:style="'width:' + ${row.capacite > 0 ? (row.totalStagiaires * 100 / row.capacite) : 0} + '%'"></span></div>
+                            </div>
+                        </td>
+                        <td><span class="svc-status active"><i></i> Actif</span></td>
+                        <td>
+                            <div class="svc-row-actions">
+                                <button type="button" title="Voir les détails" onclick="event.stopPropagation(); selectionnerService(this.closest('tr'))">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button" class="js-edit" title="Modifier"
+                                        onclick="event.stopPropagation(); ouvrirModificationDepuisLigne(this.closest('tr'))">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <a th:href="@{/admin/stagiaires}" title="Gérer les affectations" onclick="event.stopPropagation()">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </a>
+                                <button type="button" title="Plus d'actions" onclick="event.stopPropagation(); toggleMenu(this)">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <div class="svc-context-menu">
+                                    <button type="button" onclick="ouvrirModificationDepuisLigne(this.closest('tr'))">
+                                        <i class="fa-regular fa-copy"></i> Dupliquer
+                                    </button>
+                                    <form th:action="@{/admin/services/supprimer/{id}(id=${row.service.id})}" method="post"
+                                          onsubmit="return confirm('Supprimer définitivement ce service ?')">
+                                        <button type="submit" class="danger">
+                                            <i class="fa-regular fa-trash-can"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(serviceRows)}" class="svc-empty-row">
+                        <td colspan="7">
+                            <i class="fa-solid fa-building-circle-exclamation"></i>
+                            <strong>Aucun service enregistré</strong>
+                            <span>Ajoutez votre premier service pour commencer.</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <footer class="svc-pagination">
+                <span id="paginationInfo">Affichage des services disponibles</span>
+                <div>
+                    <button type="button" disabled title="Page précédente"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button type="button" class="active">1</button>
+                    <button type="button" disabled title="Page suivante"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </footer>
         </div>
+
+        <aside class="svc-details-card" id="serviceDetails">
+            <div class="svc-details-empty" id="detailsEmpty">
+                <div><i class="fa-solid fa-arrow-pointer"></i></div>
+                <h3>Détails du service</h3>
+                <p>Sélectionnez un service dans le tableau.</p>
+            </div>
+
+            <div class="svc-details-content" id="detailsContent" hidden>
+                <header class="svc-detail-hero">
+                    <div class="svc-detail-icon bleu" id="detailIcon"><i class="fa-solid fa-building-columns"></i></div>
+                    <div>
+                        <span class="svc-status active"><i></i> <span id="detailStatut">Actif</span></span>
+                        <h2 id="detailNom">Service</h2>
+                        <p id="detailDescription">Description du service</p>
+                    </div>
+                    <button type="button" title="Modifier ce service" onclick="modifierServiceSelectionne()">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </header>
+
+                <section class="svc-detail-section">
+                    <h3>Informations générales</h3>
+                    <div class="svc-info-list">
+                        <div><i class="fa-solid fa-user-tie"></i><span>Responsable<strong id="detailResponsable">Non attribué</strong></span></div>
+                        <div><i class="fa-regular fa-calendar"></i><span>Date de création<strong>22 juillet 2026</strong></span></div>
+                        <div><i class="fa-solid fa-users"></i><span>Capacité d'accueil<strong id="detailCapacite">0 stagiaire</strong></span></div>
+                        <div><i class="fa-solid fa-location-dot"></i><span>Localisation<strong id="detailLocalisation">Non renseignée</strong></span></div>
+                    </div>
+                </section>
+
+                <section class="svc-detail-section">
+                    <div class="svc-section-title">
+                        <h3>Encadreurs du service</h3>
+                        <a th:href="@{/admin/utilisateurs}"><i class="fa-solid fa-plus"></i> Ajouter</a>
+                    </div>
+                    <div class="svc-mentor-list" id="detailEncadreurs"></div>
+                </section>
+
+                <section class="svc-detail-section">
+                    <h3>Statistiques du service</h3>
+                    <div class="svc-detail-stats">
+                        <div><i class="fa-solid fa-users bleu"></i><span>Total stagiaires<strong id="detailTotal">0</strong></span></div>
+                        <div><i class="fa-solid fa-spinner vert"></i><span>Stages en cours<strong id="detailEnCours">0</strong></span></div>
+                        <div><i class="fa-solid fa-circle-check orange"></i><span>Stages clôturés<strong id="detailClotures">0</strong></span></div>
+                        <div><i class="fa-solid fa-file-arrow-up violet"></i><span>Livrables déposés<strong id="detailLivrables">0</strong></span></div>
+                        <div><i class="fa-solid fa-file-circle-check rouge"></i><span>Rapports validés<strong id="detailRapports">0</strong></span></div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<div id="modalAjout" class="svc-modal" aria-hidden="true">
+    <div class="svc-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="titreModalAjout">
+        <header>
+            <div><span><i class="fa-solid fa-building-circle-check"></i></span><h2 id="titreModalAjout">Ajouter un service</h2></div>
+            <button type="button" aria-label="Fermer" onclick="fermerModal('modalAjout')"><i class="fa-solid fa-xmark"></i></button>
+        </header>
         <form th:action="@{/admin/services/ajouter}" method="post" class="svc-form">
-            <div class="svc-form-group">
-                <label>Nom du service</label>
-                <input type="text" name="nom" required placeholder="Ex: Développement, Marketing, RH...">
-            </div>
-            <div class="svc-form-group">
-                <label>Description</label>
-                <textarea name="description" rows="3" placeholder="Description du service..."></textarea>
-            </div>
-            <div class="svc-form-actions">
-                <button type="button" class="svc-btn-cancel" onclick="document.getElementById('modalAjout').style.display='none'">Annuler</button>
-                <button type="submit" class="svc-btn-submit"><i class="fa-solid fa-check"></i> Ajouter</button>
-            </div>
+            <label>Nom du service
+                <input type="text" name="nom" required maxlength="150" placeholder="Ex. Développement logiciel">
+            </label>
+            <label>Description
+                <textarea name="description" rows="4" placeholder="Décrivez les missions principales du service"></textarea>
+            </label>
+            <footer>
+                <button type="button" class="svc-btn svc-btn-secondary" onclick="fermerModal('modalAjout')">Annuler</button>
+                <button type="submit" class="svc-btn svc-btn-primary"><i class="fa-solid fa-check"></i> Ajouter</button>
+            </footer>
         </form>
     </div>
 </div>
 
-<!-- MODAL MODIFICATION -->
-<div id="modalModif" class="svc-modal" style="display:none;">
-    <div class="svc-modal-content">
-        <div class="svc-modal-header">
-            <h2><i class="fa-solid fa-pen" style="color:#F59E0B;"></i> Modifier le service</h2>
-            <button class="svc-modal-close" onclick="document.getElementById('modalModif').style.display='none'">&times;</button>
-        </div>
-        <form th:action="@{/admin/services/modifier/{id}(id=${'_ID_'})}" method="post" class="svc-form" id="formModif">
-            <div class="svc-form-group">
-                <label>Nom du service</label>
-                <input type="text" name="nom" id="modifNom" required>
-            </div>
-            <div class="svc-form-group">
-                <label>Description</label>
-                <textarea name="description" id="modifDesc" rows="3"></textarea>
-            </div>
-            <div class="svc-form-actions">
-                <button type="button" class="svc-btn-cancel" onclick="document.getElementById('modalModif').style.display='none'">Annuler</button>
-                <button type="submit" class="svc-btn-submit"><i class="fa-solid fa-check"></i> Enregistrer</button>
-            </div>
+<div id="modalModif" class="svc-modal" aria-hidden="true">
+    <div class="svc-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="titreModalModif">
+        <header>
+            <div><span class="orange"><i class="fa-solid fa-pen"></i></span><h2 id="titreModalModif">Modifier le service</h2></div>
+            <button type="button" aria-label="Fermer" onclick="fermerModal('modalModif')"><i class="fa-solid fa-xmark"></i></button>
+        </header>
+        <form action="" method="post" class="svc-form" id="formModif">
+            <label>Nom du service
+                <input type="text" name="nom" id="modifNom" required maxlength="150">
+            </label>
+            <label>Description
+                <textarea name="description" id="modifDesc" rows="4"></textarea>
+            </label>
+            <footer>
+                <button type="button" class="svc-btn svc-btn-secondary" onclick="fermerModal('modalModif')">Annuler</button>
+                <button type="submit" class="svc-btn svc-btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+            </footer>
         </form>
     </div>
 </div>
 
 <script>
-function filtrerServices() {
-    const q = document.getElementById('svcSearch').value.toLowerCase();
-    document.querySelectorAll('#servicesTable tbody tr[data-nom]').forEach(tr => {
-        tr.style.display = tr.getAttribute('data-nom').includes(q) ? '' : 'none';
+    let serviceSelectionne = null;
+
+    function ouvrirModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        const input = modal.querySelector('input');
+        if (input) setTimeout(() => input.focus(), 100);
+    }
+
+    function fermerModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function initiales(nom) {
+        return nom.split(/\s+/).filter(Boolean).slice(0, 2).map(mot => mot.charAt(0)).join('').toUpperCase() || 'EN';
+    }
+
+    function selectionnerService(ligne) {
+        if (!ligne || !ligne.dataset.id) return;
+        document.querySelectorAll('.svc-service-row').forEach(row => row.classList.remove('selected'));
+        ligne.classList.add('selected');
+        serviceSelectionne = ligne;
+
+        document.getElementById('detailsEmpty').hidden = true;
+        document.getElementById('detailsContent').hidden = false;
+        document.getElementById('detailNom').textContent = ligne.dataset.nom;
+        document.getElementById('detailDescription').textContent = ligne.dataset.description || 'Aucune description renseignée.';
+        document.getElementById('detailResponsable').textContent = ligne.dataset.responsable;
+        document.getElementById('detailCapacite').textContent = ligne.dataset.capacite + ' stagiaires';
+        document.getElementById('detailLocalisation').textContent = ligne.dataset.localisation;
+        document.getElementById('detailStatut').textContent = ligne.dataset.statut;
+        document.getElementById('detailTotal').textContent = ligne.dataset.total;
+        document.getElementById('detailEnCours').textContent = ligne.dataset.encours;
+        document.getElementById('detailClotures').textContent = ligne.dataset.clotures;
+        document.getElementById('detailLivrables').textContent = ligne.dataset.livrables;
+        document.getElementById('detailRapports').textContent = ligne.dataset.rapports;
+        document.getElementById('detailIcon').className = 'svc-detail-icon ' + ligne.dataset.couleur;
+
+        const noms = (ligne.dataset.encadreurs || '').split('|').filter(Boolean);
+        const fonctions = (ligne.dataset.fonctions || '').split('|');
+        const liste = document.getElementById('detailEncadreurs');
+        liste.innerHTML = '';
+        if (noms.length === 0) {
+            liste.innerHTML = '<div class="svc-no-mentor"><i class="fa-regular fa-user"></i> Aucun encadreur affecté</div>';
+        } else {
+            noms.forEach((nom, index) => {
+                const item = document.createElement('div');
+                item.innerHTML = '<div class="svc-avatar">' + initiales(nom) + '</div>'
+                    + '<span><strong>' + echapperHtml(nom) + '</strong><small>' + echapperHtml(fonctions[index] || 'Encadreur') + '</small></span>'
+                    + '<em>' + (index === 0 ? 'Principal' : 'Secondaire') + '</em>';
+                liste.appendChild(item);
+            });
+        }
+    }
+
+    function echapperHtml(valeur) {
+        const div = document.createElement('div');
+        div.textContent = valeur;
+        return div.innerHTML;
+    }
+
+    function ouvrirModificationDepuisLigne(ligne) {
+        serviceSelectionne = ligne;
+        document.getElementById('formModif').action = '/admin/services/modifier/' + ligne.dataset.id;
+        document.getElementById('modifNom').value = ligne.dataset.nom;
+        document.getElementById('modifDesc').value = ligne.dataset.description || '';
+        ouvrirModal('modalModif');
+    }
+
+    function modifierServiceSelectionne() {
+        if (serviceSelectionne) ouvrirModificationDepuisLigne(serviceSelectionne);
+    }
+
+    function appliquerFiltres() {
+        const recherche = document.getElementById('svcSearch').value.trim().toLowerCase();
+        const responsable = document.getElementById('filterResponsable').value;
+        const statut = document.getElementById('filterStatut').value;
+        const localisation = document.getElementById('filterLocalisation').value;
+        let visibles = 0;
+
+        document.querySelectorAll('.svc-service-row').forEach(ligne => {
+            const texte = (ligne.dataset.nom + ' ' + ligne.dataset.description + ' ' + ligne.dataset.responsable).toLowerCase();
+            const afficher = (!recherche || texte.includes(recherche))
+                && (!responsable || ligne.dataset.responsable === responsable)
+                && (!statut || ligne.dataset.statut === statut)
+                && (!localisation || ligne.dataset.localisation === localisation);
+            ligne.hidden = !afficher;
+            if (afficher) visibles++;
+        });
+        document.getElementById('visibleServiceCount').textContent = visibles;
+        document.getElementById('paginationInfo').textContent = visibles + ' service' + (visibles > 1 ? 's' : '') + ' trouvé' + (visibles > 1 ? 's' : '');
+    }
+
+    function reinitialiserFiltres() {
+        document.getElementById('svcSearch').value = '';
+        document.getElementById('globalServiceSearch').value = '';
+        document.getElementById('filterResponsable').value = '';
+        document.getElementById('filterStatut').value = '';
+        document.getElementById('filterLocalisation').value = '';
+        appliquerFiltres();
+    }
+
+    function toggleMenu(bouton) {
+        const menu = bouton.parentElement.querySelector('.svc-context-menu');
+        document.querySelectorAll('.svc-context-menu.open').forEach(item => {
+            if (item !== menu) item.classList.remove('open');
+        });
+        menu.classList.toggle('open');
+    }
+
+    function exporterServices() {
+        const lignes = [Array.of('Service', 'Responsable', 'Encadreurs', 'Stagiaires', 'En cours', 'Clôturés', 'Capacité', 'Statut', 'Localisation')];
+        document.querySelectorAll('.svc-service-row:not([hidden])').forEach(ligne => {
+            lignes.push([
+                ligne.dataset.nom,
+                ligne.dataset.responsable,
+                (ligne.dataset.encadreurs || '').replaceAll('|', ', '),
+                ligne.dataset.total,
+                ligne.dataset.encours,
+                ligne.dataset.clotures,
+                ligne.dataset.capacite,
+                ligne.dataset.statut,
+                ligne.dataset.localisation
+            ]);
+        });
+        const csv = lignes.map(ligne => ligne.map(cellule => '"' + String(cellule).replaceAll('"', '""') + '"').join(';')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+        const lien = document.createElement('a');
+        lien.href = URL.createObjectURL(blob);
+        lien.download = 'services.csv';
+        lien.click();
+        URL.revokeObjectURL(lien.href);
+    }
+
+    document.getElementById('globalServiceSearch').addEventListener('input', function () {
+        document.getElementById('svcSearch').value = this.value;
+        appliquerFiltres();
     });
-}
-function ouvrirModification(id, nom, desc) {
-    document.getElementById('formModif').action = '/admin/services/modifier/' + id;
-    document.getElementById('modifNom').value = nom;
-    document.getElementById('modifDesc').value = desc;
-    document.getElementById('modalModif').style.display = 'flex';
-}
+
+    document.addEventListener('keydown', event => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            document.getElementById('globalServiceSearch').focus();
+        }
+        if (event.key === 'Escape') {
+            fermerModal('modalAjout');
+            fermerModal('modalModif');
+        }
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.svc-row-actions')) {
+            document.querySelectorAll('.svc-context-menu.open').forEach(menu => menu.classList.remove('open'));
+        }
+        if (event.target.classList.contains('svc-modal')) {
+            fermerModal(event.target.id);
+        }
+    });
+
+    const premiereLigne = document.querySelector('.svc-service-row');
+    if (premiereLigne) selectionnerService(premiereLigne);
 </script>
 </body>
 </html>

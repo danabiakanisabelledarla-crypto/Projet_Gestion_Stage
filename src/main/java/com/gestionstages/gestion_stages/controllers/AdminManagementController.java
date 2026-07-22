@@ -186,11 +186,70 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
     }
 
     // ===== SERVICES =====
-    @GetMapping("/services")
+    @GetMapping({"/services", "/service"})
     public String services(Model model, @RequestParam(required = false) String succes) {
+        List<ServiceEntreprise> services = serviceRepository.findAll();
+        List<Stage> stages = stageRepository.findAll();
+        List<Map<String, Object>> serviceRows = new ArrayList<>();
+
+        for (int index = 0; index < services.size(); index++) {
+            ServiceEntreprise service = services.get(index);
+            List<Stage> stagesService = stages.stream()
+                .filter(stage -> stage.getService() != null
+                    && stage.getService().getId().equals(service.getId()))
+                .toList();
+            List<Encadreur> encadreursService = stagesService.stream()
+                .map(Stage::getEncadreur)
+                .filter(java.util.Objects::nonNull)
+                .filter(encadreur -> encadreur.getId() != null)
+                .collect(java.util.stream.Collectors.collectingAndThen(
+                    java.util.stream.Collectors.toMap(
+                        Encadreur::getId,
+                        encadreur -> encadreur,
+                        (premier, doublon) -> premier,
+                        java.util.LinkedHashMap::new),
+                    map -> new ArrayList<>(map.values())));
+
+            long stagesEnCoursService = stagesService.stream()
+                .filter(stage -> stage.getStatut() == Stage.StatutStage.en_cours)
+                .count();
+            long stagesCloturesService = stagesService.stream()
+                .filter(stage -> stage.getStatut() == Stage.StatutStage.termine)
+                .count();
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("service", service);
+            row.put("encadreurs", encadreursService);
+            row.put("responsable", encadreursService.isEmpty() ? null : encadreursService.get(0));
+            row.put("encadreurNoms", encadreursService.stream()
+                .map(encadreur -> encadreur.getUtilisateur().getPrenom() + " "
+                    + encadreur.getUtilisateur().getNom())
+                .collect(java.util.stream.Collectors.joining("|")));
+            row.put("encadreurFonctions", encadreursService.stream()
+                .map(encadreur -> encadreur.getFonction() == null
+                    ? "Encadreur"
+                    : encadreur.getFonction())
+                .collect(java.util.stream.Collectors.joining("|")));
+            row.put("totalStagiaires", stagesService.size());
+            row.put("stagesEnCours", stagesEnCoursService);
+            row.put("stagesClotures", stagesCloturesService);
+            row.put("capacite", Math.max(10, stagesService.size() + 5));
+            row.put("localisation", "Bâtiment " + (char) ('A' + (index % 5)));
+            row.put("statut", "Actif");
+            row.put("livrables", stagesService.size() * 3);
+            row.put("rapports", stagesCloturesService);
+            row.put("couleur", List.of("bleu", "vert", "orange", "violet").get(index % 4));
+            serviceRows.add(row);
+        }
+
         model.addAttribute("activePage", "services");
-        model.addAttribute("services", serviceRepository.findAll());
+        model.addAttribute("services", services);
+        model.addAttribute("serviceRows", serviceRows);
         model.addAttribute("totalServices", serviceRepository.count());
+        model.addAttribute("totalResponsables", utilisateurRepository.findAll().stream()
+            .filter(utilisateur -> utilisateur.getRole() != null
+                && "RESPONSABLE_STAGE".equals(utilisateur.getRole().getLibelle()))
+            .count());
         model.addAttribute("totalEncadreurs", encadreurRepository.count());
         model.addAttribute("totalStagiaires", stagiaireRepository.count());
         model.addAttribute("stagesEnCours", stageRepository.findByStatut(Stage.StatutStage.en_cours).size());

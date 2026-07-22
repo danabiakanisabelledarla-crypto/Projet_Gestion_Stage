@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rôles &amp; Permissions - Administration</title>
+    
+    <!-- CSS existants -->
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-roles-permissions.css}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+
+    <main class="contenu-principal roles-page">
+        
+        <!-- Header -->
+        <div th:replace="~{fragments/header-admin :: header}"></div>
+
+        <div class="contenu-scrollable">
+
+            <!-- ========================================== -->
+            <!-- EN-TÊTE DE PAGE                           -->
+            <!-- ========================================== -->
+            <div class="page-entete">
+                <div class="page-entete-gauche">
+                    <div class="page-icon"><i class="fa-solid fa-lock"></i></div>
+                    <div>
+                        <h1>Rôles &amp; Permissions</h1>
+                        <p class="page-sous-titre">Gérez les rôles et les permissions des utilisateurs de la plateforme.</p>
+                        <!-- Fil d'Ariane -->
+                        <div class="fil-ariane">
+                            <span><i class="fa-solid fa-house"></i> Admin</span>
+                            <span><i class="fa-solid fa-chevron-right"></i></span>
+                            <span class="actif">Rôles &amp; Permissions</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- STATISTIQUES (6 cartes)                   -->
+            <!-- ========================================== -->
+            <section class="stats-grid-roles">
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-bleu"><i class="fa-solid fa-users-gear"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">4</div>
+                        <div class="stat-label">Rôles</div>
+                    </div>
+                    <div class="stat-tendance positive">+1 ce mois</div>
+                </div>
+
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-violet"><i class="fa-solid fa-key"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">42</div>
+                        <div class="stat-label">Permissions</div>
+                    </div>
+                    <div class="stat-tendance positive">+5</div>
+                </div>
+
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-vert"><i class="fa-solid fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">39</div>
+                        <div class="stat-label">Permissions actives</div>
+                    </div>
+                    <div class="stat-tendance positive">93%</div>
+                </div>
+
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-orange"><i class="fa-solid fa-user-check"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">128</div>
+                        <div class="stat-label">Utilisateurs concernés</div>
+                    </div>
+                    <div class="stat-tendance positive">+12</div>
+                </div>
+
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-turquoise"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">Aujourd'hui</div>
+                        <div class="stat-label">Dernière modification</div>
+                    </div>
+                    <div class="stat-tendance">15:30</div>
+                </div>
+
+                <div class="stat-card-role">
+                    <div class="stat-icon-role bg-rouge"><i class="fa-solid fa-pen-to-square"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-valeur">12</div>
+                        <div class="stat-label">Permissions personnalisées</div>
+                    </div>
+                    <div class="stat-tendance positive">+3</div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- ZONE PRINCIPALE (2 colonnes)             -->
+            <!-- ========================================== -->
+            <section class="zone-principale-roles">
+                
+                <!-- COLONNE GAUCHE : Tableau des rôles -->
+                <div class="colonne-gauche">
+                    <div class="carte-blanche-roles">
+                        
+                        <!-- Barre d'actions -->
+                        <div class="barre-actions">
+                            <div class="actions-gauche">
+                                <button class="btn-primary" onclick="ouvrirModalRole()">
+                                    <i class="fa-solid fa-plus"></i> Nouveau rôle
+                                </button>
+                                <button class="btn-secondary">
+                                    <i class="fa-solid fa-file-export"></i> Exporter
+                                </button>
+                            </div>
+                            <div class="actions-droite">
+                                <div class="recherche">
+                                    <i class="fa-solid fa-search"></i>
+                                    <input type="text" placeholder="Rechercher un rôle..." id="searchRole" oninput="filtrerRoles()">
+                                </div>
+                                <select class="select-filtre" id="filtreRole" onchange="filtrerRoles()">
+                                    <option value="">Tous les rôles</option>
+                                    <option value="administrateur">Administrateur</option>
+                                    <option value="responsable">Responsable</option>
+                                    <option value="encadreur">Encadreur</option>
+                                    <option value="stagiaire">Stagiaire</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tableau des rôles -->
+                        <div class="tableau-container">
+                            <table class="tableau-roles">
+                                <thead>
+                                    <tr>
+                                        <th>Rôle</th>
+                                        <th>Utilisateurs</th>
+                                        <th>Permissions</th>
+                                        <th>Niveau d'accès</th>
+                                        <th>Dernière modification</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="role-row" data-role="administrateur" onclick="selectRole('administrateur')">
+                                        <td>
+                                            <div class="role-info">
+                                                <div class="role-avatar bg-bleu"><i class="fa-solid fa-crown"></i></div>
+                                                <div>
+                                                    <div class="role-nom">Administrateur</div>
+                                                    <div class="role-description">Accès complet à toutes les fonctionnalités</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>1</td>
+                                        <td><span class="badge-permissions">42</span></td>
+                                        <td><span class="badge-niveau complet">Complet</span></td>
+                                        <td>22/07/2026</td>
+                                        <td><span class="statut-badge actif">Actif</span></td>
+                                        <td>
+                                            <button class="btn-action" onclick="event.stopPropagation();editerRole('administrateur')"><i class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="btn-action" onclick="event.stopPropagation();dupliquerRole('administrateur')"><i class="fa-regular fa-copy"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="role-row" data-role="responsable" onclick="selectRole('responsable')">
+                                        <td>
+                                            <div class="role-info">
+                                                <div class="role-avatar bg-violet"><i class="fa-solid fa-user-tie"></i></div>
+                                                <div>
+                                                    <div class="role-nom">Responsable de stage</div>
+                                                    <div class="role-description">Gestion des stages et affectations</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>6</td>
+                                        <td><span class="badge-permissions">38</span></td>
+                                        <td><span class="badge-niveau eleve">Élevé</span></td>
+                                        <td>21/07/2026</td>
+                                        <td><span class="statut-badge actif">Actif</span></td>
+                                        <td>
+                                            <button class="btn-action" onclick="event.stopPropagation();editerRole('responsable')"><i class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="btn-action" onclick="event.stopPropagation();dupliquerRole('responsable')"><i class="fa-regular fa-copy"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="role-row" data-role="encadreur" onclick="selectRole('encadreur')">
+                                        <td>
+                                            <div class="role-info">
+                                                <div class="role-avatar bg-vert"><i class="fa-solid fa-chalkboard-user"></i></div>
+                                                <div>
+                                                    <div class="role-nom">Encadreur</div>
+                                                    <div class="role-description">Suivi des stagiaires et évaluations</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>18</td>
+                                        <td><span class="badge-permissions">24</span></td>
+                                        <td><span class="badge-niveau moyen">Moyen</span></td>
+                                        <td>20/07/2026</td>
+                                        <td><span class="statut-badge actif">Actif</span></td>
+                                        <td>
+                                            <button class="btn-action" onclick="event.stopPropagation();editerRole('encadreur')"><i class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="btn-action" onclick="event.stopPropagation();dupliquerRole('encadreur')"><i class="fa-regular fa-copy"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="role-row" data-role="stagiaire" onclick="selectRole('stagiaire')">
+                                        <td>
+                                            <div class="role-info">
+                                                <div class="role-avatar bg-orange"><i class="fa-solid fa-user-graduate"></i></div>
+                                                <div>
+                                                    <div class="role-nom">Stagiaire</div>
+                                                    <div class="role-description">Accès limité aux fonctionnalités de base</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>103</td>
+                                        <td><span class="badge-permissions">12</span></td>
+                                        <td><span class="badge-niveau limite">Limité</span></td>
+                                        <td>19/07/2026</td>
+                                        <td><span class="statut-badge actif">Actif</span></td>
+                                        <td>
+                                            <button class="btn-action" onclick="event.stopPropagation();editerRole('stagiaire')"><i class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="btn-action" onclick="event.stopPropagation();dupliquerRole('stagiaire')"><i class="fa-regular fa-copy"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLONNE DROITE : Détails du rôle -->
+                <div class="colonne-droite">
+                    <div class="carte-blanche-roles" id="detailsRole">
+                        <div class="details-header">
+                            <div class="details-titre">
+                                <div class="role-avatar-detail bg-bleu"><i class="fa-solid fa-crown"></i></div>
+                                <div>
+                                    <h3 id="detailRoleNom">Administrateur</h3>
+                                    <p id="detailRoleDesc">Accès complet à toutes les fonctionnalités</p>
+                                </div>
+                            </div>
+                            <div class="details-stats">
+                                <span><i class="fa-regular fa-user"></i> <span id="detailRoleUsers">1</span> utilisateur</span>
+                                <span><i class="fa-regular fa-calendar"></i> <span id="detailRoleDate">22/07/2026</span></span>
+                                <span class="statut-badge actif" id="detailRoleStatut">Actif</span>
+                            </div>
+                        </div>
+
+                        <div class="details-section">
+                            <h4>Permissions</h4>
+                            <div class="liste-permissions">
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Gérer utilisateurs</span>
+                                    <span class="perm-categorie">Utilisateurs</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Gérer rôles</span>
+                                    <span class="perm-categorie">Sécurité</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Gérer services</span>
+                                    <span class="perm-categorie">Services</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Gérer documents</span>
+                                    <span class="perm-categorie">Documents</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Sauvegarde</span>
+                                    <span class="perm-categorie">Système</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Sécurité</span>
+                                    <span class="perm-categorie">Sécurité</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Paramètres</span>
+                                    <span class="perm-categorie">Système</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Journaux</span>
+                                    <span class="perm-categorie">Sécurité</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Notifications</span>
+                                    <span class="perm-categorie">Communication</span>
+                                </div>
+                                <div class="permission-item">
+                                    <i class="fa-solid fa-check-circle permission-ok"></i>
+                                    <span>Statistiques</span>
+                                    <span class="perm-categorie">Rapports</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-section">
+                            <h4>Permissions sensibles</h4>
+                            <div class="permissions-sensibles">
+                                <span class="badge-sensible"><i class="fa-solid fa-triangle-exclamation"></i> Accès base de données</span>
+                                <span class="badge-sensible"><i class="fa-solid fa-triangle-exclamation"></i> Export des données</span>
+                                <span class="badge-sensible"><i class="fa-solid fa-triangle-exclamation"></i> Configuration système</span>
+                            </div>
+                        </div>
+
+                        <div class="details-section">
+                            <h4>Historique des modifications</h4>
+                            <div class="timeline-historique">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-bleu"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-titre">Création du rôle</div>
+                                        <div class="timeline-date">22/07/2026 - 14:30</div>
+                                        <div class="timeline-desc">Rôle créé par Admin Principal</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-vert"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-titre">Ajout de permissions</div>
+                                        <div class="timeline-date">22/07/2026 - 09:15</div>
+                                        <div class="timeline-desc">Ajout des permissions Gérer documents et Sauvegarde</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-orange"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-titre">Modification des permissions</div>
+                                        <div class="timeline-date">21/07/2026 - 16:45</div>
+                                        <div class="timeline-desc">Modification du niveau d'accès de "Statistiques"</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-rouge"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-titre">Révocation de permissions</div>
+                                        <div class="timeline-date">20/07/2026 - 11:20</div>
+                                        <div class="timeline-desc">Retrait des permissions "Accès API" et "Export"</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- MATRICE DES PERMISSIONS                  -->
+            <!-- ========================================== -->
+            <section class="matrice-permissions">
+                <div class="carte-blanche-roles">
+                    <div class="matrice-header">
+                        <h3>Matrice des permissions</h3>
+                        <span class="matrice-subtitle">Croisement des rôles et des fonctionnalités</span>
+                    </div>
+                    <div class="matrice-tableau-container">
+                        <table class="matrice-tableau">
+                            <thead>
+                                <tr>
+                                    <th>Fonctionnalités</th>
+                                    <th><span class="matrice-role">Administrateur</span></th>
+                                    <th><span class="matrice-role">Responsable</span></th>
+                                    <th><span class="matrice-role">Encadreur</span></th>
+                                    <th><span class="matrice-role">Stagiaire</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="fa-solid fa-users"></i> Gérer utilisateurs</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-lock"></i> Gérer rôles</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-building"></i> Gérer services</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-folder-open"></i> Gérer documents</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-hard-drive"></i> Sauvegarde</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-shield-alt"></i> Sécurité</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-gear"></i> Paramètres</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-file-lines"></i> Journaux</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-bell"></i> Notifications</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-chart-line"></i> Statistiques</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-users-gear"></i> Affectations</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fa-solid fa-calendar-check"></i> Planning</td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pied de page -->
+            <footer class="pied-page">
+                <span>© 2026 Gestion des Stages - Tous droits réservés</span>
+                <span>Version 1.0.0</span>
+            </footer>
+
+        </div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODAL : Nouveau rôle                     -->
+    <!-- ========================================== -->
+    <div class="modal" id="modalRole">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-circle"></i> Nouveau rôle</h3>
+                <button class="modal-close" onclick="fermerModalRole()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nom du rôle</label>
+                    <input type="text" placeholder="Ex: Gestionnaire de stage" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea placeholder="Décrivez les responsabilités de ce rôle..." class="form-textarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Niveau d'accès</label>
+                    <select class="form-select">
+                        <option value="complet">Complet</option>
+                        <option value="eleve">Élevé</option>
+                        <option value="moyen">Moyen</option>
+                        <option value="limite">Limité</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Permissions</label>
+                    <div class="permissions-checkbox">
+                        <label><input type="checkbox" checked> Gérer utilisateurs</label>
+                        <label><input type="checkbox"> Gérer rôles</label>
+                        <label><input type="checkbox"> Gérer services</label>
+                        <label><input type="checkbox" checked> Gérer documents</label>
+                        <label><input type="checkbox"> Sauvegarde</label>
+                        <label><input type="checkbox"> Sécurité</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fermerModalRole()">Annuler</button>
+                <button class="btn-primary" onclick="fermerModalRole()">Créer le rôle</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // FONCTIONS DU DASHBOARD
+        // ==========================================
+        // ==========================================
+        // GESTION DES RÔLES
+        // ==========================================
+        let roleSelectionne = 'administrateur';
+
+        function selectRole(role) {
+            roleSelectionne = role;
+            // Retirer la classe active de toutes les lignes
+            document.querySelectorAll('.role-row').forEach(row => {
+                row.classList.remove('active');
+            });
+            // Ajouter la classe active à la ligne sélectionnée
+            const row = document.querySelector(`.role-row[data-role="${role}"]`);
+            if (row) row.classList.add('active');
+
+            // Données des rôles (à remplacer par des données dynamiques)
+            const rolesData = {
+                administrateur: {
+                    nom: 'Administrateur',
+                    desc: 'Accès complet à toutes les fonctionnalités',
+                    users: '1',
+                    date: '22/07/2026',
+                    statut: 'Actif',
+                    icon: 'fa-solid fa-crown',
+                    couleur: 'bg-bleu'
+                },
+                responsable: {
+                    nom: 'Responsable de stage',
+                    desc: 'Gestion des stages et affectations',
+                    users: '6',
+                    date: '21/07/2026',
+                    statut: 'Actif',
+                    icon: 'fa-solid fa-user-tie',
+                    couleur: 'bg-violet'
+                },
+                encadreur: {
+                    nom: 'Encadreur',
+                    desc: 'Suivi des stagiaires et évaluations',
+                    users: '18',
+                    date: '20/07/2026',
+                    statut: 'Actif',
+                    icon: 'fa-solid fa-chalkboard-user',
+                    couleur: 'bg-vert'
+                },
+                stagiaire: {
+                    nom: 'Stagiaire',
+                    desc: 'Accès limité aux fonctionnalités de base',
+                    users: '103',
+                    date: '19/07/2026',
+                    statut: 'Actif',
+                    icon: 'fa-solid fa-user-graduate',
+                    couleur: 'bg-orange'
+                }
+            };
+
+            const data = rolesData[role];
+            if (data) {
+                document.getElementById('detailRoleNom').textContent = data.nom;
+                document.getElementById('detailRoleDesc').textContent = data.desc;
+                document.getElementById('detailRoleUsers').textContent = data.users;
+                document.getElementById('detailRoleDate').textContent = data.date;
+                document.getElementById('detailRoleStatut').textContent = data.statut;
+
+                const avatar = document.querySelector('.role-avatar-detail');
+                avatar.className = 'role-avatar-detail ' + data.couleur;
+                avatar.querySelector('i').className = data.icon;
+            }
+        }
+
+        function filtrerRoles() {
+            const search = document.getElementById('searchRole').value.toLowerCase();
+            const filtre = document.getElementById('filtreRole').value;
+            const rows = document.querySelectorAll('.role-row');
+
+            rows.forEach(row => {
+                const nom = row.querySelector('.role-nom').textContent.toLowerCase();
+                const role = row.dataset.role;
+                let visible = true;
+
+                if (search && !nom.includes(search)) visible = false;
+                if (filtre && role !== filtre) visible = false;
+
+                row.style.display = visible ? '' : 'none';
+            });
+        }
+
+        function editerRole(role) {
+            alert('Éditer le rôle : ' + role);
+        }
+
+        function dupliquerRole(role) {
+            alert('Dupliquer le rôle : ' + role);
+        }
+
+        // ==========================================
+        // MODAL
+        // ==========================================
+        function ouvrirModalRole() {
+            document.getElementById('modalRole').classList.add('active');
+        }
+
+        function fermerModalRole() {
+            document.getElementById('modalRole').classList.remove('active');
+        }
+
+        // Fermer le modal en cliquant en dehors
+        document.getElementById('modalRole').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fermerModalRole();
+            }
+        });
+
+        // ==========================================
+        // INITIALISATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            selectRole('administrateur');
+        });
+    </script>
+
+</body>
+</html>
