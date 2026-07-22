@@ -41,6 +41,8 @@ private final EvenementPersonnelRepository evenementPersonnelRepository;
 
 private final UtilisateurRepository utilisateurRepository;
 private final PasswordEncoder passwordEncoder;
+private final ConversationRepository conversationRepository;
+private final MessageRepository messageRepository;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
@@ -54,7 +56,9 @@ public StagiaireController(StageRepository stageRepository,
                            EvaluationRepository evaluationRepository,
                            EvenementPersonnelRepository evenementPersonnelRepository,
                            UtilisateurRepository utilisateurRepository,
-                           PasswordEncoder passwordEncoder) {   // ← Ajoute cette ligne
+                           PasswordEncoder passwordEncoder,
+                           ConversationRepository conversationRepository,
+                           MessageRepository messageRepository) {
 
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
@@ -67,6 +71,8 @@ public StagiaireController(StageRepository stageRepository,
     this.evenementPersonnelRepository = evenementPersonnelRepository;
     this.utilisateurRepository = utilisateurRepository;
     this.passwordEncoder = passwordEncoder;
+    this.conversationRepository = conversationRepository;
+    this.messageRepository = messageRepository;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -507,13 +513,103 @@ public String ajouterEvenementPlanning(@AuthenticationPrincipal CustomUserDetail
 }
 
 @GetMapping("/messages")
-public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               @RequestParam(required = false) Integer convId, Model model) {
     model.addAttribute("activePage", "messages");
     model.addAttribute("prenom", userDetails.getUtilisateur().getPrenom());
     model.addAttribute("nomComplet", userDetails.getUtilisateur().getPrenom() + " " + userDetails.getUtilisateur().getNom());
     model.addAttribute("initiales", userDetails.getUtilisateur().getPrenom().substring(0,1).toUpperCase()
             + userDetails.getUtilisateur().getNom().substring(0,1).toUpperCase());
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    model.addAttribute("user", currentUser);
+    Integer userId = currentUser.getId();
+    List<Conversation> conversations = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
+    model.addAttribute("conversations", conversations);
+    Conversation active = null;
+    if (convId != null) {
+        active = conversationRepository.findById(convId).orElse(null);
+    } else if (!conversations.isEmpty()) {
+        active = conversations.get(0);
+    }
+    model.addAttribute("activeConversation", active);
+    if (active != null) {
+        model.addAttribute("messages", messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId()));
+    } else {
+        model.addAttribute("messages", new ArrayList<>());
+    }
+    List<Utilisateur> contacts = new ArrayList<>();
+    Optional<Stage> stageOpt = getStage(userDetails);
+    if (stageOpt.isPresent()) {
+        Stage stage = stageOpt.get();
+        if (stage.getEncadreur() != null) {
+            contacts.add(stage.getEncadreur().getUtilisateur());
+        }
+    }
+    List<Utilisateur> admins = utilisateurRepository.findByRole_Libelle("ADMIN");
+    for (Utilisateur admin : admins) {
+        if (!contacts.contains(admin)) contacts.add(admin);
+    }
+    contacts.remove(currentUser);
+    model.addAttribute("contacts", contacts);
     return "stagiaire/messages";
+}
+
+@PostMapping("/messages/nouveau")
+public String nouvelleConversation(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                   @RequestParam Integer destinataireId,
+                                   @RequestParam String message) {
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    Utilisateur destinataire = utilisateurRepository.findById(destinataireId).orElse(null);
+    if (destinataire == null) return "redirect:/stagiaire/messages";
+    List<Conversation> existing = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(currentUser.getId());
+    for (Conversation c : existing) {
+        boolean hasDest = c.getParticipants().stream().anyMatch(p -> p.getId().equals(destinataireId));
+        if (hasDest) {
+            Message msg = new Message();
+            msg.setConversation(c);
+            msg.setExpediteur(currentUser);
+            msg.setContenu(message);
+            msg.setDateEnvoi(java.time.LocalDateTime.now());
+            msg.setLu(false);
+            c.setDernierMessage(java.time.LocalDateTime.now());
+            conversationRepository.save(c);
+            messageRepository.save(msg);
+            return "redirect:/stagiaire/messages?convId=" + c.getId();
+        }
+    }
+    Conversation conv = new Conversation();
+    conv.setSujet("Discussion avec " + destinataire.getPrenom() + " " + destinataire.getNom());
+    conv.setDateCreation(java.time.LocalDateTime.now());
+    conv.setDernierMessage(java.time.LocalDateTime.now());
+    conv.getParticipants().add(currentUser);
+    conv.getParticipants().add(destinataire);
+    conv = conversationRepository.save(conv);
+    Message msg = new Message();
+    msg.setConversation(conv);
+    msg.setExpediteur(currentUser);
+    msg.setContenu(message);
+    msg.setDateEnvoi(java.time.LocalDateTime.now());
+    msg.setLu(false);
+    messageRepository.save(msg);
+    return "redirect:/stagiaire/messages?convId=" + conv.getId();
+}
+
+@PostMapping("/messages/envoyer")
+public String envoyerMessage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             @RequestParam Integer convId,
+                             @RequestParam String contenu) {
+    Conversation conv = conversationRepository.findById(convId).orElse(null);
+    if (conv == null) return "redirect:/stagiaire/messages";
+    Message msg = new Message();
+    msg.setConversation(conv);
+    msg.setExpediteur(userDetails.getUtilisateur());
+    msg.setContenu(contenu);
+    msg.setDateEnvoi(java.time.LocalDateTime.now());
+    msg.setLu(false);
+    conv.setDernierMessage(java.time.LocalDateTime.now());
+    conversationRepository.save(conv);
+    messageRepository.save(msg);
+    return "redirect:/stagiaire/messages?convId=" + convId;
 }
 @PostMapping("/profil/modifier")
 public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,

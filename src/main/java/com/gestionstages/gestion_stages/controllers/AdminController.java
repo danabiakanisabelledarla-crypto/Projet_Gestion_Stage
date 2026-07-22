@@ -28,6 +28,8 @@ public class AdminController {
     private final DocumentRepository documentRepository;
     private final NotificationRepository notificationRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final ConversationRepository conversationRepository;
+    private final MessageRepository messageRepository;
 
     public AdminController(DemandeStageRepository demandeStageRepository,
                             StageRepository stageRepository,
@@ -38,7 +40,9 @@ public class AdminController {
                             ServiceEntrepriseRepository serviceRepository,
                             DocumentRepository documentRepository,
                             NotificationRepository notificationRepository,
-                            ActivityLogRepository activityLogRepository) {
+                            ActivityLogRepository activityLogRepository,
+                            ConversationRepository conversationRepository,
+                            MessageRepository messageRepository) {
         this.demandeStageRepository = demandeStageRepository;
         this.stageRepository = stageRepository;
         this.tacheRepository = tacheRepository;
@@ -49,6 +53,8 @@ public class AdminController {
         this.documentRepository = documentRepository;
         this.notificationRepository = notificationRepository;
         this.activityLogRepository = activityLogRepository;
+        this.conversationRepository = conversationRepository;
+        this.messageRepository = messageRepository;
     }
     @GetMapping("/dashboard")
 public String afficherDashboard(Model model) {
@@ -383,11 +389,47 @@ public String afficherEncadreurs(Model model) {
 }
 
 @GetMapping("/messages")
-public String afficherMessages(Model model) {
+public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               @RequestParam(required = false) Integer convId, Model model) {
     model.addAttribute("activePage", "messages");
     model.addAttribute("nomComplet", "Administrateur");
     model.addAttribute("initiales", "A");
+    model.addAttribute("notificationsCount", 0);
+    model.addAttribute("recentNotifications", new ArrayList<>());
+    Integer userId = userDetails.getUtilisateur().getId();
+    List<Conversation> conversations = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
+    model.addAttribute("conversations", conversations);
+    Conversation active = null;
+    if (convId != null) {
+        active = conversationRepository.findById(convId).orElse(null);
+    } else if (!conversations.isEmpty()) {
+        active = conversations.get(0);
+    }
+    model.addAttribute("activeConversation", active);
+    if (active != null) {
+        model.addAttribute("messages", messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId()));
+    } else {
+        model.addAttribute("messages", new ArrayList<>());
+    }
     return "admin/messages";
+}
+
+@PostMapping("/messages/envoyer")
+public String envoyerMessageAdmin(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                  @RequestParam Integer convId,
+                                  @RequestParam String contenu) {
+    Conversation conv = conversationRepository.findById(convId).orElse(null);
+    if (conv == null) return "redirect:/admin/messages";
+    Message msg = new Message();
+    msg.setConversation(conv);
+    msg.setExpediteur(userDetails.getUtilisateur());
+    msg.setContenu(contenu);
+    msg.setDateEnvoi(java.time.LocalDateTime.now());
+    msg.setLu(false);
+    conv.setDernierMessage(java.time.LocalDateTime.now());
+    conversationRepository.save(conv);
+    messageRepository.save(msg);
+    return "redirect:/admin/messages?convId=" + convId;
 }
 
 @GetMapping("/statistiques")
