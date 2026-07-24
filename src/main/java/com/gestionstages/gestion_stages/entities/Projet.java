@@ -23,6 +23,18 @@ public class Projet {
     @Column(name = "date_fin")
     private LocalDate dateFin;
 
+    @Column(name = "type_projet", length = 100)
+    private String typeProjet;
+
+    @Column(length = 500)
+    private String technologies;
+
+    @Column(name = "lien_github", length = 500)
+    private String lienGithub;
+
+    @Column(name = "lien_demo", length = 500)
+    private String lienDemo;
+
     // Constructeurs
     public Projet() {
     }
@@ -74,4 +86,13 @@ public class Projet {
     public void setDateFin(LocalDate dateFin) {
         this.dateFin = dateFin;
     }
+
+    public String getTypeProjet() { return typeProjet; }
+    public void setTypeProjet(String typeProjet) { this.typeProjet = typeProjet; }
+    public String getTechnologies() { return technologies; }
+    public void setTechnologies(String technologies) { this.technologies = technologies; }
+    public String getLienGithub() { return lienGithub; }
+    public void setLienGithub(String lienGithub) { this.lienGithub = lienGithub; }
+    public String getLienDemo() { return lienDemo; }
+    public void setLienDemo(String lienDemo) { this.lienDemo = lienDemo; }
 }

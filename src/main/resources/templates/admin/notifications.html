@@ -2,34 +2,92 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications — Admin</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
 </head>
 <body class="portal-body">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal portal-main">
+<main class="contenu-principal backup-page">
     <div th:replace="~{fragments/admin-header :: header('Rechercher une notification...')}"></div>
     <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
 
-    <section class="portal-hero">
-        <div class="portal-hero-text">
-            <div class="portal-hero-eyebrow">Centre de notifications</div>
-            <h1>Envoyer et gérer les notifications</h1>
-            <p>Diffusez des notifications aux stagiaires, responsables et encadreurs.</p>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-bell"></i></div>
+            <div>
+                <h1>Notifications</h1>
+                <nav class="backup-breadcrumb">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Notifications</strong>
+                </nav>
+                <p>Gérez l'envoi et le suivi des notifications.</p>
+            </div>
         </div>
-        <div class="portal-hero-img"><img th:src="@{/images/hero-dashboard.png}" alt=""></div>
     </section>
 
-    <div class="portal-stats">
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-bell"></i></div><div class="number" th:text="${totalNotif}">0</div><div class="label">Envoyées</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-graduate"></i></div><div class="number" th:text="${totalStag}">0</div><div class="label">Stagiaires</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-user-tie"></i></div><div class="number" th:text="${totalResp}">0</div><div class="label">Responsables</div></div>
-        <div class="portal-stat-card"><div class="icon-circle"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number" th:text="${totalEnc}">0</div><div class="label">Encadreurs</div></div>
+    <div class="backup-stats">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-bell"></i></span>
+                <em>Total</em>
+            </div>
+            <span class="backup-stat-label">Envoyées</span>
+            <strong th:text="${totalNotif}">0</strong>
+            <small>Notifications envoyées</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-graduate"></i></span>
+                <em>Total</em>
+            </div>
+            <span class="backup-stat-label">Stagiaires</span>
+            <strong th:text="${totalStag}">0</strong>
+            <small>Stagiaires notifiés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-tie"></i></span>
+                <em>Total</em>
+            </div>
+            <span class="backup-stat-label">Responsables</span>
+            <strong th:text="${totalResp}">0</strong>
+            <small>Responsables notifiés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+                <em>Total</em>
+            </div>
+            <span class="backup-stat-label">Encadreurs</span>
+            <strong th:text="${totalEnc}">0</strong>
+            <small>Encadreurs notifiés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7"></path>
+            </svg>
+        </article>
     </div>
 
-    <div class="portal-two-col">
-        <div class="portal-card">
+    <div class="backup-two-col">
+        <div class="backup-card">
             <h3><i class="fa-solid fa-paper-plane"></i> Nouvelle notification</h3>
             <form th:action="@{/admin/notifications/envoyer}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -46,10 +104,10 @@
                 <div class="form-group"><label>Priorité</label>
                     <select name="priorite"><option value="normale">Normale</option><option value="importante">Importante</option><option value="urgente">Urgente</option></select>
                 </div>
-                <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
+                <button type="submit" class="backup-btn backup-btn-primary"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
             </form>
         </div>
-        <div class="portal-card">
+        <div class="backup-card">
             <h3><i class="fa-solid fa-clock-rotate-left"></i> Historique récent</h3>
             <div th:each="n : ${notifications}" class="notif-history-item">
                 <div class="table-user-name" th:text="${n.objet}">Titre</div>
@@ -60,6 +118,5 @@
             <p th:if="${notifications.isEmpty()}" style="color:#94A3B8;">Aucune notification envoyée.</p>
         </div>
     </div>
-</div>
-</body>
+</main>
 </html>

@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Services - Administration</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/admin-services.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-<main class="contenu-principal svc-page">
+<main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
     <div class="svc-alert" th:if="${succes}">
@@ -22,80 +23,75 @@
         </button>
     </div>
 
-    <section class="svc-page-heading">
-        <div class="svc-title-group">
-            <div class="svc-title-icon"><i class="fa-solid fa-sitemap"></i></div>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-building"></i></div>
             <div>
                 <h1>Services</h1>
-                <nav class="svc-breadcrumb" aria-label="Fil d'Ariane">
+                <nav class="backup-breadcrumb" aria-label="Fil d'Ariane">
                     <a th:href="@{/admin/dashboard}">Accueil</a>
                     <i class="fa-solid fa-chevron-right"></i>
                     <span>Administrateur</span>
                     <i class="fa-solid fa-chevron-right"></i>
                     <strong>Services</strong>
                 </nav>
+                <p>Gérez les services et départements de l'entreprise.</p>
             </div>
-        </div>
-        <div class="svc-heading-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" id="globalServiceSearch" placeholder="Rechercher dans les services..."
-                   aria-label="Rechercher dans les services">
-            <kbd>Ctrl K</kbd>
         </div>
     </section>
 
-    <section class="svc-stats" aria-label="Statistiques des services">
-        <article class="svc-stat-card bleu">
-            <div class="svc-stat-top">
-                <div class="svc-stat-icon"><i class="fa-solid fa-building"></i></div>
-                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 8%</span>
+    <section class="backup-stats" aria-label="Statistiques des services">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-building"></i></span>
+                <em>Total</em>
             </div>
-            <div class="svc-stat-label">Total des services</div>
-            <div class="svc-stat-number" th:text="${totalServices}">0</div>
-            <div class="svc-stat-desc">Départements enregistrés</div>
-            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+            <span class="backup-stat-label">Total des services</span>
+            <strong th:text="${totalServices}">0</strong>
+            <small>Départements enregistrés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
                 <path class="area" d="M0 34 C24 29,34 31,52 23 S85 26,104 16 S140 20,180 5 L180 38 L0 38 Z"></path>
                 <path class="line" d="M0 34 C24 29,34 31,52 23 S85 26,104 16 S140 20,180 5"></path>
             </svg>
         </article>
 
-        <article class="svc-stat-card vert">
-            <div class="svc-stat-top">
-                <div class="svc-stat-icon"><i class="fa-solid fa-user-tie"></i></div>
-                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 4%</span>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-tie"></i></span>
+                <em>Total</em>
             </div>
-            <div class="svc-stat-label">Responsables</div>
-            <div class="svc-stat-number" th:text="${totalResponsables}">0</div>
-            <div class="svc-stat-desc">Responsables de stage</div>
-            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+            <span class="backup-stat-label">Responsables</span>
+            <strong th:text="${totalResponsables}">0</strong>
+            <small>Responsables de stage</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
                 <path class="area" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8 L180 38 L0 38 Z"></path>
                 <path class="line" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8"></path>
             </svg>
         </article>
 
-        <article class="svc-stat-card orange">
-            <div class="svc-stat-top">
-                <div class="svc-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
-                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 12%</span>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+                <em>Total</em>
             </div>
-            <div class="svc-stat-label">Encadreurs</div>
-            <div class="svc-stat-number" th:text="${totalEncadreurs}">0</div>
-            <div class="svc-stat-desc">Encadreurs disponibles</div>
-            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+            <span class="backup-stat-label">Encadreurs</span>
+            <strong th:text="${totalEncadreurs}">0</strong>
+            <small>Encadreurs disponibles</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
                 <path class="area" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4 L180 38 L0 38 Z"></path>
                 <path class="line" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4"></path>
             </svg>
         </article>
 
-        <article class="svc-stat-card rouge">
-            <div class="svc-stat-top">
-                <div class="svc-stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
-                <span class="svc-trend"><i class="fa-solid fa-arrow-trend-up"></i> 16%</span>
+        <article class="backup-stat-card rouge">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-graduate"></i></span>
+                <em>Total</em>
             </div>
-            <div class="svc-stat-label">Stagiaires</div>
-            <div class="svc-stat-number" th:text="${totalStagiaires}">0</div>
-            <div class="svc-stat-desc">Tous statuts confondus</div>
-            <svg class="svc-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+            <span class="backup-stat-label">Stagiaires</span>
+            <strong th:text="${totalStagiaires}">0</strong>
+            <small>Tous statuts confondus</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
                 <path class="area" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7 L180 38 L0 38 Z"></path>
                 <path class="line" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7"></path>
             </svg>
@@ -117,7 +113,7 @@
 
             <div class="svc-toolbar">
                 <div class="svc-toolbar-primary">
-                    <button type="button" class="svc-btn svc-btn-primary" onclick="ouvrirModal('modalAjout')">
+                    <button type="button" class="svc-btn backup-btn" onclick="ouvrirModal('modalAjout')">
                         <i class="fa-solid fa-plus"></i> Ajouter un service
                     </button>
                     <button type="button" class="svc-btn svc-btn-secondary" onclick="exporterServices()">
@@ -168,8 +164,8 @@
                 </button>
             </div>
 
-            <div class="svc-table-wrap">
-                <table class="svc-table" id="servicesTable">
+            <div class="backup-table-wrap">
+                <table class="backup-table" id="servicesTable">
                     <thead>
                     <tr>
                         <th>Service</th>
@@ -367,7 +363,7 @@
             </label>
             <footer>
                 <button type="button" class="svc-btn svc-btn-secondary" onclick="fermerModal('modalAjout')">Annuler</button>
-                <button type="submit" class="svc-btn svc-btn-primary"><i class="fa-solid fa-check"></i> Ajouter</button>
+                <button type="submit" class="svc-btn backup-btn"><i class="fa-solid fa-check"></i> Ajouter</button>
             </footer>
         </form>
     </div>
@@ -388,7 +384,7 @@
             </label>
             <footer>
                 <button type="button" class="svc-btn svc-btn-secondary" onclick="fermerModal('modalModif')">Annuler</button>
-                <button type="submit" class="svc-btn svc-btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                <button type="submit" class="svc-btn backup-btn"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
             </footer>
         </form>
     </div>

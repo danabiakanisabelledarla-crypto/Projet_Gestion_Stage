@@ -2,6 +2,7 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stagiaires - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/demandes.css}">
@@ -12,7 +13,7 @@
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-<div class="contenu-principal">
+<main class="contenu-principal">
 
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
@@ -172,7 +173,7 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <!-- MODAL DÉTAILS STAGIAIRE -->
 <div class="modal-overlay" id="modalDetailsStagiaire" onclick="if(event.target===this) fermerModalStagiaire()">

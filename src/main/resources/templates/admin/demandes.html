@@ -2,76 +2,107 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demandes de stage - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/demandes.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
+<main class="contenu-principal backup-page">
 
-    <!-- HEADER (fragment — le CSS cache .header-gauche) -->
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <!-- PAGE TITLE -->
-    <div class="page-entete">
-        <div class="page-entete-gauche">
-            <div class="page-icon"><i class="fa-solid fa-file-lines"></i></div>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-file-lines"></i></div>
             <div>
                 <h1>Demandes de stage</h1>
-                <p class="page-sous-titre">Gérez et suivez toutes les demandes de stage des candidats.</p>
+                <nav class="backup-breadcrumb">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Demandes</strong>
+                </nav>
+                <p>Gérez et suivez toutes les demandes de stage des candidats.</p>
             </div>
         </div>
-        <div class="page-entete-droite">
-            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button class="btn-primary"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
+        <div class="backup-heading-actions">
+            <button type="button" class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button type="button" class="backup-btn primary"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
         </div>
-    </div>
+    </section>
 
-    <!-- STATS CARDS -->
-    <div class="stats-demandes">
-        <div class="stat-card bleu">
-            <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Total des demandes</div>
-                <div class="stat-number" th:text="${totalDemandes}">0</div>
-                <div class="stat-desc">Toutes les demandes</div>
+    <section class="backup-stats">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-file-lines"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-icon"><i class="fa-regular fa-clock"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">En attente</div>
-                <div class="stat-number" th:text="${enAttente}">0</div>
-                <div class="stat-desc">À traiter</div>
+            <span class="backup-stat-label">Total des demandes</span>
+            <strong th:text="${totalDemandes}">0</strong>
+            <small>Toutes les demandes</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-regular fa-clock"></i></span>
+                <em>En attente</em>
             </div>
-        </div>
-        <div class="stat-card vert">
-            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Acceptées</div>
-                <div class="stat-number" th:text="${acceptees}">0</div>
-                <div class="stat-desc">Validées</div>
+            <span class="backup-stat-label">En attente</span>
+            <strong th:text="${enAttente}">0</strong>
+            <small>À traiter</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-check-circle"></i></span>
+                <em>Validées</em>
             </div>
-        </div>
-        <div class="stat-card rouge">
-            <div class="stat-icon"><i class="fa-solid fa-xmark-circle"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Refusées</div>
-                <div class="stat-number" th:text="${refusees}">0</div>
-                <div class="stat-desc">Refusées</div>
+            <span class="backup-stat-label">Acceptées</span>
+            <strong th:text="${acceptees}">0</strong>
+            <small>Validées</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-xmark-circle"></i></span>
+                <em>Refusées</em>
             </div>
-        </div>
-        <div class="stat-card violet">
-            <div class="stat-icon"><i class="fa-regular fa-calendar"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Ce mois</div>
-                <div class="stat-number" th:text="${ceMois}">0</div>
-                <div class="stat-desc">Nouvelles demandes</div>
+            <span class="backup-stat-label">Refusées</span>
+            <strong th:text="${refusees}">0</strong>
+            <small>Refusées</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-regular fa-calendar"></i></span>
+                <em>Nouveaux</em>
             </div>
-        </div>
-    </div>
+            <span class="backup-stat-label">Ce mois</span>
+            <strong th:text="${ceMois}">0</strong>
+            <small>Nouvelles demandes</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+    </section>
 
     <!-- TABS + SORT -->
     <div class="tabs-bar">
@@ -102,7 +133,7 @@
 
     <!-- TABLE -->
     <div class="table-wrapper">
-        <table class="table-demandes">
+        <table class="backup-table">
             <thead>
                 <tr>
                     <th>Stagiaire</th>
@@ -171,7 +202,7 @@
             <select><option>10 par page</option><option>25 par page</option><option>50 par page</option></select>
         </div>
     </div>
-</div>
+</main>
 
 <!-- ===== MODAL DÉTAILS DEMANDE ===== -->
 <div class="modal-overlay" id="modalDetails" onclick="if(event.target===this) fermerModal()">
@@ -305,11 +336,11 @@ function fermerModal() {
 function filtrerDemandes(filtre) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('actif'));
     document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
-    document.querySelectorAll('.table-demandes tbody tr').forEach(row => {
+    document.querySelectorAll('.backup-table tbody tr').forEach(row => {
         if (filtre === 'toutes') { row.style.display = ''; return; }
-        const badge = row.querySelector('.badge-statut');
+        const badge = row.querySelector('.backup-type-badge');
         if (!badge) return;
-        const cls = Array.from(badge.classList).find(c => c !== 'badge-statut');
+        const cls = Array.from(badge.classList).find(c => c !== 'backup-type-badge');
         row.style.display = (cls === filtre) ? '' : 'none';
     });
 }

@@ -2,295 +2,281 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - Nouveau Design</title>
-    
-    <!-- CSS existants (conservés) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Administration</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    
-    <!-- NOUVEAU CSS pour ce dashboard -->
-    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
-    
-    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
+<div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-    <!-- Sidebar existante -->
-    <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+<main class="contenu-principal backup-page">
+    <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <div class="contenu-principal">
-        
-        <!-- Header existant -->
-        <div th:replace="~{fragments/header-admin :: header}"></div>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <div>
+                <h1>Tableau de bord</h1>
+                <nav class="backup-breadcrumb" aria-label="Fil d'Ariane">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Tableau de bord</strong>
+                </nav>
+                <p>Vue d'ensemble de la plateforme de gestion des stages.</p>
+            </div>
+        </div>
+        <div class="backup-heading-actions">
+            <select class="backup-period-select" onchange="window.location.href='/admin/dashboard?periode='+this.value">
+                <option value="7">7 derniers jours</option>
+                <option value="30">30 derniers jours</option>
+            </select>
+        </div>
+    </section>
 
-    <!-- ======================================== -->
-    <!-- NOUVEAU CONTENU DU DASHBOARD             -->
-    <!-- ======================================== -->
-    <div class="dashboard-container">
+    <section class="backup-stats" aria-label="Statistiques">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-users"></i></span>
+                <em>+12</em>
+            </div>
+            <span class="backup-stat-label">Utilisateurs</span>
+            <strong th:text="${statUtilisateurs}">128</strong>
+            <small>Inscrits sur la plateforme</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-graduate"></i></span>
+                <em>Actifs</em>
+            </div>
+            <span class="backup-stat-label">Stagiaires</span>
+            <strong th:text="${statStagiaires}">72</strong>
+            <small>En cours de stage</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-tie"></i></span>
+                <em>Disponibles</em>
+            </div>
+            <span class="backup-stat-label">Encadreurs</span>
+            <strong th:text="${statEncadreurs}">18</strong>
+            <small>Assignés à des stages</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-shield"></i></span>
+                <em>Actifs</em>
+            </div>
+            <span class="backup-stat-label">Responsables</span>
+            <strong th:text="${statResponsables}">6</strong>
+            <small>Supervision des stages</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card cyan">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-folder-open"></i></span>
+                <em>+256</em>
+            </div>
+            <span class="backup-stat-label">Documents</span>
+            <strong th:text="${statDocuments}">256</strong>
+            <small>Fichiers déposés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <em>+342</em>
+            </div>
+            <span class="backup-stat-label">Activités</span>
+            <strong th:text="${statActivites}">342</strong>
+            <small>Actions enregistrées</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28"></path>
+            </svg>
+        </article>
+    </section>
 
-            <!-- 1. STATISTIQUES (6 cartes) -->
-            <section class="stats-grid-new">
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-bleu"><i class="fas fa-users"></i></div>
-                    <div class="stat-valeur" th:text="${statUtilisateurs}">0</div>
-                    <div class="stat-label">Utilisateurs <span class="stat-tendance positive">+12 ce mois</span></div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,15 20,10 40,18 60,5 80,12 100,8" fill="none" stroke="#2563EB" stroke-width="2"/>
-                    </svg>
-                </div>
-
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-vert"><i class="fas fa-user-graduate"></i></div>
-                    <div class="stat-valeur" th:text="${statStagiaires}">0</div>
-                    <div class="stat-label">Stagiaires</div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,12 20,18 40,8 60,14 80,4 100,10" fill="none" stroke="#22C55E" stroke-width="2"/>
-                    </svg>
-                </div>
-
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-orange"><i class="fas fa-user-tie"></i></div>
-                    <div class="stat-valeur" th:text="${statEncadreurs}">0</div>
-                    <div class="stat-label">Encadreurs</div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,16 20,12 40,19 60,10 80,14 100,6" fill="none" stroke="#F59E0B" stroke-width="2"/>
-                    </svg>
-                </div>
-
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-violet"><i class="fas fa-user-shield"></i></div>
-                    <div class="stat-valeur" th:text="${statResponsables}">0</div>
-                    <div class="stat-label">Responsables</div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,8 20,14 40,6 60,18 80,10 100,4" fill="none" stroke="#8B5CF6" stroke-width="2"/>
-                    </svg>
-                </div>
-
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-turquoise"><i class="fas fa-folder-open"></i></div>
-                    <div class="stat-valeur" th:text="${statDocuments}">0</div>
-                    <div class="stat-label">Documents</div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,10 20,16 40,4 60,12 80,18 100,6" fill="none" stroke="#06B6D4" stroke-width="2"/>
-                    </svg>
-                </div>
-
-                <div class="stat-card-new">
-                    <div class="stat-icon stat-icon-rouge"><i class="fas fa-shield-halved"></i></div>
-                    <div class="stat-valeur" th:text="${statActivites}">0</div>
-                    <div class="stat-label">Activités</div>
-                    <svg class="sparkline" viewBox="0 0 100 20">
-                        <polyline points="0,14 20,8 40,16 60,6 80,12 100,18" fill="none" stroke="#EF4444" stroke-width="2"/>
-                    </svg>
-                </div>
-            </section>
-
-            <!-- 2. ZONE CENTRALE (2 colonnes) -->
-            <section class="zone-centrale-new">
-                
-                <!-- Aperçu plateforme -->
-                <div class="carte-blanche-new">
-                    <div class="en-tete-carte">
-                        <h3>Aperçu de la plateforme</h3>
-                        <select class="select-filtre-new" onchange="changerPeriode(this.value)">
-                            <option value="7">7 derniers jours</option>
-                            <option value="30">30 derniers jours</option>
-                        </select>
-                    </div>
-                    <div class="graphiques-new">
-                        
-                        <!-- Graphique courbes -->
-                        <div class="graphique-courbes">
-                            <h4>Connexions <span class="valeur-chiffre" th:text="${totalConnexions}">0</span> <span class="tendance-positive">+18%</span></h4>
-                            <svg viewBox="0 0 300 100" class="courbe-new">
-                                <polyline points="0,80 40,60 80,90 120,40 160,70 200,20 240,50 280,30" fill="none" stroke="#2563EB" stroke-width="3"/>
-                                <circle cx="40" cy="60" r="4" fill="#2563EB"/>
-                                <circle cx="120" cy="40" r="4" fill="#2563EB"/>
-                                <circle cx="200" cy="20" r="4" fill="#2563EB"/>
-                                <circle cx="280" cy="30" r="4" fill="#2563EB"/>
-                                <text x="0" y="95" font-size="10" fill="#6B7280">Lun</text>
-                                <text x="40" y="95" font-size="10" fill="#6B7280">Mar</text>
-                                <text x="80" y="95" font-size="10" fill="#6B7280">Mer</text>
-                                <text x="120" y="95" font-size="10" fill="#6B7280">Jeu</text>
-                                <text x="160" y="95" font-size="10" fill="#6B7280">Ven</text>
-                                <text x="200" y="95" font-size="10" fill="#6B7280">Sam</text>
-                                <text x="240" y="95" font-size="10" fill="#6B7280">Dim</text>
-                            </svg>
+    <section class="backup-layout">
+        <div class="backup-main-column">
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon blue"><i class="fa-solid fa-chart-pie"></i></span>
+                        <div>
+                            <h2>Aperçu de la plateforme</h2>
+                            <p>Activité et répartition des utilisateurs.</p>
                         </div>
-                        
-                        <!-- Donut -->
-                        <div class="graphique-donut">
-                            <h4>Répartition des utilisateurs</h4>
-                            <div class="donut-container-new">
-                                <svg viewBox="0 0 100 100" class="donut-new">
-                                    <!-- Stagiaires 56% -->
-                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#2563EB" stroke-width="15" 
-                                            stroke-dasharray="70.37 129.63" stroke-dashoffset="0"/>
-                                    <!-- Encadreurs 24% -->
-                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22C55E" stroke-width="15" 
-                                            stroke-dasharray="30.16 169.84" stroke-dashoffset="-70.37"/>
-                                    <!-- Responsables 12% -->
-                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F59E0B" stroke-width="15" 
-                                            stroke-dasharray="15.08 184.92" stroke-dashoffset="-100.53"/>
-                                    <!-- Admins 8% -->
-                                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8B5CF6" stroke-width="15" 
-                                            stroke-dasharray="10.05 189.95" stroke-dashoffset="-115.61"/>
-                                    <text x="50" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#1E3A8A">128</text>
-                                    <text x="50" y="58" text-anchor="middle" font-size="8" fill="#6B7280">Total</text>
+                    </div>
+                </header>
+                <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:24px;padding:16px 20px 20px;">
+                    <div>
+                        <h4 style="font-size:13px;color:#64748B;margin:0 0 8px;font-weight:600;">Activité <span th:text="${totalConnexions}" style="color:#0f172a;font-weight:700;">0</span> <span style="color:#22C55E;font-size:11px;">7 derniers jours</span></h4>
+                        <svg viewBox="0 0 750 180" style="width:100%;height:auto;overflow:visible;">
+                            <g class="grid" style="stroke:#E2E8F0;stroke-width:1;">
+                                <line x1="50" y1="30" x2="730" y2="30" stroke-dasharray="4 4"></line>
+                                <line x1="50" y1="70" x2="730" y2="70" stroke-dasharray="4 4"></line>
+                                <line x1="50" y1="110" x2="730" y2="110" stroke-dasharray="4 4"></line>
+                                <line x1="50" y1="150" x2="730" y2="150" stroke-dasharray="4 4"></line>
+                            </g>
+                            <path th:attr="d=${'M50,170 L' + #strings.replace(chartConnexionsPoints, ' ', ' L') + ' L730,170 Z'}" fill="rgba(37,99,235,0.08)"></path>
+                            <polyline th:attr="points=${chartConnexionsPointsCompact}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            <circle th:each="v, iter : ${chartConnexionsValues}" th:cx="${50 + iter.index * chartConnexionsStep1}" th:cy="${170 - (v * (120.0 / chartConnexionsMax))}" r="3.5" fill="#2563EB" stroke="white" stroke-width="2"></circle>
+                            <text th:each="d, iter : ${chartDays}" th:x="${50 + iter.index * chartConnexionsStep1}" y="178" font-size="10" fill="#94A3B8" text-anchor="middle" th:text="${d}">Lun</text>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style="font-size:13px;color:#64748B;margin:0 0 12px;font-weight:600;">Répartition</h4>
+                        <div class="backup-distribution" style="grid-template-columns:1fr;">
+                            <div class="backup-distribution-donut" style="width:100px;margin:0 auto;">
+                                <svg viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E2E8F0" stroke-width="2.2"></circle>
+                                    <circle th:if="${distStagiaires > 0}" cx="18" cy="18" r="15.9" fill="none" stroke="#2563EB" stroke-width="2.2" th:attr="stroke-dasharray=${donutStagiaires}, stroke-dashoffset=0"></circle>
+                                    <circle th:if="${distEncadreurs > 0}" cx="18" cy="18" r="15.9" fill="none" stroke="#22C55E" stroke-width="2.2" th:attr="stroke-dasharray=${donutEncadreurs}, stroke-dashoffset=${donutOffsetEncadreurs}"></circle>
+                                    <circle th:if="${distResponsables > 0}" cx="18" cy="18" r="15.9" fill="none" stroke="#F59E0B" stroke-width="2.2" th:attr="stroke-dasharray=${donutResponsables}, stroke-dashoffset=${donutOffsetResponsables}"></circle>
+                                    <circle th:if="${distAdmins > 0}" cx="18" cy="18" r="15.9" fill="none" stroke="#8B5CF6" stroke-width="2.2" th:attr="stroke-dasharray=${donutAdmins}, stroke-dashoffset=${donutOffsetAdmins}"></circle>
                                 </svg>
-                                <div class="legende-donut-new">
-                                    <span><span class="couleur-bleue"></span> Stagiaires (56%)</span>
-                                    <span><span class="couleur-verte"></span> Encadreurs (24%)</span>
-                                    <span><span class="couleur-orange"></span> Responsables (12%)</span>
-                                    <span><span class="couleur-violette"></span> Admins (8%)</span>
-                                </div>
+                                <div><strong th:text="${statUtilisateurs}">0</strong><span>Total</span></div>
+                            </div>
+                            <div class="backup-distribution-legend">
+                                <div><span><i class="blue"></i>Stagiaires</span><strong th:text="${pctStagiaires + '%'}">0%</strong></div>
+                                <div><span><i style="background:#22C55E;"></i>Encadreurs</span><strong th:text="${pctEncadreurs + '%'}">0%</strong></div>
+                                <div><span><i style="background:#F59E0B;"></i>Responsables</span><strong th:text="${pctResponsables + '%'}">0%</strong></div>
+                                <div><span><i style="background:#8B5CF6;"></i>Admins</span><strong th:text="${pctAdmins + '%'}">0%</strong></div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </article>
 
-                <!-- Activités récentes -->
-                <div class="carte-blanche-new">
-                    <div class="en-tete-carte">
-                        <h3>Activités récentes</h3>
-                        <a href="#" class="voir-tout" th:href="@{/admin/activites}">Voir tout</a>
-                    </div>
-                    <ul class="liste-activites-new">
-                        <li th:each="activite : ${activitesRecentes}" th:if="${activiteStat.index < 5}">
-                            <span th:class="'icone-ronde ' + ${activite.couleur}">
-                                <i th:class="${activite.icone}"></i>
-                            </span>
-                            <span th:text="${activite.message}">Nouvel utilisateur créé</span>
-                            <span class="temps" th:text="${activite.temps}">Il y a 2 min</span>
-                        </li>
-                    </ul>
-                </div>
-            </section>
-
-            <!-- 3. PARTIE INFÉRIEURE (3 cartes) -->
-            <section class="partie-inferieure-new">
-                
-                <!-- Statut système -->
-                <div class="carte-blanche-new">
-                    <h3>Statut du système</h3>
-                    <ul class="liste-statut-new">
-                        <li th:each="item : ${statutSysteme}">
-                            <i th:class="${item.icone}"></i>
-                            <span th:text="${item.nom}">Serveur</span>
-                            <span th:class="'pastille-' + ${item.couleur}" th:text="${item.statut}">Opérationnel</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Utilisateurs récents -->
-                <div class="carte-blanche-new">
-                    <div class="en-tete-carte">
-                        <h3>Utilisateurs récents</h3>
-                        <a href="#" class="voir-tout" th:href="@{/admin/utilisateurs}">Voir tous</a>
-                    </div>
-                    <ul class="liste-utilisateurs-new">
-                        <li th:each="user : ${utilisateursRecents}" th:if="${userStat.index < 4}">
-                            <img class="avatar-user" th:src="@{'/images/' + ${user.avatar}}" th:alt="${user.nom}">
-                            <span th:text="${user.nom}">Marie Dupont</span>
-                            <span th:class="'badge-' + ${user.role}" th:text="${user.role}">Encadreur</span>
-                            <span class="temps" th:text="${user.temps}">2h</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Actions rapides -->
-                <div class="carte-blanche-new">
-                    <h3>Actions rapides</h3>
-                    <div class="grid-actions-new">
-                        <div class="action-card-new" onclick="executerAction('ajouter-utilisateur')">
-                            <i class="fas fa-user-plus couleur-bleue"></i>
-                            <span>Ajouter utilisateur</span>
-                        </div>
-                        <div class="action-card-new" onclick="executerAction('gerer-roles')">
-                            <i class="fas fa-user-shield couleur-violette"></i>
-                            <span>Gérer rôles</span>
-                        </div>
-                        <div class="action-card-new" onclick="executerAction('ajouter-service')">
-                            <i class="fas fa-building couleur-turquoise"></i>
-                            <span>Ajouter service</span>
-                        </div>
-                        <div class="action-card-new" onclick="executerAction('gerer-documents')">
-                            <i class="fas fa-folder-open couleur-orange"></i>
-                            <span>Gérer documents</span>
-                        </div>
-                        <div class="action-card-new" onclick="executerAction('sauvegarder')">
-                            <i class="fas fa-hard-drive couleur-rouge"></i>
-                            <span>Sauvegarder</span>
-                        </div>
-                        <div class="action-card-new" onclick="executerAction('voir-logs')">
-                            <i class="fas fa-file-lines couleur-bleue"></i>
-                            <span>Voir les logs</span>
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon purple"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                        <div>
+                            <h2>Activités récentes</h2>
+                            <p>Dernières actions sur la plateforme.</p>
                         </div>
                     </div>
-                    <button class="btn-notification-new" onclick="envoyerNotification()">
-                        <i class="fas fa-paper-plane"></i> Envoyer notification
-                    </button>
+                    <a th:href="@{/admin/journal}" class="backup-btn secondary" style="text-decoration:none;">Voir tout</a>
+                </header>
+                <div class="backup-timeline">
+                    <div class="backup-timeline-item" th:each="activite, iter : ${activitesRecentes}" th:if="${iter.index < 5}">
+                        <div class="backup-timeline-marker" th:classappend="${activite.couleur == 'vert-clair' ? 'vert' : (activite.couleur == 'rouge-clair' ? 'rouge' : (activite.couleur == 'orange-clair' ? 'orange' : 'bleu'))}">
+                            <i th:class="${activite.icone}"></i>
+                        </div>
+                        <div class="backup-timeline-content">
+                            <div>
+                                <strong th:text="${activite.message}">Action</strong>
+                                <span th:text="${activite.temps}">Il y a 2 min</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(activitesRecentes)}" style="text-align:center;padding:32px 16px;color:#94A3B8;font-size:13px;">
+                        Aucune activité récente.
+                    </div>
                 </div>
-            </section>
-
-            <!-- Pied de page -->
-            <footer class="pied-page-new">
-                <span>© 2026 Gestion des Stages - Tous droits réservés</span>
-                <span>Version 1.0.0</span>
-            </footer>
-
+            </article>
         </div>
-        <!-- FIN NOUVEAU CONTENU -->
 
-    </div>
+        <aside class="backup-side-column">
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon green"><i class="fa-solid fa-server"></i></span><h2>Statut du système</h2></div>
+                </header>
+                <div style="padding:4px 0;">
+                    <div th:each="item : ${statutSysteme}" style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #F8FAFC;">
+                        <span style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#F1F5F9;color:#64748B;font-size:14px;flex-shrink:0;"><i th:class="${item.icone}"></i></span>
+                        <span style="flex:1;font-size:12px;font-weight:600;color:#0f172a;" th:text="${item.nom}">Serveur</span>
+                        <span th:classappend="${item.couleur == 'verte' ? 'backup-status reussie' : 'backup-status echec'}" style="font-size:10px;"><i></i><span th:text="${item.statut}">Opérationnel</span></span>
+                    </div>
+                </div>
+            </article>
 
-    <!-- ======================================== -->
-    <!-- SCRIPTS                                  -->
-    <!-- ======================================== -->
-    <script>
-        function ouvrirNotifications() {
-            window.location.href = '/admin/notifications';
-        }
-        
-        function ouvrirMessages() {
-            window.location.href = '/admin/messages';
-        }
-        
-        function envoyerNotification() {
-            alert('Ouvrir le formulaire d\'envoi de notification');
-            // À remplacer par un vrai modal ou une redirection
-        }
-        
-        function executerAction(actionId) {
-            console.log('Action : ' + actionId);
-            switch(actionId) {
-                case 'ajouter-utilisateur':
-                    window.location.href = '/admin/utilisateurs/ajouter';
-                    break;
-                case 'gerer-roles':
-                    window.location.href = '/admin/roles-permissions';
-                    break;
-                case 'ajouter-service':
-                    window.location.href = '/admin/service';
-                    break;
-                case 'gerer-documents':
-                    window.location.href = '/admin/documents';
-                    break;
-                case 'sauvegarder':
-                    alert('Sauvegarde en cours...');
-                    break;
-                case 'voir-logs':
-                    window.location.href = '/admin/logs';
-                    break;
-                default:
-                    alert('Action non reconnue');
-            }
-        }
-        
-        function changerPeriode(periode) {
-            window.location.href = '/admin/dashboard?periode=' + periode;
-        }
-    </script>
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon orange"><i class="fa-solid fa-users"></i></span><h2>Utilisateurs récents</h2></div>
+                    <a th:href="@{/admin/utilisateurs}" style="font-size:10px;color:#2563EB;text-decoration:none;font-weight:600;">Voir tous</a>
+                </header>
+                <div th:each="user, iter : ${utilisateursRecents}" th:if="${iter.index < 4}" style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #F8FAFC;">
+                    <span class="backup-user-avatar" style="width:32px;height:32px;font-size:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);" th:text="${#strings.substring(user.nom, 0, 1)}">M</span>
+                    <span style="flex:1;font-size:12px;font-weight:600;color:#0f172a;" th:text="${user.nom}">Marie Dupont</span>
+                    <span class="backup-type-badge" th:classappend="${user.role == 'encadreur' ? 'vert' : (user.role == 'stagiaire' ? 'violet' : 'orange')}" th:text="${user.role}" style="font-size:9px;">Encadreur</span>
+                    <small style="color:#94A3B8;font-size:9px;" th:text="${user.temps}">2h</small>
+                </div>
+            </article>
 
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon blue"><i class="fa-solid fa-bolt"></i></span><h2>Actions rapides</h2></div>
+                </header>
+                <div class="backup-quick-actions">
+                    <button type="button" onclick="window.location.href='/admin/utilisateurs'"><i class="fa-solid fa-user-plus"></i><span>Ajouter<small>utilisateur</small></span></button>
+                    <button type="button" onclick="window.location.href='/admin/roles-permissions'"><i class="fa-solid fa-user-shield"></i><span>Gérer<small>rôles</small></span></button>
+                    <button type="button" onclick="window.location.href='/admin/service'"><i class="fa-solid fa-building"></i><span>Ajouter<small>service</small></span></button>
+                    <button type="button" onclick="window.location.href='/admin/documents'"><i class="fa-solid fa-folder-open"></i><span>Documents<small>gérer</small></span></button>
+                    <button type="button" onclick="window.location.href='/admin/sauvegarde'"><i class="fa-solid fa-cloud-arrow-up"></i><span>Sauvegarder<small>données</small></span></button>
+                    <button type="button" onclick="window.location.href='/admin/journal'"><i class="fa-solid fa-file-lines"></i><span>Journal<small>logs</small></span></button>
+                </div>
+                <button type="button" class="backup-btn primary full" onclick="window.location.href='/admin/notifications'">
+                    <i class="fa-solid fa-paper-plane"></i> Envoyer notification
+                </button>
+            </article>
+        </aside>
+    </section>
+
+    <section class="backup-charts-grid">
+        <article class="backup-chart-card line-chart-card">
+            <header><div><h2>Évolution des connexions</h2><p>Activité des 7 derniers jours</p></div></header>
+            <div class="backup-line-chart">
+                <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                    <g class="grid">
+                        <line x1="60" y1="40" x2="760" y2="40"></line>
+                        <line x1="60" y1="90" x2="760" y2="90"></line>
+                        <line x1="60" y1="140" x2="760" y2="140"></line>
+                        <line x1="60" y1="190" x2="760" y2="190"></line>
+                    </g>
+                    <polyline fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                              th:attr="points=${chartConnexionsPoints}"></polyline>
+                    <circle th:each="v, iter : ${chartConnexionsValues}"
+                            th:cx="${50 + iter.index * chartConnexionsStep2}"
+                            th:cy="${190 - (v * (150.0 / chartConnexionsMax))}"
+                            r="4" fill="#2563EB" stroke="white" stroke-width="2"></circle>
+                    <text th:each="d, iter : ${chartDays}"
+                          th:x="${50 + iter.index * chartConnexionsStep2}"
+                          y="225" font-size="12" fill="#94A3B8" text-anchor="middle" th:text="${d}">Lun</text>
+                </svg>
+            </div>
+        </article>
+        <article class="backup-chart-card occupancy-card">
+            <header><div><h2>Activité des utilisateurs</h2><p>Taux d'engagement par rôle</p></div></header>
+            <div class="backup-bars">
+                <div><span th:style="'height:' + ${pctStagiaires * 1.5 > 0 ? pctStagiaires * 1.5 : 10} + 'px'"></span><small>Stagiaires</small></div>
+                <div><span th:style="'height:' + ${pctEncadreurs * 1.5 > 0 ? pctEncadreurs * 1.5 : 10} + 'px'"></span><small>Encadreurs</small></div>
+                <div><span th:style="'height:' + ${pctResponsables * 1.5 > 0 ? pctResponsables * 1.5 : 10} + 'px'"></span><small>Responsables</small></div>
+                <div><span th:style="'height:' + ${pctAdmins * 1.5 > 0 ? pctAdmins * 1.5 : 10} + 'px'"></span><small>Admins</small></div>
+            </div>
+        </article>
+    </section>
+</main>
 </body>
 </html>

@@ -2,8 +2,10 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utilisateurs - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/utilisateurs.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -11,22 +13,28 @@
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-<div class="contenu-principal">
+<main class="contenu-principal backup-page">
 
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <!-- PAGE HEADER -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="page-header-icon"><i class="fa-solid fa-users"></i></div>
+    <!-- BACKUP HEADING -->
+    <div class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-users"></i></div>
             <div>
                 <h1>Utilisateurs</h1>
-                <p class="page-header-sub">Gérez les encadreurs, responsables de stage et suivez les activités.</p>
+                <nav class="backup-breadcrumb">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Utilisateurs</strong>
+                </nav>
+                <p>Gérez les encadreurs et responsables de stage.</p>
             </div>
         </div>
-        <div class="page-header-right">
-            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button class="btn-primary" onclick="openModal('modal-add')"><i class="fa-solid fa-plus"></i> Ajouter un utilisateur</button>
+        <div class="backup-heading-actions">
+            <button class="backup-btn primary" onclick="openModal('modal-add')"><i class="fa-solid fa-plus"></i> Ajouter un utilisateur</button>
         </div>
     </div>
 
@@ -35,48 +43,73 @@
         <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
     </div>
 
-    <!-- STATS CARDS -->
-    <div class="stats-row">
-        <div class="stat-card bleu">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Total utilisateurs</div>
-                <div class="stat-number" th:text="${totalUsers}">0</div>
-                <div class="stat-desc">Tous rôles confondus</div>
+    <!-- BACKUP STATS -->
+    <div class="backup-stats">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon" style="background:#DBEAFE;color:#2563EB;"><i class="fa-solid fa-users"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card vert">
-            <div class="stat-icon"><i class="fa-solid fa-user-tie"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Encadreurs</div>
-                <div class="stat-number" th:text="${totalEncadreurs}">0</div>
-                <div class="stat-desc">Superviseurs de stage</div>
+            <span class="backup-stat-label">Total utilisateurs</span>
+            <strong th:text="${totalUsers}">0</strong>
+            <small>Tous rôles confondus</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 30 C18 28,35 30,52 24 S80 27,100 19 S133 23,180 10 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 30 C18 28,35 30,52 24 S80 27,100 19 S133 23,180 10"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon" style="background:#DCFCE7;color:#16A34A;"><i class="fa-solid fa-user-tie"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card violet">
-            <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Responsables</div>
-                <div class="stat-number" th:text="${totalResponsables}">0</div>
-                <div class="stat-desc">Gestion des stages</div>
+            <span class="backup-stat-label">Encadreurs</span>
+            <strong th:text="${totalEncadreurs}">0</strong>
+            <small>Superviseurs de stage</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 33 C22 26,37 31,55 23 S89 27,110 20 S147 24,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 33 C22 26,37 31,55 23 S89 27,110 20 S147 24,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon" style="background:#EDE9FE;color:#7C3AED;"><i class="fa-solid fa-briefcase"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-icon"><i class="fa-solid fa-user-shield"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Administrateurs</div>
-                <div class="stat-number" th:text="${totalAdmin}">0</div>
-                <div class="stat-desc">Accès complet</div>
+            <span class="backup-stat-label">Responsables</span>
+            <strong th:text="${totalResponsables}">0</strong>
+            <small>Gestion des stages</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 31 C20 34,38 27,57 30 S88 19,109 22 S145 13,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C20 34,38 27,57 30 S88 19,109 22 S145 13,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon" style="background:#FEF3C7;color:#D97706;"><i class="fa-solid fa-user-shield"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card rouge">
-            <div class="stat-icon"><i class="fa-solid fa-user-slash"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Inactifs</div>
-                <div class="stat-number" th:text="${totalInactifs}">0</div>
-                <div class="stat-desc">Comptes désactivés</div>
+            <span class="backup-stat-label">Administrateurs</span>
+            <strong th:text="${totalAdmin}">0</strong>
+            <small>Accès complet</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 35 C23 27,36 32,55 26 S86 30,108 18 S144 21,180 6 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C23 27,36 32,55 26 S86 30,108 18 S144 21,180 6"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon" style="background:#FEE2E2;color:#DC2626;"><i class="fa-solid fa-user-slash"></i></span>
+                <em>Inactifs</em>
             </div>
-        </div>
+            <span class="backup-stat-label">Inactifs</span>
+            <strong th:text="${totalInactifs}">0</strong>
+            <small>Comptes désactivés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 37 C26 37,39 37,60 37 S91 37,113 37 S146 37,180 37 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 37 C26 37,39 37,60 37 S91 37,113 37 S146 37,180 37"></path>
+            </svg>
+        </article>
     </div>
 
     <!-- TWO-COLUMN LAYOUT -->
@@ -85,26 +118,28 @@
         <!-- LEFT COLUMN -->
         <div class="page-layout-left">
 
-            <div class="main-card">
+            <div class="backup-card">
 
                 <!-- TABS -->
-                <div class="tabs-bar">
-                    <div class="tabs">
-                        <button class="tab actif" data-filtre="toutes" onclick="filterTabs('toutes')">
-                            Tous <span class="tab-badge" th:text="${totalUsers}">0</span>
-                        </button>
-                        <button class="tab" data-filtre="ENCADREUR" onclick="filterTabs('ENCADREUR')">
-                            Encadreurs <span class="tab-badge vert" th:text="${totalEncadreurs}">0</span>
-                        </button>
-                        <button class="tab" data-filtre="RESPONSABLE_STAGE" onclick="filterTabs('RESPONSABLE_STAGE')">
-                            Responsables <span class="tab-badge violet" th:text="${totalResponsables}">0</span>
-                        </button>
-                        <button class="tab" data-filtre="ADMINISTRATEUR" onclick="filterTabs('ADMINISTRATEUR')">
-                            Administrateurs <span class="tab-badge bleu" th:text="${totalAdmin}">0</span>
-                        </button>
-                        <button class="tab" data-filtre="inactif" onclick="filterTabs('inactif')">
-                            Inactifs <span class="tab-badge rouge" th:text="${totalInactifs}">0</span>
-                        </button>
+                <div class="backup-card-header">
+                    <div class="tabs-bar">
+                        <div class="tabs">
+                            <button class="tab actif" data-filtre="toutes" onclick="filterTabs('toutes')">
+                                Tous <span class="tab-badge" th:text="${totalUsers}">0</span>
+                            </button>
+                            <button class="tab" data-filtre="ENCADREUR" onclick="filterTabs('ENCADREUR')">
+                                Encadreurs <span class="tab-badge vert" th:text="${totalEncadreurs}">0</span>
+                            </button>
+                            <button class="tab" data-filtre="RESPONSABLE_STAGE" onclick="filterTabs('RESPONSABLE_STAGE')">
+                                Responsables <span class="tab-badge violet" th:text="${totalResponsables}">0</span>
+                            </button>
+                            <button class="tab" data-filtre="ADMINISTRATEUR" onclick="filterTabs('ADMINISTRATEUR')">
+                                Administrateurs <span class="tab-badge bleu" th:text="${totalAdmin}">0</span>
+                            </button>
+                            <button class="tab" data-filtre="inactif" onclick="filterTabs('inactif')">
+                                Inactifs <span class="tab-badge rouge" th:text="${totalInactifs}">0</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -139,51 +174,53 @@
                 </div>
 
                 <!-- TABLE -->
-                <table class="table-utilisateurs">
-                    <thead>
-                        <tr>
-                            <th>Utilisateur</th>
-                            <th>Rôle</th>
-                            <th>Email</th>
-                            <th>Statut</th>
-                            <th>Dernière connexion</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="u : ${utilisateurs}" th:data-role="${u.role.libelle}" th:data-statut="${u.statut.name()}" onclick="selectUser(this, ${u.id})">
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-avatar" th:text="${#strings.substring(u.prenom,0,1).toUpperCase() + #strings.substring(u.nom,0,1).toUpperCase()}">AB</div>
-                                    <div>
-                                        <div class="user-nom" th:text="${u.prenom + ' ' + u.nom}">Nom</div>
-                                        <div class="user-fonction" th:text="${u.role.description ?: u.role.libelle}">Fonction</div>
+                <div class="backup-table-wrap">
+                    <table class="backup-table">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Rôle</th>
+                                <th>Email</th>
+                                <th>Statut</th>
+                                <th>Dernière connexion</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="u : ${utilisateurs}" th:data-role="${u.role.libelle}" th:data-statut="${u.statut.name()}" onclick="selectUser(this, ${u.id})">
+                                <td>
+                                    <div class="backup-name-cell">
+                                        <div class="backup-user-avatar" th:text="${#strings.substring(u.prenom,0,1).toUpperCase() + #strings.substring(u.nom,0,1).toUpperCase()}">AB</div>
+                                        <div>
+                                            <div class="user-nom" th:text="${u.prenom + ' ' + u.nom}">Nom</div>
+                                            <div class="user-fonction" th:text="${u.role.description ?: u.role.libelle}">Fonction</div>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span th:class="'badge-role ' + (${u.role.libelle == 'ENCADREUR'} ? 'encadreur' : (${u.role.libelle == 'RESPONSABLE_STAGE'} ? 'responsable' : (${u.role.libelle == 'ADMINISTRATEUR'} ? 'administrateur' : 'stagiaire')))"
-                                      th:text="${u.role.libelle == 'ENCADREUR' ? 'Encadreur' : (u.role.libelle == 'RESPONSABLE_STAGE' ? 'Responsable' : (u.role.libelle == 'ADMINISTRATEUR' ? 'Administrateur' : 'Stagiaire'))}">Rôle</span>
-                            </td>
-                            <td style="color:#64748B;" th:text="${u.email}">email</td>
-                            <td>
-                                <span th:class="'badge-statut ' + ${u.statut.name()}"
-                                      th:text="${u.statut.name() == 'actif' ? 'Actif' : 'Inactif'}">Statut</span>
-                            </td>
-                            <td style="color:#94A3B8; font-size:12px;">—</td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="action-btn" th:onclick="'event.stopPropagation(); selectUser(this, ' + ${u.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                                    <button class="action-btn" th:onclick="'event.stopPropagation(); openEdit(' + ${u.id} + ')'" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                                    <button class="action-btn" onclick="event.stopPropagation()" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(utilisateurs)}">
-                            <td colspan="6" class="empty-state">Aucun utilisateur trouvé.</td>
-                        </tr>
-                    </tbody>
-                </table>
+                                </td>
+                                <td>
+                                    <span th:class="'backup-type-badge ' + (${u.role.libelle == 'ENCADREUR'} ? 'encadreur' : (${u.role.libelle == 'RESPONSABLE_STAGE'} ? 'responsable' : (${u.role.libelle == 'ADMINISTRATEUR'} ? 'administrateur' : 'stagiaire')))"
+                                          th:text="${u.role.libelle == 'ENCADREUR' ? 'Encadreur' : (u.role.libelle == 'RESPONSABLE_STAGE' ? 'Responsable' : (u.role.libelle == 'ADMINISTRATEUR' ? 'Administrateur' : 'Stagiaire'))}">Rôle</span>
+                                </td>
+                                <td style="color:#64748B;" th:text="${u.email}">email</td>
+                                <td>
+                                    <span th:class="'backup-status ' + ${u.statut.name()}"
+                                          th:text="${u.statut.name() == 'actif' ? 'Actif' : 'Inactif'}">Statut</span>
+                                </td>
+                                <td style="color:#94A3B8; font-size:12px;">—</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="backup-btn small" th:onclick="'event.stopPropagation(); selectUser(this, ' + ${u.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                        <button class="backup-btn small" th:onclick="'event.stopPropagation(); openEdit(' + ${u.id} + ')'" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                                        <button class="backup-btn small" onclick="event.stopPropagation()" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(utilisateurs)}">
+                                <td colspan="6" class="empty-state">Aucun utilisateur trouvé.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <!-- PAGINATION -->
                 <div class="pagination-bar">
@@ -207,7 +244,7 @@
 
         
     </div>
-</div>
+</main>
 
 <!-- MODAL AJOUTER -->
 <div id="modal-add" class="modal-overlay">
@@ -223,8 +260,8 @@
             </select></div>
             <div class="form-group"><label>Mot de passe</label><input type="password" name="motDePasse" required minlength="6"></div>
             <div class="modal-actions">
-                <button type="button" class="btn-modal-secondary" onclick="closeModal('modal-add')">Annuler</button>
-                <button type="submit" class="btn-modal-primary">Enregistrer</button>
+                <button type="button" class="backup-btn secondary" onclick="closeModal('modal-add')">Annuler</button>
+                <button type="submit" class="backup-btn primary">Enregistrer</button>
             </div>
         </form>
     </div>
@@ -242,8 +279,8 @@
                 <option th:each="r : ${roles}" th:value="${r.libelle}" th:text="${r.libelle}"></option>
             </select></div>
             <div class="modal-actions">
-                <button type="button" class="btn-modal-secondary" onclick="closeModal('modal-edit')">Annuler</button>
-                <button type="submit" class="btn-modal-primary">Enregistrer</button>
+                <button type="button" class="backup-btn secondary" onclick="closeModal('modal-edit')">Annuler</button>
+                <button type="submit" class="backup-btn primary">Enregistrer</button>
             </div>
         </form>
     </div>
@@ -255,7 +292,7 @@
 </script>
 <script>
     function selectUser(el, id) {
-        document.querySelectorAll('.table-utilisateurs tbody tr').forEach(r => r.classList.remove('selected'));
+        document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
         if (el.tagName === 'TR') el.classList.add('selected');
         else el.closest('tr').classList.add('selected');
         afficherDetailsUser(id);
@@ -357,13 +394,13 @@
                 Cliquez sur un utilisateur pour voir ses détails
             </div>
         `;
-        document.querySelectorAll('.table-utilisateurs tbody tr').forEach(r => r.classList.remove('selected'));
+        document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
     }
 
     function filterTabs(filtre) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('actif'));
         document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
-        document.querySelectorAll('.table-utilisateurs tbody tr').forEach(row => {
+        document.querySelectorAll('.backup-table tbody tr').forEach(row => {
             if (row.querySelector('td[colspan]')) return;
             if (filtre === 'toutes') { row.style.display = ''; return; }
             if (filtre === 'inactif') {

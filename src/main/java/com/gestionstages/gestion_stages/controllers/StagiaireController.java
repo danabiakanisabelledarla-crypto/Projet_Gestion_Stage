@@ -18,6 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,7 @@ private final UtilisateurRepository utilisateurRepository;
 private final PasswordEncoder passwordEncoder;
 private final ConversationRepository conversationRepository;
 private final MessageRepository messageRepository;
+private final ProjetRepository projetRepository;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
@@ -58,7 +61,8 @@ public StagiaireController(StageRepository stageRepository,
                            UtilisateurRepository utilisateurRepository,
                            PasswordEncoder passwordEncoder,
                            ConversationRepository conversationRepository,
-                           MessageRepository messageRepository) {
+                           MessageRepository messageRepository,
+                           ProjetRepository projetRepository) {
 
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
@@ -73,6 +77,7 @@ public StagiaireController(StageRepository stageRepository,
     this.passwordEncoder = passwordEncoder;
     this.conversationRepository = conversationRepository;
     this.messageRepository = messageRepository;
+    this.projetRepository = projetRepository;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -133,26 +138,38 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                 .findByStageIdOrderByDateActiviteDesc(stage.getId());
 
         model.addAttribute("nombreTaches", totalTaches);
+        model.addAttribute("taches", taches);
         model.addAttribute("tachesEnCours", tachesEnCours);
+        model.addAttribute("tachesTerminees", tachesTerminees);
         model.addAttribute("tachesRecentes", taches.stream().limit(3).toList());
         model.addAttribute("nombreLivrables", livrables.size());
+        model.addAttribute("livrables", livrables);
         model.addAttribute("livrablesPending", livrablesPending);
         model.addAttribute("nombreObjectifs", objectifs.size());
+        model.addAttribute("objectifs", objectifs);
         model.addAttribute("objectifsEnCours", objectifsEnCours);
         model.addAttribute("progression", progression);
         model.addAttribute("nombreJours", journaux.size());
+        model.addAttribute("journaux", journaux);
+        model.addAttribute("joursRestants", Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
 
     } else {
         model.addAttribute("stage", null);
         model.addAttribute("nombreTaches", 0);
+        model.addAttribute("taches", new ArrayList<>());
         model.addAttribute("tachesEnCours", 0);
+        model.addAttribute("tachesTerminees", 0);
         model.addAttribute("tachesRecentes", new ArrayList<>());
         model.addAttribute("nombreLivrables", 0);
+        model.addAttribute("livrables", new ArrayList<>());
         model.addAttribute("livrablesPending", 0);
         model.addAttribute("nombreObjectifs", 0);
+        model.addAttribute("objectifs", new ArrayList<>());
         model.addAttribute("objectifsEnCours", 0);
         model.addAttribute("progression", 0);
         model.addAttribute("nombreJours", 0);
+        model.addAttribute("journaux", new ArrayList<>());
+        model.addAttribute("joursRestants", 0);
     }
 
     return "stagiaire/dashboard";
@@ -219,8 +236,10 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
 
     @PostMapping("/livrables/deposer")
     public String deposerLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                @RequestParam String titre,
-                                @RequestParam MultipartFile fichier) {
+                                  @RequestParam String titre,
+                                  @RequestParam(required = false, defaultValue = "Autre") String categorie,
+                                  @RequestParam(required = false) String description,
+                                  @RequestParam MultipartFile fichier) {
         try {
             Files.createDirectories(Paths.get(DOSSIER_UPLOAD));
             String nomFichier = "livrable_" + userDetails.getUtilisateur().getId() 
@@ -233,6 +252,9 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                 Stage stage = stageOpt.get();
                 Livrable livrable = new Livrable();
                 livrable.setTitre(titre);
+                livrable.setCategorie(categorie);
+                livrable.setDescription(description);
+                livrable.setTailleOctets(fichier.getSize());
                 livrable.setFichier(chemin.toString());
                 livrable.setStage(stage);
                 livrable.setStatut(Livrable.StatutLivrable.depose);
@@ -254,7 +276,11 @@ public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDeta
 
     model.addAttribute("activePage", "taches");
     if (stageOpt.isPresent()) {
-        taches = tacheRepository.findByStageId(stageOpt.get().getId());
+        Stage stage = stageOpt.get();
+        model.addAttribute("stage", stage);
+        taches = tacheRepository.findByStageId(stage.getId());
+    } else {
+        model.addAttribute("stage", null);
     }
     String prenom = userDetails.getUtilisateur().getPrenom();
     String nom = userDetails.getUtilisateur().getNom();
@@ -265,12 +291,34 @@ public String afficherTaches(@AuthenticationPrincipal CustomUserDetails userDeta
     model.addAttribute("taches", taches);
     long tachesAFaire = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.a_faire).count();
     long tachesEnCours = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.en_cours).count();
+    long tachesEnRevue = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.en_revue).count();
     long tachesTerminees = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.terminee).count();
+    long tachesEnRetard = taches.stream().filter(t -> t.getStatut() == Tache.StatutTache.en_retard).count();
     model.addAttribute("tachesAFaire", tachesAFaire);
     model.addAttribute("tachesEnCours", tachesEnCours);
+    model.addAttribute("tachesEnRevue", tachesEnRevue);
     model.addAttribute("tachesTerminees", tachesTerminees);
+    model.addAttribute("tachesEnRetard", tachesEnRetard);
     return "stagiaire/taches";
 
+}
+
+@PostMapping("/taches/statut")
+public String changerStatutTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                 @RequestParam Integer id,
+                                 @RequestParam Tache.StatutTache statut) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    Optional<Tache> tacheOpt = tacheRepository.findById(id);
+
+    if (stageOpt.isPresent()
+            && tacheOpt.isPresent()
+            && tacheOpt.get().getStage().getId().equals(stageOpt.get().getId())) {
+        Tache tache = tacheOpt.get();
+        tache.setStatut(statut);
+        tacheRepository.save(tache);
+    }
+
+    return "redirect:/stagiaire/taches";
 }
 
 @GetMapping("/livrables")
@@ -289,13 +337,31 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
             + nom.substring(0,1).toUpperCase());
 
     if (stageOpt.isPresent()) {
-        List<Tache> taches = tacheRepository.findByStageId(stageOpt.get().getId());
+        Stage stage = stageOpt.get();
+        model.addAttribute("stage", stage);
+        livrables.addAll(livrableRepository.findByStageId(stage.getId()));
+        List<Tache> taches = tacheRepository.findByStageId(stage.getId());
         for (Tache t : taches) {
-            livrables.addAll(livrableRepository.findByTacheId(t.getId()));
+            for (Livrable livrable : livrableRepository.findByTacheId(t.getId())) {
+                if (livrables.stream().noneMatch(existing -> existing.getId().equals(livrable.getId()))) {
+                    livrables.add(livrable);
+                }
+            }
         }
+    } else {
+        model.addAttribute("stage", null);
     }
+    long valides = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.valide).count();
+    long attente = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.depose).count();
+    long refuses = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.rejete).count();
+    long corrections = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.correction_demandee).count();
     model.addAttribute("livrables", livrables);
     model.addAttribute("nombreLivrables", livrables.size());
+    model.addAttribute("livrablesValides", valides);
+    model.addAttribute("livrablesAttente", attente);
+    model.addAttribute("livrablesRefuses", refuses);
+    model.addAttribute("livrablesCorrections", corrections);
+    model.addAttribute("progressionDocumentaire", Math.min(100, livrables.size() * 100 / 12));
     return "stagiaire/livrables";
 }
 
@@ -318,6 +384,7 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
     stageOpt.ifPresent(stage -> {
         List<Document> rapports = documentRepository.findByStageId(stage.getId()).stream()
                 .filter(d -> "rapport_final".equals(d.getTypeDocument()))
+                .sorted(Comparator.comparing(Document::getDateDepot).reversed())
                 .toList();
         
         // Trier manuellement si la méthode existe
@@ -327,6 +394,9 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
             model.addAttribute("dernierRapport", rapports.get(0));
             model.addAttribute("nombreVersions", rapports.size());
         }
+        model.addAttribute("joursRapportRestants",
+                Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
+        model.addAttribute("projet", stage.getProjet());
     });
     
     if (succes != null) model.addAttribute("succes", succes);
@@ -335,8 +405,10 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
 
 @PostMapping("/rapport/deposer")
 public String deposerRapport(@AuthenticationPrincipal CustomUserDetails userDetails,
-                              @RequestParam String titre,
-                              @RequestParam MultipartFile fichier) {
+                               @RequestParam String titre,
+                               @RequestParam(required = false, defaultValue = "1.0") String version,
+                               @RequestParam(required = false) String descriptionModifications,
+                               @RequestParam MultipartFile fichier) {
     Optional<Stage> stageOpt = getStage(userDetails);
     if (stageOpt.isEmpty()) {
         return "redirect:/stagiaire/rapport";
@@ -351,12 +423,44 @@ public String deposerRapport(@AuthenticationPrincipal CustomUserDetails userDeta
         Document document = new Document(
                 fichier.getOriginalFilename(), "rapport_final", chemin.toString());
         document.setStage(stageOpt.get());
+        document.setVersion(version);
+        document.setDescriptionModifications(descriptionModifications);
+        document.setTailleOctets(fichier.getSize());
+        document.setStatut("en_attente");
         documentRepository.save(document);
     } catch (IOException e) {
         System.err.println("Erreur upload rapport : " + e.getMessage());
         return "redirect:/stagiaire/rapport?succes=Erreur lors du depot du rapport.";
     }
     return "redirect:/stagiaire/rapport?succes=Rapport depose avec succes.";
+}
+
+@PostMapping("/rapport/projet")
+public String enregistrerProjet(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam String titre,
+                                @RequestParam(required = false) String typeProjet,
+                                @RequestParam(required = false) String technologies,
+                                @RequestParam(required = false) String lienGithub,
+                                @RequestParam(required = false) String lienDemo,
+                                @RequestParam(required = false) String description) {
+    getStage(userDetails).ifPresent(stage -> {
+        Projet projet = stage.getProjet();
+        if (projet == null) {
+            projet = new Projet();
+        }
+        projet.setTitre(titre);
+        projet.setTypeProjet(typeProjet);
+        projet.setTechnologies(technologies);
+        projet.setLienGithub(lienGithub);
+        projet.setLienDemo(lienDemo);
+        projet.setDescription(description);
+        projet.setDateDebut(stage.getDateDebut());
+        projet.setDateFin(stage.getDateFin());
+        projet = projetRepository.save(projet);
+        stage.setProjet(projet);
+        stageRepository.save(stage);
+    });
+    return "redirect:/stagiaire/rapport?succes=Informations du projet enregistrees.";
 }
 
 @GetMapping("/profil")
@@ -437,7 +541,12 @@ public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetai
         obj.setPriorite(Objectif.Priorite.valueOf(priorite));
         if (dateLimite != null && !dateLimite.isEmpty())
             obj.setDateLimite(LocalDate.parse(dateLimite));
-        obj.setOrdre(0);
+        int prochainOrdre = objectifRepository.findByStageIdOrderByOrdreAsc(stageOpt.get().getId())
+                .stream()
+                .mapToInt(Objectif::getOrdre)
+                .max()
+                .orElse(0) + 1;
+        obj.setOrdre(prochainOrdre);
         obj.setProgression(0);
         obj.setStatut(Objectif.StatutObjectif.non_commence);
         objectifRepository.save(obj);
@@ -446,26 +555,46 @@ public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetai
 }
 
 @PostMapping("/objectifs/statut")
-public String changerStatutObjectif(@RequestParam Integer id,
-                                    @RequestParam String statut) {
+public String changerStatutObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                     @RequestParam Integer id,
+                                     @RequestParam String statut) {
+    Optional<Stage> stageOpt = getStage(userDetails);
     Objectif obj = objectifRepository.findById(id).orElse(null);
-    if (obj != null) {
+    if (stageOpt.isPresent()
+            && obj != null
+            && obj.getStage().getId().equals(stageOpt.get().getId())) {
         obj.setStatut(Objectif.StatutObjectif.valueOf(statut));
-        if (statut.equals("atteint")) obj.setProgression(100);
+        if (statut.equals("atteint")) {
+            obj.setProgression(100);
+        } else if (statut.equals("non_commence")) {
+            obj.setProgression(0);
+        } else if (obj.getProgression() == 0) {
+            obj.setProgression(10);
+        }
         objectifRepository.save(obj);
     }
     return "redirect:/stagiaire/objectifs";
 }
 
 @PostMapping("/objectifs/supprimer")
-public String supprimerObjectif(@RequestParam Integer id) {
-    objectifRepository.deleteById(id);
+public String supprimerObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam Integer id) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    objectifRepository.findById(id)
+            .filter(objectif -> stageOpt.isPresent()
+                    && objectif.getStage().getId().equals(stageOpt.get().getId()))
+            .ifPresent(objectifRepository::delete);
     return "redirect:/stagiaire/objectifs";
 }
 
 @GetMapping("/planning")
 public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "planning");
+    String prenom = userDetails.getUtilisateur().getPrenom();
+    String nom = userDetails.getUtilisateur().getNom();
+    model.addAttribute("prenom", prenom);
+    model.addAttribute("nomComplet", prenom + " " + nom);
+    model.addAttribute("initiales", prenom.substring(0, 1).toUpperCase() + nom.substring(0, 1).toUpperCase());
     Optional<Stage> stageOpt = getStage(userDetails);
     model.addAttribute("stage", stageOpt.orElse(null));
 
@@ -475,10 +604,19 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
             Stage stage = stageOpt.get();
 
             List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+            model.addAttribute("nombreTachesPlanning", taches.size());
             for (Tache t : taches) {
                 if (t.getDateLimite() != null) {
                     evenements.add(new EvenementPlanning(
                             t.getDateLimite(), "Echeance : " + t.getTitre(), "tache"));
+                }
+            }
+
+            List<Objectif> objectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+            for (Objectif objectif : objectifs) {
+                if (objectif.getDateLimite() != null) {
+                    evenements.add(new EvenementPlanning(
+                            objectif.getDateLimite(), "Objectif : " + objectif.getLibelle(), "important"));
                 }
             }
 
@@ -493,8 +631,14 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
 
             List<EvenementPersonnel> evenementsPerso = evenementPersonnelRepository.findByStageId(stage.getId());
             for (EvenementPersonnel ep : evenementsPerso) {
-                evenements.add(new EvenementPlanning(ep.getDate(), ep.getMotif(), ep.getTypeCouleur()));
+                evenements.add(new EvenementPlanning(
+                        ep.getDate(), ep.getMotif(), ep.getTypeCouleur(), ep.getHeure(), ep.getDescription()));
             }
+
+            model.addAttribute("joursStageRestants",
+                    Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
+            model.addAttribute("nombreEvenementsPersonnels", evenementsPerso.size());
+            model.addAttribute("nombreLivrablesPlanning", livrableRepository.findByStageId(stage.getId()).size());
         }
 
     evenements.sort(Comparator.comparing(EvenementPlanning::getDate));
@@ -504,17 +648,31 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
     model.addAttribute("evenementsAvenir", evenements.stream()
             .filter(e -> !e.getDate().isBefore(aujourdHui))
             .toList());
+    model.addAttribute("evenementsCeMois", evenements.stream()
+            .filter(e -> e.getDate().getYear() == aujourdHui.getYear()
+                    && e.getDate().getMonth() == aujourdHui.getMonth())
+            .count());
 
     return "stagiaire/planning";
 }
 
 @PostMapping("/planning/ajouter")
 public String ajouterEvenementPlanning(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                        @RequestParam String motif,
-                                        @RequestParam String date,
-                                        @RequestParam String typeCouleur) {
+                                         @RequestParam String motif,
+                                         @RequestParam String date,
+                                         @RequestParam String typeCouleur,
+                                         @RequestParam(required = false) String heure,
+                                         @RequestParam(required = false) String description,
+                                         @RequestParam(required = false, defaultValue = "moyenne") String priorite,
+                                         @RequestParam(required = false, defaultValue = "1_heure") String rappel) {
     getStage(userDetails).ifPresent(stage -> {
         EvenementPersonnel evt = new EvenementPersonnel(stage, motif, LocalDate.parse(date), typeCouleur);
+        if (heure != null && !heure.isBlank()) {
+            evt.setHeure(LocalTime.parse(heure));
+        }
+        evt.setDescription(description);
+        evt.setPriorite(priorite);
+        evt.setRappel(rappel);
         evenementPersonnelRepository.save(evt);
     });
     return "redirect:/stagiaire/planning?succes=Evenement ajoute avec succes.";
@@ -644,11 +802,17 @@ public String modifierMotDePasse(@AuthenticationPrincipal CustomUserDetails user
 }
 
     @PostMapping("/taches/{id}/statut")
-    public String changerStatutTache(@PathVariable Integer id, @RequestParam String statut) {
-        tacheRepository.findById(id).ifPresent(tache -> {
-            tache.setStatut(Tache.StatutTache.valueOf(statut));
-            tacheRepository.save(tache);
-        });
+    public String changerStatutTacheDepuisDetail(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                 @PathVariable Integer id,
+                                                 @RequestParam Tache.StatutTache statut) {
+        Optional<Stage> stageOpt = getStage(userDetails);
+        tacheRepository.findById(id)
+                .filter(tache -> stageOpt.isPresent()
+                        && tache.getStage().getId().equals(stageOpt.get().getId()))
+                .ifPresent(tache -> {
+                    tache.setStatut(statut);
+                    tacheRepository.save(tache);
+                });
         return "redirect:/stagiaire/taches";
     }
 

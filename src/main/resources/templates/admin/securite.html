@@ -2,228 +2,410 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sécurité - Administrateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sécurité du système - Administration</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/securite.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
+
+<main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <!-- HEADER -->
-    <div class="sec-header">
-        <div class="sec-header-left">
-            <div class="sec-header-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="backup-alert" th:if="${succes}">
+        <i class="fa-solid fa-circle-check"></i>
+        <span th:text="${succes}">Action effectuée avec succès.</span>
+        <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-shield-halved"></i></div>
             <div>
-                <h1>Sécurité de la plateforme</h1>
-                <p class="sec-header-sub">Surveillez les connexions, détectez les activités suspectes et protégez les comptes utilisateurs.</p>
+                <h1>Sécurité du système</h1>
+                <nav class="backup-breadcrumb" aria-label="Fil d'Ariane">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Sécurité</strong>
+                </nav>
+                <p>Surveillez les connexions, détectez les activités suspectes et protégez les comptes utilisateurs.</p>
             </div>
         </div>
-        <div class="sec-header-right">
-            <button class="sec-btn-primary"><i class="fa-solid fa-shield-virus"></i> Scanner le système</button>
-            <button class="sec-btn-outline"><i class="fa-solid fa-download"></i> Exporter le journal</button>
-            <button class="sec-btn-ghost"><i class="fa-solid fa-gear"></i> Paramètres</button>
+        <div class="backup-heading-actions">
+            <button type="button" class="backup-btn secondary" onclick="actionSecurite('Journal de sécurité exporté.')">
+                <i class="fa-solid fa-file-export"></i> Exporter le journal
+            </button>
+            <button type="button" class="backup-btn primary" onclick="actionSecurite('Scan de sécurité lancé.')">
+                <i class="fa-solid fa-shield-virus"></i> Scanner le système
+            </button>
         </div>
-    </div>
+    </section>
 
-    <!-- 6 STATS CARDS -->
-    <div class="sec-stats">
-        <div class="sec-stat-card vert">
-            <div class="sec-stat-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
-            <div><div class="sec-stat-label">Connexions réussies</div><div class="sec-stat-number" th:text="${successfulLogins}">148</div><div class="sec-stat-desc">Aujourd'hui</div></div>
-        </div>
-        <div class="sec-stat-card rouge">
-            <div class="sec-stat-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
-            <div><div class="sec-stat-label">Connexions échouées</div><div class="sec-stat-number" th:text="${failedLogins}">12</div><div class="sec-stat-desc">Aujourd'hui</div></div>
-        </div>
-        <div class="sec-stat-card bleu">
-            <div class="sec-stat-icon"><i class="fa-solid fa-users"></i></div>
-            <div><div class="sec-stat-label">Sessions actives</div><div class="sec-stat-number" th:text="${activeSessions}">37</div><div class="sec-stat-desc">En ce moment</div></div>
-        </div>
-        <div class="sec-stat-card orange">
-            <div class="sec-stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div><div class="sec-stat-label">Alertes</div><div class="sec-stat-number" th:text="${totalAlerts}">1</div><div class="sec-stat-desc">Alerte critique</div></div>
-        </div>
-        <div class="sec-stat-card violet">
-            <div class="sec-stat-icon"><i class="fa-solid fa-lock"></i></div>
-            <div><div class="sec-stat-label">Comptes verrouillés</div><div class="sec-stat-number" th:text="${lockedAccounts}">2</div><div class="sec-stat-desc">En attente</div></div>
-        </div>
-        <div class="sec-stat-card global">
-            <div class="sec-stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            <div><div class="sec-stat-label">Indice sécurité</div><div class="sec-stat-number" th:text="${securityScore + '%'}">98%</div><div class="sec-stat-desc">Global</div></div>
-        </div>
-    </div>
+    <div th:replace="~{fragments/admin-settings-tabs :: tabs('securite')}"></div>
 
-    <!-- 4 GRAPHS -->
-    <div class="sec-graphs-row">
-        <div class="sec-graph-card">
-            <div class="sec-graph-title">Évolution des connexions</div>
-            <svg width="100%" height="180" viewBox="0 0 400 180">
-                <line x1="40" y1="30" x2="380" y2="30" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="40" y1="80" x2="380" y2="80" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="40" y1="130" x2="380" y2="130" stroke="#F1F5F9" stroke-width="1"/>
-                <polyline th:attr="points=${chartLoginPoints}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline th:attr="points=${chartFailedPoints}" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <section class="backup-stats" aria-label="Statistiques de sécurité">
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-right-to-bracket"></i></span>
+                <em>+5%</em>
+            </div>
+            <span class="backup-stat-label">Connexions réussies</span>
+            <strong th:text="${successfulLogins}">148</strong>
+            <small>Aujourd'hui</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
             </svg>
-            <div class="sec-chart-legend">
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+                <em>+12%</em>
+            </div>
+            <span class="backup-stat-label">Échecs de connexion</span>
+            <strong th:text="${failedLogins}">12</strong>
+            <small>Aujourd'hui</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-users"></i></span>
+                <em>En ligne</em>
+            </div>
+            <span class="backup-stat-label">Sessions actives</span>
+            <strong th:text="${activeSessions}">37</strong>
+            <small>En ce moment</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <em>Critique</em>
+            </div>
+            <span class="backup-stat-label">Alertes critiques</span>
+            <strong th:text="${totalAlerts}">1</strong>
+            <small>Nécessite une action</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-lock"></i></span>
+                <em>En attente</em>
+            </div>
+            <span class="backup-stat-label">Comptes verrouillés</span>
+            <strong th:text="${lockedAccounts}">2</strong>
+            <small>Nécessitent déverrouillage</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card cyan">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                <em>Excellent</em>
+            </div>
+            <span class="backup-stat-label">Niveau de sécurité</span>
+            <strong th:text="${securityScore + '%'}">98%</strong>
+            <small>Score global</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4"></path>
+            </svg>
+        </article>
+    </section>
+
+    <section class="backup-layout">
+        <div class="backup-main-column">
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon blue"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                        <div>
+                            <h2>Historique des connexions</h2>
+                            <p>Dernières connexions enregistrées sur la plateforme.</p>
+                        </div>
+                    </div>
+                    <div class="backup-table-tools">
+                        <button type="button" class="backup-icon-btn" title="Exporter" onclick="actionSecurite('Fichier CSV exporté.')"><i class="fa-solid fa-download"></i></button>
+                    </div>
+                </header>
+                <div class="backup-table-wrap">
+                    <table class="backup-table">
+                        <thead>
+                            <tr><th>Utilisateur</th><th>Rôle</th><th>Date</th><th>Heure</th><th>Adresse IP</th><th>Navigateur</th><th>Statut</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c : ${connectionHistory}">
+                                <td>
+                                    <div class="backup-name-cell">
+                                        <span class="backup-user-avatar" th:text="${c.initiale}">AD</span>
+                                        <div>
+                                            <strong th:text="${c.nom}">Admin</strong>
+                                            <small th:text="${c.email}">admin@email.com</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="backup-type-badge" th:classappend="${c.roleCls}" th:text="${c.role}">Administrateur</span></td>
+                                <td><strong class="backup-date" th:text="${c.date}">24/07/2026</strong></td>
+                                <td><span class="backup-time" th:text="${c.time}">09:30</span></td>
+                                <td><span class="backup-ip" th:text="${c.ip}">192.168.1.1</span></td>
+                                <td><span class="browser" th:text="${c.browser}">Chrome 120</span></td>
+                                <td><span class="backup-status" th:classappend="${c.statutCls}"><i></i><span th:text="${c.statutLabel}">Succès</span></span></td>
+                                <td>
+                                    <div class="backup-row-actions">
+                                        <button type="button" title="Voir" onclick="actionSecurite('Détails de la connexion affichés.')"><i class="fa-regular fa-eye"></i></button>
+                                        <button type="button" title="Déconnecter" onclick="actionSecurite('Session déconnectée.')"><i class="fa-solid fa-right-from-bracket"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon purple"><i class="fa-solid fa-file-shield"></i></span>
+                        <div>
+                            <h2>Journal de sécurité</h2>
+                            <p>Toutes les actions sensibles de la plateforme sont enregistrées.</p>
+                        </div>
+                    </div>
+                </header>
+                <div class="backup-table-wrap">
+                    <table class="backup-table">
+                        <thead>
+                            <tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Description</th><th>Niveau</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="j : ${securityJournal}">
+                                <td><strong class="backup-date" th:text="${j.date}">17/07</strong><br><small class="backup-time" th:text="${j.time}">09:30</small></td>
+                                <td th:text="${j.user}">Admin</td>
+                                <td th:text="${j.action}">Connexion réussie</td>
+                                <td><small style="color:#64748B;" th:text="${j.desc}">Description</small></td>
+                                <td><span class="backup-status" th:classappend="${j.levelCls}"><i></i><span th:text="${j.level}">Info</span></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon red"><i class="fa-solid fa-lock"></i></span>
+                        <div>
+                            <h2>Comptes verrouillés</h2>
+                            <p>Comptes ayant dépassé le nombre maximal de tentatives de connexion.</p>
+                        </div>
+                    </div>
+                </header>
+                <div th:if="${#lists.isEmpty(lockedAccountsList)}" class="backup-empty-state">
+                    <i class="fa-solid fa-lock-open"></i>
+                    <strong>Aucun compte verrouillé</strong>
+                    <p>Tous les comptes sont accessibles.</p>
+                </div>
+                <div th:unless="${#lists.isEmpty(lockedAccountsList)}" class="backup-table-wrap">
+                    <table class="backup-table">
+                        <thead>
+                            <tr><th>Utilisateur</th><th>Tentatives</th><th>Date</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="l : ${lockedAccountsList}">
+                                <td><div class="backup-name-cell"><span class="backup-user-avatar" th:text="${l.initiale}">U</span><strong th:text="${l.nom}">Utilisateur</strong></div></td>
+                                <td><span class="backup-attempts-badge" th:text="${l.attempts}">5</span></td>
+                                <td><span th:text="${l.date}">17/07</span> <span th:text="${l.time}">09:30</span></td>
+                                <td>
+                                    <div class="backup-row-actions">
+                                        <button type="button" class="backup-btn small green" onclick="actionSecurite('Compte déverrouillé.')"><i class="fa-solid fa-lock-open"></i></button>
+                                        <button type="button" class="backup-btn small" onclick="actionSecurite('Mot de passe réinitialisé.')"><i class="fa-solid fa-key"></i></button>
+                                        <button type="button" class="backup-btn small danger" onclick="actionSecurite('Compte désactivé.')"><i class="fa-solid fa-ban"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+        <aside class="backup-side-column">
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon red"><i class="fa-solid fa-triangle-exclamation"></i></span><h2>Activités suspectes</h2></div>
+                </header>
+                <div class="backup-suspect-list">
+                    <div th:each="a : ${suspiciousActivities}" class="backup-suspect-item">
+                        <div class="backup-suspect-icon" th:classappend="${a.levelCls}"><i class="fa-solid fa-bug"></i></div>
+                        <div class="backup-suspect-content">
+                            <strong th:text="${a.title}">Connexion depuis plusieurs pays</strong>
+                            <small th:text="${a.desc}">Description</small>
+                            <div class="backup-suspect-meta">
+                                <span th:text="${a.date}">15/07</span>
+                                <span class="backup-level-badge" th:classappend="${a.levelCls}" th:text="${a.level}">Critique</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon blue"><i class="fa-solid fa-users"></i></span><h2>Sessions actives</h2></div>
+                </header>
+                <div th:each="s : ${activeSessionsList}" class="backup-session-item">
+                    <span class="backup-user-avatar" th:text="${s.initiale}">A</span>
+                    <div class="backup-session-content">
+                        <strong th:text="${s.nom}">Admin</strong>
+                        <small th:text="${s.appareil}">Chrome · Windows</small>
+                        <span class="backup-session-meta" th:text="${'IP: ' + s.ip + ' · ' + s.lastActivity}">IP: 192.168.1.1 · Il y a 2 min</span>
+                    </div>
+                    <button type="button" class="backup-btn small danger" onclick="actionSecurite('Session fermée.')"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon blue"><i class="fa-solid fa-key"></i></span><h2>Politique mot de passe</h2></div>
+                </header>
+                <div class="backup-policy-list">
+                    <div class="backup-policy-item ok"><i class="fa-solid fa-check-circle"></i> Longueur minimale <strong>12 caractères</strong></div>
+                    <div class="backup-policy-item ok"><i class="fa-solid fa-check-circle"></i> Majuscule obligatoire</div>
+                    <div class="backup-policy-item ok"><i class="fa-solid fa-check-circle"></i> Chiffre obligatoire</div>
+                    <div class="backup-policy-item ok"><i class="fa-solid fa-check-circle"></i> Caractère spécial obligatoire</div>
+                    <div class="backup-policy-item ok"><i class="fa-solid fa-check-circle"></i> Expiration <strong>90 jours</strong></div>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon purple"><i class="fa-solid fa-fingerprint"></i></span><h2>Authentification 2FA</h2></div>
+                </header>
+                <div class="backup-2fa-stats">
+                    <div class="backup-2fa-number"><strong th:text="${twoFactorEnabled}">24</strong><small>activé</small></div>
+                    <div class="backup-2fa-number muted"><strong th:text="${twoFactorDisabled}">12</strong><small>désactivé</small></div>
+                </div>
+                <div class="backup-storage-progress"><span th:style="'width:' + ${twoFactorPct} + '%'"></span></div>
+                <small class="backup-storage-note" th:text="${twoFactorPct + '% des utilisateurs ont activé la 2FA'}">67% des utilisateurs ont activé la 2FA</small>
+                <div style="padding:12px 16px 16px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="backup-btn small green" onclick="actionSecurite('2FA activée pour tous les utilisateurs.')"><i class="fa-solid fa-toggle-on"></i> Activer 2FA</button>
+                    <button type="button" class="backup-btn small" onclick="actionSecurite('Codes 2FA réinitialisés.')"><i class="fa-solid fa-arrows-rotate"></i> Réinitialiser</button>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon orange"><i class="fa-solid fa-user-shield"></i></span><h2>Permissions des rôles</h2></div>
+                </header>
+                <div class="backup-perms-grid">
+                    <div class="backup-perm-col"><div class="backup-perm-title blue"><i class="fa-solid fa-crown"></i> Administrateur</div><div class="backup-perm-item ok">✔ Ajouter utilisateur</div><div class="backup-perm-item ok">✔ Restaurer sauvegarde</div><div class="backup-perm-item ok">✔ Voir journaux</div></div>
+                    <div class="backup-perm-col"><div class="backup-perm-title green"><i class="fa-solid fa-user-tie"></i> Responsable</div><div class="backup-perm-item ok">✔ Affecter stages</div><div class="backup-perm-item ok">✔ Clôturer</div><div class="backup-perm-item ok">✔ Voir progression</div></div>
+                    <div class="backup-perm-col"><div class="backup-perm-title orange"><i class="fa-solid fa-chalkboard-user"></i> Encadreur</div><div class="backup-perm-item ok">✔ Créer tâches</div><div class="backup-perm-item ok">✔ Corriger livrables</div><div class="backup-perm-item ok">✔ Évaluer</div></div>
+                    <div class="backup-perm-col"><div class="backup-perm-title purple"><i class="fa-solid fa-user-graduate"></i> Stagiaire</div><div class="backup-perm-item ok">✔ Déposer rapport</div><div class="backup-perm-item ok">✔ Journal</div><div class="backup-perm-item ok">✔ Livrables</div></div>
+                </div>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon orange"><i class="fa-solid fa-bolt"></i></span><h2>Actions rapides</h2></div>
+                </header>
+                <div class="backup-quick-actions">
+                    <button type="button" onclick="actionSecurite('Module de déverrouillage ouvert.')"><i class="fa-solid fa-lock-open"></i><span>Déverrouiller<small>un compte utilisateur</small></span></button>
+                    <button type="button" onclick="actionSecurite('Session fermée.')"><i class="fa-solid fa-right-from-bracket"></i><span>Fermer<small>une session active</small></span></button>
+                    <button type="button" onclick="actionSecurite('Mot de passe réinitialisé.')"><i class="fa-solid fa-key"></i><span>Réinitialiser<small>mot de passe</small></span></button>
+                    <button type="button" onclick="actionSecurite('Paramètres de sécurité modifiés.')"><i class="fa-solid fa-sliders"></i><span>Configurer<small>politiques de sécurité</small></span></button>
+                    <button type="button" onclick="actionSecurite('Gestion 2FA ouverte.')"><i class="fa-solid fa-fingerprint"></i><span>Gérer<small>authentification 2FA</small></span></button>
+                    <button type="button" onclick="actionSecurite('Journal exporté au format CSV.')"><i class="fa-solid fa-file-export"></i><span>Exporter<small>le journal</small></span></button>
+                </div>
+            </article>
+        </aside>
+    </section>
+
+    <section class="backup-charts-grid">
+        <article class="backup-chart-card line-chart-card">
+            <header><div><h2>Évolution des connexions</h2><p>Connexions réussies vs échouées</p></div><span><i></i> 7 derniers jours</span></header>
+            <div class="backup-line-chart">
+                <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                    <g class="grid"><line x1="60" y1="40" x2="760" y2="40"></line><line x1="60" y1="90" x2="760" y2="90"></line><line x1="60" y1="140" x2="760" y2="140"></line><line x1="60" y1="190" x2="760" y2="190"></line></g>
+                    <polyline class="auto" th:attr="points=${chartLoginPoints}"></polyline>
+                    <polyline class="manual" th:attr="points=${chartFailedPoints}"></polyline>
+                </svg>
+            </div>
+            <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:10px;color:#64748B;">
                 <span><span style="color:#22C55E;">●</span> Réussies</span>
                 <span><span style="color:#EF4444;">●</span> Échouées</span>
             </div>
-        </div>
-        <div class="sec-graph-card">
-            <div class="sec-graph-title">Répartition utilisateurs</div>
-            <div class="sec-donut-wrapper">
-                <div class="sec-donut">
-                    <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"/>
-                                                <circle th:each="s : ${userDistributionSegments}" cx="18" cy="18" r="15.9" fill="none" th:stroke="${s.color}" stroke-width="3.5"  th:attr="stroke-dasharray=${s.dasharray}, stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)" stroke-linecap="round"/>
+        </article>
+
+        <article class="backup-chart-card">
+            <header><div><h2>Échecs par semaine</h2><p>Tentatives échouées par semaine</p></div></header>
+            <div class="backup-bars">
+                <div th:each="v, iter : ${weeklyFailures}"><span th:style="'height:' + ${weeklyFailureHeights[iter.index]} + 'px'" th:title="${v + ' échecs'}"></span><small th:text="${'S' + (iter.index + 1)}">S1</small></div>
+            </div>
+        </article>
+
+        <article class="backup-chart-card">
+            <header><div><h2>Répartition des utilisateurs</h2><p>Par rôle sur la plateforme</p></div></header>
+            <div class="backup-distribution">
+                <div class="backup-distribution-donut">
+                    <svg viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.9"></circle>
+                        <circle th:each="s : ${userDistributionSegments}" cx="18" cy="18" r="15.9"
+                                th:attr="stroke=${s.color},stroke-dasharray=${s.dasharray},stroke-dashoffset=${s.dashoffset}"></circle>
                     </svg>
-                    <div class="sec-donut-center"><div class="sec-donut-nb" th:text="${totalUsers}">0</div><div class="sec-donut-lb">Total</div></div>
+                    <div><strong th:text="${totalUsers}">0</strong><span>Total</span></div>
                 </div>
-                <div class="sec-donut-legend-side">
-                    <div th:each="d : ${userDistribution}" class="sec-legend-item"><span class="sec-legend-dot" th:classappend="${d.cls}"></span><span th:text="${d.name}">Admin</span><span th:text="${d.pct + '%'}" style="margin-left:auto;font-weight:700;color:#0f172a;">25%</span></div>
-                </div>
-            </div>
-        </div>
-        <div class="sec-graph-card">
-            <div class="sec-graph-title">Échecs par semaine</div>
-            <div style="display:flex;align-items:flex-end;gap:8px;height:150px;padding:10px 0;">
-                                <div th:each="v, iter : ${weeklyFailures}" style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                    <div class="bar-weekly-failure" th:style="'height:' + ${weeklyFailureHeights[iter.index]} + 'px'" th:title="${v + ' échecs'}"></div>
-                    <span style="font-size:9px;color:#94A3B8;margin-top:4px;" th:text="${'S' + (iter.index + 1)}">S1</span>
+                <div class="backup-distribution-legend">
+                    <div th:each="d : ${userDistribution}"><span><i th:class="${d.cls}"></i><span th:text="${d.name}">Admin</span></span><strong th:text="${d.pct + '%'}">25%</strong></div>
                 </div>
             </div>
-        </div>
-        <div class="sec-graph-card">
-            <div class="sec-graph-title">Évolution des alertes</div>
-            <svg width="100%" height="180" viewBox="0 0 400 180">
-                <line x1="40" y1="30" x2="380" y2="30" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="40" y1="80" x2="380" y2="80" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="40" y1="130" x2="380" y2="130" stroke="#F1F5F9" stroke-width="1"/>
-                <polyline th:attr="points=${chartAlertPoints}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <div class="sec-chart-legend"><span><span style="color:#F59E0B;">●</span> Alertes</span></div>
-        </div>
-    </div>
+        </article>
 
-    <!-- CONNECTION HISTORY -->
-    <div class="sec-card">
-        <div class="sec-card-header">
-            <span class="sec-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:#2563EB;margin-right:8px;"></i>Historique des connexions</span>
-            <div class="sec-card-actions">
-                <select class="sec-filter-select"><option>Date</option></select>
-                <select class="sec-filter-select"><option>Utilisateur</option></select>
-                <select class="sec-filter-select"><option>Rôle</option></select>
-                <button class="sec-card-btn"><i class="fa-solid fa-download"></i> Export</button>
+        <article class="backup-chart-card occupancy-card">
+            <header><div><h2>Évolution des alertes</h2><p>Incidents de sécurité détectés</p></div><strong th:text="${totalAlerts}">1</strong></header>
+            <div class="backup-line-chart">
+                <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                    <g class="grid"><line x1="60" y1="40" x2="760" y2="40"></line><line x1="60" y1="90" x2="760" y2="90"></line><line x1="60" y1="140" x2="760" y2="140"></line><line x1="60" y1="190" x2="760" y2="190"></line></g>
+                    <polyline class="auto" th:attr="points=${chartAlertPoints}"></polyline>
+                </svg>
             </div>
-        </div>
-        <table class="sec-table">
-            <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Date</th><th>Heure</th><th>Adresse IP</th><th>Navigateur</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody>
-                <tr th:each="c : ${connectionHistory}">
-                    <td><div class="sec-user-cell"><div class="sec-user-avatar" th:text="${c.initiale}">A</div><div><div class="sec-user-name" th:text="${c.nom}">Admin</div><div class="sec-user-email" th:text="${c.email}">admin@email.com</div></div></div></td>
-                    <td><span class="sec-role-badge" th:classappend="${c.roleCls}" th:text="${c.role}">Admin</span></td>
-                    <td th:text="${c.date}">17/07</td>
-                    <td th:text="${c.time}">09:30</td>
-                    <td style="font-family:monospace;font-size:12px;" th:text="${c.ip}">192.168.1.1</td>
-                    <td style="font-size:12px;" th:text="${c.browser}">Chrome 120</td>
-                    <td><span class="sec-badge" th:classappend="${c.statutCls}" th:text="${c.statutLabel}">Succès</span></td>
-                    <td><button class="sec-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button><button class="sec-action-btn" title="Déconnecter"><i class="fa-solid fa-right-from-bracket"></i></button></td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="sec-pagination"><button class="sec-page-btn actif">1</button><button class="sec-page-btn">2</button><button class="sec-page-btn">3</button><button class="sec-page-btn"><i class="fa-solid fa-chevron-right"></i></button></div>
-    </div>
+            <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:10px;color:#64748B;">
+                <span><span style="color:#F59E0B;">●</span> Alertes</span>
+            </div>
+        </article>
+    </section>
 
-    <!-- TWO COLUMNS: Suspicious + Sessions -->
-    <div class="sec-two-col">
-        <div class="sec-card">
-            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444;margin-right:8px;"></i>Activités suspectes</span></div>
-            <div th:each="a : ${suspiciousActivities}" class="sec-suspect-item">
-                <div class="sec-suspect-icon rouge"><i class="fa-solid fa-bug"></i></div>
-                <div class="sec-suspect-content"><div class="sec-suspect-title" th:text="${a.title}">Connexion depuis plusieurs pays</div><div class="sec-suspect-desc" th:text="${a.desc}">Description</div><div class="sec-suspect-meta"><span th:text="${a.date}">15/07</span><span class="sec-level" th:classappend="${a.levelCls}" th:text="${a.level}">Critique</span></div></div>
-            </div>
-        </div>
-        <div class="sec-card">
-            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-users" style="color:#2563EB;margin-right:8px;"></i>Sessions ouvertes</span></div>
-            <div th:each="s : ${activeSessionsList}" class="sec-session-item">
-                <div class="sec-user-avatar" th:text="${s.initiale}">A</div>
-                <div class="sec-session-content"><div class="sec-session-name" th:text="${s.nom}">Admin</div><div class="sec-session-device" th:text="${s.appareil}">Chrome · Windows</div><div class="sec-session-meta" th:text="${'IP: ' + s.ip + ' · ' + s.lastActivity}">IP: 192.168.1.1 · Il y a 2 min</div></div>
-                <button class="sec-btn-sm danger"><i class="fa-solid fa-right-from-bracket"></i> Déconnecter</button>
-            </div>
-        </div>
+    <div class="backup-toast" id="secToast" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check"></i><span>Action terminée.</span>
     </div>
+</main>
 
-    <!-- SECURITY JOURNAL -->
-    <div class="sec-card">
-        <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-file-shield" style="color:#8B5CF6;margin-right:8px;"></i>Journal de sécurité</span><span style="font-size:12px;color:#64748B;">Toutes les actions sensibles de la plateforme sont enregistrées.</span></div>
-        <table class="sec-table">
-            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Description</th><th>Niveau</th></tr></thead>
-            <tbody>
-                <tr th:each="j : ${securityJournal}">
-                    <td><span class="sec-date" th:text="${j.date}">17/07</span><br><span class="sec-time" th:text="${j.time}">09:30</span></td>
-                    <td th:text="${j.user}">Admin</td>
-                    <td th:text="${j.action}">Connexion réussie</td>
-                    <td style="color:#64748B;font-size:12px;" th:text="${j.desc}">Description</td>
-                    <td><span class="sec-level-badge" th:classappend="${j.levelCls}" th:text="${j.level}">Info</span></td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="sec-pagination"><button class="sec-page-btn actif">1</button><button class="sec-page-btn">2</button></div>
-    </div>
-
-    <!-- LOCKED ACCOUNTS -->
-    <div class="sec-card">
-        <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-lock" style="color:#EF4444;margin-right:8px;"></i>Comptes verrouillés</span><span style="font-size:12px;color:#64748B;">Les comptes ayant dépassé le nombre maximal de tentatives de connexion.</span></div>
-        <div th:if="${#lists.isEmpty(lockedAccountsList)}" class="sec-empty"><i class="fa-solid fa-lock-open" style="font-size:48px;display:block;margin-bottom:12px;color:#22C55E;"></i>Aucun compte verrouillé.</div>
-        <table th:unless="${#lists.isEmpty(lockedAccountsList)}" class="sec-table">
-            <thead><tr><th>Utilisateur</th><th>Tentatives</th><th>Date</th><th>Heure</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody>
-                <tr th:each="l : ${lockedAccountsList}">
-                    <td><div class="sec-user-cell"><div class="sec-user-avatar" th:text="${l.initiale}">U</div><div th:text="${l.nom}">Utilisateur</div></div></td>
-                    <td><span class="sec-attempts" th:text="${l.attempts}">5</span></td>
-                    <td th:text="${l.date}">17/07</td>
-                    <td th:text="${l.time}">09:30</td>
-                    <td><span class="sec-badge rouge">Verrouillé</span></td>
-                    <td><button class="sec-btn-sm vert"><i class="fa-solid fa-lock-open"></i> Déverrouiller</button><button class="sec-btn-sm"><i class="fa-solid fa-key"></i> Réinitialiser</button><button class="sec-btn-sm danger"><i class="fa-solid fa-ban"></i> Désactiver</button></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- BOTTOM THREE CARDS -->
-    <div class="sec-bottom-row">
-        <div class="sec-card">
-            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-key" style="color:#2563EB;margin-right:8px;"></i>Politique mot de passe</span></div>
-            <div class="sec-policy-list">
-                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Longueur minimale <strong>12 caractères</strong></div>
-                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Majuscule obligatoire</div>
-                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Chiffre obligatoire</div>
-                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Caractère spécial obligatoire</div>
-                <div class="sec-policy-item ok"><i class="fa-solid fa-check-circle"></i> Expiration <strong>90 jours</strong></div>
-            </div>
-        </div>
-        <div class="sec-card">
-            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-fingerprint" style="color:#8B5CF6;margin-right:8px;"></i>Authentification 2FA</span></div>
-            <div class="sec-2fa-stats">
-                <div class="sec-2fa-number"><span th:text="${twoFactorEnabled}">24</span><small>activé</small></div>
-                <div class="sec-2fa-number gris"><span th:text="${twoFactorDisabled}">12</span><small>désactivé</small></div>
-            </div>
-            <div class="sec-2fa-bar"><div class="sec-2fa-fill" th:style="'width:' + (${twoFactorPct}) + '%'"></div></div>
-            <div class="sec-2fa-actions"><button class="sec-btn-sm vert"><i class="fa-solid fa-toggle-on"></i> Activer 2FA</button><button class="sec-btn-sm"><i class="fa-solid fa-arrows-rotate"></i> Réinitialiser codes</button></div>
-        </div>
-        <div class="sec-card">
-            <div class="sec-card-header"><span class="sec-card-title"><i class="fa-solid fa-user-shield" style="color:#F59E0B;margin-right:8px;"></i>Permissions des rôles</span></div>
-            <div class="sec-perms-grid">
-                <div class="sec-perm-col"><div class="sec-perm-title bleu"><i class="fa-solid fa-crown"></i> Administrateur</div><div class="sec-perm-item ok">✔ Ajouter utilisateur</div><div class="sec-perm-item ok">✔ Restaurer sauvegarde</div><div class="sec-perm-item ok">✔ Voir journaux</div></div>
-                <div class="sec-perm-col"><div class="sec-perm-title vert"><i class="fa-solid fa-user-tie"></i> Responsable</div><div class="sec-perm-item ok">✔ Affecter stages</div><div class="sec-perm-item ok">✔ Clôturer</div><div class="sec-perm-item ok">✔ Voir progression</div></div>
-                <div class="sec-perm-col"><div class="sec-perm-title orange"><i class="fa-solid fa-chalkboard-user"></i> Encadreur</div><div class="sec-perm-item ok">✔ Créer tâches</div><div class="sec-perm-item ok">✔ Corriger livrables</div><div class="sec-perm-item ok">✔ Évaluer</div></div>
-                <div class="sec-perm-col"><div class="sec-perm-title violet"><i class="fa-solid fa-user-graduate"></i> Stagiaire</div><div class="sec-perm-item ok">✔ Déposer rapport</div><div class="sec-perm-item ok">✔ Journal</div><div class="sec-perm-item ok">✔ Livrables</div></div>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+    function actionSecurite(message) {
+        const toast = document.getElementById('secToast');
+        toast.querySelector('span').textContent = message;
+        toast.classList.add('show');
+        clearTimeout(window.secToastTimer);
+        window.secToastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+</script>
 </body>
 </html>

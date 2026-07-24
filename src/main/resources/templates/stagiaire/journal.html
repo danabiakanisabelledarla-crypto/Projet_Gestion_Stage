@@ -2,217 +2,97 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Journal de bord - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-journal.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-premium.css}">
 </head>
-<body>
-
+<body class="intern-portal">
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+<div class="intern-content-shell">
+<div th:replace="~{fragments/header-stagiaire :: header}"></div>
+<main class="intern-page">
+    <section class="intern-page-heading">
+        <div class="intern-heading-main"><div class="intern-heading-icon"><i class="fa-solid fa-book-open"></i></div><div class="intern-heading-copy"><div class="intern-breadcrumb"><a th:href="@{/stagiaire/dashboard}">Accueil</a> / Stagiaire / Journal de bord</div><h1>Journal de bord</h1><p>Suivez, documentez et valorisez votre activité quotidienne durant votre stage</p></div></div>
+        <button type="button" class="intern-button" data-open-journal><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
+    </section>
 
-<div class="journal-main">
+    <div th:if="${succes}" class="intern-card" style="margin-bottom:18px;color:#15803d;background:#f0fdf4" th:text="${succes}">Journal enregistré.</div>
 
-    <!-- ========== BARRE SUPERIEURE ========== -->
-    <!--<header class="journal-header">
-        <div class="header-gauche">
-            <div class="header-search">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Rechercher une activite...">
-            </div>
-        </div>
-        <div class="header-droite">
-            <div class="header-icon-btn">
-                <i class="fa-regular fa-bell"></i>
-                <span class="notif-dot">2</span>
-            </div>
-            <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
-                <i class="fa-regular fa-envelope"></i>
-            </a>
-            <div class="header-user">
-                <div class="header-user-text">
-                    <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
-                    <span class="header-user-role">Stagiaire</span>
-                </div>
-                <div class="header-avatar" th:text="${initiales}">S</div>
-                <i class="fa-solid fa-chevron-down header-arrow"></i>
-            </div>
-        </div>
-    </header>-->
-    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
+    <section class="intern-kpis five">
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-book"></i></span><div class="intern-kpi-value" th:text="${nombreEntrees}">28</div><div class="intern-kpi-label">Entrées enregistrées</div><div class="intern-kpi-note">Total du journal</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-green"><i class="fa-solid fa-check"></i></span><div class="intern-kpi-value" th:text="${nombreEntrees}">22</div><div class="intern-kpi-label">Entrées validées</div><div class="intern-kpi-note">Par l’encadreur</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-orange"><i class="fa-regular fa-clock"></i></span><div class="intern-kpi-value">0</div><div class="intern-kpi-label">En attente</div><div class="intern-kpi-note">De validation</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-purple"><i class="fa-solid fa-stopwatch"></i></span><div class="intern-kpi-value" th:text="${nombreEntrees * 7 + ' h'}">184 h</div><div class="intern-kpi-label">Heures déclarées</div><div class="intern-kpi-note">Estimation cumulée</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-chart-line"></i></span><div class="intern-kpi-value" th:text="${nombreEntrees > 0 ? '100%' : '0%'}">79%</div><div class="intern-kpi-label">Taux de validation</div><div class="intern-progress"><span th:style="'width:' + (${nombreEntrees > 0 ? 100 : 0}) + '%;background:#2563eb'"></span></div></article>
+    </section>
 
-    <!-- ========== CONTENU ========== -->
-    <div class="journal-content">
+    <section class="intern-grid two">
+        <article class="intern-card"><div class="intern-card-header"><div><h2 class="intern-card-title">Vue d’ensemble du journal</h2><p class="intern-card-subtitle">Résumé de votre activité sur les 30 derniers jours</p></div><select class="intern-select" style="width:auto"><option>30 derniers jours</option><option>Cette semaine</option></select></div><div class="intern-grid two" style="margin:0;align-items:center"><div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + (${nombreEntrees > 0 ? 100 : 0})"></div><div class="intern-donut-label"><strong th:text="${nombreEntrees > 0 ? '100%' : '0%'}">79%</strong><span>Entrées validées</span></div></div><div class="intern-chart-box"><span class="intern-chart-bar" style="height:25%"></span><span class="intern-chart-bar" style="height:38%"></span><span class="intern-chart-bar" style="height:31%"></span><span class="intern-chart-bar" style="height:50%"></span><span class="intern-chart-bar" style="height:58%"></span><span class="intern-chart-bar" style="height:70%"></span><span class="intern-chart-bar" style="height:82%"></span></div></div></article>
+        <aside class="intern-grid" style="margin:0">
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Mon activité</h2></div><div class="intern-data-list"><div class="intern-data-row"><span>Entrées enregistrées</span><strong th:text="${nombreEntrees}">28</strong></div><div class="intern-data-row"><span>Temps déclaré</span><strong th:text="${nombreEntrees * 7 + ' heures'}">184 heures</strong></div><div class="intern-data-row"><span>Tâches disponibles</span><strong th:text="${taches.size()}">12</strong></div><div class="intern-data-row"><span>Livrables associés</span><strong th:text="${livrables.size()}">4</strong></div></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Derniers commentaires</h2></div><div class="intern-feed"><div class="intern-feed-item"><span class="intern-avatar">PB</span><div><strong>Paul Bernard</strong><span>Excellent travail sur le dashboard.</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-avatar">PB</span><div><strong>Paul Bernard</strong><span>Pense à compléter la documentation.</span><small>Hier</small></div></div></div></article>
+        </aside>
+    </section>
 
-        <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
-
-        <!-- EN-TETE PAGE -->
-        <div class="page-entete">
-            <div class="page-entete-gauche">
-                <div class="page-icon">
-                    <i class="fa-solid fa-book-open"></i>
-                </div>
-                <div>
-                    <h1 class="page-titre">Journal de bord</h1>
-                    <p class="page-sous-titre">Consignez quotidiennement les activites realisees durant votre stage.</p>
-                </div>
-            </div>
-            <div class="page-entete-droite">
-                <a href="#" class="btn-nouveau" onclick="document.getElementById('formNouveauJournal').style.display='block'; return false;">
-                    <i class="fa-solid fa-plus"></i> Nouvelle entree
-                </a>
-            </div>
-        </div>
-
-        <!-- CARTES RESUME -->
-        <div class="resume-cartes">
-            <div class="resume-carte">
-                <div class="resume-icone bleu"><i class="fa-regular fa-calendar"></i></div>
-                <div class="resume-info">
-                    <div class="resume-label">Entrees</div>
-                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
-                    <div class="resume-sous">activites enregistrees</div>
-                </div>
-            </div>
-            <div class="resume-carte">
-                <div class="resume-icone orange"><i class="fa-regular fa-clock"></i></div>
-                <div class="resume-info">
-                    <div class="resume-label">Cette semaine</div>
-                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
-                    <div class="resume-sous">nouvelles entrees</div>
-                </div>
-            </div>
-            <div class="resume-carte">
-                <div class="resume-icone vert"><i class="fa-solid fa-trophy"></i></div>
-                <div class="resume-info">
-                    <div class="resume-label">Jours actifs</div>
-                    <div class="resume-valeur" th:text="${nombreEntrees}">0</div>
-                    <div class="resume-sous">jours de stage</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TIMELINE -->
-        <div class="timeline-section" th:if="${journaux != null and !journaux.isEmpty()}">
-            <div class="timeline-line"></div>
-
-            <div class="timeline-entree" th:each="journal : ${journaux}">
-                <div class="timeline-cercle"><i class="fa-solid fa-check"></i></div>
-                <div class="entree-carte">
-                    <div class="entree-header">
-                        <div class="entree-date-badge" th:text="${#temporals.format(journal.dateActivite, 'dd MMMM yyyy')}">-</div>
-                        <div class="entree-titre" th:text="${#strings.abbreviate(journal.travauxRealises, 60)}">-</div>
-                        <div class="entree-actions">
-                            <a th:href="@{/stagiaire/journal/{id}/modifier(id=${journal.id})}" class="entree-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                            <a th:href="@{/stagiaire/journal/{id}/supprimer(id=${journal.id})}" class="entree-action-btn rouge" title="Supprimer" onclick="return confirm('Supprimer cette entree ?')"><i class="fa-solid fa-trash"></i></a>
+    <section class="intern-grid two">
+        <article class="intern-card">
+            <div class="intern-card-header"><div><h2 class="intern-card-title">Mes entrées du journal</h2><p class="intern-card-subtitle">Chronologie de vos activités</p></div><div style="display:flex;gap:8px"><select class="intern-select" style="width:auto"><option>Cette semaine</option><option>Ce mois</option></select><button class="intern-button" data-open-journal><i class="fa-solid fa-plus"></i> Nouvelle entrée</button></div></div>
+            <div class="intern-timeline" th:if="${journaux != null and !journaux.isEmpty()}">
+                <article class="intern-timeline-item" th:each="journal : ${journaux}">
+                    <span class="intern-timeline-marker"></span>
+                    <div class="intern-journal-entry">
+                        <div class="intern-entry-head"><div><span class="intern-entry-date" th:text="${#temporals.format(journal.dateActivite, 'dd MMMM yyyy')}">21 juillet 2026</span><h3 th:text="${#strings.abbreviate(journal.travauxRealises, 65)}">Développement API Statistiques</h3></div><span class="intern-status status-green"><i class="fa-solid fa-check"></i> Validée</span></div>
+                        <div class="intern-entry-body" th:text="${journal.travauxRealises}">Description de l’activité réalisée.</div>
+                        <div class="intern-entry-details" th:if="${(journal.difficultes != null and !journal.difficultes.isEmpty()) or (journal.observations != null and !journal.observations.isEmpty())}">
+                            <div class="intern-detail-box" th:if="${journal.difficultes != null and !journal.difficultes.isEmpty()}"><strong><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i> Difficultés rencontrées</strong><span th:text="${journal.difficultes}">Difficultés</span></div>
+                            <div class="intern-detail-box" th:if="${journal.observations != null and !journal.observations.isEmpty()}"><strong><i class="fa-regular fa-lightbulb" style="color:#16a34a"></i> Solutions et observations</strong><span th:text="${journal.observations}">Solutions</span></div>
                         </div>
+                        <div class="intern-task-footer"><span><i class="fa-regular fa-clock"></i> 7 heures</span><span><i class="fa-solid fa-folder"></i> Stage</span></div>
                     </div>
-                    <div class="entree-description" th:text="${journal.travauxRealises}">-</div>
-                    <div class="entree-difficultes" th:if="${journal.difficultes != null and !journal.difficultes.isEmpty()}">
-                        <h4><i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B;"></i> Difficultes rencontrees</h4>
-                        <div class="difficultes-encart" th:text="${journal.difficultes}">-</div>
-                    </div>
-                    <div class="entree-solutions" th:if="${journal.observations != null and !journal.observations.isEmpty()}">
-                        <h4><i class="fa-solid fa-lightbulb" style="color:#22C55E;"></i> Solutions apportees</h4>
-                        <div class="solutions-encart" th:text="${journal.observations}">-</div>
-                    </div>
-                    <div class="entree-footer">
-                        <span><i class="fa-regular fa-clock"></i> -</span>
-                        <span><i class="fa-solid fa-folder"></i> Stage</span>
-                        <span class="statut-badge valide"><i class="fa-solid fa-check"></i> Valide</span>
-                    </div>
-                </div>
+                </article>
             </div>
-        </div>
+            <div class="intern-empty" th:if="${journaux == null or journaux.isEmpty()}">Aucune entrée dans le journal. Utilisez « Nouvelle entrée » pour commencer.</div>
+        </article>
 
-        <div class="vide" th:if="${journaux == null or journaux.isEmpty()}">
-            Aucune entree dans le journal pour le moment.<br>
-            Cliquez sur "Nouvelle entree" pour commencer.
-        </div>
-
-        <!-- HISTORIQUE COMPLET -->
-        <div class="historique-section" th:if="${journaux != null and !journaux.isEmpty()}">
-            <h2 class="historique-titre"><i class="fa-solid fa-table"></i> Historique complet des activites</h2>
-            <div class="carte-tableau">
-                <table class="table-journal">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Titre</th>
-                            <th>Projet</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="journal : ${journaux}">
-                            <td th:text="${#temporals.format(journal.dateActivite, 'dd/MM/yyyy')}">-</td>
-                            <td class="titre-cell" th:text="${#strings.abbreviate(journal.travauxRealises, 50)}">-</td>
-                            <td>Stage</td>
-                            <td><span class="statut-badge valide">Valide</span></td>
-                            <td>
-                                <a th:href="@{/stagiaire/journal/{id}/modifier(id=${journal.id})}" class="action-icon-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="pagination">
-                    <div class="pagination-info" th:text="${nombreEntrees} + ' activites enregistrees'">-</div>
-                    <div class="pagination-btns">
-                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="page-btn actif">1</button>
-                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BARRE D'INFORMATION FINALE -->
-        <div class="info-banner">
-            <div class="info-banner-content">
-                <div class="info-banner-icon">
-                    <i class="fa-solid fa-book"></i>
-                </div>
-                <div>
-                    <p class="info-banner-text">Le journal de bord constitue une preuve du travail realise durant votre stage.<br>Veillez a le completer regulierement.</p>
-                    <a href="#" class="info-banner-btn">Consulter le reglement</a>
-                </div>
-            </div>
-        </div>
-
-    </div>
+        <aside class="intern-grid" style="margin:0">
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Calendrier d’activité</h2></div><div class="intern-calendar-head"><span>Juillet 2026</span><i class="fa-regular fa-calendar"></i></div><div class="intern-calendar-grid"><span class="day-name">L</span><span class="day-name">M</span><span class="day-name">M</span><span class="day-name">J</span><span class="day-name">V</span><span class="day-name">S</span><span class="day-name">D</span><span></span><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span class="event-day">15</span><span>16</span><span>17</span><span class="event-day">18</span><span class="event-day">19</span><span class="event-day">20</span><span class="active-day">21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2></div><div class="intern-feed"><div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-plus"></i></span><div><strong>Nouvelle entrée créée</strong><span>Développement API Statistiques</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Entrée validée</strong><span>Dashboard stagiaire</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-regular fa-comment"></i></span><div><strong>Nouveau commentaire</strong><span>Paul Bernard</span><small>Hier</small></div></div></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Progression du stage</h2><strong>68%</strong></div><div class="intern-progress"><span style="width:68%;background:#2563eb"></span></div><div class="intern-data-list" style="margin-top:10px"><div class="intern-data-row"><span>Objectifs atteints</span><strong>7 / 10</strong></div><div class="intern-data-row"><span>Tâches terminées</span><strong>18 / 25</strong></div><div class="intern-data-row"><span>Livrables déposés</span><strong>9 / 12</strong></div></div></article>
+        </aside>
+    </section>
+</main>
 </div>
 
-<!-- FORMULAIRE NOUVELLE ENTREE (MODAL) -->
-<div class="journal-modal-overlay" id="formNouveauJournal" style="display:none;" onclick="if(event.target==this)this.style.display='none'">
-    <div class="journal-modal">
-        <div class="modal-header">
-            <h2>Nouvelle entree</h2>
-            <button type="button" class="modal-close" onclick="document.getElementById('formNouveauJournal').style.display='none'">&times;</button>
+<div class="intern-modal" id="journalModal" role="dialog" aria-modal="true" aria-labelledby="journalModalTitle">
+    <form class="intern-modal-panel" th:action="@{/stagiaire/journal/ajouter}" method="post">
+        <div class="intern-card-header"><div><h2 class="intern-card-title" id="journalModalTitle">Nouvelle entrée du journal</h2><p class="intern-card-subtitle">Décrivez précisément votre activité de la journée</p></div><button type="button" class="intern-icon-button intern-icon-only" data-close-journal aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button></div>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="intern-form-grid">
+            <div class="intern-form-group"><label for="dateActivite">Date</label><input class="intern-input" id="dateActivite" name="dateActivite" type="date" required></div>
+            <div class="intern-form-group"><label for="duree">Durée (heures)</label><input class="intern-input" id="duree" type="number" min="1" max="24" value="7"></div>
+            <div class="intern-form-group full"><label for="travauxRealises">Titre et description détaillée</label><textarea class="intern-textarea" id="travauxRealises" name="travauxRealises" required placeholder="Décrivez les travaux réalisés..."></textarea></div>
+            <div class="intern-form-group"><label for="objectifAssocie">Objectif associé</label><select class="intern-select" id="objectifAssocie"><option>Aucun objectif</option><option>Dashboard stagiaire</option><option>Module Livrables</option></select></div>
+            <div class="intern-form-group"><label for="tacheAssociee">Tâche associée</label><select class="intern-select" id="tacheAssociee"><option value="">Aucune tâche</option><option th:each="tache : ${taches}" th:text="${tache.titre}">Tâche</option></select></div>
+            <div class="intern-form-group full"><label for="difficultes">Difficultés rencontrées</label><textarea class="intern-textarea" id="difficultes" name="difficultes" placeholder="Facultatif"></textarea></div>
+            <div class="intern-form-group full"><label for="solutions">Solutions et observations</label><textarea class="intern-textarea" id="solutions" name="solutions" placeholder="Facultatif"></textarea></div>
         </div>
-        <form th:action="@{/stagiaire/journal/ajouter}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="groupe-champ">
-                <label>Date</label>
-                <input type="date" name="dateActivite" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Travaux realises</label>
-                <textarea name="travauxRealises" placeholder="Decrivez vos activites du jour..." required></textarea>
-            </div>
-            <div class="groupe-champ">
-                <label>Difficultes rencontrees</label>
-                <textarea name="difficultes" placeholder="Optionnel..."></textarea>
-            </div>
-            <div class="groupe-champ">
-                <label>Solutions apportees</label>
-                <textarea name="solutions" placeholder="Optionnel..."></textarea>
-            </div>
-            <button type="submit" class="bouton-principal">Enregistrer</button>
-        </form>
-    </div>
+        <div class="intern-modal-actions"><button type="button" class="intern-button secondary" data-close-journal>Annuler</button><button type="submit" class="intern-button"><i class="fa-solid fa-paper-plane"></i> Enregistrer et soumettre</button></div>
+    </form>
 </div>
-
+<script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('journalModal');
+    const date = document.getElementById('dateActivite');
+    const open = () => { modal.classList.add('open'); date.valueAsDate = new Date(); document.body.style.overflow = 'hidden'; };
+    const close = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
+    document.querySelectorAll('[data-open-journal]').forEach(button => button.addEventListener('click', open));
+    document.querySelectorAll('[data-close-journal]').forEach(button => button.addEventListener('click', close));
+    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+});
+</script>
 </body>
 </html>

@@ -7,4 +7,5 @@ import java.util.List;
 public interface LivrableRepository extends JpaRepository<Livrable, Integer> {
 
     List<Livrable> findByTacheId(Integer tacheId);
+    List<Livrable> findByStageId(Integer stageId);
 }

@@ -2,74 +2,108 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Journal de bord - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/journal.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
+<main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
     <!-- PAGE HEADER -->
-    <div class="journal-header">
-        <div class="journal-header-left">
-            <div class="journal-header-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+    <div class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-book"></i></div>
             <div>
-                <h1>Journal de bord</h1>
-                <p class="journal-header-sub">Consultez et gérez toutes les activités enregistrées par les stagiaires, les encadreurs et les responsables.</p>
+                <h1>Journal d'activités</h1>
+                <nav class="backup-breadcrumb">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Journal</strong>
+                </nav>
+                <p>Consultez l'ensemble des activités enregistrées sur la plateforme.</p>
             </div>
         </div>
-        <div class="journal-header-right">
-            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
-            <button class="btn-outline"><i class="fa-solid fa-print"></i> Imprimer</button>
-            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
+        <div class="backup-heading-right">
+            <button class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <button class="backup-btn secondary"><i class="fa-solid fa-print"></i> Imprimer</button>
+            <button class="backup-btn primary"><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
         </div>
     </div>
 
     <!-- 5 STATS CARDS -->
-    <div class="journal-stats">
-        <div class="jstat-card bleu">
-            <div class="jstat-icon"><i class="fa-solid fa-list"></i></div>
-            <div class="jstat-info">
-                <div class="jstat-label">Entrées totales</div>
-                <div class="jstat-number" th:text="${totalEntries}">0</div>
-                <div class="jstat-desc">Toutes périodes</div>
+    <div class="backup-stats">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-list"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="jstat-card vert">
-            <div class="jstat-icon"><i class="fa-solid fa-user-check"></i></div>
-            <div class="jstat-info">
-                <div class="jstat-label">Stagiaires actifs</div>
-                <div class="jstat-number" th:text="${activeStagiaires}">0</div>
-                <div class="jstat-desc">Cette semaine</div>
+            <span class="backup-stat-label">Entrées totales</span>
+            <strong th:text="${totalEntries}">0</strong>
+            <small>Toutes périodes</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-user-check"></i></span>
+                <em>Semaine</em>
             </div>
-        </div>
-        <div class="jstat-card orange">
-            <div class="jstat-icon"><i class="fa-regular fa-calendar"></i></div>
-            <div class="jstat-info">
-                <div class="jstat-label">Entrées de la semaine</div>
-                <div class="jstat-number" th:text="${weekEntries}">0</div>
-                <div class="jstat-desc">Les 7 derniers jours</div>
+            <span class="backup-stat-label">Stagiaires actifs</span>
+            <strong th:text="${activeStagiaires}">0</strong>
+            <small>Cette semaine</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C22 26,39 29,58 20 S91 19,111 16 S146 11,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-regular fa-calendar"></i></span>
+                <em>7 jours</em>
             </div>
-        </div>
-        <div class="jstat-card violet">
-            <div class="jstat-icon"><i class="fa-solid fa-check-double"></i></div>
-            <div class="jstat-info">
-                <div class="jstat-label">Tâches liées</div>
-                <div class="jstat-number" th:text="${linkedTasks}">0</div>
-                <div class="jstat-desc">Activités enregistrées</div>
+            <span class="backup-stat-label">Entrées de la semaine</span>
+            <strong th:text="${weekEntries}">0</strong>
+            <small>Les 7 derniers jours</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C20 35,35 24,53 27 S82 17,102 20 S138 13,180 4"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-check-double"></i></span>
+                <em>Liées</em>
             </div>
-        </div>
-        <div class="jstat-card rouge">
-            <div class="jstat-icon"><i class="fa-solid fa-comment"></i></div>
-            <div class="jstat-info">
-                <div class="jstat-label">Commentaires</div>
-                <div class="jstat-number" th:text="${totalComments}">0</div>
-                <div class="jstat-desc">Commentaires publiés</div>
+            <span class="backup-stat-label">Tâches liées</span>
+            <strong th:text="${linkedTasks}">0</strong>
+            <small>Activités enregistrées</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C21 27,36 32,54 24 S87 29,107 18 S142 22,180 7"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-comment"></i></span>
+                <em>Publiés</em>
             </div>
-        </div>
+            <span class="backup-stat-label">Commentaires</span>
+            <strong th:text="${totalComments}">0</strong>
+            <small>Commentaires publiés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
+                <path class="area" d="M0 33 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 33 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
     </div>
 
     <!-- TWO-COLUMN LAYOUT -->
@@ -77,15 +111,15 @@
         <!-- LEFT COL -->
         <div class="journal-layout-left">
             <!-- FILTER BAR -->
-            <div class="journal-filter-bar">
-                <div class="journal-filter-left">
-                    <select class="journal-filter-select">
+            <div class="backup-table-tools">
+                <div class="backup-table-tools-left">
+                    <select class="backup-table-select">
                         <option value="">Tous les utilisateurs</option>
                     </select>
-                    <select class="journal-filter-select">
+                    <select class="backup-table-select">
                         <option value="">Tous les services</option>
                     </select>
-                    <select class="journal-filter-select">
+                    <select class="backup-table-select">
                         <option value="">Type d'activité</option>
                         <option>Journal</option>
                         <option>Commentaire</option>
@@ -94,7 +128,7 @@
                         <option>Réunion</option>
                         <option>Note</option>
                     </select>
-                    <select class="journal-filter-select">
+                    <select class="backup-table-select">
                         <option value="">Période</option>
                         <option>Aujourd'hui</option>
                         <option>Cette semaine</option>
@@ -102,14 +136,14 @@
                         <option>Cette année</option>
                     </select>
                 </div>
-                <div class="journal-filter-right">
-                    <button class="btn-outline"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
+                <div class="backup-table-tools-right">
+                    <button class="backup-btn secondary"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
                 </div>
             </div>
 
             <!-- TABLE -->
-            <div class="journal-table-card">
-                <table class="journal-table">
+            <div class="backup-table-card">
+                <table class="backup-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -159,25 +193,25 @@
                                 <span th:unless="${a.attachmentsCount > 0}" style="color:#94A3B8;font-size:12px;">—</span>
                             </td>
                             <td>
-                                <button class="journal-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                                <button class="journal-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                                <button class="journal-action-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <button class="backup-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                                <button class="backup-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                                <button class="backup-action-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(activites)}">
-                            <td colspan="7" class="journal-empty">Aucune activité enregistrée.</td>
+                            <td colspan="7" class="backup-empty">Aucune activité enregistrée.</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <!-- PAGINATION -->
-                <div class="journal-pagination">
-                    <button class="journal-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="journal-page-btn actif">1</button>
-                    <button class="journal-page-btn" th:if="${totalEntries > 10}">2</button>
-                    <button class="journal-page-btn" th:if="${totalEntries > 20}">3</button>
-                    <span th:if="${totalEntries > 30}" class="journal-page-dots">...</span>
-                    <button class="journal-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="backup-pagination">
+                    <button class="backup-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="backup-page-btn actif">1</button>
+                    <button class="backup-page-btn" th:if="${totalEntries > 10}">2</button>
+                    <button class="backup-page-btn" th:if="${totalEntries > 20}">3</button>
+                    <span th:if="${totalEntries > 30}" class="backup-page-dots">...</span>
+                    <button class="backup-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
         </div>
@@ -252,6 +286,5 @@
             </div>
         </div>
     </div>
-</div>
-</body>
+</main>
 </html>

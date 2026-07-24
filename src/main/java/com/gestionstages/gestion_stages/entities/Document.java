@@ -34,6 +34,15 @@ public class Document {
     @Column(length = 30)
     private String statut = "disponible";
 
+    @Column(length = 20)
+    private String version = "1.0";
+
+    @Column(name = "description_modifications", columnDefinition = "TEXT")
+    private String descriptionModifications;
+
+    @Column(name = "taille_octets")
+    private Long tailleOctets = 0L;
+
     // Constructeurs
     public Document() {
     }
@@ -108,4 +117,11 @@ public class Document {
     public void setStatut(String statut) {
         this.statut = statut;
     }
+
+    public String getVersion() { return version; }
+    public void setVersion(String version) { this.version = version; }
+    public String getDescriptionModifications() { return descriptionModifications; }
+    public void setDescriptionModifications(String descriptionModifications) { this.descriptionModifications = descriptionModifications; }
+    public Long getTailleOctets() { return tailleOctets; }
+    public void setTailleOctets(Long tailleOctets) { this.tailleOctets = tailleOctets; }
 }

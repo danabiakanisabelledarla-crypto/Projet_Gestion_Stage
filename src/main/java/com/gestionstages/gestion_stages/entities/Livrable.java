@@ -25,6 +25,12 @@ public class Livrable {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(length = 80)
+    private String categorie = "Autre";
+
+    @Column(name = "taille_octets")
+    private Long tailleOctets = 0L;
+
     @Column(nullable = false, length = 255)
     private String fichier;
 
@@ -92,6 +98,22 @@ public class Livrable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
+    public Long getTailleOctets() {
+        return tailleOctets;
+    }
+
+    public void setTailleOctets(Long tailleOctets) {
+        this.tailleOctets = tailleOctets;
     }
 
     public String getFichier() {

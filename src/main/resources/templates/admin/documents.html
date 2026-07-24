@@ -2,87 +2,132 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documents - Administrateur</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/demandes.css}">
-    <link rel="stylesheet" th:href="@{/css/documents.css}">>
+    <link rel="stylesheet" th:href="@{/css/documents.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
-<div class="contenu-principal">
+<main class="contenu-principal backup-page">
 
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <!-- PAGE HEADER -->
-    <div class="page-entete">
-        <div class="page-entete-gauche">
-            <div class="page-icon"><i class="fa-solid fa-folder-open"></i></div>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-folder-open"></i></div>
             <div>
-                <h1>Gestion documentaire</h1>
-                <p class="page-sous-titre">Centralisez, gérez et archivez tous les documents de la plateforme.</p>
+                <h1>Documents</h1>
+                <nav class="backup-breadcrumb" aria-label="Fil d'Ariane">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Documents</strong>
+                </nav>
+                <p>Consultez et gérez tous les documents déposés sur la plateforme.</p>
             </div>
         </div>
-    </div>
+        <div class="backup-heading-actions">
+            <button type="button" class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button type="button" class="backup-btn primary"><i class="fa-solid fa-plus"></i> Ajouter un document</button>
+        </div>
+    </section>
 
     <!-- ALERT -->
-    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
-        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
+    <div class="backup-alert" th:if="${succes}">
+        <i class="fa-solid fa-circle-check"></i>
+        <span th:text="${succes}">Succès</span>
+        <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-    <!-- 6 STATS CARDS -->
-    <div class="stats-row">
-        <div class="stat-card bleu">
-            <div class="stat-icon"><i class="fa-solid fa-folder"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Documents</div>
-                <div class="stat-number" th:text="${totalDocs}">0</div>
-                <div class="stat-desc">Tous les documents</div>
+    <section class="backup-stats" aria-label="Statistiques des documents">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-folder"></i></span>
+                <em>Total</em>
             </div>
-        </div>
-        <div class="stat-card vert">
-            <div class="stat-icon"><i class="fa-solid fa-file-pdf"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Rapports finaux</div>
-                <div class="stat-number" th:text="${totalRapports}">0</div>
-                <div class="stat-desc">Documents validés</div>
+            <span class="backup-stat-label">Documents</span>
+            <strong th:text="${totalDocs}">0</strong>
+            <small>Tous les documents</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-file-pdf"></i></span>
+                <em>Validés</em>
             </div>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-icon"><i class="fa-solid fa-file-signature"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Rapports hebdo</div>
-                <div class="stat-number" th:text="${totalRapportsHebdo}">0</div>
-                <div class="stat-desc">Hebdomadaires</div>
+            <span class="backup-stat-label">Rapports finaux</span>
+            <strong th:text="${totalRapports}">0</strong>
+            <small>Documents validés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-file-signature"></i></span>
+                <em>En cours</em>
             </div>
-        </div>
-        <div class="stat-card violet">
-            <div class="stat-icon"><i class="fa-solid fa-file-circle-check"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Attestations</div>
-                <div class="stat-number" th:text="${totalAttestations}">0</div>
-                <div class="stat-desc">Documents officiels</div>
+            <span class="backup-stat-label">Rapports hebdo</span>
+            <strong th:text="${totalRapportsHebdo}">0</strong>
+            <small>Hebdomadaires</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-file-circle-check"></i></span>
+                <em>Officiels</em>
             </div>
-        </div>
-        <div class="stat-card rouge">
-            <div class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Fiches notes</div>
-                <div class="stat-number" th:text="${totalFichesNotes}">0</div>
-                <div class="stat-desc">Évaluations</div>
+            <span class="backup-stat-label">Attestations</span>
+            <strong th:text="${totalAttestations}">0</strong>
+            <small>Documents officiels</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+                <em>Évaluations</em>
             </div>
-        </div>
-        <div class="stat-card gris">
-            <div class="stat-icon"><i class="fa-solid fa-box-archive"></i></div>
-            <div class="stat-info">
-                <div class="stat-label">Archives</div>
-                <div class="stat-number" th:text="${totalArchives}">0</div>
-                <div class="stat-desc">Documents archivés</div>
+            <span class="backup-stat-label">Fiches notes</span>
+            <strong th:text="${totalFichesNotes}">0</strong>
+            <small>Évaluations</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card cyan">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-box-archive"></i></span>
+                <em>Archivés</em>
             </div>
-        </div>
-    </div>
+            <span class="backup-stat-label">Archives</span>
+            <strong th:text="${totalArchives}">0</strong>
+            <small>Documents archivés</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+    </section>
 
     <!-- ACTION BAR -->
     <div class="action-bar">
@@ -93,18 +138,16 @@
             </div>
         </div>
         <div class="action-bar-right">
-            <button class="btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-            <button class="btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button class="btn-primary"><i class="fa-solid fa-upload"></i> Nouveau document</button>
+            <button class="backup-btn secondary"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <button class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button class="backup-btn primary"><i class="fa-solid fa-upload"></i> Nouveau document</button>
         </div>
     </div>
 
-    <!-- TWO-COLUMN LAYOUT -->
-    <div class="page-layout">
+    <section class="backup-layout">
 
-        <!-- LEFT -->
-        <div class="page-layout-left">
-            <div class="main-card">
+        <div class="backup-main-column">
+            <article class="backup-card">
                 <!-- TABS -->
                 <div class="tabs-bar">
                     <div class="tabs">
@@ -118,8 +161,8 @@
                 </div>
 
                 <!-- TABLE -->
-                <div class="table-wrapper">
-                    <table class="table-documents">
+                <div class="backup-table-wrap">
+                    <table class="backup-table">
                         <thead>
                             <tr>
                                 <th>Document</th>
@@ -171,7 +214,7 @@
                                     </td>
                                     <td><span class="badge-version">v1</span></td>
                                     <td>
-                                        <span th:class="'badge-statut ' + (${doc.statut == 'archive'} ? 'archive' : (${doc.statut == 'en_attente'} ? 'en_attente' : 'disponible'))"
+                                        <span th:class="'backup-type-badge ' + (${doc.statut == 'archive'} ? 'archive' : (${doc.statut == 'en_attente'} ? 'en_attente' : 'disponible'))"
                                               th:text="${doc.statut == 'archive' ? 'Archivé' : (doc.statut == 'en_attente' ? 'En attente' : 'Disponible')}">Statut</span>
                                     </td>
                                     <td>
@@ -211,11 +254,10 @@
                         <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
 
-        <!-- RIGHT — DETAIL PANEL -->
-        <div class="page-layout-right">
+        <aside class="backup-side-column">
             <div class="detail-panel" id="detailPanel">
                 <div class="detail-panel-header">
                     <h2>Détails du document</h2>
@@ -228,9 +270,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </aside>
+    </section>
+</main>
 
 <script th:inline="javascript">
     const docsData = /*[[${documentsJson}]]*/ [];
@@ -247,7 +289,7 @@
     }
 
     function selectDoc(el, id) {
-        document.querySelectorAll('.table-documents tbody tr').forEach(r => r.classList.remove('selected'));
+        document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
         if (el.tagName === 'TR') el.classList.add('selected');
         else el.closest('tr').classList.add('selected');
         afficherDetailDoc(id);
@@ -380,13 +422,13 @@
                 Cliquez sur un document pour voir ses détails
             </div>
         `;
-        document.querySelectorAll('.table-documents tbody tr').forEach(r => r.classList.remove('selected'));
+        document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
     }
 
     function filterTabs(filtre) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('actif'));
         document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
-        document.querySelectorAll('.table-documents tbody tr').forEach(row => {
+        document.querySelectorAll('.backup-table tbody tr').forEach(row => {
             if (row.querySelector('td[colspan]')) return;
             if (filtre === 'toutes') { row.style.display = ''; return; }
             if (filtre === 'archive') {
@@ -399,7 +441,7 @@
 
     function filterTable() {
         const q = document.getElementById('searchDoc').value.toLowerCase();
-        document.querySelectorAll('.table-documents tbody tr').forEach(row => {
+        document.querySelectorAll('.backup-table tbody tr').forEach(row => {
             if (row.querySelector('td[colspan]')) return;
             const name = row.querySelector('.doc-name')?.textContent?.toLowerCase() || '';
             row.style.display = name.includes(q) ? '' : 'none';

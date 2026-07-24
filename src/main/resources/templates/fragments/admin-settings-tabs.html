@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="tabs(activeTab)" class="settings-tabs-card" aria-label="Sections des paramètres">
+    <a th:href="@{/admin/parametres}" class="settings-tab"
+       th:classappend="${activeTab == 'systeme'} ? ' active'">
+        <span class="settings-tab-icon"><i class="fa-solid fa-gear"></i></span>
+        <span>
+            <strong>Paramètres du système</strong>
+            <small>Configuration générale de la plateforme</small>
+        </span>
+    </a>
+    <a th:href="@{/admin/sauvegarde}" class="settings-tab"
+       th:classappend="${activeTab == 'sauvegarde'} ? ' active'">
+        <span class="settings-tab-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+        <span>
+            <strong>Sauvegarde</strong>
+            <small>Gestion des sauvegardes et restaurations</small>
+        </span>
+    </a>
+    <a th:href="@{/admin/securite}" class="settings-tab"
+       th:classappend="${activeTab == 'securite'} ? ' active'">
+        <span class="settings-tab-icon"><i class="fa-solid fa-shield-halved"></i></span>
+        <span>
+            <strong>Sécurité</strong>
+            <small>Sécurité et contrôle des accès</small>
+        </span>
+    </a>
+</nav>
+</body>
+</html>

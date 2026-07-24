@@ -33,7 +33,7 @@ public class Tache {
     private StatutTache statut = StatutTache.a_faire;
 
     public enum StatutTache {
-        a_faire, en_cours, terminee, en_retard
+        a_faire, en_cours, en_revue, terminee, en_retard
     }
 
     // Constructeurs

@@ -2,319 +2,364 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Mes taches - Stagiaire</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
+    <title>Mes tâches - Stagiaire</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-tache.css}">
-    
+    <link rel="stylesheet" th:href="@{/css/stagiaire-premium.css}">
 </head>
-<body>
-
+<body class="intern-portal">
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-
-<div class="taches-main">
-
-    <!-- ========== BARRE SUPERIEURE ========== -->
-    <!--<header class="taches-header">
-        <div class="header-gauche">
-            <div class="header-search">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Rechercher une tache...">
+<div class="intern-content-shell">
+<div th:replace="~{fragments/header-stagiaire :: header}"></div>
+<main class="intern-page">
+    <section class="intern-page-heading">
+        <div class="intern-heading-main">
+            <div class="intern-heading-icon"><i class="fa-solid fa-list-check"></i></div>
+            <div class="intern-heading-copy">
+                <div class="intern-breadcrumb"><a th:href="@{/stagiaire/dashboard}">Accueil</a> / Stagiaire / Tâches</div>
+                <h1>Mes tâches</h1>
+                <p>Organisez et suivez toutes les tâches de votre stage</p>
             </div>
         </div>
-        <div class="header-droite">
-            <div class="header-icon-btn">
-                <i class="fa-regular fa-bell"></i>
-                <span class="notif-dot">2</span>
-            </div>
-            <a th:href="@{/stagiaire/messages}" class="header-icon-btn" title="Messages">
-                <i class="fa-regular fa-envelope"></i>
-            </a>
-            <div class="header-user">
-                <div class="header-user-text">
-                    <span class="header-user-nom" th:text="${nomComplet}">Nom</span>
-                    <span class="header-user-role">Stagiaire</span>
+        <button type="button" class="intern-button secondary" id="resetTaskFilters"><i class="fa-solid fa-rotate-left"></i> Réinitialiser</button>
+    </section>
+
+    <section class="intern-kpis five">
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-clipboard-list"></i></span><div class="intern-kpi-value" th:text="${taches.size()}">28</div><div class="intern-kpi-label">Total des tâches</div><div class="intern-kpi-note">Toutes tâches confondues</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-regular fa-circle"></i></span><div class="intern-kpi-value" th:text="${tachesAFaire}">7</div><div class="intern-kpi-label">À faire</div><div class="intern-kpi-note">Tâches à démarrer</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-orange"><i class="fa-solid fa-spinner"></i></span><div class="intern-kpi-value" th:text="${tachesEnCours}">8</div><div class="intern-kpi-label">En cours</div><div class="intern-kpi-note">Tâches en progression</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-purple"><i class="fa-regular fa-eye"></i></span><div class="intern-kpi-value" th:text="${tachesEnRevue}">0</div><div class="intern-kpi-label">En revue</div><div class="intern-kpi-note">En attente de validation</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><div class="intern-kpi-value" th:text="${tachesTerminees}">9</div><div class="intern-kpi-label">Terminées</div><div class="intern-kpi-note">Tâches finalisées</div></article>
+    </section>
+
+    <section class="intern-filters">
+        <label class="intern-field"><i class="fa-solid fa-magnifying-glass"></i><input class="intern-input" id="taskSearch" type="search" placeholder="Rechercher une tâche"></label>
+        <select class="intern-select" id="priorityFilter"><option value="">Toutes les priorités</option><option value="haute">Haute</option><option value="moyenne">Moyenne</option><option value="faible">Faible</option></select>
+        <select class="intern-select" id="deadlineFilter"><option value="">Toutes les échéances</option><option value="late">En retard</option><option value="soon">Cette semaine</option></select>
+        <select class="intern-select"><option>Tous les objectifs</option><option>Dashboard</option><option>Module Livrables</option></select>
+        <select class="intern-select" id="statusFilter"><option value="">Tous les statuts</option><option value="a_faire">À faire</option><option value="en_cours">En cours</option><option value="en_revue">En revue</option><option value="terminee">Terminées</option><option value="en_retard">En retard</option></select>
+        <button class="intern-button" type="button" data-open-view><i class="fa-solid fa-plus"></i> Nouvelle vue</button>
+    </section>
+
+    <section class="intern-kanban" id="taskBoard">
+        <article class="intern-kanban-column" data-column="a_faire">
+            <header class="intern-kanban-head"><div class="intern-kanban-title"><span class="intern-dot" style="color:#2563eb"></span>À faire <span class="intern-count" th:text="${tachesAFaire + tachesEnRetard}">7</span></div><button class="intern-icon-button intern-icon-only" title="Options"><i class="fa-solid fa-ellipsis"></i></button></header>
+            <div class="intern-task" draggable="true" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'a_faire' or tache.statut.name() == 'en_retard'}" th:attr="data-id=${tache.id},data-title=${#strings.toLowerCase(tache.titre)},data-status=${tache.statut.name()},data-deadline=${tache.dateLimite}">
+                <span class="intern-status" th:classappend="${tache.statut.name() == 'en_retard'} ? ' status-red' : ' status-blue'" th:text="${tache.statut.name() == 'en_retard'} ? 'En retard' : 'À faire'">À faire</span>
+                <h3 th:text="${tache.titre}">Créer API statistiques</h3>
+                <p th:text="${tache.description != null ? tache.description : 'Tâche attribuée dans le cadre de votre stage.'}">Description</p>
+                <div class="intern-task-meta">
+                    <span><i class="fa-solid fa-bullseye"></i> Objectif de stage</span>
+                    <span><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">20/07/2026</span></span>
+                    <span><i class="fa-regular fa-user"></i> Encadreur responsable</span>
                 </div>
-                <div class="header-avatar" th:text="${initiales}">S</div>
-                <i class="fa-solid fa-chevron-down header-arrow"></i>
-            </div>
-        </div>
-    </header>-->
-    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
-
-    <!-- ========== CONTENU ========== -->
-    <div class="taches-content">
-
-        <!-- EN-TETE PAGE -->
-        <div class="page-entete">
-            <div class="page-entete-gauche">
-                <div class="page-icon">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                </div>
-                <div>
-                    <h1 class="page-titre">Mes taches</h1>
-                    <p class="page-sous-titre">Retrouvez ici toutes les taches qui vous sont attribuees.</p>
-                </div>
-            </div>
-            <div class="page-entete-droite">
-                <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalNouvelleTache')">
-                    <i class="fa-solid fa-plus"></i> Nouvelle tache
-                </button>
-            </div>
-        </div>
-
-        <!-- ========== BARRE RECHERCHE / FILTRE / TRI ========== -->
-        <div class="filtres-barre">
-            <div class="recherche-barre">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" id="rechercheTache" placeholder="Rechercher une tache..." onkeyup="filtrerTaches()">
-            </div>
-            <select id="filtreStatut" class="filtre-select" onchange="filtrerTaches()">
-                <option value="">Tous les statuts</option>
-                <option value="a_faire">A faire</option>
-                <option value="en_cours">En cours</option>
-                <option value="terminee">Terminee</option>
-            </select>
-            <select id="triTaches" class="filtre-select" onchange="filtrerTaches()">
-                <option value="">Trier par...</option>
-                <option value="date">Date limite</option>
-                <option value="statut">Statut</option>
-                <option value="priorite">Priorite</option>
-            </select>
-        </div>
-
-        <!-- ========== CARTE TABLEAU ========== -->
-        <div class="carte-tableau">
-
-            <!-- TABLEAU -->
-            <table class="table-taches">
-                <thead>
-                    <tr>
-                        <th>Titre</th>
-                        <th>Description</th>
-                        <th>Date debut</th>
-                        <th>Date limite</th>
-                        <th>Priorite</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableTachesBody">
-                    <tr class="ligne-tache" th:each="tache : ${taches}" th:attr="data-statut=${tache.statut.name()}, data-date=${#temporals.format(tache.dateLimite, 'yyyy-MM-dd')}, data-priorite='moyenne'">
-                        <td>
-                            <div class="tache-titre-cell">
-                                <span class="tache-dot" th:classappend="${tache.statut.name() == 'a_faire'} ? 'dot-violet' : (${tache.statut.name() == 'en_cours'} ? 'dot-orange' : 'dot-vert')"></span>
-                                <span class="tache-nom" th:text="${tache.titre}">-</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="tache-desc" th:text="${tache.description != null ? tache.description : '-'}">-</span>
-                        </td>
-                        <td>
-                            <span class="date-cell">
-                                <i class="fa-regular fa-calendar"></i>
-                                <span th:text="${#temporals.format(tache.dateCreation, 'dd/MM/yyyy')}">-</span>
-                            </span>
-                        </td>
-                        <td>
-                            <span class="date-cell date-limite">
-                                <i class="fa-regular fa-calendar"></i>
-                                <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">-</span>
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge-prio moyenne">-</span>
-                        </td>
-                        <td>
-                            <span th:text="${tache.statut.name() == 'a_faire' ? 'A faire' : (tache.statut.name() == 'en_cours' ? 'En cours' : 'Terminee')}">
-                        </td>
-                        <td>
-                            <div class="actions-cell">
-                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <input type="hidden" name="statut" value="a_faire"/>
-                                    <button type="submit" class="btn-statut afaire" th:classappend="${tache.statut.name() == 'a_faire'} ? ' actif'">A faire</button>
-                                </form>
-                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <input type="hidden" name="statut" value="en_cours"/>
-                                    <button type="submit" class="btn-statut encours" th:classappend="${tache.statut.name() == 'en_cours'} ? ' actif'">En cours</button>
-                                </form>
-                                <form th:action="@{/stagiaire/taches/{id}/statut(id=${tache.id})}" method="post" style="display:inline">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <input type="hidden" name="statut" value="terminee"/>
-                                    <button type="submit" class="btn-statut termine" th:classappend="${tache.statut.name() == 'terminee'} ? ' actif'">Termine</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(taches)}">
-                        <td colspan="7" class="vide">Aucune tache assignee pour le moment.</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- PAGINATION -->
-            <div class="pagination" th:if="${!taches.isEmpty()}">
-                <div class="pagination-info" th:text="'Affichage de 1 a ' + ${taches.size()} + ' sur ' + ${taches.size()} + ' taches'">-</div>
-                <div class="pagination-btns">
-                    <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="page-btn actif">1</button>
-                    <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== VUE KANBAN ========== -->
-        <div class="kanban-section">
-            <h2 class="kanban-titre-section"><i class="fa-solid fa-columns"></i> Vue Kanban</h2>
-            <div class="kanban-colonnes">
-
-                <!-- A FAIRE -->
-                <div class="kanban-col">
-                    <div class="kanban-col-header bleu">
-                        <span>A faire</span>
-                        <span class="kanban-badge" th:text="${tachesAFaire}">0</span>
-                    </div>
-                    <div class="kanban-cartes">
-                        <div class="kanban-carte" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'a_faire'}">
-                            <div class="kanban-carte-titre" th:text="${tache.titre}">-</div>
-                            <div class="kanban-carte-date">
-                                <i class="fa-regular fa-calendar"></i>
-                                <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">-</span>
-                            </div>
-                            <span class="kanban-prio moyenne">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- EN COURS -->
-                <div class="kanban-col">
-                    <div class="kanban-col-header vert">
-                        <span>En cours</span>
-                        <span class="kanban-badge" th:text="${tachesEnCours}">0</span>
-                    </div>
-                    <div class="kanban-cartes">
-                        <div class="kanban-carte" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'en_cours'}">
-                            <div class="kanban-carte-titre" th:text="${tache.titre}">-</div>
-                            <div class="kanban-carte-date">
-                                <i class="fa-regular fa-calendar"></i>
-                                <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">-</span>
-                            </div>
-                            <span class="kanban-prio moyenne">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TERMINE -->
-                <div class="kanban-col">
-                    <div class="kanban-col-header violet">
-                        <span>Termine</span>
-                        <span class="kanban-badge" th:text="${tachesTerminees}">0</span>
-                    </div>
-                    <div class="kanban-cartes" th:if="${tachesTerminees > 0}">
-                        <div class="kanban-carte terminee" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'terminee'}">
-                            <div class="kanban-carte-titre" th:text="${tache.titre}">-</div>
-                            <div class="kanban-carte-date">
-                                <i class="fa-regular fa-calendar"></i>
-                                <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">-</span>
-                            </div>
-                            <span class="kanban-prio moyenne">-</span>
-                        </div>
-                    </div>
-                     <div class="kanban-empty" th:if="${tachesTerminees == 0}">
-                        <div class="kanban-empty-icon"><i class="fa-solid fa-check"></i></div>
-                        <p>Aucune tache terminee</p>
-                        <small>Bravo ! Continuez votre excellent travail.</small>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-</div>
-<!-- MODAL NOUVELLE TACHE -->
-<div class="modal-overlay" id="modalNouvelleTache" onclick="if(event.target===this)fermerModal('modalNouvelleTache')">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2>Nouvelle tache</h2>
-            <button class="modal-close" onclick="fermerModal('modalNouvelleTache')">&times;</button>
-        </div>
-        <form th:action="@{/stagiaire/taches/ajouter}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="groupe-champ">
-                <label>Titre</label>
-                <input type="text" name="titre" placeholder="Titre de la tache" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Description</label>
-                <textarea name="description" placeholder="Description de la tache..." rows="3"></textarea>
-            </div>
-            <div class="form-row-2col">
-                <div class="groupe-champ">
-                    <label>Date limite</label>
-                    <input type="date" name="dateLimite" required>
-                </div>
-                <div class="groupe-champ">
-                    <label>Priorité</label>
-                    <select name="priorite">
-                        <option value="basse">Basse</option>
-                        <option value="moyenne" selected>Moyenne</option>
-                        <option value="haute">Haute</option>
-                        <option value="critique">Critique</option>
+                <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="id" th:value="${tache.id}">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                        <option value="a_faire" th:selected="${tache.statut.name() == 'a_faire'}">À faire</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="en_revue">En revue</option>
+                        <option value="terminee">Terminée</option>
+                        <option value="en_retard" th:selected="${tache.statut.name() == 'en_retard'}">En retard</option>
                     </select>
-                </div>
+                </form>
+                <footer class="intern-task-footer"><span><i class="fa-regular fa-comment"></i> 0</span><span><i class="fa-solid fa-paperclip"></i> 0</span></footer>
             </div>
-            <button type="submit" class="bouton-principal">Créer la tache</button>
-        </form>
-    </div>
+            <div class="intern-empty" th:if="${tachesAFaire == 0}">Aucune tâche à démarrer.</div>
+        </article>
+
+        <article class="intern-kanban-column" data-column="en_cours">
+            <header class="intern-kanban-head"><div class="intern-kanban-title"><span class="intern-dot" style="color:#f59e0b"></span>En cours <span class="intern-count" th:text="${tachesEnCours}">8</span></div><button class="intern-icon-button intern-icon-only" title="Options"><i class="fa-solid fa-ellipsis"></i></button></header>
+            <div class="intern-task" draggable="true" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'en_cours'}" th:attr="data-id=${tache.id},data-title=${#strings.toLowerCase(tache.titre)},data-status=${tache.statut.name()},data-deadline=${tache.dateLimite}">
+                <span class="intern-status status-orange">En progression</span>
+                <h3 th:text="${tache.titre}">Développer Dashboard Stagiaire</h3>
+                <p th:text="${tache.description != null ? tache.description : 'Travail en cours de réalisation.'}">Description</p>
+                <div class="intern-progress"><span style="width:68%;background:#f59e0b"></span></div>
+                <div class="intern-task-meta" style="margin-top:10px">
+                    <span><i class="fa-regular fa-calendar"></i> Échéance : <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">25/07/2026</span></span>
+                </div>
+                <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="id" th:value="${tache.id}">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                        <option value="a_faire">À faire</option>
+                        <option value="en_cours" selected>En cours</option>
+                        <option value="en_revue">En revue</option>
+                        <option value="terminee">Terminée</option>
+                        <option value="en_retard">En retard</option>
+                    </select>
+                </form>
+                <footer class="intern-task-footer"><span><i class="fa-regular fa-comment"></i> 2</span><span><i class="fa-solid fa-list-check"></i> 4/7</span></footer>
+            </div>
+            <div class="intern-empty" th:if="${tachesEnCours == 0}">Aucune tâche en cours.</div>
+        </article>
+
+        <article class="intern-kanban-column" data-column="en_revue">
+            <header class="intern-kanban-head"><div class="intern-kanban-title"><span class="intern-dot" style="color:#8b5cf6"></span>En revue <span class="intern-count" th:text="${tachesEnRevue}">0</span></div><button class="intern-icon-button intern-icon-only" title="Options"><i class="fa-solid fa-ellipsis"></i></button></header>
+            <div class="intern-task" draggable="true" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'en_revue'}" th:attr="data-id=${tache.id},data-title=${#strings.toLowerCase(tache.titre)},data-status=${tache.statut.name()},data-deadline=${tache.dateLimite}">
+                <span class="intern-status status-purple">En revue</span>
+                <h3 th:text="${tache.titre}">Tâche en revue</h3>
+                <p th:text="${tache.description != null ? tache.description : 'Cette tâche est en attente de validation.'}">Cette tâche est en attente de validation.</p>
+                <div class="intern-task-meta"><span><i class="fa-regular fa-calendar"></i><span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">20/07/2026</span></span></div>
+                <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="id" th:value="${tache.id}">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                        <option value="a_faire">À faire</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="en_revue" selected>En revue</option>
+                        <option value="terminee">Terminée</option>
+                        <option value="en_retard">En retard</option>
+                    </select>
+                </form>
+            </div>
+            <div class="intern-empty" th:if="${tachesEnRevue == 0}">Aucune tâche en attente de validation.</div>
+        </article>
+
+        <article class="intern-kanban-column" data-column="terminee">
+            <header class="intern-kanban-head"><div class="intern-kanban-title"><span class="intern-dot" style="color:#16a34a"></span>Terminées <span class="intern-count" th:text="${tachesTerminees}">9</span></div><button class="intern-icon-button intern-icon-only" title="Options"><i class="fa-solid fa-ellipsis"></i></button></header>
+            <div class="intern-task" draggable="true" th:each="tache : ${taches}" th:if="${tache.statut.name() == 'terminee'}" th:attr="data-id=${tache.id},data-title=${#strings.toLowerCase(tache.titre)},data-status=${tache.statut.name()},data-deadline=${tache.dateLimite}">
+                <span class="intern-status status-green"><i class="fa-solid fa-check"></i> Terminée</span>
+                <h3 th:text="${tache.titre}">Module RH</h3>
+                <p th:text="${tache.description != null ? tache.description : 'Tâche terminée avec succès.'}">Description</p>
+                <div class="intern-task-meta"><span><i class="fa-regular fa-calendar-check"></i><span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">10/07/2026</span></span></div>
+                <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="id" th:value="${tache.id}">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                        <option value="a_faire">À faire</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="en_revue">En revue</option>
+                        <option value="terminee" selected>Terminée</option>
+                        <option value="en_retard">En retard</option>
+                    </select>
+                </form>
+            </div>
+            <div class="intern-empty" th:if="${tachesTerminees == 0}">Aucune tâche terminée.</div>
+        </article>
+    </section>
+
+    <section class="intern-grid two" style="margin-top:18px">
+        <article class="intern-card">
+            <div class="intern-card-header"><div><h2 class="intern-card-title">Mes performances</h2><p class="intern-card-subtitle">Progression globale des tâches</p></div></div>
+            <div class="intern-grid two" style="margin:0;align-items:center">
+                <div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + (${taches.size() > 0 ? (tachesTerminees * 100 / taches.size()) : 0})"></div><div class="intern-donut-label"><strong th:text="${taches.size() > 0 ? (tachesTerminees * 100 / taches.size()) + '%' : '0%'}">72%</strong><span>Tâches terminées</span></div></div>
+                <div class="intern-data-list"><div class="intern-data-row"><span>Terminées</span><strong th:text="${tachesTerminees + ' / ' + taches.size()}">18 / 25</strong></div><div class="intern-data-row"><span>En cours</span><strong th:text="${tachesEnCours}">8</strong></div><div class="intern-data-row"><span>En retard</span><strong th:text="${tachesEnRetard}">0</strong></div></div>
+            </div>
+        </article>
+        <article class="intern-card">
+            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#" class="intern-link">Voir tout →</a></div>
+            <div class="intern-feed"><div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Tâche terminée</strong><span>Correction bugs Dashboard</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-regular fa-comment"></i></span><div><strong>Commentaire ajouté</strong><span>Module Livrables</span><small>Hier</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-regular fa-eye"></i></span><div><strong>Validation reçue</strong><span>Rapport intermédiaire validé</span><small>Hier</small></div></div></div>
+        </article>
+    </section>
+</main>
 </div>
 
+<div class="intern-modal" id="viewModal" role="dialog" aria-modal="true" aria-labelledby="viewModalTitle">
+    <form class="intern-modal-panel" id="newViewForm">
+        <div class="intern-card-header">
+            <div>
+                <h2 class="intern-card-title" id="viewModalTitle">Nouvelle vue Kanban</h2>
+                <p class="intern-card-subtitle">Ajoutez une colonne personnalisée à votre tableau</p>
+            </div>
+            <button type="button" class="intern-icon-button intern-icon-only" data-close-view aria-label="Fermer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="intern-form-grid">
+            <div class="intern-form-group full">
+                <label for="viewName">Nom de la vue</label>
+                <input class="intern-input" id="viewName" maxlength="40" required
+                       placeholder="Ex. À vérifier, Bloquées, Prioritaires">
+            </div>
+            <div class="intern-form-group full">
+                <label for="viewColor">Couleur</label>
+                <select class="intern-select" id="viewColor">
+                    <option value="#2563eb">Bleu</option>
+                    <option value="#16a34a">Vert</option>
+                    <option value="#f59e0b">Orange</option>
+                    <option value="#ef4444">Rouge</option>
+                    <option value="#8b5cf6">Violet</option>
+                </select>
+            </div>
+        </div>
+        <div class="intern-modal-actions">
+            <button type="button" class="intern-button secondary" data-close-view>Annuler</button>
+            <button type="submit" class="intern-button"><i class="fa-solid fa-plus"></i> Ajouter la vue</button>
+        </div>
+    </form>
+</div>
+<script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
 <script>
-function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
-function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', () => {
+    const board = document.getElementById('taskBoard');
+    const tasks = [...document.querySelectorAll('.intern-task[data-title]')];
+    const search = document.getElementById('taskSearch');
+    const status = document.getElementById('statusFilter');
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfParameter = document.querySelector('meta[name="_csrf_parameter"]').content;
+    const viewStorageKey = 'stagiaire-kanban-views';
+    const assignmentStorageKey = 'stagiaire-kanban-assignments';
 
-function filtrerTaches() {
-    var recherche = document.getElementById('rechercheTache').value.toLowerCase();
-    var filtreStatut = document.getElementById('filtreStatut').value;
-    var tri = document.getElementById('triTaches').value;
-    var lignes = document.querySelectorAll('#tableTachesBody tr.ligne-tache');
-    var lignesArray = Array.from(lignes);
+    const readStorage = (key, fallback) => {
+        try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+        catch (error) { return fallback; }
+    };
 
-    lignesArray.forEach(function(row) {
-        var titre = row.querySelector('.tache-nom').textContent.toLowerCase();
-        var statut = row.getAttribute('data-statut');
-        var match = true;
-        if (recherche && !titre.includes(recherche)) match = false;
-        if (filtreStatut && statut !== filtreStatut) match = false;
-        row.style.display = match ? '' : 'none';
+    let customViews = readStorage(viewStorageKey, []);
+    let assignments = readStorage(assignmentStorageKey, {});
+
+    const createViewColumn = view => {
+        if (document.querySelector(`[data-custom-view="${view.id}"]`)) return;
+        const column = document.createElement('article');
+        column.className = 'intern-kanban-column';
+        column.dataset.column = `custom:${view.id}`;
+        column.dataset.customView = view.id;
+        column.innerHTML = `
+            <header class="intern-kanban-head">
+                <div class="intern-kanban-title">
+                    <span class="intern-dot" style="color:${view.color}"></span>
+                    <span class="custom-view-name"></span>
+                    <span class="intern-count">0</span>
+                </div>
+                <button class="intern-icon-button intern-icon-only" type="button" data-delete-view="${view.id}" title="Supprimer la vue">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </header>
+            <div class="intern-empty">Déposez des tâches dans cette vue.</div>`;
+        column.querySelector('.custom-view-name').textContent = view.name;
+        board.appendChild(column);
+        bindDropZone(column);
+    };
+
+    const updateCustomCounts = () => {
+        document.querySelectorAll('[data-custom-view]').forEach(column => {
+            const count = column.querySelectorAll('.intern-task').length;
+            column.querySelector('.intern-count').textContent = count;
+            const empty = column.querySelector('.intern-empty');
+            if (empty) empty.style.display = count ? 'none' : '';
+        });
+    };
+
+    customViews.forEach(createViewColumn);
+    tasks.forEach(task => {
+        const viewId = assignments[task.dataset.id];
+        const column = viewId ? document.querySelector(`[data-custom-view="${viewId}"]`) : null;
+        if (column) column.appendChild(task);
+    });
+    updateCustomCounts();
+
+    const applyFilters = () => {
+        const query = search.value.trim().toLowerCase();
+        tasks.forEach(task => {
+            const matchesText = !query || task.dataset.title.includes(query);
+            const matchesStatus = !status.value || task.dataset.status === status.value;
+            task.style.display = matchesText && matchesStatus ? '' : 'none';
+        });
+    };
+    search.addEventListener('input', applyFilters);
+    status.addEventListener('change', applyFilters);
+    document.getElementById('resetTaskFilters').addEventListener('click', () => {
+        document.querySelectorAll('.intern-filters input, .intern-filters select').forEach(field => field.value = '');
+        applyFilters();
     });
 
-    if (tri === 'date') {
-        lignesArray.sort(function(a, b) {
-            return a.getAttribute('data-date').localeCompare(b.getAttribute('data-date'));
+    let dragged = null;
+    tasks.forEach(task => {
+        task.addEventListener('dragstart', () => { dragged = task; task.style.opacity = '.55'; });
+        task.addEventListener('dragend', () => { task.style.opacity = ''; dragged = null; });
+    });
+
+    async function persistTaskStatus(task, statusValue) {
+        const body = new URLSearchParams();
+        body.set('id', task.dataset.id);
+        body.set('statut', statusValue);
+        body.set(csrfParameter, csrfToken);
+        const response = await fetch('/stagiaire/taches/statut', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            credentials: 'same-origin',
+            body
         });
-    } else if (tri === 'statut') {
-        var ordre = { 'a_faire': 1, 'en_cours': 2, 'terminee': 3 };
-        lignesArray.sort(function(a, b) {
-            return (ordre[a.getAttribute('data-statut')] || 0) - (ordre[b.getAttribute('data-statut')] || 0);
-        });
-    } else if (tri === 'priorite') {
-        var ordreP = { 'haute': 1, 'moyenne': 2, 'basse': 3 };
-        lignesArray.sort(function(a, b) {
-            return (ordreP[a.getAttribute('data-priorite')] || 0) - (ordreP[b.getAttribute('data-priorite')] || 0);
+        if (!response.ok) throw new Error('Mise à jour impossible');
+        window.location.reload();
+    }
+
+    function bindDropZone(column) {
+        column.addEventListener('dragover', event => event.preventDefault());
+        column.addEventListener('drop', async event => {
+            event.preventDefault();
+            if (!dragged) return;
+
+            const target = column.dataset.column;
+            column.appendChild(dragged);
+            updateCustomCounts();
+
+            if (target.startsWith('custom:')) {
+                assignments[dragged.dataset.id] = target.replace('custom:', '');
+                localStorage.setItem(assignmentStorageKey, JSON.stringify(assignments));
+                return;
+            }
+
+            delete assignments[dragged.dataset.id];
+            localStorage.setItem(assignmentStorageKey, JSON.stringify(assignments));
+            try {
+                await persistTaskStatus(dragged, target);
+            } catch (error) {
+                alert('Le statut de la tâche n’a pas pu être enregistré.');
+                window.location.reload();
+            }
         });
     }
-    var tbody = document.getElementById('tableTachesBody');
-    lignesArray.forEach(function(row) { tbody.appendChild(row); });
+    document.querySelectorAll('.intern-kanban-column').forEach(bindDropZone);
 
-    var visible = lignesArray.filter(function(r) { return r.style.display !== 'none'; }).length;
-    var info = document.querySelector('.pagination-info');
-    if (info) info.textContent = 'Affichage de 1 a ' + visible + ' sur ' + visible + ' taches';
-}
+    const modal = document.getElementById('viewModal');
+    const openModal = () => {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('viewName').focus();
+    };
+    const closeModal = () => {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    };
+    document.querySelectorAll('[data-open-view]').forEach(button => button.addEventListener('click', openModal));
+    document.querySelectorAll('[data-close-view]').forEach(button => button.addEventListener('click', closeModal));
+    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+
+    document.getElementById('newViewForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const name = document.getElementById('viewName').value.trim();
+        if (!name) return;
+        const view = {id: String(Date.now()), name, color: document.getElementById('viewColor').value};
+        customViews.push(view);
+        localStorage.setItem(viewStorageKey, JSON.stringify(customViews));
+        createViewColumn(view);
+        event.target.reset();
+        closeModal();
+    });
+
+    board.addEventListener('click', event => {
+        const button = event.target.closest('[data-delete-view]');
+        if (!button) return;
+        const viewId = button.dataset.deleteView;
+        const column = document.querySelector(`[data-custom-view="${viewId}"]`);
+        column.querySelectorAll('.intern-task').forEach(task => {
+            delete assignments[task.dataset.id];
+            document.querySelector('[data-column="a_faire"]').appendChild(task);
+        });
+        customViews = customViews.filter(view => view.id !== viewId);
+        localStorage.setItem(viewStorageKey, JSON.stringify(customViews));
+        localStorage.setItem(assignmentStorageKey, JSON.stringify(assignments));
+        column.remove();
+    });
+
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+});
 </script>
 </body>
 </html>

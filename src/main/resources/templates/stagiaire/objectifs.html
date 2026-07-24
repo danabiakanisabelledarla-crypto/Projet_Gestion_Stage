@@ -2,345 +2,171 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mes objectifs - Stagiaire</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-objectifs.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-premium.css}">
 </head>
-<body>
-
+<body class="intern-portal">
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-<div class="app-main">
-    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
-    <div class="objectifs-page">
-
-        <!-- ========== BARRE SUPERIEURE ========== -->
-        <div class="objectifs-topbar">
-            <div class="objectifs-topbar-left">
-                <div class="objectifs-icon-box">
-                    <i class="fa-solid fa-bullseye"></i>
-                </div>
-                <div>
-                    <h1 class="objectifs-titre">Objectifs de stage</h1>
-                    <p class="objectifs-sous-titre">Consultez les objectifs definis par votre encadreur et suivez votre progression tout au long du stage.</p>
-                    <div class="objectifs-breadcrumb">
-                        <a href="#">Accueil</a>
-                        <span class="breadcrumb-sep">></span>
-                        <a href="#">Stagiaire</a>
-                        <span class="breadcrumb-sep">></span>
-                        <span>Objectifs</span>
-                    </div>
-                </div>
+<div class="intern-content-shell">
+<div th:replace="~{fragments/header-stagiaire :: header}"></div>
+<main class="intern-page">
+    <section class="intern-page-heading">
+        <div class="intern-heading-main">
+            <div class="intern-heading-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <div class="intern-heading-copy">
+                <div class="intern-breadcrumb"><a th:href="@{/stagiaire/dashboard}">Accueil</a> / Stagiaire / Objectifs</div>
+                <h1>Mes objectifs</h1>
+                <p>Suivez les objectifs définis par votre encadreur</p>
             </div>
         </div>
+        <button type="button" class="intern-button" data-open-objective>
+            <i class="fa-solid fa-plus"></i> Ajouter un objectif
+        </button>
+    </section>
 
-        <!-- ========== CARTES STATISTIQUES ========== -->
-        <div class="objectifs-stats">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-bleu"><i class="fa-solid fa-bullseye"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${nombreObjectifs}">0</div>
-                    <div class="stat-label">Total des objectifs</div>
-                    <div class="stat-sous">Objectifs attribues</div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#2563EB" stroke-width="2" points="0,25 10,20 20,22 30,10 40,15 50,5"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-vert"><i class="fa-solid fa-circle-check"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${objectifsAtteints}">0</div>
-                    <div class="stat-label">Termines</div>
-                    <div class="stat-sous">Objectifs atteints</div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#22C55E" stroke-width="2" points="0,25 10,18 20,20 30,8 40,12 50,3"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-orange"><i class="fa-solid fa-spinner"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${objectifsEnCours}">0</div>
-                    <div class="stat-label">En cours</div>
-                    <div class="stat-sous">Objectifs en cours</div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#F59E0B" stroke-width="2" points="0,28 10,22 20,25 30,15 40,18 50,12"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-rouge"><i class="fa-solid fa-clock"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${objectifsNonCommences}">0</div>
-                    <div class="stat-label">En attente</div>
-                    <div class="stat-sous">Non commences</div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#EF4444" stroke-width="2" points="0,28 10,26 20,27 30,24 40,25 50,22"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-violet"><i class="fa-solid fa-chart-line"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${progressionMoyenne} + '%'">0%</div>
-                    <div class="stat-label">Progression moyenne</div>
-                    <div class="stat-barre">
-                        <div class="stat-barre-remplissage" th:style="'width:' + ${progressionMoyenne} + '%'"></div>
-                    </div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#8B5CF6" stroke-width="2" points="0,25 10,20 20,18 30,12 40,8 50,4"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-bleu"><i class="fa-solid fa-calendar-days"></i></div>
-                <div class="stat-info">
-                    <div class="stat-valeur" th:text="${#lists.size(echeancesProches)}">0</div>
-                    <div class="stat-label">Echeances proches</div>
-                    <div class="stat-sous">Cette semaine</div>
-                </div>
-                <div class="stat-chart">
-                    <svg width="50" height="30" viewBox="0 0 50 30">
-                        <polyline fill="none" stroke="#3B82F6" stroke-width="2" points="0,20 10,15 20,18 30,8 40,10 50,6"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
+    <section class="intern-kpis five">
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-bullseye"></i></span><div class="intern-kpi-value" th:text="${nombreObjectifs}">12</div><div class="intern-kpi-label">Total objectifs</div><div class="intern-kpi-note">Objectifs définis</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><div class="intern-kpi-value" th:text="${objectifsAtteints}">7</div><div class="intern-kpi-label">Terminés</div><div class="intern-kpi-note">Objectifs atteints</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-orange"><i class="fa-solid fa-spinner"></i></span><div class="intern-kpi-value" th:text="${objectifsEnCours}">3</div><div class="intern-kpi-label">En cours</div><div class="intern-kpi-note">Objectifs en progression</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-purple"><i class="fa-regular fa-clock"></i></span><div class="intern-kpi-value" th:text="${objectifsNonCommences}">2</div><div class="intern-kpi-label">À venir</div><div class="intern-kpi-note">Objectifs non commencés</div></article>
+        <article class="intern-kpi"><span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-chart-line"></i></span><div class="intern-kpi-value" th:text="${progressionMoyenne + '%'}">68%</div><div class="intern-kpi-label">Taux de réalisation</div><div class="intern-progress"><span th:style="'width:' + ${progressionMoyenne} + '%;background:#2563eb'"></span></div></article>
+    </section>
 
-        <!-- ========== BOARD KANBAN ========== -->
-        <div class="kanban-header">
-            <h2 class="kanban-titre">
-                <i class="fa-solid fa-bullseye"></i> Mes objectifs
-                <span class="kanban-compteur" th:text="${objectifs.size()}">0</span>
-            </h2>
-            <button class="kanban-btn-ajouter" onclick="openModal()">
-                <i class="fa-solid fa-plus"></i> Nouvel objectif
+    <section class="intern-grid two">
+        <article class="intern-card">
+            <div class="intern-card-header"><div><h2 class="intern-card-title">Progression globale du stage</h2><p class="intern-card-subtitle">Évolution de la progression</p></div><select class="intern-select" style="width:auto"><option>7 derniers jours</option><option>30 derniers jours</option></select></div>
+            <div class="intern-grid two" style="margin:0;align-items:center">
+                <div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + ${progressionMoyenne}"></div><div class="intern-donut-label"><strong th:text="${progressionMoyenne + '%'}">68%</strong><span>Progression globale</span></div></div>
+                <div class="intern-chart-box"><span class="intern-chart-bar" style="height:25%"></span><span class="intern-chart-bar" style="height:33%"></span><span class="intern-chart-bar" style="height:41%"></span><span class="intern-chart-bar" style="height:48%"></span><span class="intern-chart-bar" style="height:55%"></span><span class="intern-chart-bar" style="height:61%"></span><span class="intern-chart-bar" th:style="'height:' + ${progressionMoyenne} + '%'"></span></div>
+            </div>
+        </article>
+        <aside class="intern-grid" style="margin:0">
+            <article class="intern-card">
+                <div class="intern-card-header"><h2 class="intern-card-title">Répartition des objectifs</h2><a href="#objectiveList" class="intern-link">Voir le détail →</a></div>
+                <div class="intern-data-list"><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#16a34a"></span> Terminés</span><strong th:text="${objectifsAtteints}">7</strong></div><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#f59e0b"></span> En cours</span><strong th:text="${objectifsEnCours}">3</strong></div><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#8b5cf6"></span> À venir</span><strong th:text="${objectifsNonCommences}">2</strong></div></div>
+            </article>
+            <article class="intern-card">
+                <div class="intern-card-header"><h2 class="intern-card-title">Objectifs prioritaires</h2></div>
+                <div class="intern-feed">
+                    <div class="intern-feed-item" th:each="objectif, stat : ${objectifs}" th:if="${objectif.priorite.name() == 'haute' and stat.index < 3}"><span class="intern-feed-icon tone-orange"><i class="fa-solid fa-star"></i></span><div><strong th:text="${objectif.libelle}">Objectif prioritaire</strong><span th:text="${objectif.dateLimite != null ? 'Échéance : ' + #temporals.format(objectif.dateLimite, 'dd/MM/yyyy') : 'Sans échéance'}">Échéance</span></div></div>
+                    <div class="intern-empty" th:if="${objectifs.isEmpty()}">Aucun objectif prioritaire.</div>
+                </div>
+            </article>
+        </aside>
+    </section>
+
+    <section class="intern-grid two">
+        <article class="intern-card" id="objectiveList">
+            <div class="intern-card-header">
+                <div><h2 class="intern-card-title">Liste des objectifs</h2><p class="intern-card-subtitle">Créez vos objectifs et mettez à jour leur état d’avancement</p></div>
+                <div style="display:flex;gap:8px"><select id="objectiveStatus" class="intern-select" style="width:auto"><option value="">Tous les statuts</option><option value="non_commence">À venir</option><option value="en_cours">En cours</option><option value="atteint">Terminés</option></select><select class="intern-select" style="width:auto"><option>Trier par priorité</option><option>Échéance</option><option>Progression</option></select></div>
+            </div>
+
+            <article class="intern-objective" th:each="objectif, stat : ${objectifs}" th:attr="data-objective-status=${objectif.statut.name()}">
+                <span class="intern-objective-icon" th:classappend="${stat.index % 4 == 0} ? ' tone-blue' : (${stat.index % 4 == 1} ? ' tone-green' : (${stat.index % 4 == 2} ? ' tone-purple' : ' tone-orange'))"><i class="fa-solid" th:classappend="${stat.index % 3 == 0} ? ' fa-display' : (${stat.index % 3 == 1} ? ' fa-database' : ' fa-file-lines')"></i></span>
+                <div><h3 th:text="${objectif.libelle}">Développer Dashboard Stagiaire</h3><p th:text="${objectif.description != null ? objectif.description : 'Objectif défini dans le cadre du suivi de votre stage.'}">Description</p><div style="margin-top:8px"><span class="intern-status" th:classappend="${objectif.priorite.name() == 'haute'} ? ' status-orange' : ' status-gray'"><i th:class="${objectif.priorite.name() == 'haute'} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i><span th:text="${objectif.priorite.name() == 'haute'} ? 'Prioritaire' : 'Non prioritaire'">Prioritaire</span></span></div></div>
+                <div class="intern-objective-progress"><div class="intern-progress-label"><span>Progression</span><strong th:text="${objectif.progression + '%'}">75%</strong></div><div class="intern-progress"><span th:style="'width:' + ${objectif.progression} + '%;background:' + (${stat.index % 3 == 0} ? '#2563eb' : (${stat.index % 3 == 1} ? '#16a34a' : '#8b5cf6'))"></span></div><div class="intern-progress-label" style="margin-top:7px"><span th:text="${objectif.dateLimite != null ? 'Échéance : ' + #temporals.format(objectif.dateLimite, 'dd/MM/yyyy') : 'Sans échéance'}">Échéance</span></div></div>
+                <div class="intern-objective-actions">
+                    <form th:action="@{/stagiaire/objectifs/statut}" method="post" class="intern-status-form">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="id" th:value="${objectif.id}">
+                        <select name="statut" class="intern-select intern-status-select"
+                                th:classappend="${objectif.statut.name() == 'atteint'} ? ' status-green' : (${objectif.statut.name() == 'en_cours'} ? ' status-orange' : ' status-purple')"
+                                onchange="this.form.submit()" aria-label="Changer le statut de l’objectif">
+                            <option value="non_commence" th:selected="${objectif.statut.name() == 'non_commence'}">À venir</option>
+                            <option value="en_cours" th:selected="${objectif.statut.name() == 'en_cours'}">En cours</option>
+                            <option value="atteint" th:selected="${objectif.statut.name() == 'atteint'}">Terminé</option>
+                        </select>
+                    </form>
+                    <button class="intern-icon-button intern-icon-only" title="Voir les détails"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </article>
+            <div class="intern-empty" th:if="${objectifs.isEmpty()}">Aucun objectif n’a encore été défini par votre encadreur.</div>
+        </article>
+
+        <aside class="intern-card">
+            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#" class="intern-link">Voir tout</a></div>
+            <div class="intern-feed">
+                <div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Objectif terminé</strong><span>Authentification sécurisée</span><small>Aujourd’hui 10:25</small></div></div>
+                <div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-link"></i></span><div><strong>Nouvelle tâche liée</strong><span>Créer API statistiques</span><small>Aujourd’hui 09:40</small></div></div>
+                <div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-solid fa-pen"></i></span><div><strong>Objectif modifié</strong><span>Rapport intermédiaire</span><small>Hier 16:30</small></div></div>
+                <div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-solid fa-plus"></i></span><div><strong>Objectif créé</strong><span>Rapport final</span><small>Hier 14:15</small></div></div>
+            </div>
+        </aside>
+    </section>
+</main>
+</div>
+
+<div class="intern-modal" id="objectiveModal" role="dialog" aria-modal="true" aria-labelledby="objectiveModalTitle">
+    <form class="intern-modal-panel" th:action="@{/stagiaire/objectifs/creer}" method="post">
+        <div class="intern-card-header">
+            <div>
+                <h2 class="intern-card-title" id="objectiveModalTitle">Ajouter un objectif</h2>
+                <p class="intern-card-subtitle">Définissez le résultat à atteindre pendant votre stage</p>
+            </div>
+            <button type="button" class="intern-icon-button intern-icon-only" data-close-objective aria-label="Fermer">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-
-        <div class="kanban-board">
-            <!-- COLONNE: EN ATTENTE -->
-            <div class="kanban-colonne" data-colonne="non_commence">
-                <div class="kanban-col-header">
-                    <div class="kanban-col-titre">
-                        <span class="kanban-dot gris"></span>
-                        <span>En attente</span>
-                    </div>
-                    <span class="kanban-col-compteur" th:text="${objectifsNonCommences}">0</span>
-                </div>
-                <div class="kanban-cartes" id="col-non_commence">
-                    <div class="kanban-carte" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'non_commence'}"
-                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
-                        <div class="kanban-carte-bande" th:classappend="${obj.priorite.name() == 'haute'} ? 'bande-rouge' : (${obj.priorite.name() == 'moyenne'} ? 'bande-orange' : 'bande-vert')"></div>
-                        <div class="kanban-carte-contenu">
-                            <div class="kanban-carte-header">
-                                <span th:class="'kanban-badge-prio ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
-                                <span th:if="${obj.dateLimite != null}" class="kanban-carte-date"><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(obj.dateLimite, 'dd/MM')}">-</span></span>
-                            </div>
-                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
-                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
-                            <div class="kanban-carte-progression" th:if="${obj.progression != null && obj.progression > 0}">
-                                <div class="kanban-barre">
-                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
-                                </div>
-                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">0%</span>
-                            </div>
-                            <div class="kanban-carte-actions">
-                                <button class="kanban-action-btn avancer" th:if="${obj.statut.name() == 'non_commence'}" onclick="changerStatut(${obj.id}, 'en_cours')"><i class="fa-solid fa-play"></i> Demarrer</button>
-                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-carte-vide" th:if="${objectifsNonCommences == 0}">
-                        <i class="fa-regular fa-circle"></i>
-                        <p>Aucun objectif en attente</p>
-                    </div>
-                </div>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="intern-form-grid">
+            <div class="intern-form-group full">
+                <label for="objectifLibelle">Titre de l’objectif</label>
+                <input class="intern-input" id="objectifLibelle" name="libelle" maxlength="200" required
+                       placeholder="Ex. Développer le tableau de bord stagiaire">
             </div>
-
-            <!-- COLONNE: EN COURS -->
-            <div class="kanban-colonne" data-colonne="en_cours">
-                <div class="kanban-col-header">
-                    <div class="kanban-col-titre">
-                        <span class="kanban-dot orange"></span>
-                        <span>En cours</span>
-                    </div>
-                    <span class="kanban-col-compteur" th:text="${objectifsEnCours}">0</span>
-                </div>
-                <div class="kanban-cartes" id="col-en_cours">
-                    <div class="kanban-carte" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'en_cours'}"
-                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
-                        <div class="kanban-carte-bande" th:classappend="${obj.priorite.name() == 'haute'} ? 'bande-rouge' : (${obj.priorite.name() == 'moyenne'} ? 'bande-orange' : 'bande-vert')"></div>
-                        <div class="kanban-carte-contenu">
-                            <div class="kanban-carte-header">
-                                <span th:class="'kanban-badge-prio ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
-                                <span th:if="${obj.dateLimite != null}" class="kanban-carte-date"><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(obj.dateLimite, 'dd/MM')}">-</span></span>
-                            </div>
-                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
-                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
-                            <div class="kanban-carte-progression" th:if="${obj.progression != null && obj.progression > 0}">
-                                <div class="kanban-barre">
-                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
-                                </div>
-                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">0%</span>
-                            </div>
-                            <div class="kanban-carte-actions">
-                                <button class="kanban-action-btn terminer" onclick="changerStatut(${obj.id}, 'atteint')"><i class="fa-solid fa-check"></i> Terminer</button>
-                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-carte-vide" th:if="${objectifsEnCours == 0}">
-                        <i class="fa-regular fa-circle"></i>
-                        <p>Aucun objectif en cours</p>
-                    </div>
-                </div>
+            <div class="intern-form-group full">
+                <label for="objectifDescription">Description</label>
+                <textarea class="intern-textarea" id="objectifDescription" name="description"
+                          placeholder="Décrivez clairement le résultat attendu..."></textarea>
             </div>
-
-            <!-- COLONNE: TERMINE -->
-            <div class="kanban-colonne" data-colonne="atteint">
-                <div class="kanban-col-header">
-                    <div class="kanban-col-titre">
-                        <span class="kanban-dot vert"></span>
-                        <span>Termine</span>
-                    </div>
-                    <span class="kanban-col-compteur" th:text="${objectifsAtteints}">0</span>
-                </div>
-                <div class="kanban-cartes" id="col-atteint">
-                    <div class="kanban-carte completed" th:each="obj : ${objectifs}" th:if="${obj.statut.name() == 'atteint'}"
-                         th:attr="data-id=${obj.id}, data-statut=${obj.statut.name()}">
-                        <div class="kanban-carte-bande bande-vert"></div>
-                        <div class="kanban-carte-contenu">
-                            <div class="kanban-carte-header">
-                                <span class="kanban-badge-prio" th:classappend="' ' + ${obj.priorite.name()}" th:text="${obj.priorite.name() == 'haute' ? 'Haute' : (obj.priorite.name() == 'moyenne' ? 'Moyenne' : 'Faible')}">-</span>
-                                <span class="kanban-carte-termine-badge"><i class="fa-solid fa-check-circle"></i> Termine</span>
-                            </div>
-                            <div class="kanban-carte-titre" th:text="${obj.libelle}">Titre</div>
-                            <div class="kanban-carte-desc" th:text="${obj.description != null ? obj.description : 'Aucune description'}">Description</div>
-                            <div class="kanban-carte-progression">
-                                <div class="kanban-barre">
-                                    <div class="kanban-barre-remplissage" th:style="'width:' + ${obj.progression} + '%'"></div>
-                                </div>
-                                <span class="kanban-barre-texte" th:text="${obj.progression} + '%'">100%</span>
-                            </div>
-                            <div class="kanban-carte-actions">
-                                <button class="kanban-action-btn supprimer" onclick="supprimerObjectif(${obj.id})"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-carte-vide" th:if="${objectifsAtteints == 0}">
-                        <i class="fa-regular fa-circle-check"></i>
-                        <p>Aucun objectif termine</p>
-                    </div>
-                </div>
+            <div class="intern-form-group">
+                <label for="objectifPriorite">Priorité</label>
+                <select class="intern-select" id="objectifPriorite" name="priorite">
+                    <option value="basse">Faible</option>
+                    <option value="moyenne" selected>Moyenne</option>
+                    <option value="haute">Haute</option>
+                </select>
+            </div>
+            <div class="intern-form-group">
+                <label for="objectifDateLimite">Date d’échéance</label>
+                <input class="intern-input" id="objectifDateLimite" name="dateLimite" type="date">
             </div>
         </div>
-
-        <!-- ========== BARRE DE PROGRESSION GLOBALE ========== -->
-        <div class="kanban-progression-barre">
-            <div class="kanban-progression-label">
-                <span>Progression globale du stage</span>
-                <strong th:text="${progressionMoyenne} + '%'">0%</strong>
-            </div>
-            <div class="kanban-progression-track">
-                <div class="kanban-progression-remplissage" th:style="'width:' + ${progressionMoyenne} + '%'"></div>
-            </div>
+        <div class="intern-modal-actions">
+            <button type="button" class="intern-button secondary" data-close-objective>Annuler</button>
+            <button type="submit" class="intern-button"><i class="fa-solid fa-plus"></i> Ajouter l’objectif</button>
         </div>
-
-    </div>
+    </form>
 </div>
-
-<!-- ========== MODAL AJOUT OBJECTIF ========== -->
-<div class="modal-overlay" id="modalObjectif" onclick="closeModalOutside(event)">
-    <div class="modal-contenu">
-        <div class="modal-header">
-            <h3><i class="fa-solid fa-bullseye"></i> Nouvel objectif</h3>
-            <button class="modal-fermer" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="formObjectif" th:action="@{/stagiaire/objectifs/creer}" method="POST">
-            <div class="modal-body">
-                <div class="modal-groupe">
-                    <label>Titre de l'objectif</label>
-                    <input type="text" name="libelle" placeholder="Ex: Apprendre Spring Boot" required>
-                </div>
-                <div class="modal-groupe">
-                    <label>Description (optionnelle)</label>
-                    <textarea name="description" rows="3" placeholder="Decrivez votre objectif..."></textarea>
-                </div>
-                <div class="modal-row">
-                    <div class="modal-groupe">
-                        <label>Priorite</label>
-                        <select name="priorite">
-                            <option value="haute">Haute</option>
-                            <option value="moyenne" selected>Moyenne</option>
-                            <option value="basse">Faible</option>
-                        </select>
-                    </div>
-                    <div class="modal-groupe">
-                        <label>Date limite (optionnelle)</label>
-                        <input type="date" name="dateLimite">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="modal-btn-annuler" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="modal-btn-creer"><i class="fa-solid fa-plus"></i> Creer l'objectif</button>
-            </div>
-        </form>
-    </div>
-</div>
-
+<script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
 <script>
-function openModal() {
-    document.getElementById('modalObjectif').classList.add('ouvert');
-}
-
-function closeModal() {
-    document.getElementById('modalObjectif').classList.remove('ouvert');
-}
-
-function closeModalOutside(e) {
-    if (e.target === e.currentTarget) closeModal();
-}
-
-function changerStatut(id, nouveauStatut) {
-    if (!confirm('Confirmer le changement de statut ?')) return;
-    fetch('/stagiaire/objectifs/statut', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'id=' + id + '&statut=' + nouveauStatut
-    }).then(function(r) {
-        if (r.ok) window.location.reload();
-        else alert('Erreur lors du changement de statut');
+document.addEventListener('DOMContentLoaded', () => {
+    const filter = document.getElementById('objectiveStatus');
+    filter.addEventListener('change', () => {
+        document.querySelectorAll('[data-objective-status]').forEach(card => {
+            card.style.display = !filter.value || card.dataset.objectiveStatus === filter.value ? '' : 'none';
+        });
     });
-}
 
-function supprimerObjectif(id) {
-    if (!confirm('Supprimer cet objectif ?')) return;
-    fetch('/stagiaire/objectifs/supprimer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'id=' + id
-    }).then(function(r) {
-        if (r.ok) window.location.reload();
-        else alert('Erreur lors de la suppression');
-    });
-}
+    const modal = document.getElementById('objectiveModal');
+    const openModal = () => {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('objectifLibelle').focus();
+    };
+    const closeModal = () => {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    };
+    document.querySelectorAll('[data-open-objective]').forEach(button => button.addEventListener('click', openModal));
+    document.querySelectorAll('[data-close-objective]').forEach(button => button.addEventListener('click', closeModal));
+    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+});
 </script>
-
 </body>
 </html>

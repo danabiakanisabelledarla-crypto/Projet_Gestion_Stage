@@ -2,249 +2,519 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sauvegarde & restauration - Administrateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sauvegarde du système - Administration</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
-<div class="contenu-principal">
+
+<main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
 
-    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
-        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
+    <div class="backup-alert" th:if="${succes}">
+        <i class="fa-solid fa-circle-check"></i>
+        <span th:text="${succes}">Sauvegarde créée avec succès.</span>
+        <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-    <!-- PAGE HEADER -->
-    <div class="sg-header">
-        <div class="sg-header-left">
-            <div class="sg-header-icon"><i class="fa-solid fa-database"></i></div>
+    <section class="backup-heading">
+        <div class="backup-heading-left">
+            <div class="backup-heading-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
             <div>
-                <h1>Sauvegarde &amp; restauration</h1>
-                <p class="sg-header-sub">Gérez les sauvegardes automatiques, restaurez les données et surveillez l'état du système.</p>
+                <h1>Sauvegarde du système</h1>
+                <nav class="backup-breadcrumb" aria-label="Fil d'Ariane">
+                    <a th:href="@{/admin/dashboard}">Accueil</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span>Administrateur</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <strong>Sauvegarde</strong>
+                </nav>
+                <p>Créez, planifiez et restaurez les sauvegardes de la plateforme.</p>
             </div>
         </div>
-        <div class="sg-header-right">
-            <button class="sg-btn-primary"><i class="fa-solid fa-cloud-upload"></i> Nouvelle sauvegarde</button>
-            <button class="sg-btn-outline"><i class="fa-solid fa-rotate-left"></i> Restaurer</button>
-            <button class="sg-btn-ghost"><i class="fa-solid fa-gear"></i> Paramètres</button>
+        <div class="backup-heading-actions">
+            <button type="button" class="backup-btn secondary" onclick="exporterJournal()">
+                <i class="fa-solid fa-file-export"></i> Exporter le journal
+            </button>
+            <button type="button" class="backup-btn primary" onclick="allerCreation()">
+                <i class="fa-solid fa-plus"></i> Nouvelle sauvegarde
+            </button>
         </div>
-    </div>
+    </section>
 
-    <!-- 5 STATS CARDS -->
-    <div class="sg-stats">
-        <div class="sg-stat-card bleu">
-            <div class="sg-stat-icon"><i class="fa-solid fa-database"></i></div>
-            <div class="sg-stat-info">
-                <div class="sg-stat-label">Sauvegardes</div>
-                <div class="sg-stat-number" th:text="${totalBackups}">0</div>
-                <div class="sg-stat-desc">Effectuées</div>
-            </div>
-        </div>
-        <div class="sg-stat-card vert">
-            <div class="sg-stat-icon"><i class="fa-regular fa-clock"></i></div>
-            <div class="sg-stat-info">
-                <div class="sg-stat-label">Dernière sauvegarde</div>
-                <div class="sg-stat-number" th:text="${lastBackupDate}">—</div>
-                <div class="sg-stat-desc" th:text="${lastBackupTime}">—</div>
-            </div>
-        </div>
-        <div class="sg-stat-card orange">
-            <div class="sg-stat-icon"><i class="fa-solid fa-hard-drive"></i></div>
-            <div class="sg-stat-info">
-                <div class="sg-stat-label">Stockage</div>
-                <div class="sg-stat-number" th:text="${storageUsed + ' Go'}">0</div>
-                <div class="sg-stat-desc" th:text="${storagePct + '% utilisé'}">—</div>
-            </div>
-        </div>
-        <div class="sg-stat-card violet">
-            <div class="sg-stat-icon"><i class="fa-solid fa-repeat"></i></div>
-            <div class="sg-stat-info">
-                <div class="sg-stat-label">Sauvegarde automatique</div>
-                <div class="sg-stat-number" th:text="${autoBackupStatus ? 'Activée' : 'Désactivée'}">—</div>
-                <div class="sg-stat-desc">Chaque nuit</div>
-            </div>
-        </div>
-        <div class="sg-stat-card rouge">
-            <div class="sg-stat-icon"><i class="fa-solid fa-rotate-left"></i></div>
-            <div class="sg-stat-info">
-                <div class="sg-stat-label">Restaurations</div>
-                <div class="sg-stat-number" th:text="${totalRestorations}">0</div>
-                <div class="sg-stat-desc">Historique</div>
-            </div>
-        </div>
-    </div>
+    <div th:replace="~{fragments/admin-settings-tabs :: tabs('sauvegarde')}"></div>
 
-    <!-- TWO-COLUMN LAYOUT -->
-    <div class="sg-layout">
-        <!-- LEFT COLUMN -->
-        <div class="sg-layout-left">
-            <div class="sg-card">
-                <div class="sg-card-header">
-                    <span class="sg-card-title"><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px;color:#2563EB;"></i>Historique des sauvegardes</span>
-                    <div class="sg-card-actions">
-                        <button class="sg-card-btn"><i class="fa-solid fa-download"></i> Exporter</button>
-                        <button class="sg-card-btn"><i class="fa-solid fa-filter"></i> Filtrer</button>
+    <section class="backup-stats" aria-label="Statistiques des sauvegardes">
+        <article class="backup-stat-card blue">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-database"></i></span>
+                <em><i class="fa-solid fa-arrow-trend-up"></i> +8%</em>
+            </div>
+            <span class="backup-stat-label">Sauvegardes totales</span>
+            <strong th:text="${totalBackups}">42</strong>
+            <small>Depuis la mise en service</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card green">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-regular fa-clock"></i></span>
+                <em>Réussie</em>
+            </div>
+            <span class="backup-stat-label">Dernière sauvegarde</span>
+            <strong th:text="${lastBackupDate}">Aujourd'hui</strong>
+            <small th:text="${lastBackupTime}">14h35</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card purple">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-arrows-rotate"></i></span>
+                <em>Planifiées</em>
+            </div>
+            <span class="backup-stat-label">Sauvegardes automatiques</span>
+            <strong th:text="${autoBackupCount}">3</strong>
+            <small>Quotidienne, hebdo et mensuelle</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card orange">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-box-archive"></i></span>
+                <em>Compressées</em>
+            </div>
+            <span class="backup-stat-label">Taille totale</span>
+            <strong th:text="${totalBackupSize}">96,4 Go</strong>
+            <small>Toutes sauvegardes confondues</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card cyan">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-hard-drive"></i></span>
+                <em th:text="${storagePct + '%'}">76%</em>
+            </div>
+            <span class="backup-stat-label">Stockage utilisé</span>
+            <strong th:text="${storageUsed + ' Go'}">245 Go</strong>
+            <small>Sur une capacité de 320 Go</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 34 C21 30,37 30,54 25 S83 29,106 17 S144 18,180 4"></path>
+            </svg>
+        </article>
+        <article class="backup-stat-card red">
+            <div class="backup-stat-top">
+                <span class="backup-stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <em>À vérifier</em>
+            </div>
+            <span class="backup-stat-label">Échecs de sauvegarde</span>
+            <strong th:text="${failedBackups}">1</strong>
+            <small>Sur les 30 derniers jours</small>
+            <svg viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="area" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28 L180 38 L0 38 Z"></path>
+                <path class="line" d="M0 18 C25 20,38 29,58 27 S91 30,113 25 S147 31,180 28"></path>
+            </svg>
+        </article>
+    </section>
+
+    <section class="backup-layout">
+        <div class="backup-main-column">
+            <article class="backup-card" id="createBackupCard">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon blue"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                        <div>
+                            <h2>Créer une sauvegarde</h2>
+                            <p>Générez une copie sécurisée des données de la plateforme.</p>
+                        </div>
                     </div>
-                </div>
-                <table class="sg-table">
-                    <thead>
+                    <span class="backup-secure-badge"><i class="fa-solid fa-shield-halved"></i> Sécurisé</span>
+                </header>
+
+                <form th:action="@{/admin/sauvegarde}" method="post" id="createBackupForm" class="backup-create-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div class="backup-form-grid">
+                        <label class="backup-field">
+                            <span>Nom de la sauvegarde</span>
+                            <div><i class="fa-solid fa-tag"></i><input type="text" name="name" required value="Sauvegarde complète juillet 2026"></div>
+                        </label>
+                        <label class="backup-field">
+                            <span>Type de sauvegarde</span>
+                            <div><i class="fa-solid fa-layer-group"></i>
+                                <select name="type" required>
+                                    <option value="database">Base de données</option>
+                                    <option value="documents">Documents</option>
+                                    <option value="complete" selected>Complète</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                        </label>
+                        <label class="backup-field field-wide">
+                            <span>Description</span>
+                            <div class="textarea"><i class="fa-regular fa-file-lines"></i><textarea name="description" rows="3" placeholder="Décrivez le contenu de cette sauvegarde...">Sauvegarde complète avant la maintenance mensuelle.</textarea></div>
+                        </label>
+                    </div>
+                    <div class="backup-options">
+                        <label class="backup-check">
+                            <input type="checkbox" name="compression" checked>
+                            <span><i class="fa-solid fa-file-zipper"></i></span>
+                            <strong>Compression</strong>
+                            <small>Réduit l'espace utilisé</small>
+                        </label>
+                        <label class="backup-check">
+                            <input type="checkbox" name="encryption" checked>
+                            <span><i class="fa-solid fa-lock"></i></span>
+                            <strong>Chiffrement AES-256</strong>
+                            <small>Protège les données sensibles</small>
+                        </label>
+                    </div>
+                    <div class="backup-create-footer">
+                        <div class="backup-progress-zone" id="creationProgress" hidden>
+                            <div><span>Création de la sauvegarde...</span><strong id="creationPercent">0%</strong></div>
+                            <div class="backup-progress"><span id="creationProgressBar"></span></div>
+                        </div>
+                        <button type="submit" class="backup-btn primary">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Créer une sauvegarde
+                        </button>
+                    </div>
+                </form>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon purple"><i class="fa-solid fa-boxes-stacked"></i></span>
+                        <div>
+                            <h2>Liste des sauvegardes</h2>
+                            <p><span th:text="${#lists.size(backupHistory)}">6</span> sauvegardes récentes affichées.</p>
+                        </div>
+                    </div>
+                    <div class="backup-table-tools">
+                        <label><i class="fa-solid fa-magnifying-glass"></i><input type="search" id="backupSearch" placeholder="Rechercher..." oninput="filtrerSauvegardes()"></label>
+                        <select id="backupTypeFilter" onchange="filtrerSauvegardes()">
+                            <option value="">Tous les types</option>
+                            <option value="complete">Complète</option>
+                            <option value="database">Base de données</option>
+                            <option value="documents">Documents</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="backup-table-wrap">
+                    <table class="backup-table" id="backupTable">
+                        <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Heure</th>
+                            <th>Nom</th>
                             <th>Type</th>
+                            <th>Date</th>
                             <th>Taille</th>
-                            <th>Destination</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="b : ${backupHistory}">
-                            <td><span class="sgdate" th:text="${b.date}">17/07/2026</span></td>
-                            <td><span class="sgtime" th:text="${b.time}">09:30</span></td>
-                            <td><span class="sg-badge" th:classappend="${b.typeCls}" th:text="${b.typeLabel}">Automatique</span></td>
-                            <td><span class="sg-size" th:text="${b.size}">2.5 Go</span></td>
-                            <td><span class="sg-dest" th:text="${b.destination}">Cloud</span></td>
-                            <td><span class="sg-badge" th:classappend="${b.statutCls}" th:text="${b.statutLabel}">Réussie</span></td>
+                        </thead>
+                        <tbody>
+                        <tr th:each="backup, iter : ${backupHistory}"
+                            th:attr="data-name=${'backup-' + backup.typeCls + '-' + iter.index},
+                                     data-type=${iter.index % 3 == 0 ? 'complete' : (iter.index % 3 == 1 ? 'database' : 'documents')}">
                             <td>
-                                <button class="sg-action-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
-                                <button class="sg-action-btn" title="Restaurer"><i class="fa-solid fa-rotate-left"></i></button>
-                                <button class="sg-action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                <div class="backup-name-cell">
+                                    <span th:classappend="${iter.index % 3 == 0 ? 'complete' : (iter.index % 3 == 1 ? 'database' : 'documents')}">
+                                        <i th:class="${iter.index % 3 == 0 ? 'fa-solid fa-box-archive' : (iter.index % 3 == 1 ? 'fa-solid fa-database' : 'fa-solid fa-folder-open')}"></i>
+                                    </span>
+                                    <div>
+                                        <strong th:text="${'backup-' + backup.typeCls + '-' + #strings.replace(backup.date, '/', '')}">backup-complete-24072026</strong>
+                                        <small th:text="${backup.destination}">Cloud sécurisé</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="backup-type-badge"
+                                      th:classappend="${iter.index % 3 == 0 ? 'complete' : (iter.index % 3 == 1 ? 'database' : 'documents')}"
+                                      th:text="${iter.index % 3 == 0 ? 'Complète' : (iter.index % 3 == 1 ? 'Base de données' : 'Documents')}">Complète</span></td>
+                            <td><strong class="backup-date" th:text="${backup.date}">24/07/2026</strong><small class="backup-time" th:text="${backup.time}">14:35</small></td>
+                            <td><strong class="backup-size" th:text="${backup.size}">3,2 Go</strong></td>
+                            <td><span class="backup-status" th:classappend="${backup.statutCls}"><i></i><span th:text="${backup.statutLabel}">Réussie</span></span></td>
+                            <td>
+                                <div class="backup-row-actions">
+                                    <button type="button" title="Prévisualiser" onclick="actionSauvegarde('Prévisualisation ouverte.')"><i class="fa-regular fa-eye"></i></button>
+                                    <button type="button" title="Télécharger" onclick="actionSauvegarde('Téléchargement de la sauvegarde démarré.')"><i class="fa-solid fa-download"></i></button>
+                                    <button type="button" title="Restaurer" onclick="restaurerSauvegarde()"><i class="fa-solid fa-rotate-left"></i></button>
+                                    <button type="button" class="danger" title="Supprimer" onclick="supprimerSauvegarde(this)"><i class="fa-regular fa-trash-can"></i></button>
+                                </div>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(backupHistory)}">
-                            <td colspan="7" class="sg-empty">Aucune sauvegarde trouvée.</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="sg-pagination">
-                    <button class="sg-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="sg-page-btn actif">1</button>
-                    <button class="sg-page-btn">2</button>
-                    <button class="sg-page-btn">3</button>
-                    <button class="sg-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+                <footer class="backup-table-footer">
+                    <span id="backupTableCount" th:text="${#lists.size(backupHistory) + ' sauvegardes'}">6 sauvegardes</span>
+                    <div><button type="button" disabled><i class="fa-solid fa-chevron-left"></i></button><button type="button" class="active">1</button><button type="button" disabled><i class="fa-solid fa-chevron-right"></i></button></div>
+                </footer>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-card-header">
+                    <div>
+                        <span class="backup-card-icon orange"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                        <div>
+                            <h2>Historique des sauvegardes</h2>
+                            <p>Journal récent des créations et opérations de restauration.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="backup-icon-btn" title="Exporter l'historique" onclick="exporterJournal()"><i class="fa-solid fa-file-export"></i></button>
+                </header>
+                <div class="backup-timeline">
+                    <div class="backup-timeline-item" th:each="activity, iter : ${recentActivity}">
+                        <div class="backup-timeline-marker" th:classappend="${activity.cls}"><i th:class="${activity.icon}"></i></div>
+                        <div class="backup-timeline-content">
+                            <div>
+                                <strong th:text="${activity.title}">Sauvegarde créée</strong>
+                                <span th:text="${activity.date + ' à ' + activity.time}">24 juillet à 14:35</span>
+                            </div>
+                            <p><i class="fa-regular fa-user"></i> Administrateur <span>•</span>
+                                <span th:text="${iter.index == 1 ? 'Restauration terminée' : (activity.cls == 'rouge' ? 'Opération échouée' : 'Opération réussie')}">Opération réussie</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
         </div>
 
-        <!-- RIGHT COLUMN -->
-        <div class="sg-layout-right">
-            <!-- CARD 1: Stockage -->
-            <div class="sg-side-card">
-                <div class="sg-side-card-header">
-                    <span class="sg-side-card-title"><i class="fa-solid fa-hard-drive" style="color:#2563EB;margin-right:8px;"></i>Utilisation du stockage</span>
-                </div>
-                <div class="sg-gauge-wrapper">
-                    <div class="sg-gauge">
-                        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
-                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"></circle>
-                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2563EB" stroke-width="3.5"
-                                    stroke-dasharray="${storagePct * 100 / 100 * 100} ${(100 - storagePct) * 100 / 100 * 100}"
-                                    stroke-dashoffset="0" transform="rotate(-90,18,18)" stroke-linecap="round"></circle>
+        <aside class="backup-side-column">
+            <article class="backup-card backup-storage-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon cyan"><i class="fa-solid fa-hard-drive"></i></span><h2>Stockage</h2></div>
+                    <span class="backup-status reussie"><i></i> Opérationnel</span>
+                </header>
+                <div class="backup-storage-overview">
+                    <div class="backup-storage-donut">
+                        <svg viewBox="0 0 42 42" aria-label="Occupation du stockage">
+                            <circle cx="21" cy="21" r="16" pathLength="100"></circle>
+                            <circle class="used" cx="21" cy="21" r="16" pathLength="100"
+                                    th:attr="stroke-dasharray=${storagePct + ' ' + (100 - storagePct)}"></circle>
                         </svg>
-                        <div class="sg-gauge-center">
-                            <div class="sg-gauge-number" th:text="${storagePct + '%'}">76%</div>
-                            <div class="sg-gauge-label" th:text="${storageUsed + ' Go'}">245 Go</div>
-                        </div>
+                        <div><strong th:text="${storagePct + '%'}">76%</strong><span>utilisé</span></div>
                     </div>
-                    <div class="sg-gauge-bar-wrapper">
-                        <div class="sg-gauge-bar-bg">
-                            <div class="sg-gauge-bar-fill" th:style="'width:' + ${storagePct} + '%'"></div>
-                        </div>
+                    <div class="backup-storage-legend">
+                        <div><span><i class="used"></i>Espace utilisé</span><strong th:text="${storageUsed + ' Go'}">245 Go</strong></div>
+                        <div><span><i class="free"></i>Espace libre</span><strong>75 Go</strong></div>
+                        <div><span><i class="backups"></i>Sauvegardes</span><strong th:text="${totalBackupSize}">96,4 Go</strong></div>
+                        <div><span>Capacité totale</span><strong>320 Go</strong></div>
                     </div>
                 </div>
-            </div>
+                <div class="backup-storage-progress"><span th:style="'width:' + ${storagePct} + '%'"></span></div>
+                <small class="backup-storage-note">Une alerte sera envoyée lorsque l'utilisation dépassera 90 %.</small>
+            </article>
 
-            <!-- CARD 2: Répartition -->
-            <div class="sg-side-card">
-                <div class="sg-side-card-header">
-                    <span class="sg-side-card-title"><i class="fa-solid fa-chart-pie" style="color:#8B5CF6;margin-right:8px;"></i>Répartition</span>
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon green"><i class="fa-solid fa-calendar-days"></i></span><h2>Sauvegardes automatiques</h2></div>
+                </header>
+                <div class="backup-schedule-list">
+                    <label><span><strong>Quotidienne</strong><small>Chaque jour à l'heure définie</small></span><input type="checkbox" checked><i></i></label>
+                    <label><span><strong>Hebdomadaire</strong><small>Chaque dimanche</small></span><input type="checkbox" checked><i></i></label>
+                    <label><span><strong>Mensuelle</strong><small>Le premier jour du mois</small></span><input type="checkbox" checked><i></i></label>
                 </div>
-                <div class="sg-donut-wrapper">
-                    <div class="sg-donut">
-                        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
-                            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F1F5F9" stroke-width="3.5"></circle>
-                            <circle th:each="s : ${distributionSegments}" cx="18" cy="18" r="15.9" fill="none"
-                                    th:stroke="${s.color}" stroke-width="3.5" stroke-dasharray="${s.dasharray}"
-                                    th:attr="stroke-dashoffset=${s.dashoffset}" transform="rotate(-90,18,18)"
-                                    stroke-linecap="round"></circle>
-                        </svg>
-                        <div class="sg-donut-center">
-                            <div class="sg-donut-number" th:text="${totalBackups}">42</div>
-                            <div class="sg-donut-label">Total</div>
-                        </div>
-                    </div>
-                    <div class="sg-donut-legend">
-                        <div th:each="d : ${distribution}" class="sg-legend-item">
-                            <span class="sg-legend-dot" th:classappend="${d.cls}"></span>
-                            <span class="sg-legend-name" th:text="${d.name}">Auto</span>
-                            <span class="sg-legend-pct" th:text="${d.pct + '%'}">65%</span>
-                            <span class="sg-legend-nb" th:text="${d.count}">28</span>
-                        </div>
-                    </div>
+                <div class="backup-side-form two">
+                    <label><span>Heure d'exécution</span><input type="time" value="02:00"></label>
+                    <label><span>Nombre maximal</span><input type="number" min="1" max="100" value="30"></label>
                 </div>
-            </div>
+            </article>
 
-            <!-- CARD 3: Activité récente -->
-            <div class="sg-side-card">
-                <div class="sg-side-card-header">
-                    <span class="sg-side-card-title"><i class="fa-solid fa-bolt" style="color:#F59E0B;margin-right:8px;"></i>Activité récente</span>
-                    <a href="#" class="sg-side-card-link">Voir tout</a>
+            <article class="backup-card" id="backupSettingsCard">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon purple"><i class="fa-solid fa-sliders"></i></span><h2>Paramètres de sauvegarde</h2></div>
+                </header>
+                <div class="backup-side-form">
+                    <label><span>Dossier de stockage</span><div><i class="fa-regular fa-folder"></i><input type="text" value="/data/backups"></div></label>
+                    <label><span>Durée de conservation</span><select><option>15 jours</option><option selected>30 jours</option><option>90 jours</option></select></label>
+                    <label class="backup-inline-switch"><span><strong>Compression</strong><small>Format ZIP optimisé</small></span><input type="checkbox" checked><i></i></label>
+                    <label class="backup-inline-switch"><span><strong>Chiffrement</strong><small>Clé AES-256</small></span><input type="checkbox" checked><i></i></label>
+                    <label class="backup-inline-switch"><span><strong>Notifications d'échec</strong><small>Alerter les administrateurs</small></span><input type="checkbox" checked><i></i></label>
                 </div>
-                <div class="sg-recent-list">
-                    <div th:each="r : ${recentActivity}" class="sg-recent-item">
-                        <div class="sg-recent-icon" th:classappend="${r.cls}">
-                            <i th:class="${r.icon}"></i>
-                        </div>
-                        <div class="sg-recent-content">
-                            <div class="sg-recent-title" th:text="${r.title}">Action</div>
-                            <div class="sg-recent-time" th:text="${r.date + ' · ' + r.time}">Aujourd'hui · 02:00</div>
-                        </div>
-                    </div>
+                <button type="button" class="backup-btn primary full" onclick="actionSauvegarde('Paramètres de sauvegarde enregistrés.')">
+                    <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+                </button>
+            </article>
+
+            <article class="backup-card">
+                <header class="backup-side-title">
+                    <div><span class="backup-card-icon orange"><i class="fa-solid fa-bolt"></i></span><h2>Actions rapides</h2></div>
+                </header>
+                <div class="backup-quick-actions">
+                    <button type="button" onclick="allerCreation()"><i class="fa-solid fa-plus"></i><span>Créer<small>Nouvelle sauvegarde</small></span></button>
+                    <button type="button" onclick="restaurerSauvegarde()"><i class="fa-solid fa-rotate-left"></i><span>Restaurer<small>Depuis une copie</small></span></button>
+                    <button type="button" onclick="actionSauvegarde('Sélectionnez une sauvegarde dans le tableau.')"><i class="fa-solid fa-download"></i><span>Télécharger<small>Copie locale</small></span></button>
+                    <button type="button" onclick="document.getElementById('backupSettingsCard').scrollIntoView({behavior:'smooth'})"><i class="fa-solid fa-gears"></i><span>Configurer<small>Planification auto</small></span></button>
+                    <button type="button" onclick="nettoyerSauvegardes()"><i class="fa-solid fa-broom"></i><span>Nettoyer<small>Anciennes copies</small></span></button>
+                    <button type="button" onclick="exporterJournal()"><i class="fa-solid fa-file-export"></i><span>Exporter<small>Journal CSV</small></span></button>
+                </div>
+            </article>
+        </aside>
+    </section>
+
+    <section class="backup-charts-grid">
+        <article class="backup-chart-card line-chart-card">
+            <header><div><h2>Évolution des sauvegardes</h2><p>Nombre d'opérations par mois</p></div><span><i></i> Automatiques</span></header>
+            <div class="backup-line-chart">
+                <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                    <g class="grid"><line x1="60" y1="40" x2="760" y2="40"></line><line x1="60" y1="90" x2="760" y2="90"></line><line x1="60" y1="140" x2="760" y2="140"></line><line x1="60" y1="190" x2="760" y2="190"></line></g>
+                    <polyline class="auto" th:attr="points=${chartAutoPoints}"></polyline>
+                    <polyline class="manual" th:attr="points=${chartManualPoints}"></polyline>
+                    <circle th:each="value, iter : ${chartAutoValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (value * 3)}" r="4"></circle>
+                    <text th:each="month, iter : ${chartMonths}" th:x="${60 + (iter.index + 1) * 100}" y="222" th:text="${month}">Jan</text>
+                </svg>
+            </div>
+        </article>
+
+        <article class="backup-chart-card">
+            <header><div><h2>Volume des sauvegardes</h2><p>Volume mensuel en gigaoctets</p></div></header>
+            <div class="backup-bars">
+                <div><span style="height:42%"></span><small>Jan</small></div>
+                <div><span style="height:58%"></span><small>Fév</small></div>
+                <div><span style="height:49%"></span><small>Mar</small></div>
+                <div><span style="height:72%"></span><small>Avr</small></div>
+                <div><span style="height:64%"></span><small>Mai</small></div>
+                <div><span style="height:84%"></span><small>Juin</small></div>
+                <div><span style="height:68%"></span><small>Juil</small></div>
+            </div>
+        </article>
+
+        <article class="backup-chart-card">
+            <header><div><h2>Types de sauvegardes</h2><p>Répartition des 42 sauvegardes</p></div></header>
+            <div class="backup-distribution">
+                <div class="backup-distribution-donut">
+                    <svg viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.9"></circle>
+                        <circle th:each="segment : ${distributionSegments}" cx="18" cy="18" r="15.9"
+                                th:attr="stroke=${segment.color},stroke-dasharray=${segment.dasharray},stroke-dashoffset=${segment.dashoffset}"></circle>
+                    </svg>
+                    <div><strong th:text="${totalBackups}">42</strong><span>Total</span></div>
+                </div>
+                <div class="backup-distribution-legend">
+                    <div th:each="item : ${distribution}"><span><i th:class="${item.cls}"></i><span th:text="${item.name}">Automatiques</span></span><strong th:text="${item.pct + '%'}">65%</strong></div>
                 </div>
             </div>
-        </div>
+        </article>
+
+        <article class="backup-chart-card occupancy-card">
+            <header><div><h2>Occupation du stockage</h2><p>Capacité de sauvegarde disponible</p></div><strong th:text="${storagePct + '%'}">76%</strong></header>
+            <div class="backup-occupancy-progress"><span th:style="'width:' + ${storagePct} + '%'"></span></div>
+            <div class="backup-occupancy-labels"><span>0 Go</span><span>160 Go</span><span>320 Go</span></div>
+            <div class="backup-occupancy-summary">
+                <div><span class="used"></span><p>Espace utilisé<strong th:text="${storageUsed + ' Go'}">245 Go</strong></p></div>
+                <div><span class="free"></span><p>Espace disponible<strong>75 Go</strong></p></div>
+            </div>
+        </article>
+    </section>
+
+    <div class="backup-toast" id="backupToast" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check"></i><span>Action terminée.</span>
     </div>
+</main>
 
-    <!-- BOTTOM CARD: Évolution -->
-    <div class="sg-bottom-card">
-        <div class="sg-bottom-card-title"><i class="fa-solid fa-chart-line" style="color:#2563EB;margin-right:8px;"></i>Évolution des sauvegardes</div>
-        <div class="sg-chart-wrapper">
-            <svg class="sg-chart-svg" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid meet">
-                <!-- Grille horizontale -->
-                <line x1="60" y1="40" x2="760" y2="40" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="60" y1="90" x2="760" y2="90" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="60" y1="140" x2="760" y2="140" stroke="#F1F5F9" stroke-width="1"/>
-                <line x1="60" y1="190" x2="760" y2="190" stroke="#F1F5F9" stroke-width="1"/>
-                <text x="55" y="44" text-anchor="end" fill="#94A3B8" font-size="10">50 Go</text>
-                <text x="55" y="94" text-anchor="end" fill="#94A3B8" font-size="10">40 Go</text>
-                <text x="55" y="144" text-anchor="end" fill="#94A3B8" font-size="10">30 Go</text>
-                <text x="55" y="194" text-anchor="end" fill="#94A3B8" font-size="10">20 Go</text>
+<script>
+    function afficherBackupToast(message) {
+        const toast = document.getElementById('backupToast');
+        toast.querySelector('span').textContent = message;
+        toast.classList.add('show');
+        clearTimeout(window.backupToastTimer);
+        window.backupToastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
 
-                <!-- Axe X labels (mois) -->
-                <text th:each="m, iter : ${chartMonths}" th:x="${60 + (iter.index + 1) * 100}" y="220" text-anchor="middle" fill="#94A3B8" font-size="11" th:text="${m}">Jan</text>
+    function actionSauvegarde(message) {
+        afficherBackupToast(message);
+    }
 
-                <!-- Courbe auto (bleu) -->
-                <polyline th:attr="points=${chartAutoPoints}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle th:each="p, iter : ${chartAutoValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#2563EB" stroke="white" stroke-width="2"/>
+    function allerCreation() {
+        document.getElementById('createBackupCard').scrollIntoView({behavior: 'smooth', block: 'start'});
+        setTimeout(() => document.querySelector('#createBackupForm input[name="name"]').focus(), 450);
+    }
 
-                <!-- Courbe manuelle (vert) -->
-                <polyline th:attr="points=${chartManualPoints}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle th:each="p, iter : ${chartManualValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#22C55E" stroke="white" stroke-width="2"/>
+    function restaurerSauvegarde() {
+        if (confirm('Restaurer cette sauvegarde ? Les données actuelles seront remplacées.')) {
+            afficherBackupToast('Restauration planifiée avec succès.');
+        }
+    }
 
-                <!-- Courbe restauration (orange) -->
-                <polyline th:attr="points=${chartRestorePoints}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle th:each="p, iter : ${chartRestoreValues}" th:cx="${60 + (iter.index + 1) * 100}" th:cy="${190 - (p * 3)}" r="4" fill="#F59E0B" stroke="white" stroke-width="2"/>
-            </svg>
-        </div>
-        <div class="sg-chart-legend">
-            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#2563EB;"></span> Automatiques</div>
-            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#22C55E;"></span> Manuelles</div>
-            <div class="sg-chart-legend-item"><span class="sg-chart-legend-dot" style="background:#F59E0B;"></span> Restaurations</div>
-        </div>
-    </div>
-</div>
+    function supprimerSauvegarde(button) {
+        if (!confirm('Supprimer définitivement cette sauvegarde ?')) return;
+        button.closest('tr').remove();
+        filtrerSauvegardes();
+        afficherBackupToast('Sauvegarde supprimée de la liste.');
+    }
+
+    function nettoyerSauvegardes() {
+        if (confirm('Supprimer les sauvegardes ayant dépassé la durée de conservation ?')) {
+            afficherBackupToast('Nettoyage terminé : 3 anciennes sauvegardes supprimées.');
+        }
+    }
+
+    function filtrerSauvegardes() {
+        const query = document.getElementById('backupSearch').value.trim().toLowerCase();
+        const type = document.getElementById('backupTypeFilter').value;
+        let count = 0;
+        document.querySelectorAll('#backupTable tbody tr').forEach(row => {
+            const visible = (!query || row.textContent.toLowerCase().includes(query))
+                && (!type || row.dataset.type === type);
+            row.hidden = !visible;
+            if (visible) count++;
+        });
+        document.getElementById('backupTableCount').textContent = count + ' sauvegarde' + (count > 1 ? 's' : '');
+    }
+
+    function exporterJournal() {
+        const rows = [Array.of('Nom', 'Type', 'Date', 'Taille', 'Statut')];
+        document.querySelectorAll('#backupTable tbody tr:not([hidden])').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            rows.push(Array.of(
+                cells[0].innerText.trim().replace(/\s+/g, ' '),
+                cells[1].innerText.trim(),
+                cells[2].innerText.trim().replace(/\s+/g, ' '),
+                cells[3].innerText.trim(),
+                cells[4].innerText.trim()
+            ));
+        });
+        const csv = rows.map(row => row.map(value => '"' + value.replaceAll('"', '""') + '"').join(';')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'journal-sauvegardes-24-07-2026.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        afficherBackupToast('Journal exporté au format CSV.');
+    }
+
+    document.getElementById('createBackupForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const form = this;
+        const zone = document.getElementById('creationProgress');
+        const bar = document.getElementById('creationProgressBar');
+        const percent = document.getElementById('creationPercent');
+        zone.hidden = false;
+        let value = 0;
+        const timer = setInterval(() => {
+            value += 10;
+            bar.style.width = value + '%';
+            percent.textContent = value + '%';
+            if (value >= 100) {
+                clearInterval(timer);
+                setTimeout(() => form.submit(), 250);
+            }
+        }, 70);
+    });
+</script>
 </body>
 </html>

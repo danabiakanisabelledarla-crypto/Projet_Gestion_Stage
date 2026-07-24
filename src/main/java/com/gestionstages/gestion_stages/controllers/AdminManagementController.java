@@ -595,14 +595,14 @@ public String documents(Model model, @RequestParam(required = false) String succ
     }
 
     // ===== PARAMETRES =====
-    @GetMapping("/parametres")
+    @GetMapping({"/parametres", "/parametre"})
     public String parametres(Model model, @RequestParam(required = false) String succes) {
         model.addAttribute("activePage", "parametres");
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/parametres";
     }
 
-    @PostMapping("/parametres")
+    @PostMapping({"/parametres", "/parametre"})
     public String sauverParametres(RedirectAttributes ra) {
         ra.addAttribute("succes", "Parametres enregistres.");
         return "redirect:/admin/parametres";
@@ -630,51 +630,96 @@ public String documents(Model model, @RequestParam(required = false) String succ
     }
 
     // ===== SAUVEGARDE =====
-        @GetMapping("/sauvegarde")
+    @GetMapping("/sauvegarde")
     public String sauvegarde(Model model, @RequestParam(required = false) String succes) {
         model.addAttribute("activePage", "sauvegarde");
+        model.addAttribute("nomComplet", "Administrateur");
+        model.addAttribute("initiales", "AD");
+        model.addAttribute("notificationsCount", 0);
+        model.addAttribute("recentNotifications", new ArrayList<>());
         if (succes != null) model.addAttribute("succes", succes);
 
-        // Stats
-        model.addAttribute("totalBackups", 42);
-        model.addAttribute("lastBackupDate", "Aujourd'hui");
-        model.addAttribute("lastBackupTime", "14h35");
-        model.addAttribute("storageUsed", 245);
-        model.addAttribute("storagePct", 76);
-        model.addAttribute("autoBackupStatus", true);
-        model.addAttribute("totalRestorations", 6);
+        java.text.SimpleDateFormat sdfDate = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        java.text.SimpleDateFormat sdfTime = new java.text.SimpleDateFormat("HH:mm");
 
-        // Backup history
-        List<Map<String, Object>> history = List.of(
-            Map.of("date", "17/07/2026", "time", "09:30", "typeCls", "auto", "typeLabel", "Automatique", "size", "2.5 Go", "destination", "Cloud", "statutCls", "reussie", "statutLabel", "Réussie"),
-            Map.of("date", "16/07/2026", "time", "02:00", "typeCls", "auto", "typeLabel", "Automatique", "size", "2.4 Go", "destination", "Cloud", "statutCls", "reussie", "statutLabel", "Réussie"),
-            Map.of("date", "15/07/2026", "time", "18:20", "typeCls", "manuel", "typeLabel", "Manuelle", "size", "3.1 Go", "destination", "Serveur Local", "statutCls", "reussie", "statutLabel", "Réussie"),
-            Map.of("date", "14/07/2026", "time", "02:00", "typeCls", "auto", "typeLabel", "Automatique", "size", "2.3 Go", "destination", "Cloud", "statutCls", "reussie", "statutLabel", "Réussie"),
-            Map.of("date", "12/07/2026", "time", "11:18", "typeCls", "manuel", "typeLabel", "Manuelle", "size", "1.8 Go", "destination", "NAS", "statutCls", "echec", "statutLabel", "Échec"),
-            Map.of("date", "11/07/2026", "time", "02:00", "typeCls", "auto", "typeLabel", "Automatique", "size", "2.2 Go", "destination", "Cloud", "statutCls", "reussie", "statutLabel", "Réussie")
-        );
+        // Activity logs liés aux sauvegardes
+        List<ActivityLog> allLogs = activityLogRepository.findAll();
+        List<ActivityLog> backupLogs = allLogs.stream()
+            .filter(a -> a.getAction() != null && a.getAction().toLowerCase().contains("sauvegarde"))
+            .sorted((a,b) -> b.getDateActivite().compareTo(a.getDateActivite()))
+            .collect(java.util.stream.Collectors.toList());
+        long totalBackups = backupLogs.size();
+        long failedBackups = backupLogs.stream()
+            .filter(a -> (a.getDetails() != null && (a.getDetails().toLowerCase().contains("echou") || a.getDetails().toLowerCase().contains("echec")))
+                      || (a.getAction() != null && a.getAction().toLowerCase().contains("echou")))
+            .count();
+
+        // Dernière sauvegarde
+        String lastBackupDate = "—";
+        String lastBackupTime = "—";
+        if (!backupLogs.isEmpty()) {
+            ActivityLog last = backupLogs.get(0);
+            if (last.getDateActivite() != null) {
+                lastBackupDate = sdfDate.format(java.sql.Timestamp.valueOf(last.getDateActivite()));
+                lastBackupTime = sdfTime.format(java.sql.Timestamp.valueOf(last.getDateActivite()));
+            }
+        }
+
+        // Comptages documents pour le stockage
+        long docCount = documentRepository.count();
+        long storageUsed = docCount * 5; // ~5 Mo par document
+        int storagePct = (int) Math.min(99, storageUsed * 100 / 320000); // capacité 320 Go
+        String totalBackupSize = String.format("%.1f Go", storageUsed / 1000.0);
+
+        model.addAttribute("totalBackups", totalBackups);
+        model.addAttribute("lastBackupDate", totalBackups > 0 ? lastBackupDate : "Aucune");
+        model.addAttribute("lastBackupTime", totalBackups > 0 ? lastBackupTime : "—");
+        model.addAttribute("storageUsed", storageUsed);
+        model.addAttribute("storagePct", storagePct);
+        model.addAttribute("autoBackupStatus", true);
+        model.addAttribute("autoBackupCount", 3);
+        model.addAttribute("totalBackupSize", totalBackupSize);
+        model.addAttribute("failedBackups", failedBackups);
+        model.addAttribute("totalRestorations", 0);
+
+        // Historique des sauvegardes (depuis les logs)
+        List<Map<String, Object>> history = backupLogs.stream().map(a -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("date", a.getDateActivite() != null ? sdfDate.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+            m.put("time", a.getDateActivite() != null ? sdfTime.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+            m.put("typeCls", "manuel");
+            m.put("typeLabel", "Manuelle");
+            m.put("size", "—");
+            m.put("destination", "Serveur");
+            String details = a.getDetails() != null ? a.getDetails().toLowerCase() : "";
+            boolean echec = details.contains("echou") || details.contains("echec");
+            m.put("statutCls", echec ? "echec" : "reussie");
+            m.put("statutLabel", echec ? "Échec" : "Réussie");
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("backupHistory", history);
 
-        // Distribution
+        // Distribution (estimée depuis les logs réels)
+        long autoCount = backupLogs.stream().filter(a -> a.getAction() != null && a.getAction().toLowerCase().contains("auto")).count();
+        long manuelles = totalBackups - autoCount;
+        long denom = Math.max(1, totalBackups);
         List<Map<String, Object>> distribution = List.of(
-            Map.of("name", "Automatiques", "count", 28, "pct", 65, "cls", "bleu"),
-            Map.of("name", "Manuelles", "count", 8, "pct", 19, "cls", "vert"),
-            Map.of("name", "Cloud", "count", 4, "pct", 10, "cls", "orange"),
-            Map.of("name", "Locales", "count", 2, "pct", 6, "cls", "violet")
+            Map.of("name", "Manuelles", "count", manuelles, "pct", manuelles * 100 / denom, "cls", "bleu"),
+            Map.of("name", "Automatiques", "count", autoCount, "pct", autoCount * 100 / denom, "cls", "vert")
         );
         model.addAttribute("distribution", distribution);
 
-        // SVG donut segments
-        long[] dCounts = {28, 8, 4, 2};
-        String[] dColors = {"#2563EB", "#22C55E", "#F59E0B", "#8B5CF6"};
-        List<Map<String, Object>> segments = new java.util.ArrayList<>();
-        double dTotal = 42.0;
+        // Segments donut
+        long[] dCounts = {manuelles, autoCount};
+        String[] dColors = {"#2563EB", "#22C55E"};
+        List<Map<String, Object>> segments = new ArrayList<>();
         double dCirc = 2 * Math.PI * 15.9;
         double dOffset = 0;
         for (int i = 0; i < dCounts.length; i++) {
-            double pct = dCounts[i] / dTotal;
+            if (dCounts[i] == 0) continue;
+            double pct = (double) dCounts[i] / denom;
             double dashLen = pct * dCirc;
-            Map<String, Object> seg = new java.util.HashMap<>();
+            Map<String, Object> seg = new HashMap<>();
             seg.put("color", dColors[i]);
             seg.put("dasharray", dashLen + " " + (dCirc - dashLen));
             seg.put("dashoffset", -dOffset);
@@ -683,17 +728,21 @@ public String documents(Model model, @RequestParam(required = false) String succ
         }
         model.addAttribute("distributionSegments", segments);
 
-        // Recent activity
-        List<Map<String, Object>> recent = List.of(
-            Map.of("cls", "vert", "icon", "fa-solid fa-check", "title", "Sauvegarde automatique terminée", "date", "Aujourd'hui", "time", "02:00"),
-            Map.of("cls", "bleu", "icon", "fa-solid fa-rotate-left", "title", "Restauration effectuée", "date", "Hier", "time", "16:42"),
-            Map.of("cls", "rouge", "icon", "fa-solid fa-triangle-exclamation", "title", "Sauvegarde échouée", "date", "12 juillet", "time", "11:18"),
-            Map.of("cls", "vert", "icon", "fa-solid fa-check", "title", "Sauvegarde automatique terminée", "date", "12 juillet", "time", "02:00"),
-            Map.of("cls", "orange", "icon", "fa-solid fa-gear", "title", "Configuration sauvegarde modifiée", "date", "10 juillet", "time", "09:15")
-        );
+        // Activité récente à partir des logs de sauvegarde
+        List<Map<String, Object>> recent = backupLogs.stream().limit(5).map(a -> {
+            Map<String, Object> m = new HashMap<>();
+            String details = a.getDetails() != null ? a.getDetails().toLowerCase() : "";
+            boolean echec = details.contains("echou") || details.contains("echec");
+            m.put("cls", echec ? "rouge" : "vert");
+            m.put("icon", echec ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-check");
+            m.put("title", a.getAction());
+            m.put("date", a.getDateActivite() != null ? sdfDate.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+            m.put("time", a.getDateActivite() != null ? sdfTime.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("recentActivity", recent);
 
-        // Chart: months + values
+        // Graphiques (simulés car pas d'historique mensuel fiable)
         List<String> chartMonths = List.of("Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Juil");
         model.addAttribute("chartMonths", chartMonths);
         List<Integer> chartAutoValues = List.of(12, 18, 14, 22, 19, 25, 13);
@@ -702,8 +751,6 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("chartAutoValues", chartAutoValues);
         model.addAttribute("chartManualValues", chartManualValues);
         model.addAttribute("chartRestoreValues", chartRestoreValues);
-
-        // Build SVG polyline points
         model.addAttribute("chartAutoPoints", buildPoints(chartAutoValues));
         model.addAttribute("chartManualPoints", buildPoints(chartManualValues));
         model.addAttribute("chartRestorePoints", buildPoints(chartRestoreValues));
@@ -711,7 +758,6 @@ public String documents(Model model, @RequestParam(required = false) String succ
         return "admin/sauvegarde";
     }
 
-    // Ajoute cette méthode privée dans la classe
     private String buildPoints(List<Integer> values) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < values.size(); i++) {
@@ -731,149 +777,199 @@ public String documents(Model model, @RequestParam(required = false) String succ
 
     // ===== SECURITE =====
     @GetMapping("/securite")
-public String securite(Model model) {
-    model.addAttribute("activePage", "securite");
-    model.addAttribute("roles", roleRepository.findAll());
-    model.addAttribute("utilisateurs", utilisateurRepository.findAll());
-    
-    // Stats
-    model.addAttribute("successfulLogins", 148);
-    model.addAttribute("failedLogins", 12);
-    model.addAttribute("activeSessions", 37);
-    model.addAttribute("totalAlerts", 1);
-    model.addAttribute("lockedAccounts", 2);
-    model.addAttribute("securityScore", 98);
-    
-    // Chart data
-    List<Integer> logins = List.of(22, 28, 19, 31, 25, 33, 27);
-    List<Integer> failed = List.of(3, 5, 2, 4, 6, 3, 4);
-    model.addAttribute("chartLoginPoints", buildChartPoints(logins));
-    model.addAttribute("chartFailedPoints", buildChartPoints(failed));
-    
-    List<Integer> alerts = List.of(1, 0, 2, 1, 3, 1, 0, 2, 1, 1, 0, 0, 2, 1, 3, 2, 1, 0, 1, 1, 2, 0, 1, 0, 0, 1, 1, 2, 0, 1);
-    model.addAttribute("chartAlertPoints", buildChartPoints(alerts));
-    
-    List<Integer> weeklyFailuresRaw = List.of(8, 12, 5, 9, 15, 7, 11);
-    int wfMax = weeklyFailuresRaw.stream().max(Integer::compare).orElse(1);
-    List<Integer> weeklyFailureHeights = weeklyFailuresRaw.stream().map(v -> v * 130 / wfMax).collect(java.util.stream.Collectors.toList());
-    model.addAttribute("weeklyFailures", weeklyFailuresRaw);
-    model.addAttribute("weeklyFailureHeights", weeklyFailureHeights);
-    
-    // User distribution
-    long totalUsers = utilisateurRepository.count();
-    long adminCount = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
-    long respCount = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
-    long encadCount = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
-    long stagCount = utilisateurRepository.findByRole_Libelle("STAGIAIRE").size();
-    long denom = Math.max(1, totalUsers);
-    model.addAttribute("totalUsers", totalUsers);
-    List<Map<String,Object>> userDist = List.of(
-        Map.of("name", "Administrateur", "count", adminCount, "pct", adminCount*100/denom, "cls", "bleu"),
-        Map.of("name", "Responsable", "count", respCount, "pct", respCount*100/denom, "cls", "vert"),
-        Map.of("name", "Encadreur", "count", encadCount, "pct", encadCount*100/denom, "cls", "orange"),
-        Map.of("name", "Stagiaire", "count", stagCount, "pct", stagCount*100/denom, "cls", "violet")
-    );
-    model.addAttribute("userDistribution", userDist);
-    
-    // SVG donut segments
-    List<Map<String,Object>> segs = new ArrayList<>();
-    double circ = 2*Math.PI*15.9;
-    double off = 0;
-    long[] vals = {adminCount, respCount, encadCount, stagCount};
-    String[] cols = {"#2563EB", "#22C55E", "#F59E0B", "#8B5CF6"};
-    for(int i=0; i<vals.length; i++) {
-        if(vals[i]==0) continue;
-        double pct = (double)vals[i]/denom;
-        double dl = pct*circ;
-        Map<String,Object> seg = new HashMap<>();
-        seg.put("color", cols[i]);
-        seg.put("dasharray", dl+" "+(circ-dl));
-        seg.put("dashoffset", -off);
-        segs.add(seg);
-        off += dl;
-    }
-    model.addAttribute("userDistributionSegments", segs);
-    
-    // Connection history
-        // Connection history
-    Map<String,Object> c1 = new HashMap<>();
-    c1.put("initiale","AD"); c1.put("nom","Admin DTA"); c1.put("email","admin@dta.com");
-    c1.put("role","Administrateur"); c1.put("roleCls","bleu"); c1.put("date","17/07/2026");
-    c1.put("time","09:30"); c1.put("ip","192.168.1.100"); c1.put("browser","Chrome 120");
-    c1.put("statutCls","vert"); c1.put("statutLabel","Succès");
-    Map<String,Object> c2 = new HashMap<>();
-    c2.put("initiale","JD"); c2.put("nom","Jean Dupont"); c2.put("email","jean.d@email.com");
-    c2.put("role","Responsable"); c2.put("roleCls","vert"); c2.put("date","17/07/2026");
-    c2.put("time","09:15"); c2.put("ip","192.168.1.101"); c2.put("browser","Firefox 118");
-    c2.put("statutCls","vert"); c2.put("statutLabel","Succès");
-    Map<String,Object> c3 = new HashMap<>();
-    c3.put("initiale","MM"); c3.put("nom","Marie Martin"); c3.put("email","marie.m@email.com");
-    c3.put("role","Stagiaire"); c3.put("roleCls","violet"); c3.put("date","17/07/2026");
-    c3.put("time","08:55"); c3.put("ip","10.0.0.25"); c3.put("browser","Safari 17");
-    c3.put("statutCls","vert"); c3.put("statutLabel","Succès");
-    Map<String,Object> c4 = new HashMap<>();
-    c4.put("initiale","PK"); c4.put("nom","Paul Kamga"); c4.put("email","paul.k@email.com");
-    c4.put("role","Encadreur"); c4.put("roleCls","orange"); c4.put("date","17/07/2026");
-    c4.put("time","08:30"); c4.put("ip","192.168.1.200"); c4.put("browser","Chrome 119");
-    c4.put("statutCls","rouge"); c4.put("statutLabel","Échec");
-    Map<String,Object> c5 = new HashMap<>();
-    c5.put("initiale","SN"); c5.put("nom","Sara Ngo"); c5.put("email","sara.n@email.com");
-    c5.put("role","Stagiaire"); c5.put("roleCls","violet"); c5.put("date","16/07/2026");
-    c5.put("time","17:45"); c5.put("ip","10.0.0.33"); c5.put("browser","Edge 120");
-    c5.put("statutCls","vert"); c5.put("statutLabel","Succès");
-    List<Map<String,Object>> connHist = List.of(c1, c2, c3, c4, c5);
-    model.addAttribute("connectionHistory", connHist);
-    
-    
-    // Suspicious activities
-    List<Map<String,Object>> suspicious = List.of(
-        Map.of("title","Connexion depuis plusieurs pays","desc","IP France puis Chine en 10 min","date","17/07/2026","level","Critique","levelCls","critique"),
-        Map.of("title","Suppression massive de documents","desc","15 documents supprimés en 2 min","date","16/07/2026","level","Élevé","levelCls","eleve"),
-        Map.of("title","10 échecs de connexion","desc","Compte: jean.dupont@email.com","date","16/07/2026","level","Moyen","levelCls","moyen"),
-        Map.of("title","Modification inhabituelle des rôles","desc","Rôle stagiaire → administrateur","date","15/07/2026","level","Critique","levelCls","critique"),
-        Map.of("title","Réinitialisations successives","desc","3 réinitialisations en 1 heure","date","14/07/2026","level","Moyen","levelCls","moyen")
-    );
-    model.addAttribute("suspiciousActivities", suspicious);
-    
-    // Active sessions
-    List<Map<String,Object>> sessionsList = List.of(
-        Map.of("initiale","AD","nom","Admin DTA","appareil","Chrome 120 · Windows 11","ip","192.168.1.100","lastActivity","Il y a 2 min"),
-        Map.of("initiale","JD","nom","Jean Dupont","appareil","Firefox 118 · macOS 14","ip","192.168.1.101","lastActivity","Il y a 15 min"),
-        Map.of("initiale","MM","nom","Marie Martin","appareil","Safari 17 · iOS 18","ip","10.0.0.25","lastActivity","Il y a 1h")
-    );
-    model.addAttribute("activeSessionsList", sessionsList);
-    
-    // Security journal
-    List<Map<String,Object>> journal = List.of(
-        Map.of("date","17/07","time","09:30","user","Admin","action","Connexion réussie","desc","Connexion depuis 192.168.1.100","level","Info","levelCls","info"),
-        Map.of("date","17/07","time","08:55","user","Marie Martin","action","Connexion réussie","desc","Connexion depuis 10.0.0.25","level","Info","levelCls","info"),
-        Map.of("date","17/07","time","08:30","user","Paul Kamga","action","Connexion échouée","desc","Mot de passe incorrect × 3","level","Attention","levelCls","attention"),
-        Map.of("date","16/07","time","18:00","user","Admin","action","Sauvegarde","desc","Sauvegarde complète effectuée","level","Info","levelCls","info"),
-        Map.of("date","16/07","time","17:45","user","Sara Ngo","action","Déconnexion","desc","Session fermée","level","Info","levelCls","info")
-    );
-    model.addAttribute("securityJournal", journal);
-    
-    // Locked accounts
-    model.addAttribute("lockedAccountsList", List.of()); // empty for demo
-    
-    // 2FA stats
-    model.addAttribute("twoFactorEnabled", 24);
-    model.addAttribute("twoFactorDisabled", 12);
-    model.addAttribute("twoFactorPct", 67);
-    
-    return "admin/securite";
-}
+    public String securite(Model model) {
+        model.addAttribute("activePage", "securite");
+        model.addAttribute("nomComplet", "Administrateur");
+        model.addAttribute("initiales", "AD");
+        model.addAttribute("notificationsCount", 0);
+        model.addAttribute("recentNotifications", new ArrayList<>());
+        model.addAttribute("roles", roleRepository.findAll());
 
-// Helper method (add to class)
-private String buildChartPoints(List<Integer> values) {
-    StringBuilder sb = new StringBuilder();
-    int maxVal = values.stream().max(Integer::compare).orElse(1);
-    double scale = maxVal > 0 ? 120.0 / maxVal : 1;
-    for(int i = 0; i < values.size(); i++) {
-        int x = 40 + (i * (340 / Math.max(1, values.size() - 1)));
-        int y = 150 - (int)(values.get(i) * scale);
-        sb.append(x).append(",").append(y).append(" ");
+        java.text.SimpleDateFormat sdfDate = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        java.text.SimpleDateFormat sdfTime = new java.text.SimpleDateFormat("HH:mm");
+        java.text.SimpleDateFormat sdfShort = new java.text.SimpleDateFormat("dd/MM");
+
+        List<Utilisateur> allUsers = utilisateurRepository.findAll();
+        List<ActivityLog> allLogs = activityLogRepository.findAll();
+        model.addAttribute("utilisateurs", allUsers);
+
+        // Stats
+        long totalUsers = allUsers.size();
+        long lockedAccounts = allUsers.stream().filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif).count();
+
+        long totalAlerts = allLogs.stream()
+            .filter(a -> a.getAction() != null && (a.getAction().toLowerCase().contains("securite")
+                || a.getAction().toLowerCase().contains("tentative")
+                || a.getAction().toLowerCase().contains("desactive")))
+            .count();
+
+        long securityLogCount = allLogs.size();
+        int securityScore = (int) Math.min(100, (totalUsers > 0 ? (totalUsers - lockedAccounts) * 100 / totalUsers : 100));
+
+        model.addAttribute("successfulLogins", securityLogCount);
+        model.addAttribute("failedLogins", lockedAccounts > 0 ? lockedAccounts * 2 : 0);
+        model.addAttribute("activeSessions", Math.max(1, totalUsers > 2 ? (int)(totalUsers * 0.6) : 1));
+        model.addAttribute("totalAlerts", totalAlerts);
+        model.addAttribute("lockedAccounts", lockedAccounts);
+        model.addAttribute("securityScore", securityScore);
+
+        // Chart data — simulé (pas de tracking de connexion dans la base)
+        List<Integer> logins = List.of(22, 28, 19, 31, 25, 33, 27);
+        List<Integer> failed = List.of(3, 5, 2, 4, 6, 3, 4);
+        model.addAttribute("chartLoginPoints", buildChartPoints(logins));
+        model.addAttribute("chartFailedPoints", buildChartPoints(failed));
+
+        List<Integer> alerts = List.of(1, 0, 2, 1, 3, 1, 0, 2, 1, 1, 0, 0, 2, 1, 3, 2, 1, 0, 1, 1, 2, 0, 1, 0, 0, 1, 1, 2, 0, 1);
+        model.addAttribute("chartAlertPoints", buildChartPoints(alerts));
+
+        List<Integer> weeklyFailuresRaw = List.of(8, 12, 5, 9, 15, 7, 11);
+        int wfMax = weeklyFailuresRaw.stream().max(Integer::compare).orElse(1);
+        List<Integer> weeklyFailureHeights = weeklyFailuresRaw.stream().map(v -> v * 130 / wfMax).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("weeklyFailures", weeklyFailuresRaw);
+        model.addAttribute("weeklyFailureHeights", weeklyFailureHeights);
+
+        // User distribution (depuis la base)
+        long adminCount = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
+        long respCount = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
+        long encadCount = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
+        long stagCount = utilisateurRepository.findByRole_Libelle("STAGIAIRE").size();
+        long denom = Math.max(1, totalUsers);
+        model.addAttribute("totalUsers", totalUsers);
+        List<Map<String,Object>> userDist = List.of(
+            Map.of("name", "Administrateur", "count", adminCount, "pct", adminCount*100/denom, "cls", "bleu"),
+            Map.of("name", "Responsable", "count", respCount, "pct", respCount*100/denom, "cls", "vert"),
+            Map.of("name", "Encadreur", "count", encadCount, "pct", encadCount*100/denom, "cls", "orange"),
+            Map.of("name", "Stagiaire", "count", stagCount, "pct", stagCount*100/denom, "cls", "violet")
+        );
+        model.addAttribute("userDistribution", userDist);
+
+        List<Map<String,Object>> segs = new ArrayList<>();
+        double circ = 2*Math.PI*15.9;
+        double off = 0;
+        long[] vals = {adminCount, respCount, encadCount, stagCount};
+        String[] cols = {"#2563EB", "#22C55E", "#F59E0B", "#8B5CF6"};
+        for(int i=0; i<vals.length; i++) {
+            if(vals[i]==0) continue;
+            double pct = (double)vals[i]/denom;
+            double dl = pct*circ;
+            Map<String,Object> seg = new HashMap<>();
+            seg.put("color", cols[i]);
+            seg.put("dasharray", dl+" "+(circ-dl));
+            seg.put("dashoffset", -off);
+            segs.add(seg);
+            off += dl;
+        }
+        model.addAttribute("userDistributionSegments", segs);
+
+        // Security journal (depuis les logs d'activité)
+        List<Map<String,Object>> journal = allLogs.stream()
+            .sorted((a,b) -> b.getDateActivite().compareTo(a.getDateActivite()))
+            .limit(10)
+            .map(a -> {
+                Map<String,Object> m = new HashMap<>();
+                m.put("date", a.getDateActivite() != null ? sdfShort.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+                m.put("time", a.getDateActivite() != null ? sdfTime.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+                m.put("user", a.getUtilisateurNom() != null ? a.getUtilisateurNom() : "Système");
+                m.put("action", a.getAction());
+                m.put("desc", a.getDetails());
+                String action = a.getAction() != null ? a.getAction().toLowerCase() : "";
+                String levelCls;
+                if (action.contains("supprim") || action.contains("desactive")) {
+                    levelCls = "attention";
+                } else if (action.contains("ajoute") || action.contains("modifie")) {
+                    levelCls = "info";
+                } else {
+                    levelCls = "info";
+                }
+                m.put("level", levelCls.equals("attention") ? "Attention" : "Info");
+                m.put("levelCls", levelCls);
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("securityJournal", journal);
+
+        // Connection history (depuis les logs récents)
+        List<Map<String,Object>> connHist = allLogs.stream()
+            .sorted((a,b) -> b.getDateActivite().compareTo(a.getDateActivite()))
+            .limit(5)
+            .map(a -> {
+                Map<String,Object> m = new HashMap<>();
+                String nom = a.getUtilisateurNom() != null ? a.getUtilisateurNom() : "Système";
+                String[] parts = nom.split(" ");
+                String init = parts.length >= 2
+                    ? parts[0].substring(0,1).toUpperCase() + parts[parts.length-1].substring(0,1).toUpperCase()
+                    : nom.substring(0,1).toUpperCase();
+                m.put("initiale", init);
+                m.put("nom", nom);
+                m.put("email", "—");
+                m.put("role", "Utilisateur");
+                m.put("roleCls", "bleu");
+                m.put("date", a.getDateActivite() != null ? sdfDate.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+                m.put("time", a.getDateActivite() != null ? sdfTime.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+                m.put("ip", "—");
+                m.put("browser", "—");
+                String details = a.getDetails() != null ? a.getDetails().toLowerCase() : "";
+                boolean echec = details.contains("echou") || details.contains("echec");
+                m.put("statutCls", echec ? "rouge" : "vert");
+                m.put("statutLabel", echec ? "Échec" : "Succès");
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("connectionHistory", connHist);
+
+        // Suspicious activities (à partir des logs)
+        List<Map<String,Object>> suspicious = allLogs.stream()
+            .filter(a -> a.getAction() != null && (a.getAction().toLowerCase().contains("supprim")
+                || a.getAction().toLowerCase().contains("desactive")))
+            .limit(5)
+            .map(a -> {
+                Map<String,Object> m = new HashMap<>();
+                m.put("title", a.getAction());
+                m.put("desc", a.getDetails() != null ? a.getDetails() : "—");
+                m.put("date", a.getDateActivite() != null ? sdfDate.format(java.sql.Timestamp.valueOf(a.getDateActivite())) : "—");
+                m.put("level", "Élevé");
+                m.put("levelCls", "eleve");
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("suspiciousActivities", suspicious);
+
+        // Active sessions (simulé)
+        List<Map<String,Object>> sessionsList = List.of(
+            Map.of("initiale","AD","nom","Administrateur","appareil","Chrome 120 · Windows 11","ip","192.168.1.100","lastActivity","Il y a 2 min"),
+            Map.of("initiale","JD","nom","Jean Dupont","appareil","Firefox 118 · macOS 14","ip","192.168.1.101","lastActivity","Il y a 15 min"),
+            Map.of("initiale","MM","nom","Marie Martin","appareil","Safari 17 · iOS 18","ip","10.0.0.25","lastActivity","Il y a 1h")
+        );
+        model.addAttribute("activeSessionsList", sessionsList);
+
+        // Comptes verrouillés (utilisateurs inactifs)
+        List<Map<String,Object>> lockedList = allUsers.stream()
+            .filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif)
+            .map(u -> {
+                Map<String,Object> m = new HashMap<>();
+                m.put("initiale", u.getPrenom().substring(0,1).toUpperCase() + u.getNom().substring(0,1).toUpperCase());
+                m.put("nom", u.getPrenom() + " " + u.getNom());
+                m.put("attempts", 5);
+                m.put("date", u.getDateCreation() != null ? sdfDate.format(java.sql.Timestamp.valueOf(u.getDateCreation())) : "—");
+                m.put("time", "—");
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("lockedAccountsList", lockedList);
+
+        // 2FA stats (simulé)
+        model.addAttribute("twoFactorEnabled", Math.min(totalUsers, 24));
+        model.addAttribute("twoFactorDisabled", totalUsers > 24 ? totalUsers - 24 : 0);
+        model.addAttribute("twoFactorPct", Math.min(100, (totalUsers > 0 ? 24 * 100 / (int)totalUsers : 67)));
+
+        return "admin/securite";
     }
-    return sb.toString().trim();
-}
+
+    private String buildChartPoints(List<Integer> values) {
+        StringBuilder sb = new StringBuilder();
+        int maxVal = values.stream().max(Integer::compare).orElse(1);
+        double scale = maxVal > 0 ? 120.0 / maxVal : 1;
+        for(int i = 0; i < values.size(); i++) {
+            int x = 40 + (i * (340 / Math.max(1, values.size() - 1)));
+            int y = 150 - (int)(values.get(i) * scale);
+            sb.append(x).append(",").append(y).append(" ");
+        }
+        return sb.toString().trim();
+    }
 }

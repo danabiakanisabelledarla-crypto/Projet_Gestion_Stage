@@ -59,130 +59,165 @@ public class AdminController {
         this.messageRepository = messageRepository;
     }
 
-    // ============================================
-    // MÉTHODE DASHBOARD CORRIGÉE
-    // ============================================
     @GetMapping("/dashboard")
-    public String dashboard(
-            @RequestParam(value = "periode", defaultValue = "7") int periode,
-            Model model) {
+    public String dashboard(Model model) {
+        model.addAttribute("activePage", "dashboard");
+        model.addAttribute("nomComplet", "Administrateur");
+        model.addAttribute("initiales", "AD");
 
-        // --- STATISTIQUES ---
-        model.addAttribute("statUtilisateurs", 128);
-        model.addAttribute("statStagiaires", 72);
-        model.addAttribute("statEncadreurs", 18);
-        model.addAttribute("statResponsables", 6);
-        model.addAttribute("statDocuments", 256);
-        model.addAttribute("statActivites", 342);
-        model.addAttribute("totalConnexions", 126);
+        // --- STATISTIQUES DEPUIS LA BASE ---
+        long totalUsers = utilisateurRepository.count();
+        long totalStagiaires = stagiaireRepository.count();
+        long totalEncadreurs = encadreurRepository.count();
+        long totalResp = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
+        long totalDocs = documentRepository.count();
+        long totalLogs = activityLogRepository.count();
 
-        // --- ACTIVITÉS RÉCENTES ---
-        List<Map<String, String>> activitesRecentes = new ArrayList<>();
-        
-        Map<String, String> act1 = new HashMap<>();
-        act1.put("icone", "fas fa-user-plus");
-        act1.put("couleur", "bleu-clair");
-        act1.put("message", "Nouvel utilisateur créé");
-        act1.put("temps", "Il y a 2 min");
-        activitesRecentes.add(act1);
-        
-        Map<String, String> act2 = new HashMap<>();
-        act2.put("icone", "fas fa-file-pdf");
-        act2.put("couleur", "vert-clair");
-        act2.put("message", "Document téléchargé");
-        act2.put("temps", "Il y a 15 min");
-        activitesRecentes.add(act2);
-        
-        Map<String, String> act3 = new HashMap<>();
-        act3.put("icone", "fas fa-times-circle");
-        act3.put("couleur", "rouge-clair");
-        act3.put("message", "Connexion échouée");
-        act3.put("temps", "Il y a 1h");
-        activitesRecentes.add(act3);
-        
-        Map<String, String> act4 = new HashMap<>();
-        act4.put("icone", "fas fa-database");
-        act4.put("couleur", "turquoise-clair");
-        act4.put("message", "Sauvegarde automatique");
-        act4.put("temps", "Il y a 2h");
-        activitesRecentes.add(act4);
-        
-        Map<String, String> act5 = new HashMap<>();
-        act5.put("icone", "fas fa-sliders-h");
-        act5.put("couleur", "orange-clair");
-        act5.put("message", "Paramètre modifié");
-        act5.put("temps", "Il y a 3h");
-        activitesRecentes.add(act5);
-        
+        model.addAttribute("statUtilisateurs", totalUsers);
+        model.addAttribute("statStagiaires", totalStagiaires);
+        model.addAttribute("statEncadreurs", totalEncadreurs);
+        model.addAttribute("statResponsables", totalResp);
+        model.addAttribute("statDocuments", totalDocs);
+        model.addAttribute("statActivites", totalLogs);
+        model.addAttribute("totalConnexions", totalLogs);
+
+        // --- ACTIVITÉS RÉCENTES (depuis les logs) ---
+        List<ActivityLog> recentLogs = activityLogRepository.findTop50ByOrderByDateActiviteDesc();
+        List<Map<String, String>> activitesRecentes = recentLogs.stream().limit(5).map(a -> {
+            Map<String, String> m = new HashMap<>();
+            String action = a.getAction() != null ? a.getAction().toLowerCase() : "";
+            String icone;
+            String couleur;
+            if (action.contains("ajoute") || action.contains("cr")) {
+                icone = "fa-solid fa-user-plus"; couleur = "bleu-clair";
+            } else if (action.contains("sauvegarde")) {
+                icone = "fa-solid fa-database"; couleur = "vert-clair";
+            } else if (action.contains("supprim") || action.contains("desactive")) {
+                icone = "fa-solid fa-times-circle"; couleur = "rouge-clair";
+            } else if (action.contains("modifie")) {
+                icone = "fa-solid fa-sliders-h"; couleur = "orange-clair";
+            } else {
+                icone = "fa-solid fa-bolt"; couleur = "bleu";
+            }
+            m.put("icone", icone);
+            m.put("couleur", couleur);
+            m.put("message", a.getAction() != null ? a.getAction() : "Action");
+            if (a.getDateActivite() != null) {
+                long minutes = java.time.Duration.between(a.getDateActivite(), java.time.LocalDateTime.now()).toMinutes();
+                if (minutes < 1) m.put("temps", "À l'instant");
+                else if (minutes < 60) m.put("temps", "Il y a " + minutes + " min");
+                else if (minutes < 1440) m.put("temps", "Il y a " + (minutes / 60) + "h");
+                else m.put("temps", "Il y a " + (minutes / 1440) + " jours");
+            } else {
+                m.put("temps", "—");
+            }
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("activitesRecentes", activitesRecentes);
 
         // --- STATUT SYSTÈME ---
-        List<Map<String, String>> statutSysteme = new ArrayList<>();
-        
-        Map<String, String> stat1 = new HashMap<>();
-        stat1.put("icone", "fas fa-server");
-        stat1.put("nom", "Serveur");
-        stat1.put("statut", "Opérationnel");
-        stat1.put("couleur", "verte");
-        statutSysteme.add(stat1);
-        
-        Map<String, String> stat2 = new HashMap<>();
-        stat2.put("icone", "fas fa-database");
-        stat2.put("nom", "Base de données");
-        stat2.put("statut", "À jour");
-        stat2.put("couleur", "verte");
-        statutSysteme.add(stat2);
-        
-        Map<String, String> stat3 = new HashMap<>();
-        stat3.put("icone", "fas fa-hdd");
-        stat3.put("nom", "Stockage");
-        stat3.put("statut", "78% utilisé");
-        stat3.put("couleur", "orange");
-        statutSysteme.add(stat3);
-        
-        Map<String, String> stat4 = new HashMap<>();
-        stat4.put("icone", "fas fa-cloud-upload-alt");
-        stat4.put("nom", "Sauvegarde");
-        stat4.put("statut", "Aucun incident");
-        stat4.put("couleur", "verte");
-        statutSysteme.add(stat4);
-        
-        Map<String, String> stat5 = new HashMap<>();
-        stat5.put("icone", "fas fa-shield-alt");
-        stat5.put("nom", "Sécurité");
-        stat5.put("statut", "Protégé");
-        stat5.put("couleur", "verte");
-        statutSysteme.add(stat5);
-        
+        List<Map<String, String>> statutSysteme = List.of(
+            Map.of("icone", "fa-solid fa-server", "nom", "Serveur", "statut", "Opérationnel", "couleur", "verte"),
+            Map.of("icone", "fa-solid fa-database", "nom", "Base de données", "statut", "À jour", "couleur", "verte"),
+            Map.of("icone", "fa-solid fa-hdd", "nom", "Stockage", "statut", totalDocs * 5 / 32 + "% utilisé", "couleur", "orange"),
+            Map.of("icone", "fa-solid fa-cloud-upload-alt", "nom", "Sauvegarde", "statut", "Aucun incident", "couleur", "verte"),
+            Map.of("icone", "fa-solid fa-shield-alt", "nom", "Sécurité", "statut", "Protégé", "couleur", "verte")
+        );
         model.addAttribute("statutSysteme", statutSysteme);
 
-        // --- UTILISATEURS RÉCENTS ---
-        List<Map<String, String>> utilisateursRecents = new ArrayList<>();
-        
-        Map<String, String> user1 = new HashMap<>();
-        user1.put("avatar", "user1.jpg");
-        user1.put("nom", "Marie Dupont");
-        user1.put("role", "encadreur");
-        user1.put("temps", "2h");
-        utilisateursRecents.add(user1);
-        
-        Map<String, String> user2 = new HashMap<>();
-        user2.put("avatar", "user2.jpg");
-        user2.put("nom", "Jean Martin");
-        user2.put("role", "stagiaire");
-        user2.put("temps", "4h");
-        utilisateursRecents.add(user2);
-        
-        Map<String, String> user3 = new HashMap<>();
-        user3.put("avatar", "user3.jpg");
-        user3.put("nom", "Sophie Legrand");
-        user3.put("role", "responsable");
-        user3.put("temps", "6h");
-        utilisateursRecents.add(user3);
-        
+        // --- UTILISATEURS RÉCENTS (depuis la base) ---
+        List<Map<String, String>> utilisateursRecents = utilisateurRepository.findAll().stream()
+            .sorted((a,b) -> b.getDateCreation().compareTo(a.getDateCreation()))
+            .limit(3)
+            .map(u -> {
+                Map<String, String> m = new HashMap<>();
+                m.put("nom", u.getPrenom() + " " + u.getNom());
+                String role = u.getRole().getLibelle().toLowerCase();
+                m.put("role", role.contains("encadreur") ? "encadreur" : role.contains("responsable") ? "responsable" : "stagiaire");
+                if (u.getDateCreation() != null) {
+                    long minutes = java.time.Duration.between(u.getDateCreation(), java.time.LocalDateTime.now()).toMinutes();
+                    if (minutes < 60) m.put("temps", minutes + " min");
+                    else if (minutes < 1440) m.put("temps", (minutes / 60) + "h");
+                    else m.put("temps", (minutes / 1440) + "j");
+                } else {
+                    m.put("temps", "—");
+                }
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("utilisateursRecents", utilisateursRecents);
 
+        // --- DONNÉES POUR LES GRAPHIQUES ---
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEEE");
+        List<String> joursSemaine = List.of("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim");
+        model.addAttribute("chartDays", joursSemaine);
+
+        List<Integer> connexionsValues = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            java.time.LocalDate day = java.time.LocalDate.now().minusDays(i);
+            long count = recentLogs.stream()
+                .filter(a -> a.getDateActivite() != null && a.getDateActivite().toLocalDate().equals(day))
+                .count();
+            connexionsValues.add(0, (int) count);
+        }
+        model.addAttribute("chartConnexionsValues", connexionsValues);
+        int maxVal = connexionsValues.stream().max(Integer::compare).orElse(1);
+        int step1 = connexionsValues.size() > 1 ? 680 / (connexionsValues.size() - 1) : 680;
+        int step2 = connexionsValues.size() > 1 ? 700 / (connexionsValues.size() - 1) : 700;
+        model.addAttribute("chartConnexionsMax", maxVal == 0 ? 1 : maxVal);
+        model.addAttribute("chartConnexionsStep1", step1);
+        model.addAttribute("chartConnexionsStep2", step2);
+        model.addAttribute("chartConnexionsPointsCompact",
+                buildDashboardPoints(connexionsValues, 680, 170, 120));
+        model.addAttribute("chartConnexionsPoints",
+                buildDashboardPoints(connexionsValues, 700, 190, 150));
+
+        // Répartition des utilisateurs
+        long adminCount = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
+        long respCount = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
+        long encadCount = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
+        long stagCount = utilisateurRepository.findByRole_Libelle("STAGIAIRE").size();
+        long denom = Math.max(1, totalUsers);
+        model.addAttribute("distStagiaires", stagCount);
+        model.addAttribute("distEncadreurs", encadCount);
+        model.addAttribute("distResponsables", respCount);
+        model.addAttribute("distAdmins", adminCount);
+        model.addAttribute("pctStagiaires", stagCount * 100 / denom);
+        model.addAttribute("pctEncadreurs", encadCount * 100 / denom);
+        model.addAttribute("pctResponsables", respCount * 100 / denom);
+        model.addAttribute("pctAdmins", adminCount * 100 / denom);
+        model.addAttribute("donutStagiaires", buildDonutSegment(stagCount, denom));
+        model.addAttribute("donutEncadreurs", buildDonutSegment(encadCount, denom));
+        model.addAttribute("donutResponsables", buildDonutSegment(respCount, denom));
+        model.addAttribute("donutAdmins", buildDonutSegment(adminCount, denom));
+        model.addAttribute("donutOffsetEncadreurs", buildDonutOffset(stagCount, denom));
+        model.addAttribute("donutOffsetResponsables", buildDonutOffset(stagCount + encadCount, denom));
+        model.addAttribute("donutOffsetAdmins", buildDonutOffset(stagCount + encadCount + respCount, denom));
+
         return "admin/dashboard";
+    }
+
+    private String buildDashboardPoints(List<Integer> values, int width, int baseline, int chartHeight) {
+        StringBuilder sb = new StringBuilder();
+        int max = values.stream().max(Integer::compare).orElse(1);
+        if (max == 0) max = 1;
+        double scale = (double) chartHeight / max;
+        int spacing = width / Math.max(1, values.size() - 1);
+        for (int i = 0; i < values.size(); i++) {
+            int x = 50 + i * spacing;
+            int y = baseline - (int) (values.get(i) * scale);
+            sb.append(x).append(",").append(y).append(" ");
+        }
+        return sb.toString().trim();
+    }
+
+    private String buildDonutSegment(long value, long total) {
+        double segment = value * 99.9 / Math.max(1, total);
+        return String.format(java.util.Locale.ROOT, "%.2f %.2f", segment, 99.9 - segment);
+    }
+
+    private String buildDonutOffset(long precedingValues, long total) {
+        double offset = precedingValues * 99.9 / Math.max(1, total);
+        return String.format(java.util.Locale.ROOT, "-%.2f", offset);
     }
 
     // ============================================

@@ -2,6 +2,7 @@ package com.gestionstages.gestion_stages.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "evenements_personnels")
@@ -24,6 +25,17 @@ public class EvenementPersonnel {
     @Column(length = 50)
     private String typeCouleur = "personnel";
 
+    private LocalTime heure;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(length = 30)
+    private String priorite = "moyenne";
+
+    @Column(length = 30)
+    private String rappel = "1_heure";
+
     public EvenementPersonnel() {}
 
     public EvenementPersonnel(Stage stage, String motif, LocalDate date, String typeCouleur) {
@@ -43,4 +55,12 @@ public class EvenementPersonnel {
     public void setDate(LocalDate date) { this.date = date; }
     public String getTypeCouleur() { return typeCouleur; }
     public void setTypeCouleur(String typeCouleur) { this.typeCouleur = typeCouleur; }
+    public LocalTime getHeure() { return heure; }
+    public void setHeure(LocalTime heure) { this.heure = heure; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getPriorite() { return priorite; }
+    public void setPriorite(String priorite) { this.priorite = priorite; }
+    public String getRappel() { return rappel; }
+    public void setRappel(String rappel) { this.rappel = rappel; }
 }
