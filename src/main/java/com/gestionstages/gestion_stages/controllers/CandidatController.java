@@ -59,7 +59,8 @@ public String soumettreFormulaire(
 
     DemandeStage demande = new DemandeStage(nom, prenom, ecole,
             filiere, niveau, dureeSouhaitee);
-    demande.setCommentaire("Email candidat : " + email);
+    demande.setEmail(email.trim().toLowerCase());
+    demande.setCommentaire("Email candidat : " + demande.getEmail());
     demandeStageRepository.save(demande);
 
     try {
@@ -99,10 +100,10 @@ public String soumettreFormulaire(
 
         @PostMapping("/suivi")
         public String rechercherDemande(@RequestParam String email, Model model) {
-            // On cherche la demande par l'email stocké dans le commentaire
             demandeStageRepository.findAll().stream()
-                    .filter(d -> d.getCommentaire() != null
-                            && d.getCommentaire().equals("Email candidat : " + email))
+                    .filter(d -> (d.getEmail() != null && d.getEmail().equalsIgnoreCase(email.trim()))
+                            || (d.getCommentaire() != null
+                            && d.getCommentaire().equalsIgnoreCase("Email candidat : " + email.trim())))
                     .findFirst()
                     .ifPresentOrElse(
                             demande -> model.addAttribute("demande", demande),

@@ -1,6 +1,7 @@
 package com.gestionstages.gestion_stages.controllers;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.HashMap;
 
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
@@ -28,8 +29,10 @@ public class EncadreurController {
     private final CritereEvaluationRepository critereRepository;
     private final EvaluationRepository evaluationRepository;
     private final NoteEvaluationRepository noteRepository;
-    
     private final ObjectifRepository objectifRepository;
+    private final StagiaireRepository stagiaireRepository;
+    private final UtilisateurRepository utilisateurRepository;
+
     public EncadreurController(EncadreurRepository encadreurRepository,
                            StageRepository stageRepository,
                            TacheRepository tacheRepository,
@@ -37,7 +40,9 @@ public class EncadreurController {
                            ObjectifRepository objectifRepository,
                            CritereEvaluationRepository critereRepository,
                            EvaluationRepository evaluationRepository,
-                           NoteEvaluationRepository noteRepository) {
+                           NoteEvaluationRepository noteRepository,
+                           StagiaireRepository stagiaireRepository,
+                           UtilisateurRepository utilisateurRepository) {
             this.encadreurRepository = encadreurRepository;
             this.stageRepository = stageRepository;
             this.tacheRepository = tacheRepository;
@@ -46,12 +51,74 @@ public class EncadreurController {
             this.evaluationRepository = evaluationRepository;
             this.noteRepository = noteRepository;
             this.objectifRepository = objectifRepository;
+            this.stagiaireRepository = stagiaireRepository;
+            this.utilisateurRepository = utilisateurRepository;
 }
 
     private Encadreur getEncadreur(CustomUserDetails userDetails) {
         return encadreurRepository
                 .findByUtilisateurId(userDetails.getUtilisateur().getId())
                 .orElse(null);
+    }
+
+    @GetMapping("/mes-stagiaires")
+    public String mesStagiaires(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        Encadreur encadreur = getEncadreur(userDetails);
+        if (encadreur == null) {
+            return "redirect:/login";
+        }
+
+        // Récupérer les stages de cet encadreur
+        List<Stage> stages = stageRepository.findByEncadreurId(encadreur.getId());
+        
+        // Récupérer les stagiaires associés à ces stages
+        List<Map<String, Object>> stagiairesData = new ArrayList<>();
+        long stagesActifs = 0;
+        long evaluationsCompletes = 0;
+
+        for (Stage stage : stages) {
+            if (stage.getStagiaire() != null) {
+                Stagiaire stagiaire = stage.getStagiaire();
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", stagiaire.getId());
+                data.put("utilisateur", stagiaire.getUtilisateur());
+                data.put("matricule", stagiaire.getMatricule());
+                data.put("demandeStage", stagiaire.getDemandeStage());
+                data.put("stage", stage);
+                
+                // Calculer la progression
+                if (stage.getDateDebut() != null && stage.getDateFin() != null) {
+                    long total = java.time.temporal.ChronoUnit.DAYS.between(stage.getDateDebut(), stage.getDateFin());
+                    long ecoule = java.time.temporal.ChronoUnit.DAYS.between(stage.getDateDebut(), java.time.LocalDate.now());
+                    int progression = total > 0 ? (int) Math.min(100, Math.max(0, ecoule * 100 / total)) : 0;
+                    data.put("progression", progression);
+                } else {
+                    data.put("progression", 0);
+                }
+
+                stagiairesData.add(data);
+
+                if (stage.getStatut() == Stage.StatutStage.en_cours) {
+                    stagesActifs++;
+                }
+
+                // Compter les évaluations complètes
+                long evalsCount = evaluationRepository.findByStageId(stage.getId()).stream()
+                    .filter(e -> e.getTypeEvaluation() == Evaluation.TypeEvaluation.finale)
+                    .count();
+                if (evalsCount > 0) {
+                    evaluationsCompletes++;
+                }
+            }
+        }
+
+        model.addAttribute("stagiaires", stagiairesData);
+        model.addAttribute("totalStagiaires", stagiairesData.size());
+        model.addAttribute("stagesActifs", stagesActifs);
+        model.addAttribute("evaluationsCompletes", evaluationsCompletes);
+        model.addAttribute("activePage", "mes-stagiaires");
+
+        return "encadreur/mes-stagiaires";
     }
 
     @GetMapping("/dashboard")
@@ -241,15 +308,6 @@ public String rejeterLivrable(@PathVariable Integer id) {
         livrableRepository.save(livrable);
     });
     return "redirect:/encadreur/livrables";
-}
-
-@GetMapping("/mes-stagiaires")
-public String mesStagiaires(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-    model.addAttribute("activePage", "mes-stagiaires");
-    Encadreur encadreur = getEncadreur(userDetails);
-    List<Stage> stages = encadreur != null ? stageRepository.findByEncadreurId(encadreur.getId()) : List.of();
-    model.addAttribute("stages", stages);
-    return "encadreur/mes-stagiaires";
 }
 
 @GetMapping("/planning")

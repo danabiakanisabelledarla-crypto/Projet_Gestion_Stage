@@ -14,10 +14,11 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void envoyerConfirmationAdmission(String destinataire,
+    public boolean envoyerConfirmationAdmission(String destinataire,
                                               String prenomNom,
                                               String emailCompte,
                                               String motDePasse) {
+        if (!destinataireValide(destinataire)) return false;
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -102,15 +103,18 @@ public class EmailService {
             helper.setText(contenu, true);
             mailSender.send(message);
             System.out.println(">>> Email envoye a : " + destinataire);
+            return true;
 
         } catch (Exception e) {
             System.err.println(">>> Erreur envoi email : " + e.getMessage());
+            return false;
         }
     }
 
-    public void envoyerRefusDemande(String destinataire,
+    public boolean envoyerRefusDemande(String destinataire,
                                     String prenomNom,
                                     String motifRefus) {
+        if (!destinataireValide(destinataire)) return false;
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -138,16 +142,19 @@ public class EmailService {
             helper.setText(contenu, true);
             mailSender.send(message);
             System.out.println(">>> Email de refus envoyé à : " + destinataire);
+            return true;
         } catch (Exception e) {
             System.err.println(">>> Erreur envoi email de refus : " + e.getMessage());
+            return false;
         }
     }
 
-    public void envoyerChangementRole(String destinataire,
+    public boolean envoyerChangementRole(String destinataire,
                                       String nomComplet,
                                       String telephone,
                                       String role,
                                       java.util.Collection<String> permissions) {
+        if (!destinataireValide(destinataire)) return false;
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -179,8 +186,50 @@ public class EmailService {
 
             helper.setText(contenu, true);
             mailSender.send(message);
+            return true;
         } catch (Exception e) {
             System.err.println(">>> Erreur envoi email de changement de rôle : " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean envoyerDecisionDemande(String destinataire,
+                                           String nomComplet,
+                                           boolean acceptee,
+                                           String motif) {
+        if (!destinataireValide(destinataire)) return false;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("innotechlab26@gmail.com");
+            helper.setTo(destinataire);
+            helper.setSubject(acceptee
+                    ? "Votre demande de stage a été acceptée"
+                    : "Décision concernant votre demande de stage");
+
+            String couleur = acceptee ? "#16a34a" : "#dc2626";
+            String titre = acceptee ? "Demande acceptée" : "Demande refusée";
+            String detail = acceptee
+                    ? "Votre demande a été acceptée. Le service chargé des stages vous communiquera les prochaines étapes."
+                    : "Votre demande n'a pas été retenue."
+                    + (motif == null || motif.isBlank()
+                    ? ""
+                    : "<br><br><strong>Motif :</strong> " + echapperHtml(motif));
+
+            String contenu = "<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:20px'>"
+                    + "<div style='background:#1d4ed8;color:white;padding:22px;border-radius:10px 10px 0 0'>"
+                    + "<h1 style='font-size:20px;margin:0'>Gestion des Stages</h1></div>"
+                    + "<div style='border:1px solid #dbe4f0;border-top:0;padding:28px;background:white'>"
+                    + "<h2 style='color:" + couleur + ";margin-top:0'>" + titre + "</h2>"
+                    + "<p>Bonjour <strong>" + echapperHtml(nomComplet) + "</strong>,</p>"
+                    + "<p style='line-height:1.65;color:#334155'>" + detail + "</p>"
+                    + "</div></div>";
+            helper.setText(contenu, true);
+            mailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            System.err.println(">>> Erreur envoi email de décision : " + e.getMessage());
+            return false;
         }
     }
 
@@ -191,5 +240,10 @@ public class EmailService {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+
+    private boolean destinataireValide(String destinataire) {
+        return destinataire != null
+                && destinataire.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     }
 }

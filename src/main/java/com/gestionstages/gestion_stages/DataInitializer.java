@@ -2,6 +2,7 @@ package com.gestionstages.gestion_stages;
 
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
+import com.gestionstages.gestion_stages.services.PermissionService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final StagiaireRepository stagiaireRepository;
     private final StageRepository stageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PermissionService permissionService;
 
     public DataInitializer(RoleRepository roleRepository,
                            PermissionRepository permissionRepository,
@@ -35,7 +37,8 @@ public class DataInitializer implements CommandLineRunner {
                            DemandeStageRepository demandeStageRepository,
                            StagiaireRepository stagiaireRepository,
                            StageRepository stageRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           PermissionService permissionService) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.utilisateurRepository = utilisateurRepository;
@@ -47,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
         this.stagiaireRepository = stagiaireRepository;
         this.stageRepository = stageRepository;
         this.passwordEncoder = passwordEncoder;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -57,6 +61,7 @@ public class DataInitializer implements CommandLineRunner {
         creerRoleSiAbsent("ENCADREUR", "Encadreur de stagiaires");
         creerRoleSiAbsent("STAGIAIRE", "Stagiaire");
         initialiserPermissions();
+        permissionService.initialiserMappingsParDefaut();
 
         creerUtilisateurSiAbsent("ADMINISTRATEUR", "Admin", "Test",
                 "admin@gestion-stages.com", "admin1234");
@@ -120,6 +125,7 @@ public class DataInitializer implements CommandLineRunner {
 
             DemandeStage demande = new DemandeStage("Mebale", "Darla",
                     "Universite de Yaounde I", "Informatique", "Licence 3", "3 mois");
+            demande.setEmail("stagiaire@gestion-stages.com");
             demande.setStatut(DemandeStage.StatutDemande.acceptee);
             demande.setCommentaire("Email candidat : stagiaire@gestion-stages.com");
             demandeStageRepository.save(demande);
@@ -152,9 +158,10 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void creerRoleSiAbsent(String libelle, String description) {
-        if (roleRepository.findByLibelle(libelle).isEmpty()) {
-            roleRepository.save(new Role(libelle, description));
-        }
+        Role role = roleRepository.findByLibelle(libelle)
+                .orElseGet(() -> new Role(libelle, description));
+        role.setEspace(libelle);
+        roleRepository.save(role);
     }
 
     private void initialiserPermissions() {

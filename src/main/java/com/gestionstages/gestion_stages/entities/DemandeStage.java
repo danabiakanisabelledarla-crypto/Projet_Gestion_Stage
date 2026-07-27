@@ -17,6 +17,9 @@ public class DemandeStage {
     @Column(nullable = false, length = 100)
     private String prenom;
 
+    @Column(length = 150)
+    private String email;
+
     @Column(nullable = false, length = 150)
     private String ecole;
 
@@ -82,6 +85,14 @@ public class DemandeStage {
 
     public void setPrenom(String prenom) {
         this.prenom = prenom;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getEcole() {

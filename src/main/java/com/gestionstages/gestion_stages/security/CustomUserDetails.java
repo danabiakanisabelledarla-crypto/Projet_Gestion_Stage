@@ -25,6 +25,8 @@ public class CustomUserDetails implements UserDetails{
         String roleName = "ROLE_" + utilisateur.getRole().getLibelle();
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(roleName));
+        authorities.add(new SimpleGrantedAuthority(
+                "ESPACE_" + utilisateur.getRole().getEspaceEffectif()));
         utilisateur.getRole().getPermissions().stream()
                 .map(permission -> new SimpleGrantedAuthority("PERM_" + permission.getCode()))
                 .forEach(authorities::add);

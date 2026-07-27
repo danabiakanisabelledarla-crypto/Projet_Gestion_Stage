@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <div th:fragment="sidebar" class="barre-laterale portal-sidebar">
@@ -7,13 +8,13 @@
     <div class="sidebar-role">Encadreur</div>
     <nav>
         <a th:href="@{/encadreur/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
-        <a th:href="@{/encadreur/mes-stagiaires}" th:classappend="${activePage == 'mes-stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Mes stagiaires</a>
-        <a th:href="@{/encadreur/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
-        <a th:href="@{/encadreur/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Tâches</a>
-        <a th:href="@{/encadreur/livrables}" th:classappend="${activePage == 'livrables'} ? ' actif'"><i class="fa-solid fa-file-arrow-up"></i> Livrables</a>
-        <a th:href="@{/encadreur/evaluations}" th:classappend="${activePage == 'evaluations'} ? ' actif'"><i class="fa-solid fa-star"></i> Évaluations</a>
-        <a th:href="@{/encadreur/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
-        <a th:href="@{/encadreur/messagerie}" th:classappend="${activePage == 'messagerie'} ? ' actif'"><i class="fa-solid fa-comments"></i> Messagerie</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/mes-stagiaires}" th:classappend="${activePage == 'mes-stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Mes stagiaires</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Tâches</a>
+        <a sec:authorize="hasAuthority('PERM_CONSULTER_RAPPORTS')" th:href="@{/encadreur/livrables}" th:classappend="${activePage == 'livrables'} ? ' actif'"><i class="fa-solid fa-file-arrow-up"></i> Livrables et rapports</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/evaluations}" th:classappend="${activePage == 'evaluations'} ? ' actif'"><i class="fa-solid fa-star"></i> Évaluations</a>
+        <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')" th:href="@{/encadreur/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
+        <a sec:authorize="hasAnyAuthority('PERM_ENVOYER_NOTIFICATIONS','PERM_GERER_NOTIFICATIONS')" th:href="@{/encadreur/messagerie}" th:classappend="${activePage == 'messagerie'} ? ' actif'"><i class="fa-solid fa-comments"></i> Messagerie</a>
         <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
     </nav>
     <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">

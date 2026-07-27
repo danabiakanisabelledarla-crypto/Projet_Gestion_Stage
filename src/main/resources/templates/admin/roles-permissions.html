@@ -197,7 +197,7 @@
                                             </div>
                                         </td>
                                         <td th:text="${nombreAdministrateurs}">1</td>
-                                        <td><span class="badge-permissions">42</span></td>
+                                        <td><span class="badge-permissions" th:text="${rolesParLibelle['ADMINISTRATEUR'].permissions.size()}">0</span></td>
                                         <td><span class="badge-niveau complet">Complet</span></td>
                                         <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
@@ -217,7 +217,7 @@
                                             </div>
                                         </td>
                                         <td th:text="${nombreResponsables}">6</td>
-                                        <td><span class="badge-permissions">38</span></td>
+                                        <td><span class="badge-permissions" th:text="${rolesParLibelle['RESPONSABLE_STAGE'].permissions.size()}">0</span></td>
                                         <td><span class="badge-niveau eleve">Élevé</span></td>
                                         <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
@@ -237,7 +237,7 @@
                                             </div>
                                         </td>
                                         <td th:text="${nombreEncadreursRole}">18</td>
-                                        <td><span class="badge-permissions">24</span></td>
+                                        <td><span class="badge-permissions" th:text="${rolesParLibelle['ENCADREUR'].permissions.size()}">0</span></td>
                                         <td><span class="badge-niveau moyen">Moyen</span></td>
                                         <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
@@ -257,7 +257,7 @@
                                             </div>
                                         </td>
                                         <td th:text="${nombreStagiairesRole}">103</td>
-                                        <td><span class="badge-permissions">12</span></td>
+                                        <td><span class="badge-permissions" th:text="${rolesParLibelle['STAGIAIRE'].permissions.size()}">0</span></td>
                                         <td><span class="badge-niveau limite">Limité</span></td>
                                         <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
@@ -281,7 +281,7 @@
                                             </div>
                                         </td>
                                         <td th:text="${utilisateursParRole[role.libelle]}">0</td>
-                                        <td><span class="badge-permissions">0</span></td>
+                                        <td><span class="badge-permissions" th:text="${role.permissions.size()}">0</span></td>
                                         <td><span class="badge-niveau limite">Personnalisé</span></td>
                                         <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
@@ -584,12 +584,11 @@
                     <textarea name="description" placeholder="Décrivez les responsabilités de ce rôle..." class="form-textarea"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Niveau d'accès</label>
-                    <select class="form-select">
-                        <option value="complet">Complet</option>
-                        <option value="eleve">Élevé</option>
-                        <option value="moyen">Moyen</option>
-                        <option value="limite">Limité</option>
+                    <label>Espace utilisateur</label>
+                    <select class="form-select" name="espace" required>
+                        <option value="STAGIAIRE">Espace stagiaire</option>
+                        <option value="ENCADREUR">Espace encadreur</option>
+                        <option value="RESPONSABLE_STAGE">Espace responsable de stage</option>
                     </select>
                 </div>
                 <div class="form-group">

@@ -18,6 +18,9 @@ public class Role {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "espace", length = 40)
+    private String espace;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permissions",
@@ -56,6 +59,24 @@ public class Role {
     }
     public void setDescription(String description){
         this.description = description;
+    }
+
+    public String getEspace() {
+        return espace;
+    }
+
+    public void setEspace(String espace) {
+        this.espace = espace;
+    }
+
+    public String getEspaceEffectif() {
+        if (espace != null && !espace.isBlank()) {
+            return espace;
+        }
+        return switch (libelle) {
+            case "ADMINISTRATEUR", "RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE" -> libelle;
+            default -> "STAGIAIRE";
+        };
     }
 
     public Set<Permission> getPermissions() {

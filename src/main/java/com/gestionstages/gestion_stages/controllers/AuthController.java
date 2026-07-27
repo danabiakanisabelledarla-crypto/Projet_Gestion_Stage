@@ -15,7 +15,7 @@ public class AuthController {
 
     @GetMapping("/redirection")
     public String redirigerSelonRole(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        String role = userDetails.getUtilisateur().getRole().getLibelle();
+        String role = userDetails.getUtilisateur().getRole().getEspaceEffectif();
 
         switch (role) {
             case "ADMINISTRATEUR":

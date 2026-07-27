@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <div th:fragment="sidebar" class="barre-laterale portal-sidebar">
@@ -7,10 +8,10 @@
     <div class="sidebar-role">Responsable</div>
     <nav>
         <a th:href="@{/responsable/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
-        <a th:href="@{/responsable/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
-        <a th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
-        <a th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
-        <a th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_DEMANDES_STAGE')" th:href="@{/responsable/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
+        <a sec:authorize="hasAuthority('PERM_GERER_DOSSIERS')" th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
+        <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')" th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
         
         <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
     </nav>

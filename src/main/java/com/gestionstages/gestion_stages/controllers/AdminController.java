@@ -45,6 +45,7 @@ public class AdminController {
     private final LivrableRepository livrableRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final com.gestionstages.gestion_stages.services.PermissionService permissionService;
 
     public AdminController(DemandeStageRepository demandeStageRepository,
                             StageRepository stageRepository,
@@ -62,7 +63,8 @@ public class AdminController {
                             PermissionRepository permissionRepository,
                             LivrableRepository livrableRepository,
                             PasswordEncoder passwordEncoder,
-                            EmailService emailService) {
+                            EmailService emailService,
+                            com.gestionstages.gestion_stages.services.PermissionService permissionService) {
         this.demandeStageRepository = demandeStageRepository;
         this.stageRepository = stageRepository;
         this.tacheRepository = tacheRepository;
@@ -80,6 +82,7 @@ public class AdminController {
         this.livrableRepository = livrableRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.permissionService = permissionService;
     }
 
     @GetMapping("/dashboard")
@@ -362,19 +365,26 @@ public class AdminController {
 
         String matricule = genererMatriculeStagiaire();
         stagiaireRepository.save(new Stagiaire(utilisateur, demande, matricule, LocalDate.now()));
-        demande.setStatut(DemandeStage.StatutDemande.acceptee);
-        demande.setMotifRefus(null);
-        demandeStageRepository.save(demande);
+    demande.setStatut(DemandeStage.StatutDemande.acceptee);
+    demande.setMotifRefus(null);
+    demande.setEmail(emailNormalise);
+    demandeStageRepository.save(demande);
 
-        emailService.envoyerConfirmationAdmission(
-                extraireEmailCandidat(demande),
-                demande.getPrenom() + " " + demande.getNom(),
-                emailNormalise,
-                motDePasse
-        );
+    boolean emailEnvoye = emailService.envoyerConfirmationAdmission(
+            emailNormalise,
+            demande.getPrenom() + " " + demande.getNom(),
+            emailNormalise,
+            motDePasse
+    );
 
+    if (emailEnvoye) {
         redirectAttributes.addFlashAttribute("succes",
-                "Demande acceptée, compte " + matricule + " créé et réponse envoyée par email.");
+                "Demande acceptée, compte " + matricule + " créé et notification envoyée à " + emailNormalise + ".");
+    } else {
+        redirectAttributes.addFlashAttribute("erreur",
+                "La demande et le compte ont été enregistrés, mais l'e-mail n'a pas pu être envoyé à "
+                        + emailNormalise + ". Vérifiez la configuration SMTP.");
+    }
         return "redirect:/admin/demandes";
     }
 
@@ -396,13 +406,21 @@ public class AdminController {
         demande.setStatut(DemandeStage.StatutDemande.refusee);
         demande.setMotifRefus(motif.trim());
         demandeStageRepository.save(demande);
-        emailService.envoyerRefusDemande(
-                extraireEmailCandidat(demande),
-                demande.getPrenom() + " " + demande.getNom(),
-                motif.trim()
-        );
+    String destinataire = extraireEmailCandidat(demande);
+    boolean emailEnvoye = emailService.envoyerRefusDemande(
+            destinataire,
+            demande.getPrenom() + " " + demande.getNom(),
+            motif.trim()
+    );
 
-        redirectAttributes.addFlashAttribute("succes", "Demande refusée et réponse envoyée par email.");
+    if (emailEnvoye) {
+        redirectAttributes.addFlashAttribute("succes",
+                "Demande refusée et notification envoyée à " + destinataire + ".");
+    } else {
+        redirectAttributes.addFlashAttribute("erreur",
+                "Le refus a été enregistré, mais l'e-mail n'a pas pu être envoyé à "
+                        + destinataire + ". Vérifiez la configuration SMTP.");
+    }
         return "redirect:/admin/demandes";
     }
 
@@ -777,6 +795,8 @@ public class AdminController {
                 role -> utilisateurRepository.findByRole_Libelle(role.getLibelle()).size()
         ));
         model.addAttribute("roles", roles);
+        model.addAttribute("rolesParLibelle", roles.stream()
+                .collect(Collectors.toMap(Role::getLibelle, role -> role)));
         model.addAttribute("permissions", permissionRepository.findAll());
         model.addAttribute("utilisateurs", utilisateurRepository.findAll());
         model.addAttribute("utilisateursParRole", utilisateursParRole);
@@ -803,6 +823,7 @@ public class AdminController {
     @PostMapping("/roles-permissions/ajouter")
     public String ajouterRole(@RequestParam String libelle,
                               @RequestParam(required = false) String description,
+                              @RequestParam(defaultValue = "STAGIAIRE") String espace,
                               @RequestParam(required = false) List<Integer> permissionIds,
                               RedirectAttributes redirectAttributes) {
         String roleLibelle = libelle == null ? "" : java.text.Normalizer
@@ -820,6 +841,8 @@ public class AdminController {
             return "redirect:/admin/roles-permissions";
         }
         Role role = new Role(roleLibelle, description);
+        Set<String> espacesAutorises = Set.of("RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE");
+        role.setEspace(espacesAutorises.contains(espace) ? espace : "STAGIAIRE");
         if (permissionIds != null) {
             role.setPermissions(new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
         }
@@ -844,8 +867,9 @@ public class AdminController {
         Role nouveauRole = roleOpt.get();
         utilisateur.setRole(nouveauRole);
         utilisateurRepository.save(utilisateur);
+        assurerProfilPourEspace(utilisateur, nouveauRole.getEspaceEffectif());
 
-        emailService.envoyerChangementRole(
+        boolean emailEnvoye = emailService.envoyerChangementRole(
                 utilisateur.getEmail(),
                 utilisateur.getPrenom() + " " + utilisateur.getNom(),
                 utilisateur.getTelephone(),
@@ -857,9 +881,15 @@ public class AdminController {
                 ? "a été confirmé"
                 : "a été changé de " + (ancienRole == null ? "sans rôle" : ancienRole.getLibelle())
                         + " vers " + nouveauRole.getLibelle();
-        redirectAttributes.addFlashAttribute("succes",
-                "Le rôle de " + utilisateur.getPrenom() + " " + utilisateur.getNom() + " " + action
-                        + ". Un e-mail récapitulatif a été envoyé.");
+        if (emailEnvoye) {
+            redirectAttributes.addFlashAttribute("succes",
+                    "Le rôle de " + utilisateur.getPrenom() + " " + utilisateur.getNom() + " " + action
+                            + ". Un e-mail récapitulatif a été envoyé.");
+        } else {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "Le rôle et les permissions ont bien été mis à jour, mais l'e-mail n'a pas pu être envoyé à "
+                            + utilisateur.getEmail() + ". Vérifiez la configuration SMTP.");
+        }
         return "redirect:/admin/roles-permissions";
     }
 
@@ -877,6 +907,10 @@ public class AdminController {
                 ? new LinkedHashSet<>()
                 : new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
         roleRepository.save(role);
+        
+        // Synchroniser avec les mappings pour éviter les duplications
+        permissionService.synchroniserRoleAvecMappings(role);
+        
         redirectAttributes.addFlashAttribute("succes",
                 "Les permissions du rôle " + role.getLibelle() + " ont été mises à jour.");
         return "redirect:/admin/roles-permissions";
@@ -929,6 +963,41 @@ public class AdminController {
                 .replaceAll("^_+|_+$", "");
     }
 
+    private void assurerProfilPourEspace(Utilisateur utilisateur, String espace) {
+        if ("ENCADREUR".equals(espace)
+                && encadreurRepository.findByUtilisateurId(utilisateur.getId()).isEmpty()) {
+            encadreurRepository.save(new Encadreur(
+                    utilisateur,
+                    "À renseigner",
+                    "Encadreur"
+            ));
+        }
+
+        if ("STAGIAIRE".equals(espace)
+                && stagiaireRepository.findByUtilisateurId(utilisateur.getId()).isEmpty()) {
+            DemandeStage demande = new DemandeStage(
+                    utilisateur.getNom(),
+                    utilisateur.getPrenom(),
+                    "À renseigner",
+                    "À renseigner",
+                    "À renseigner",
+                    "À renseigner"
+            );
+            demande.setEmail(utilisateur.getEmail());
+            demande.setCommentaire("Profil créé lors d'un changement de rôle");
+            demande.setStatut(DemandeStage.StatutDemande.acceptee);
+            demandeStageRepository.save(demande);
+
+            String matricule = "STG-ROLE-" + utilisateur.getId() + "-" + System.currentTimeMillis();
+            stagiaireRepository.save(new Stagiaire(
+                    utilisateur,
+                    demande,
+                    matricule,
+                    LocalDate.now()
+            ));
+        }
+    }
+
     @GetMapping("/statistiques")
     public String afficherStatistiques(Model model) {
         model.addAttribute("activePage", "statistiques");
@@ -943,8 +1012,11 @@ public class AdminController {
         return "admin/statistiques";
     }
 
-    private String extraireEmailCandidat(DemandeStage demande) {
-        String commentaire = demande.getCommentaire();
+private String extraireEmailCandidat(DemandeStage demande) {
+    if (demande.getEmail() != null && !demande.getEmail().isBlank()) {
+        return demande.getEmail().trim().toLowerCase(Locale.ROOT);
+    }
+    String commentaire = demande.getCommentaire();
         if (commentaire != null) {
             String marqueur = "Email candidat : ";
             int index = commentaire.indexOf(marqueur);
@@ -954,16 +1026,8 @@ public class AdminController {
                 return finLigne >= 0 ? email.substring(0, finLigne).trim() : email;
             }
         }
-        String prenom = normaliserIdentifiant(demande.getPrenom());
-        String nom = normaliserIdentifiant(demande.getNom());
-        return prenom + "." + nom + "@stagiaire.com";
-    }
-
-    private String normaliserIdentifiant(String valeur) {
-        String normalisee = java.text.Normalizer.normalize(valeur, java.text.Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
-        return normalisee.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
-    }
+    return "";
+}
 
     private String genererMatriculeStagiaire() {
         int numero = (int) stagiaireRepository.count() + 1;

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -211,19 +212,37 @@ private static String quote(Object v) {
     }
 
     @GetMapping("/demandes/accepter/{id}")
-    public String accepterDemande(@PathVariable Integer id) {
+    public String accepterDemande(@PathVariable Integer id,
+                                  RedirectAttributes redirectAttributes) {
         demandeStageRepository.findById(id).ifPresent(demande -> {
             demande.setStatut(DemandeStage.StatutDemande.acceptee);
             demandeStageRepository.save(demande);
+            boolean envoye = emailService.envoyerDecisionDemande(
+                    emailDemande(demande),
+                    demande.getPrenom() + " " + demande.getNom(),
+                    true,
+                    null
+            );
+            ajouterRetourEmail(redirectAttributes, envoye, emailDemande(demande),
+                    "La demande a été acceptée.");
         });
         return "redirect:/responsable/demandes";
     }
 
     @GetMapping("/demandes/refuser/{id}")
-    public String refuserDemande(@PathVariable Integer id) {
+    public String refuserDemande(@PathVariable Integer id,
+                                 RedirectAttributes redirectAttributes) {
         demandeStageRepository.findById(id).ifPresent(demande -> {
             demande.setStatut(DemandeStage.StatutDemande.refusee);
             demandeStageRepository.save(demande);
+            boolean envoye = emailService.envoyerDecisionDemande(
+                    emailDemande(demande),
+                    demande.getPrenom() + " " + demande.getNom(),
+                    false,
+                    demande.getMotifRefus()
+            );
+            ajouterRetourEmail(redirectAttributes, envoye, emailDemande(demande),
+                    "La demande a été refusée.");
         });
         return "redirect:/responsable/demandes";
     }
@@ -537,5 +556,34 @@ public String afficherPlanning(Model model) {
     return "responsable/planning";
 }
 
+private String emailDemande(DemandeStage demande) {
+    if (demande.getEmail() != null && !demande.getEmail().isBlank()) {
+        return demande.getEmail().trim().toLowerCase();
+    }
+    String commentaire = demande.getCommentaire();
+    String prefixe = "Email candidat : ";
+    if (commentaire != null && commentaire.startsWith(prefixe)) {
+        String email = commentaire.substring(prefixe.length()).trim().toLowerCase();
+        return email.contains("@") ? email : null;
+    }
+    return null;
+}
+
+private void ajouterRetourEmail(RedirectAttributes redirectAttributes,
+                                boolean envoye,
+                                String destinataire,
+                                String operation) {
+    if (destinataire == null || destinataire.isBlank()) {
+        redirectAttributes.addFlashAttribute("erreur",
+                operation + " Aucune adresse e-mail fiable n'est enregistrée pour ce candidat.");
+    } else if (envoye) {
+        redirectAttributes.addFlashAttribute("succes",
+                operation + " Notification envoyée à " + destinataire + ".");
+    } else {
+        redirectAttributes.addFlashAttribute("erreur",
+                operation + " L'e-mail n'a pas pu être envoyé à " + destinataire
+                        + ". Vérifiez la configuration SMTP.");
+    }
+}
 
 }
