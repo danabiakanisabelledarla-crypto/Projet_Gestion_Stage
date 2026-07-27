@@ -468,10 +468,10 @@
     }
 
     function appliquerFiltres() {
-        const recherche = document.getElementById('svcSearch').value.trim().toLowerCase();
-        const responsable = document.getElementById('filterResponsable').value;
-        const statut = document.getElementById('filterStatut').value;
-        const localisation = document.getElementById('filterLocalisation').value;
+        const recherche = (document.getElementById('svcSearch')?.value || '').trim().toLowerCase();
+        const responsable = document.getElementById('filterResponsable')?.value || '';
+        const statut = document.getElementById('filterStatut')?.value || '';
+        const localisation = document.getElementById('filterLocalisation')?.value || '';
         let visibles = 0;
 
         document.querySelectorAll('.svc-service-row').forEach(ligne => {
@@ -483,16 +483,17 @@
             ligne.hidden = !afficher;
             if (afficher) visibles++;
         });
-        document.getElementById('visibleServiceCount').textContent = visibles;
-        document.getElementById('paginationInfo').textContent = visibles + ' service' + (visibles > 1 ? 's' : '') + ' trouvé' + (visibles > 1 ? 's' : '');
+        const compteur = document.getElementById('visibleServiceCount');
+        const pagination = document.getElementById('paginationInfo');
+        if (compteur) compteur.textContent = visibles;
+        if (pagination) pagination.textContent = visibles + ' service' + (visibles > 1 ? 's' : '') + ' trouvé' + (visibles > 1 ? 's' : '');
     }
 
     function reinitialiserFiltres() {
-        document.getElementById('svcSearch').value = '';
-        document.getElementById('globalServiceSearch').value = '';
-        document.getElementById('filterResponsable').value = '';
-        document.getElementById('filterStatut').value = '';
-        document.getElementById('filterLocalisation').value = '';
+        ['svcSearch', 'globalServiceSearch', 'filterResponsable', 'filterStatut', 'filterLocalisation'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.value = '';
+        });
         appliquerFiltres();
     }
 
@@ -528,15 +529,19 @@
         URL.revokeObjectURL(lien.href);
     }
 
-    document.getElementById('globalServiceSearch').addEventListener('input', function () {
-        document.getElementById('svcSearch').value = this.value;
-        appliquerFiltres();
-    });
+    const rechercheGlobale = document.getElementById('globalServiceSearch');
+    if (rechercheGlobale) {
+        rechercheGlobale.addEventListener('input', function () {
+            const rechercheLocale = document.getElementById('svcSearch');
+            if (rechercheLocale) rechercheLocale.value = this.value;
+            appliquerFiltres();
+        });
+    }
 
     document.addEventListener('keydown', event => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
             event.preventDefault();
-            document.getElementById('globalServiceSearch').focus();
+            (document.getElementById('globalServiceSearch') || document.getElementById('svcSearch'))?.focus();
         }
         if (event.key === 'Escape') {
             fermerModal('modalAjout');

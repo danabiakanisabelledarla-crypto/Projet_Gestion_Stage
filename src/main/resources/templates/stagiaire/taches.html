@@ -204,6 +204,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfParameter = document.querySelector('meta[name="_csrf_parameter"]').content;
     const viewStorageKey = 'stagiaire-kanban-views';
     const assignmentStorageKey = 'stagiaire-kanban-assignments';
+    const columnLabels = {
+        a_faire: 'À faire',
+        en_cours: 'En cours',
+        en_revue: 'En revue',
+        terminee: 'Terminée'
+    };
+
+    document.querySelectorAll('.intern-kanban-column[data-column]').forEach(column => {
+        const targetStatus = column.dataset.column;
+        if (!columnLabels[targetStatus]) return;
+
+        const composer = document.createElement('div');
+        composer.className = 'intern-card-composer';
+        composer.innerHTML = `
+            <button type="button" class="intern-add-card" aria-expanded="false">
+                <i class="fa-solid fa-plus"></i>
+                <span>Ajouter une carte</span>
+            </button>
+            <form action="/stagiaire/taches/ajouter" method="post" class="intern-card-form" hidden>
+                <input type="hidden" name="${csrfParameter}" value="${csrfToken}">
+                <input type="hidden" name="statut" value="${targetStatus}">
+                <textarea name="titre" required maxlength="180"
+                    placeholder="Saisissez le motif de la tâche"></textarea>
+                <div class="intern-card-form-actions">
+                    <button type="submit" class="intern-button">Ajouter</button>
+                    <button type="button" class="intern-icon-button intern-icon-only" data-cancel-card title="Annuler">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <small>La carte sera ajoutée dans « ${columnLabels[targetStatus]} ».</small>
+            </form>`;
+        column.appendChild(composer);
+
+        const trigger = composer.querySelector('.intern-add-card');
+        const form = composer.querySelector('.intern-card-form');
+        const textarea = form.querySelector('textarea');
+        trigger.addEventListener('click', () => {
+            trigger.hidden = true;
+            trigger.setAttribute('aria-expanded', 'true');
+            form.hidden = false;
+            textarea.focus();
+        });
+        form.querySelector('[data-cancel-card]').addEventListener('click', () => {
+            form.reset();
+            form.hidden = true;
+            trigger.hidden = false;
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+    });
 
     const readStorage = (key, fallback) => {
         try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -263,10 +312,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     search.addEventListener('input', applyFilters);
     status.addEventListener('change', applyFilters);
-    document.getElementById('resetTaskFilters').addEventListener('click', () => {
-        document.querySelectorAll('.intern-filters input, .intern-filters select').forEach(field => field.value = '');
-        applyFilters();
-    });
+    const resetTaskFilters = document.getElementById('resetTaskFilters');
+    if (resetTaskFilters) {
+        resetTaskFilters.addEventListener('click', () => {
+            document.querySelectorAll('.intern-filters input, .intern-filters select').forEach(field => field.value = '');
+            applyFilters();
+        });
+    }
 
     let dragged = null;
     tasks.forEach(task => {

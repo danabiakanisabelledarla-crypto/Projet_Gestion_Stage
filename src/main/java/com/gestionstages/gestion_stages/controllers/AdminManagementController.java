@@ -314,6 +314,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
         m.put("nomFichier", d.getNomFichier());
         m.put("typeDocument", d.getTypeDocument());
         m.put("statut", d.getStatut());
+        m.put("version", d.getVersion() != null ? d.getVersion() : "1.0");
+        m.put("taille", d.getTailleOctets() != null
+                ? String.format(java.util.Locale.FRANCE, "%.1f Mo", d.getTailleOctets() / 1048576.0)
+                : "—");
         m.put("dateDepot", d.getDateDepot() != null ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDepot())) : "—");
 
         String ext = d.getNomFichier() != null && d.getNomFichier().contains(".")

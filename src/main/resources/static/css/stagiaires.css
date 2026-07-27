@@ -129,3 +129,49 @@
 .actions-admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .btn-action-secondaire { padding: 10px 16px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Poppins', sans-serif; color: #475569; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
 .btn-action-secondaire:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+
+.modal-details-header p { margin:5px 0 0; color:#64748b; font-size:11px; }
+.stagiaire-resource-list, .stagiaire-task-list { display:grid; gap:10px; }
+.stagiaire-resource-item { min-height:68px; padding:12px; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; transition:.2s ease; }
+.stagiaire-resource-item:hover { border-color:#bfdbfe; box-shadow:0 8px 20px rgba(15,23,42,.06); transform:translateY(-1px); }
+.stagiaire-resource-icon { width:42px; height:42px; display:grid; place-items:center; color:#64748b; background:#f1f5f9; border-radius:10px; font-size:17px; }
+.stagiaire-resource-icon.pdf { color:#dc2626; background:#fef2f2; }
+.stagiaire-resource-icon.word { color:#2563eb; background:#eff6ff; }
+.stagiaire-resource-icon.image, .stagiaire-resource-icon.livrable { color:#16a34a; background:#f0fdf4; }
+.stagiaire-resource-item strong, .stagiaire-resource-item small { display:block; }
+.stagiaire-resource-item strong { color:#1e293b; font-size:12px; overflow-wrap:anywhere; }
+.stagiaire-resource-item small { margin-top:4px; color:#94a3b8; font-size:9px; }
+.stagiaire-resource-actions { display:flex; gap:6px; }
+.stagiaire-resource-actions a { width:34px; height:34px; display:grid; place-items:center; color:#64748b; background:#fff; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; }
+.stagiaire-resource-actions a:hover { color:#2563eb; background:#eff6ff; border-color:#bfdbfe; }
+.stagiaire-resource-empty { min-height:230px; display:grid; place-items:center; align-content:center; gap:10px; color:#94a3b8; text-align:center; }
+.stagiaire-resource-empty i { font-size:35px; }
+.stagiaire-resource-empty p { margin:0; font-size:12px; }
+.resource-status { width:max-content; margin-top:7px; padding:4px 7px; display:inline-flex; color:#475569; background:#f1f5f9; border-radius:5px; font-size:8px; font-weight:700; }
+.resource-status.valide, .resource-status.terminee { color:#166534; background:#dcfce7; }
+.resource-status.depose, .resource-status.en_cours, .resource-status.en_revue { color:#1d4ed8; background:#dbeafe; }
+.resource-status.rejete, .resource-status.en_retard { color:#991b1b; background:#fee2e2; }
+.resource-status.correction_demandee, .resource-status.a_faire { color:#9a3412; background:#ffedd5; }
+.stagiaire-task-item { padding:14px; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:11px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; }
+.stagiaire-task-item strong { color:#1e293b; font-size:12px; }
+.stagiaire-task-item p { margin:5px 0; color:#64748b; font-size:10px; line-height:1.5; }
+.stagiaire-task-item small { color:#94a3b8; font-size:9px; }
+.task-status-dot { width:10px; height:10px; margin-top:3px; background:#94a3b8; border-radius:50%; box-shadow:0 0 0 4px #f1f5f9; }
+.task-status-dot.terminee { background:#22c55e; box-shadow:0 0 0 4px #dcfce7; }
+.task-status-dot.en_cours, .task-status-dot.en_revue { background:#2563eb; box-shadow:0 0 0 4px #dbeafe; }
+.task-status-dot.en_retard { background:#ef4444; box-shadow:0 0 0 4px #fee2e2; }
+.stagiaire-edit-form { padding:24px; }
+.stagiaire-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.stagiaire-form-grid label { color:#475569; font-size:11px; font-weight:700; }
+.stagiaire-form-grid label.full { grid-column:1/-1; }
+.stagiaire-form-grid input, .stagiaire-form-grid select { width:100%; height:42px; margin-top:7px; padding:0 11px; color:#334155; background:#fff; border:1px solid #dce3ec; border-radius:9px; outline:0; font:inherit; }
+.stagiaire-form-grid input:focus, .stagiaire-form-grid select:focus { border-color:#93b4fb; box-shadow:0 0 0 3px #dbeafe; }
+.stagiaire-form-actions { margin-top:20px; display:flex; justify-content:flex-end; gap:9px; }
+.stagiaire-save-button { min-height:40px; padding:0 15px; color:#fff; background:#2563eb; border:1px solid #2563eb; border-radius:9px; cursor:pointer; font-weight:700; }
+
+@media(max-width:650px) {
+    .stagiaire-form-grid { grid-template-columns:1fr; }
+    .stagiaire-form-grid label.full { grid-column:auto; }
+    .stagiaire-resource-item, .stagiaire-task-item { grid-template-columns:auto minmax(0,1fr); }
+    .stagiaire-resource-actions, .stagiaire-task-item > .resource-status { grid-column:2; }
+}

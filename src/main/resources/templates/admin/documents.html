@@ -300,10 +300,20 @@
         if (!d) return;
         const ext = d.ext || 'unknown';
         const ei = getExtIcon(ext);
+        const previewUrl = `/documents/${d.id}/preview`;
+        const previewContent = ['png','jpg','jpeg','gif','svg','webp'].includes(ext)
+            ? `<img class="document-preview-image" src="${previewUrl}" alt="Aperçu de ${escapeHtml(d.nomFichier)}">`
+            : ext === 'pdf'
+                ? `<iframe class="document-preview-frame" src="${previewUrl}" title="Aperçu de ${escapeHtml(d.nomFichier)}"></iframe>`
+                : `<div class="detail-preview-icon ${ei.cls}"><i class="${ei.icon}"></i><span>Aperçu direct indisponible pour ce format</span></div>`;
 
         document.getElementById('detailContentDoc').innerHTML = `
             <div class="detail-preview">
-                <div class="detail-preview-icon ${ei.cls}" style="font-size:56px;"><i class="${ei.icon}"></i></div>
+                ${previewContent}
+                <div class="document-preview-actions">
+                    <a href="${previewUrl}" target="_blank"><i class="fa-solid fa-up-right-from-square"></i> Ouvrir en grand</a>
+                    <a href="/documents/${d.id}"><i class="fa-solid fa-download"></i> Télécharger</a>
+                </div>
             </div>
 
             <div class="detail-section">
@@ -311,8 +321,8 @@
                 <div class="detail-grid-2">
                     <div><span class="detail-info-icon bleu"><i class="fa-solid fa-file"></i></span><div><div class="detail-info-label">Nom</div><div class="detail-info-value mono">${d.nomFichier}</div></div></div>
                     <div><span class="detail-info-icon vert"><i class="fa-solid fa-tag"></i></span><div><div class="detail-info-label">Type</div><div class="detail-info-value">${d.typeDocument}</div></div></div>
-                    <div><span class="detail-info-icon orange"><i class="fa-solid fa-weight"></i></span><div><div class="detail-info-label">Taille</div><div class="detail-info-value">—</div></div></div>
-                    <div><span class="detail-info-icon violet"><i class="fa-solid fa-code-branch"></i></span><div><div class="detail-info-label">Version</div><div class="detail-info-value">v1</div></div></div>
+                    <div><span class="detail-info-icon orange"><i class="fa-solid fa-weight"></i></span><div><div class="detail-info-label">Taille</div><div class="detail-info-value">${d.taille || '—'}</div></div></div>
+                    <div><span class="detail-info-icon violet"><i class="fa-solid fa-code-branch"></i></span><div><div class="detail-info-label">Version</div><div class="detail-info-value">v${d.version || '1.0'}</div></div></div>
                     <div><span class="detail-info-icon bleu"><i class="fa-regular fa-calendar-plus"></i></span><div><div class="detail-info-label">Créé le</div><div class="detail-info-value">${d.dateDepot}</div></div></div>
                     <div><span class="detail-info-icon rouge"><i class="fa-regular fa-pen-to-square"></i></span><div><div class="detail-info-label">Modifié le</div><div class="detail-info-value">${d.dateDepot}</div></div></div>
                 </div>
@@ -402,7 +412,7 @@
             <div class="detail-section" style="border:2px solid #2563EB;background:white;">
                 <div class="detail-section-title"><i class="fa-solid fa-shield-halved"></i> Actions administratives</div>
                 <div class="actions-admin-row">
-                    <button class="btn-action-admin primary"><i class="fa-solid fa-download"></i> Télécharger</button>
+                    <button class="btn-action-admin primary" onclick="window.location.href='/documents/${d.id}'"><i class="fa-solid fa-download"></i> Télécharger</button>
                     <button class="btn-action-admin vert"><i class="fa-solid fa-box-archive"></i> Archiver</button>
                     <button class="btn-action-admin"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
                 </div>
@@ -413,6 +423,12 @@
                 </div>
             </div>
         `;
+    }
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value || '';
+        return element.innerHTML;
     }
 
     function closeDetailDoc() {

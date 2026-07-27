@@ -31,10 +31,12 @@
             </div>
         </div>
         <div class="backup-heading-actions">
-            <button type="button" class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button type="button" class="backup-btn primary"><i class="fa-solid fa-filter"></i> Filtres avancés</button>
+            <a th:href="@{/admin/demandes/exporter}" class="backup-btn secondary"><i class="fa-solid fa-download"></i> Télécharger la fiche</a>
         </div>
     </section>
+
+    <div th:if="${succes}" class="request-flash success"><i class="fa-solid fa-circle-check"></i><span th:text="${succes}">Opération réussie.</span></div>
+    <div th:if="${erreur}" class="request-flash error"><i class="fa-solid fa-circle-exclamation"></i><span th:text="${erreur}">Une erreur est survenue.</span></div>
 
     <section class="backup-stats">
         <article class="backup-stat-card blue">
@@ -152,7 +154,7 @@
                             <div class="candidat-avatar" th:text="${demande.prenom.substring(0,1).toUpperCase() + demande.nom.substring(0,1).toUpperCase()}">S</div>
                             <div>
                                 <div class="candidat-nom" th:text="${demande.prenom + ' ' + demande.nom}">Nom</div>
-                                <div class="candidat-email" th:text="${demande.prenom.toLowerCase() + '.' + demande.nom.toLowerCase() + '@email.com'}">email</div>
+                                <div class="candidat-email" th:text="${emailsDemandes[demande.id]}">email</div>
                             </div>
                         </div>
                     </td>
@@ -219,6 +221,68 @@
     </div>
 </div>
 
+<!-- ===== MODAL ACCEPTATION ET CRÉATION DU COMPTE ===== -->
+<div class="modal-overlay decision-modal" id="modalAccept" onclick="if(event.target===this) fermerDecision('modalAccept')">
+    <div class="modal-box decision-modal-box">
+        <div class="modal-details-header">
+            <div>
+                <h2>Accepter la demande</h2>
+                <p>Créez le compte du stagiaire avant d'envoyer la réponse.</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="fermerDecision('modalAccept')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="acceptForm" method="post" class="decision-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="decision-candidate">
+                <span class="decision-avatar" id="acceptInitials">JC</span>
+                <div><strong id="acceptName">Candidat</strong><small>Le candidat recevra ses identifiants par email.</small></div>
+            </div>
+            <label>Adresse email de connexion
+                <div class="decision-input"><i class="fa-regular fa-envelope"></i><input type="email" id="acceptEmail" name="email" required></div>
+            </label>
+            <label>Mot de passe temporaire
+                <div class="decision-password">
+                    <div class="decision-input"><i class="fa-solid fa-key"></i><input type="text" id="acceptPassword" name="motDePasse" minlength="6" required></div>
+                    <button type="button" onclick="genererMotDePasse()"><i class="fa-solid fa-wand-magic-sparkles"></i> Générer</button>
+                </div>
+            </label>
+            <div class="decision-notice"><i class="fa-solid fa-paper-plane"></i><span>En terminant, la demande sera acceptée, le compte sera créé et l'email de confirmation sera envoyé.</span></div>
+            <div class="decision-actions">
+                <button type="button" class="backup-btn secondary" onclick="fermerDecision('modalAccept')">Annuler</button>
+                <button type="submit" class="backup-btn primary"><i class="fa-solid fa-check"></i> Terminer et envoyer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== MODAL REFUS ===== -->
+<div class="modal-overlay decision-modal" id="modalReject" onclick="if(event.target===this) fermerDecision('modalReject')">
+    <div class="modal-box decision-modal-box">
+        <div class="modal-details-header reject-heading">
+            <div>
+                <h2>Refuser la demande</h2>
+                <p>Le motif sera transmis au candidat par email.</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="fermerDecision('modalReject')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="rejectForm" method="post" class="decision-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="decision-candidate">
+                <span class="decision-avatar reject" id="rejectInitials">JC</span>
+                <div><strong id="rejectName">Candidat</strong><small id="rejectEmail">Adresse du candidat</small></div>
+            </div>
+            <label>Raison du refus
+                <textarea name="motif" id="rejectReason" rows="6" minlength="10" required placeholder="Expliquez clairement pourquoi cette demande ne peut pas être acceptée..."></textarea>
+                <small class="decision-help">Minimum 10 caractères. Cette information sera conservée dans le dossier.</small>
+            </label>
+            <div class="decision-actions">
+                <button type="button" class="backup-btn secondary" onclick="fermerDecision('modalReject')">Annuler</button>
+                <button type="submit" class="backup-btn danger"><i class="fa-solid fa-paper-plane"></i> Refuser et envoyer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script th:inline="javascript">
 const demandesData = /*[[${demandesJson}]]*/ [];
 
@@ -277,8 +341,8 @@ function ouvrirDetails(id) {
                         <div class="doc-meta">${doc.taille} · ${doc.dateDepot}</div>
                     </div>
                     <div class="doc-actions">
-                        <button class="doc-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
-                        <button class="doc-btn" title="Prévisualiser"><i class="fa-solid fa-eye"></i></button>
+                        <a class="doc-btn" href="/documents/${doc.id}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                        <a class="doc-btn" href="/documents/${doc.id}/preview" target="_blank" title="Prévisualiser"><i class="fa-solid fa-eye"></i></a>
                     </div>
                 </div>
             `).join('') : '<div class="observations-empty">Aucun document joint.</div>'}
@@ -308,21 +372,25 @@ function ouvrirDetails(id) {
         <!-- OBSERVATIONS -->
         <div class="sous-carte">
             <div class="sous-carte-titre"><i class="fa-solid fa-comment"></i> Observations</div>
-            <div class="observations-empty"><i class="fa-regular fa-comment-dots"></i> Aucune observation enregistrée.</div>
+            ${d.motifRefus
+                ? `<div class="request-refusal-note"><i class="fa-solid fa-circle-exclamation"></i><div><strong>Motif du refus</strong><p>${escapeHtml(d.motifRefus)}</p></div></div>`
+                : '<div class="observations-empty"><i class="fa-regular fa-comment-dots"></i> Aucune observation enregistrée.</div>'}
         </div>
 
         <!-- ACTIONS ADMIN -->
         <div class="sous-carte" style="border:2px solid #2563EB; background:white;">
             <div class="sous-carte-titre"><i class="fa-solid fa-shield-halved"></i> Actions administratives</div>
-            <div class="actions-admin-grid">
-                <button class="btn-action-admin btn-accept"><i class="fa-solid fa-check"></i> Accepter la demande</button>
-                <button class="btn-action-admin btn-reject"><i class="fa-solid fa-xmark"></i> Refuser la demande</button>
-            </div>
+            ${d.statutCls === 'en_attente' ? `
+                <div class="actions-admin-grid">
+                    <button class="btn-action-admin btn-accept" onclick="ouvrirAcceptation(${d.id})"><i class="fa-solid fa-check"></i> Accepter la demande</button>
+                    <button class="btn-action-admin btn-reject" onclick="ouvrirRefus(${d.id})"><i class="fa-solid fa-xmark"></i> Refuser la demande</button>
+                </div>` : `
+                <div class="request-processed ${d.statutCls}"><i class="fa-solid ${d.statutCls === 'acceptee' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                    Cette demande a déjà été ${d.statutCls === 'acceptee' ? 'acceptée' : 'refusée'}.
+                </div>`}
             <div class="actions-admin-secondaires">
-                <button class="btn-action-secondaire"><i class="fa-solid fa-circle-info"></i> Demander des informations</button>
-                <button class="btn-action-secondaire"><i class="fa-solid fa-envelope"></i> Envoyer un message</button>
-                <button class="btn-action-secondaire"><i class="fa-solid fa-folder"></i> Télécharger le dossier</button>
-                <button class="btn-action-secondaire"><i class="fa-solid fa-user-plus"></i> Créer un compte stagiaire</button>
+                <a class="btn-action-secondaire" href="mailto:${d.email}"><i class="fa-solid fa-envelope"></i> Envoyer un message</a>
+                <button class="btn-action-secondaire" onclick="telechargerDossier(${d.id})"><i class="fa-solid fa-folder"></i> Télécharger le dossier</button>
             </div>
         </div>
     `;
@@ -331,6 +399,60 @@ function ouvrirDetails(id) {
 
 function fermerModal() {
     document.getElementById('modalDetails').classList.remove('open');
+}
+
+function ouvrirAcceptation(id) {
+    const d = demandesData.find(item => item.id === id);
+    if (!d) return;
+    fermerModal();
+    document.getElementById('acceptForm').action = `/admin/demandes/${id}/accepter`;
+    document.getElementById('acceptName').textContent = d.nomComplet;
+    document.getElementById('acceptInitials').textContent = d.initiale;
+    document.getElementById('acceptEmail').value = d.email;
+    genererMotDePasse();
+    document.getElementById('modalAccept').classList.add('open');
+}
+
+function ouvrirRefus(id) {
+    const d = demandesData.find(item => item.id === id);
+    if (!d) return;
+    fermerModal();
+    document.getElementById('rejectForm').action = `/admin/demandes/${id}/refuser`;
+    document.getElementById('rejectName').textContent = d.nomComplet;
+    document.getElementById('rejectInitials').textContent = d.initiale;
+    document.getElementById('rejectEmail').textContent = d.email;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('modalReject').classList.add('open');
+}
+
+function fermerDecision(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+function genererMotDePasse() {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#';
+    let password = 'Stag';
+    for (let index = 0; index < 8; index++) {
+        password += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    document.getElementById('acceptPassword').value = password;
+}
+
+function telechargerDossier(id) {
+    const d = demandesData.find(item => item.id === id);
+    if (!d || !d.documents || d.documents.length === 0) {
+        alert('Aucun document joint à cette demande.');
+        return;
+    }
+    d.documents.forEach((document, index) => {
+        setTimeout(() => window.open(`/documents/${document.id}`, '_blank'), index * 250);
+    });
+}
+
+function escapeHtml(value) {
+    const element = document.createElement('div');
+    element.textContent = value || '';
+    return element.innerHTML;
 }
 
 function filtrerDemandes(filtre) {
@@ -344,6 +466,14 @@ function filtrerDemandes(filtre) {
         row.style.display = (cls === filtre) ? '' : 'none';
     });
 }
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        fermerModal();
+        fermerDecision('modalAccept');
+        fermerDecision('modalReject');
+    }
+});
 </script>
 </body>
 </html>

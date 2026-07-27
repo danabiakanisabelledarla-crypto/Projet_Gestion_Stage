@@ -1,5 +1,7 @@
 package com.gestionstages.gestion_stages.entities;
 import jakarta.persistence.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "roles")
@@ -15,6 +17,15 @@ public class Role {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "role_permissions",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    @OrderBy("nom ASC")
+    private Set<Permission> permissions = new LinkedHashSet<>();
 
     //CONTRUCTEUR   
     public Role(){
@@ -45,6 +56,14 @@ public class Role {
     }
     public void setDescription(String description){
         this.description = description;
+    }
+
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions == null ? new LinkedHashSet<>() : permissions;
     }
 
     

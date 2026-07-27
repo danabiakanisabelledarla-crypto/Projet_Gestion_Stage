@@ -2,230 +2,472 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Planning - Stagiaire</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-planning.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-premium.css}">
+    <link rel="stylesheet" th:href="@{/css/stagiaire-modules-premium.css}">
 </head>
-<body>
-    
+<body class="intern-portal">
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
-<div class="app-main">
+
+<div class="intern-content-shell">
     <div th:replace="~{fragments/header-stagiaire :: header}"></div>
-    <div class="contenu-principal">
-    <div class="en-tete-page">
-    <div style="display:flex;align-items:center;gap:20px;">
-        <h1>Planning</h1>
-        <div class="countdown-badge" th:if="${stage != null and stage.dateFin != null}" id="countdownBadge">
-            <i class="fa-regular fa-clock"></i>
-            <span id="countdownText">--</span>
-        </div>
-    </div>
-    <span class="utilisateur-connecte">Stagiaire</span>
-</div>
 
-    <div class="planning-layout">
-
-        <!-- EN HAUT + CENTRE -->
-        <div class="planning-colonne-gauche">
-
-            <div class="calendrier-wrapper bloc-module">
-                <div class="calendrier-entete">
-                    <button type="button" id="moisPrecedent" class="btn-nav-mois">&lsaquo;</button>
-                    <div id="calendrierTitre" class="calendrier-titre">-</div>
-                    <button type="button" id="moisSuivant" class="btn-nav-mois">&rsaquo;</button>
-                    <button type="button" class="btn-nouveau" onclick="ouvrirModal('modalAjoutEvenement')" style="margin-left:auto;padding:8px 16px;font-size:12px;">
-                        <i class="fa-solid fa-plus"></i> Ajouter un evenement
-                    </button>
+    <main class="intern-page">
+        <section class="intern-page-heading">
+            <div class="intern-heading-main">
+                <div class="intern-heading-icon"><i class="fa-regular fa-calendar-days"></i></div>
+                <div class="intern-heading-copy">
+                    <div class="intern-breadcrumb"><a th:href="@{/stagiaire/dashboard}">Accueil</a> / Stagiaire / Planning</div>
+                    <h1>Planning</h1>
+                    <p>Organisez vos réunions, échéances, livrables et événements tout au long de votre stage.</p>
                 </div>
-                <div class="calendrier-jours-semaine">
-                    <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
-                </div>
-                <div id="calendrierGrille" class="calendrier-grille"></div>
             </div>
+            <button class="intern-button" type="button" data-open-event><i class="fa-solid fa-plus"></i> Ajouter un événement</button>
+        </section>
 
-            <div class="bloc-module calendrier-legende">
-                <h2>Types d'evenements</h2>
-                <div class="legende-item"><span class="pastille-legende tache"></span> Dates limites des taches</div>
-                <div class="legende-item"><span class="pastille-legende evaluation"></span> Evaluations</div>
-                <div class="legende-item"><span class="pastille-legende fin_stage"></span> Fin du stage</div>
-                <div class="legende-item"><span class="pastille-legende reunion"></span> Reunions</div>
-                <div class="legende-item"><span class="pastille-legende livrable"></span> Depot des livrables</div>
-                <div class="legende-item"><span class="pastille-legende personnel"></span> Evenements personnels</div>
-                <div class="legende-item"><span class="pastille-legende conges"></span> Conges</div>
-                <div class="legende-item"><span class="pastille-legende important"></span> Important</div>
-            </div>
-
+        <div th:if="${param.succes}" class="module-flash success">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="${param.succes[0]}">Événement ajouté avec succès.</span>
         </div>
 
-        <!-- A DROITE -->
-        <div class="bloc-module planning-colonne-droite">
-            <h2>Evenements a venir</h2>
-            <div class="liste-evenements">
-                <div class="evenement-item" th:each="ev : ${evenementsAvenir}">
-                    <div class="evenement-date-bloc">
-                        <div class="evenement-jour" th:text="${#temporals.format(ev.date,'dd')}">-</div>
-                        <div class="evenement-mois" th:text="${#temporals.format(ev.date,'MMM')}">-</div>
+        <section th:if="${stage == null}" class="intern-card module-empty">
+            <i class="fa-regular fa-calendar-xmark"></i>
+            <h2>Aucun stage actif</h2>
+            <p>Le planning sera disponible dès qu'un stage vous aura été affecté.</p>
+        </section>
+
+        <div th:if="${stage != null}">
+            <section class="intern-kpis five">
+                <article class="intern-kpi">
+                    <span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-hourglass-half"></i></span>
+                    <div class="intern-kpi-value" th:text="${joursStageRestants != null ? joursStageRestants : 0}">160</div>
+                    <div class="intern-kpi-label">Jours restants du stage</div>
+                    <div class="intern-kpi-note" id="stageCountdown">Compte à rebours actif</div>
+                </article>
+                <article class="intern-kpi">
+                    <span class="intern-kpi-icon tone-purple"><i class="fa-regular fa-calendar-check"></i></span>
+                    <div class="intern-kpi-value" th:text="${evenementsCeMois != null ? evenementsCeMois : 0}">14</div>
+                    <div class="intern-kpi-label">Événements ce mois</div>
+                    <div class="module-mini-bars"><i></i><i></i><i></i><i></i><i></i></div>
+                </article>
+                <article class="intern-kpi">
+                    <span class="intern-kpi-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <div class="intern-kpi-value module-kpi-text" id="nextDeadlineTitle">À planifier</div>
+                    <div class="intern-kpi-label">Prochaine échéance</div>
+                    <div class="intern-kpi-note" id="nextDeadlineDate">Aucune échéance proche</div>
+                </article>
+                <article class="intern-kpi">
+                    <span class="intern-kpi-icon tone-orange"><i class="fa-solid fa-users"></i></span>
+                    <div class="intern-kpi-value module-kpi-text" id="nextMeetingTitle">Aucune réunion</div>
+                    <div class="intern-kpi-label">Prochaine réunion</div>
+                    <div class="intern-kpi-note" id="nextMeetingDate">Ajoutez un rendez-vous</div>
+                </article>
+                <article class="intern-kpi">
+                    <span class="intern-kpi-icon tone-green"><i class="fa-solid fa-file-arrow-up"></i></span>
+                    <div class="intern-kpi-value" th:text="${nombreLivrablesPlanning != null ? nombreLivrablesPlanning : 0}">3</div>
+                    <div class="intern-kpi-label">Livrables enregistrés</div>
+                    <div class="intern-kpi-note">Suivis dans le planning</div>
+                </article>
+            </section>
+
+            <section class="planning-main-grid">
+                <article class="intern-card calendar-shell">
+                    <div class="calendar-toolbar">
+                        <div class="calendar-navigation">
+                            <button type="button" class="module-action" id="calendarPrevious" title="Période précédente"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button type="button" class="intern-button secondary calendar-today" id="calendarToday">Aujourd'hui</button>
+                            <button type="button" class="module-action" id="calendarNext" title="Période suivante"><i class="fa-solid fa-chevron-right"></i></button>
+                            <h2 class="calendar-title" id="calendarTitle">Juillet 2026</h2>
+                        </div>
+                        <div class="calendar-toolbar-right">
+                            <div class="calendar-views" role="tablist" aria-label="Vues du planning">
+                                <button type="button" class="calendar-view active" data-view="month">Mois</button>
+                                <button type="button" class="calendar-view" data-view="week">Semaine</button>
+                                <button type="button" class="calendar-view" data-view="day">Jour</button>
+                            </div>
+                            <button class="intern-button" type="button" data-open-event><i class="fa-solid fa-plus"></i> Ajouter</button>
+                        </div>
                     </div>
-                    <div class="evenement-info">
-                        <div class="evenement-titre" th:text="${ev.titre}">-</div>
-                        <span th:class="'evenement-type ' + ${ev.type}" th:text="${ev.type}">-</span>
+
+                    <div id="monthCalendar">
+                        <div class="calendar-weekdays">
+                            <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid"></div>
                     </div>
-                </div>
-                <div class="vide" th:if="${#lists.isEmpty(evenementsAvenir)}">
-                    Aucun evenement a venir.
-                </div>
-            </div>
-        </div>
+                    <div class="calendar-agenda" id="calendarAgenda" hidden></div>
+                    <div class="calendar-legend">
+                        <span><i style="--legend:#2563eb"></i>Tâches</span>
+                        <span><i style="--legend:#22c55e"></i>Livrables</span>
+                        <span><i style="--legend:#f59e0b"></i>Réunions</span>
+                        <span><i style="--legend:#8b5cf6"></i>Évaluations</span>
+                        <span><i style="--legend:#ef4444"></i>Important</span>
+                        <span><i style="--legend:#94a3b8"></i>Personnel</span>
+                    </div>
+                </article>
 
-        </div>
-</div>
-</div>
-<script>
-function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
-function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
-</script>
+                <aside class="intern-card planning-upcoming">
+                    <div class="intern-card-header">
+                        <div><h2 class="intern-card-title">Prochains événements</h2><p class="intern-card-subtitle">Votre agenda à venir</p></div>
+                        <span class="intern-kpi-icon tone-blue"><i class="fa-regular fa-clock"></i></span>
+                    </div>
+                    <div class="planning-timeline">
+                        <div class="planning-event-line" th:each="ev, iteration : ${evenementsAvenir}" th:if="${iteration.index < 8}" th:classappend="${ev.type}">
+                            <span class="planning-event-dot"></span>
+                            <div>
+                                <strong th:text="${ev.titre}">Correction Dashboard</strong>
+                                <span th:text="${#temporals.format(ev.date, 'dd MMMM yyyy') + (ev.heure != null ? ' · ' + #temporals.format(ev.heure, 'HH:mm') : '')}">Aujourd'hui · 14:00</span>
+                                <small th:if="${ev.description != null and !ev.description.isBlank()}" th:text="${ev.description}">Description</small>
+                            </div>
+                        </div>
+                        <div th:if="${evenementsAvenir == null or evenementsAvenir.isEmpty()}" class="module-empty compact">
+                            <i class="fa-regular fa-calendar-plus"></i>
+                            <p>Aucun événement à venir.</p>
+                            <button class="intern-button secondary" type="button" data-open-event>Planifier</button>
+                        </div>
+                    </div>
+                </aside>
+            </section>
 
-<!-- MODAL AJOUT EVENEMENT -->
-<div class="modal-overlay" id="modalAjoutEvenement" onclick="if(event.target===this)fermerModal('modalAjoutEvenement')">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2>Ajouter un evenement</h2>
-            <button class="modal-close" onclick="fermerModal('modalAjoutEvenement')">&times;</button>
+            <section class="intern-grid two planning-secondary-grid">
+                <article class="intern-card">
+                    <div class="intern-card-header"><div><h2 class="intern-card-title">Catégories d'événements</h2><p class="intern-card-subtitle">Repérez rapidement chaque type d'activité</p></div></div>
+                    <div class="event-category-grid">
+                        <div class="event-category"><i class="tone-blue fa-solid fa-list-check"></i><div><strong>Tâches</strong><small>Travaux et actions à réaliser</small></div></div>
+                        <div class="event-category"><i class="tone-green fa-solid fa-file-arrow-up"></i><div><strong>Livrables</strong><small>Documents à remettre</small></div></div>
+                        <div class="event-category"><i class="tone-orange fa-solid fa-users"></i><div><strong>Réunions</strong><small>Points avec l'encadreur</small></div></div>
+                        <div class="event-category"><i class="tone-purple fa-solid fa-clipboard-check"></i><div><strong>Évaluations</strong><small>Bilans et appréciations</small></div></div>
+                        <div class="event-category"><i class="tone-red fa-solid fa-triangle-exclamation"></i><div><strong>Important</strong><small>Échéances prioritaires</small></div></div>
+                        <div class="event-category"><i class="tone-gray fa-solid fa-user"></i><div><strong>Personnel</strong><small>Congés et événements privés</small></div></div>
+                    </div>
+                </article>
+
+                <article class="intern-card">
+                    <div class="intern-card-header"><div><h2 class="intern-card-title">Activité récente</h2><p class="intern-card-subtitle">Dernières modifications du planning</p></div></div>
+                    <div class="intern-feed">
+                        <div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-calendar-plus"></i></span><div><strong>Nouveau rendez-vous ajouté</strong><span>Point hebdomadaire avec l'encadreur</span><small>Aujourd'hui</small></div></div>
+                        <div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-file-circle-check"></i></span><div><strong>Rapport planifié</strong><span>Échéance ajoutée au calendrier</span><small>Hier</small></div></div>
+                        <div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-solid fa-clipboard-check"></i></span><div><strong>Évaluation programmée</strong><span>Bilan intermédiaire du stage</span><small>Il y a 2 jours</small></div></div>
+                        <div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-solid fa-pen"></i></span><div><strong>Événement modifié</strong><span>L'heure de la réunion a été mise à jour</span><small>Il y a 3 jours</small></div></div>
+                        <div class="intern-feed-item"><span class="intern-feed-icon tone-red"><i class="fa-regular fa-bell"></i></span><div><strong>Nouveau rappel créé</strong><span>Notification un jour avant l'échéance</span><small>Il y a 4 jours</small></div></div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div class="intern-modal" data-event-modal aria-hidden="true">
+    <div class="intern-modal-panel">
+        <div class="intern-card-header">
+            <div><h2 class="intern-card-title">Ajouter un événement</h2><p class="intern-card-subtitle">Planifiez une nouvelle activité dans votre calendrier</p></div>
+            <button class="module-action" type="button" data-close-event aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form th:action="@{/stagiaire/planning/ajouter}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="groupe-champ">
-                <label>Motif de l'evenement</label>
-                <select name="motif" required>
-                    <option value="">Choisir un motif...</option>
-                    <option value="Permission">Permission</option>
-                    <option value="Evaluation">Evaluation</option>
-                    <option value="Conge">Conge</option>
-                    <option value="Reunion">Reunion</option>
-                    <option value="Depot livrable">Depot livrable</option>
-                    <option value="Soutenance">Soutenance</option>
-                    <option value="Autre">Autre</option>
-                </select>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="intern-form-grid">
+                <div class="intern-form-group full">
+                    <label for="eventTitle">Titre</label>
+                    <input class="intern-input" id="eventTitle" name="motif" required placeholder="Ex. Réunion avec mon encadreur">
+                </div>
+                <div class="intern-form-group">
+                    <label for="eventType">Type</label>
+                    <select class="intern-select" id="eventType" name="typeCouleur" required>
+                        <option value="reunion">Réunion</option>
+                        <option value="tache">Tâche</option>
+                        <option value="livrable">Livrable</option>
+                        <option value="evaluation">Évaluation</option>
+                        <option value="personnel">Personnel</option>
+                        <option value="conges">Congé</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="intern-form-group">
+                    <label for="eventPriority">Niveau de priorité</label>
+                    <select class="intern-select" id="eventPriority" name="priorite">
+                        <option value="basse">Basse</option>
+                        <option value="moyenne" selected>Moyenne</option>
+                        <option value="haute">Haute</option>
+                        <option value="urgente">Urgente</option>
+                    </select>
+                </div>
+                <div class="intern-form-group">
+                    <label for="eventDate">Date</label>
+                    <input class="intern-input" type="date" id="eventDate" name="date" required>
+                </div>
+                <div class="intern-form-group">
+                    <label for="eventTime">Heure</label>
+                    <input class="intern-input" type="time" id="eventTime" name="heure">
+                </div>
+                <div class="intern-form-group">
+                    <label for="eventReminder">Rappel</label>
+                    <select class="intern-select" id="eventReminder" name="rappel">
+                        <option value="30_minutes">30 minutes avant</option>
+                        <option value="1_heure" selected>1 heure avant</option>
+                        <option value="1_jour">1 jour avant</option>
+                        <option value="1_semaine">1 semaine avant</option>
+                    </select>
+                </div>
+                <div class="intern-form-group full">
+                    <label for="eventDescription">Description</label>
+                    <textarea class="intern-textarea" id="eventDescription" name="description" placeholder="Ajoutez le lieu, les participants ou les points à traiter..."></textarea>
+                </div>
             </div>
-            <div class="groupe-champ">
-                <label>Date de l'evenement</label>
-                <input type="date" name="date" required>
+            <div class="intern-modal-actions">
+                <button class="intern-button secondary" type="button" data-close-event>Annuler</button>
+                <button class="intern-button" type="submit"><i class="fa-solid fa-calendar-plus"></i> Créer l'événement</button>
             </div>
-            <div class="groupe-champ">
-                <label>Couleur</label>
-                <select name="typeCouleur" required>
-                    <option value="personnel" selected>Bleu</option>
-                    <option value="evaluation">Orange</option>
-                    <option value="conges">Vert</option>
-                    <option value="reunion">Violet</option>
-                    <option value="important">Rouge</option>
-                </select>
-            </div>
-            <button type="submit" class="bouton-principal">Ajouter l'evenement</button>
         </form>
     </div>
 </div>
+
+<script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
 <script th:inline="javascript">
-    const evenements = [
-        /*[# th:each="ev : ${evenements}"]*/
-        {
-            date: /*[[${#temporals.format(ev.date, 'yyyy-MM-dd')}]]*/ '2026-01-01',
-            titre: /*[[${ev.titre}]]*/ 'Titre',
-            type: /*[[${ev.type}]]*/ 'tache'
-        },
-        /*[/]*/
-    ];
+const planningEvents = [
+    /*[# th:each="ev : ${evenements}"]*/
+    {
+        date: /*[[${#temporals.format(ev.date, 'yyyy-MM-dd')}]]*/ '2026-07-27',
+        title: /*[[${ev.titre}]]*/ 'Événement',
+        type: /*[[${ev.type}]]*/ 'personnel',
+        time: /*[[${ev.heure != null ? #temporals.format(ev.heure, 'HH:mm') : ''}]]*/ '',
+        description: /*[[${ev.description != null ? ev.description : ''}]]*/ ''
+    },
+    /*[/]*/
+];
+const stageEndDate = /*[[${stage != null and stage.dateFin != null ? #temporals.format(stage.dateFin, 'yyyy-MM-dd') : ''}]]*/ '';
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.querySelector('[data-event-modal]');
+    const dateInput = document.getElementById('eventDate');
+    const openModal = selectedDate => {
+        if (selectedDate) dateInput.value = selectedDate;
+        if (!dateInput.value) dateInput.value = formatDateKey(new Date());
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+    const closeModal = () => {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    };
+    document.querySelectorAll('[data-open-event]').forEach(button => button.addEventListener('click', () => openModal()));
+    document.querySelectorAll('[data-close-event]').forEach(button => button.addEventListener('click', closeModal));
+    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
 
-    let currentDate = new Date();
-    currentDate.setDate(1);
+    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    const grid = document.getElementById('calendarGrid');
+    const monthCalendar = document.getElementById('monthCalendar');
+    const agenda = document.getElementById('calendarAgenda');
+    const title = document.getElementById('calendarTitle');
+    let cursor = new Date();
+    cursor.setHours(12, 0, 0, 0);
+    let activeView = 'month';
 
-    const nomsMois = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
-
-    function formatDateKey(d) {
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    function formatDateKey(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     }
 
-    function evenementsDuJour(cle) {
-        return evenements.filter(e => e.date === cle);
+    function parseDate(value) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day, 12);
     }
 
-    function genererCalendrier() {
-        const grille = document.getElementById('calendrierGrille');
-        grille.innerHTML = '';
-        document.getElementById('calendrierTitre').textContent =
-            nomsMois[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+    function eventsForDate(date) {
+        const key = formatDateKey(date);
+        return planningEvents.filter(event => event.date === key);
+    }
 
-        const premierJourMois = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const dernierJourMois = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    function normalizeType(type) {
+        return ['tache', 'livrable', 'reunion', 'evaluation', 'important', 'fin_stage', 'personnel', 'conges'].includes(type) ? type : 'personnel';
+    }
 
-        let decalage = premierJourMois.getDay() - 1;
-        if (decalage < 0) decalage = 6;
+    function renderMonth() {
+        monthCalendar.hidden = false;
+        agenda.hidden = true;
+        grid.innerHTML = '';
+        title.textContent = monthNames[cursor.getMonth()] + ' ' + cursor.getFullYear();
+        const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1, 12);
+        const mondayOffset = (first.getDay() + 6) % 7;
+        const start = new Date(first);
+        start.setDate(first.getDate() - mondayOffset);
+        const todayKey = formatDateKey(new Date());
 
-        for (let i = 0; i < decalage; i++) {
-            const vide = document.createElement('div');
-            vide.className = 'case-jour vide';
-            grille.appendChild(vide);
-        }
+        for (let index = 0; index < 42; index++) {
+            const date = new Date(start);
+            date.setDate(start.getDate() + index);
+            const day = document.createElement('div');
+            day.className = 'calendar-day';
+            day.dataset.date = formatDateKey(date);
+            if (date.getMonth() !== cursor.getMonth()) day.classList.add('outside');
+            if (day.dataset.date === todayKey) day.classList.add('today');
 
-        const aujourdHui = formatDateKey(new Date());
+            const number = document.createElement('button');
+            number.type = 'button';
+            number.className = 'calendar-day-number';
+            number.textContent = date.getDate();
+            number.title = 'Ajouter un événement';
+            number.addEventListener('click', () => openModal(day.dataset.date));
+            day.appendChild(number);
 
-        for (let jour = 1; jour <= dernierJourMois.getDate(); jour++) {
-            const dateCourante = new Date(currentDate.getFullYear(), currentDate.getMonth(), jour);
-            const cle = formatDateKey(dateCourante);
-            const evtsJour = evenementsDuJour(cle);
+            eventsForDate(date).slice(0, 4).forEach(event => day.appendChild(createEventElement(event)));
+            const overflow = eventsForDate(date).length - 4;
+            if (overflow > 0) {
+                const more = document.createElement('span');
+                more.className = 'calendar-more';
+                more.textContent = '+' + overflow + ' autre(s)';
+                day.appendChild(more);
+            }
 
-            const caseJour = document.createElement('div');
-            caseJour.className = 'case-jour';
-            if (cle === aujourdHui) caseJour.classList.add('aujourdhui');
-            if (evtsJour.length > 0) caseJour.classList.add('avec-evenement');
-
-            const numero = document.createElement('div');
-            numero.className = 'numero-jour';
-            numero.textContent = jour;
-            caseJour.appendChild(numero);
-
-            evtsJour.forEach(e => {
-                const pastille = document.createElement('div');
-                pastille.className = 'pastille-evenement ' + e.type;
-                pastille.title = e.titre;
-                caseJour.appendChild(pastille);
+            day.addEventListener('dragover', event => event.preventDefault());
+            day.addEventListener('drop', event => {
+                event.preventDefault();
+                const eventIndex = Number(event.dataTransfer.getData('text/plain'));
+                if (Number.isNaN(eventIndex) || !planningEvents[eventIndex]) return;
+                planningEvents[eventIndex].date = day.dataset.date;
+                renderCalendar();
             });
-
-            grille.appendChild(caseJour);
+            grid.appendChild(day);
         }
     }
 
-    document.getElementById('moisPrecedent').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        genererCalendrier();
-    });
-    document.getElementById('moisSuivant').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        genererCalendrier();
-    });
+    function createEventElement(event) {
+        const eventElement = document.createElement('div');
+        eventElement.className = 'calendar-event ' + normalizeType(event.type);
+        eventElement.draggable = true;
+        eventElement.title = event.title + (event.time ? ' · ' + event.time : '') + (event.description ? '\n' + event.description : '');
+        eventElement.textContent = (event.time ? event.time + ' ' : '') + event.title;
+        eventElement.addEventListener('dragstart', dragEvent => {
+            dragEvent.dataTransfer.setData('text/plain', String(planningEvents.indexOf(event)));
+        });
+        return eventElement;
+    }
 
-    genererCalendrier();
-</script>
-<script th:if="${stage != null and stage.dateFin != null}">
-const dateFin = new Date(/*[[${#temporals.format(stage.dateFin, 'yyyy-MM-dd')}]]*/ '2026-12-31T23:59:59');
-function updateCountdown() {
+    function startOfWeek(date) {
+        const result = new Date(date);
+        result.setDate(result.getDate() - ((result.getDay() + 6) % 7));
+        return result;
+    }
+
+    function renderAgenda() {
+        monthCalendar.hidden = true;
+        agenda.hidden = false;
+        agenda.innerHTML = '';
+        const dates = [];
+        if (activeView === 'week') {
+            const start = startOfWeek(cursor);
+            for (let index = 0; index < 7; index++) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + index);
+                dates.push(date);
+            }
+            const end = dates[6];
+            title.textContent = dates[0].getDate() + ' - ' + end.getDate() + ' ' + monthNames[end.getMonth()] + ' ' + end.getFullYear();
+        } else {
+            dates.push(new Date(cursor));
+            title.textContent = dayNames[cursor.getDay()] + ' ' + cursor.getDate() + ' ' + monthNames[cursor.getMonth()] + ' ' + cursor.getFullYear();
+        }
+
+        dates.forEach(date => {
+            const column = document.createElement('section');
+            column.className = 'calendar-agenda-day';
+            const heading = document.createElement('button');
+            heading.type = 'button';
+            heading.className = 'calendar-agenda-heading';
+            heading.innerHTML = '<strong>' + dayNames[date.getDay()] + '</strong><span>' + date.getDate() + ' ' + monthNames[date.getMonth()] + '</span>';
+            heading.addEventListener('click', () => openModal(formatDateKey(date)));
+            column.appendChild(heading);
+            const dayEvents = eventsForDate(date);
+            if (!dayEvents.length) {
+                const empty = document.createElement('p');
+                empty.className = 'calendar-agenda-empty';
+                empty.textContent = 'Aucun événement';
+                column.appendChild(empty);
+            }
+            dayEvents.forEach(event => {
+                const item = document.createElement('div');
+                item.className = 'calendar-agenda-event ' + normalizeType(event.type);
+                item.innerHTML = '<time>' + (event.time || 'Toute la journée') + '</time><strong>' + escapeHtml(event.title) + '</strong><span>' + escapeHtml(event.description || 'Aucun détail supplémentaire') + '</span>';
+                column.appendChild(item);
+            });
+            agenda.appendChild(column);
+        });
+        agenda.classList.toggle('week-view', activeView === 'week');
+    }
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value;
+        return element.innerHTML;
+    }
+
+    function renderCalendar() {
+        if (activeView === 'month') renderMonth();
+        else renderAgenda();
+    }
+
+    document.getElementById('calendarPrevious').addEventListener('click', () => {
+        if (activeView === 'month') cursor.setMonth(cursor.getMonth() - 1);
+        else cursor.setDate(cursor.getDate() - (activeView === 'week' ? 7 : 1));
+        renderCalendar();
+    });
+    document.getElementById('calendarNext').addEventListener('click', () => {
+        if (activeView === 'month') cursor.setMonth(cursor.getMonth() + 1);
+        else cursor.setDate(cursor.getDate() + (activeView === 'week' ? 7 : 1));
+        renderCalendar();
+    });
+    document.getElementById('calendarToday').addEventListener('click', () => {
+        cursor = new Date();
+        cursor.setHours(12, 0, 0, 0);
+        renderCalendar();
+    });
+    document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+        activeView = button.dataset.view;
+        document.querySelectorAll('[data-view]').forEach(item => item.classList.toggle('active', item === button));
+        renderCalendar();
+    }));
+
     const now = new Date();
-    const diff = dateFin - now;
-    if (diff <= 0) { document.getElementById('countdownText').textContent = 'Termine'; return; }
-    const jours = Math.floor(diff / (1000*60*60*24));
-    const heures = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-    const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-    const secondes = Math.floor((diff % (1000*60)) / 1000);
-    document.getElementById('countdownText').textContent = jours + 'j ' + heures + 'h ' + minutes + 'm ' + secondes + 's';
-}
-updateCountdown();
-setInterval(updateCountdown, 1000);
+    const futureEvents = planningEvents
+        .filter(event => parseDate(event.date) >= new Date(now.getFullYear(), now.getMonth(), now.getDate()))
+        .sort((first, second) => first.date.localeCompare(second.date) || first.time.localeCompare(second.time));
+    const deadlines = futureEvents.filter(event => ['tache', 'livrable', 'important', 'fin_stage', 'evaluation'].includes(event.type));
+    const meetings = futureEvents.filter(event => event.type === 'reunion');
+    updateNextCard(deadlines[0], 'nextDeadlineTitle', 'nextDeadlineDate');
+    updateNextCard(meetings[0], 'nextMeetingTitle', 'nextMeetingDate');
+
+    function updateNextCard(event, titleId, dateId) {
+        if (!event) return;
+        document.getElementById(titleId).textContent = event.title;
+        const date = parseDate(event.date);
+        document.getElementById(dateId).textContent = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + (event.time ? ' · ' + event.time : '');
+    }
+
+    if (stageEndDate) {
+        const end = parseDate(stageEndDate);
+        const countdown = document.getElementById('stageCountdown');
+        const refreshCountdown = () => {
+            const difference = end.getTime() - Date.now();
+            if (difference <= 0) {
+                countdown.textContent = 'Stage terminé';
+                return;
+            }
+            const days = Math.floor(difference / 86400000);
+            const hours = Math.floor((difference % 86400000) / 3600000);
+            countdown.textContent = days + ' j · ' + hours + ' h restantes';
+        };
+        refreshCountdown();
+        setInterval(refreshCountdown, 60000);
+    }
+
+    renderCalendar();
+});
 </script>
-</div>
-</div>
 </body>
 </html>

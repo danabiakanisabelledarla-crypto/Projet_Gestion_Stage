@@ -1,16 +1,24 @@
 package com.gestionstages.gestion_stages.controllers;
 
+import com.gestionstages.gestion_stages.EmailService;
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -32,6 +40,11 @@ public class AdminController {
     private final ActivityLogRepository activityLogRepository;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
+    private final LivrableRepository livrableRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AdminController(DemandeStageRepository demandeStageRepository,
                             StageRepository stageRepository,
@@ -44,7 +57,12 @@ public class AdminController {
                             NotificationRepository notificationRepository,
                             ActivityLogRepository activityLogRepository,
                             ConversationRepository conversationRepository,
-                            MessageRepository messageRepository) {
+                            MessageRepository messageRepository,
+                            RoleRepository roleRepository,
+                            PermissionRepository permissionRepository,
+                            LivrableRepository livrableRepository,
+                            PasswordEncoder passwordEncoder,
+                            EmailService emailService) {
         this.demandeStageRepository = demandeStageRepository;
         this.stageRepository = stageRepository;
         this.tacheRepository = tacheRepository;
@@ -57,6 +75,11 @@ public class AdminController {
         this.activityLogRepository = activityLogRepository;
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+        this.livrableRepository = livrableRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @GetMapping("/dashboard")
@@ -251,12 +274,13 @@ public class AdminController {
             m.put("id", d.getId());
             m.put("nomComplet", d.getPrenom() + " " + d.getNom());
             m.put("initiale", d.getPrenom().substring(0,1).toUpperCase() + d.getNom().substring(0,1).toUpperCase());
-            m.put("email", d.getPrenom().toLowerCase() + "." + d.getNom().toLowerCase() + "@email.com");
+            m.put("email", extraireEmailCandidat(d));
             m.put("ecole", d.getEcole());
             m.put("filiere", d.getFiliere());
             m.put("niveau", d.getNiveau());
             m.put("dureeSouhaitee", d.getDureeSouhaitee());
             m.put("commentaire", d.getCommentaire());
+            m.put("motifRefus", d.getMotifRefus());
             m.put("dateDemande", d.getDateDemande() != null ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDemande())) : "—");
             m.put("statutCls", d.getStatut().name());
             m.put("statutLabel", d.getStatut() == DemandeStage.StatutDemande.en_attente ? "En attente"
@@ -265,6 +289,7 @@ public class AdminController {
             List<Document> docs = documentRepository.findByDemandeStageId(d.getId());
             List<Map<String, String>> docsJson = docs.stream().map(doc -> {
                 Map<String, String> dm = new java.util.HashMap<>();
+                dm.put("id", doc.getId().toString());
                 dm.put("nom", doc.getNomFichier());
                 dm.put("taille", "—");
                 dm.put("dateDepot", doc.getDateDepot() != null
@@ -290,8 +315,120 @@ public class AdminController {
         model.addAttribute("refusees", refusees);
         model.addAttribute("ceMois", ceMois);
         model.addAttribute("demandesJson", demandesJson);
+        model.addAttribute("emailsDemandes", toutesLesDemandes.stream().collect(Collectors.toMap(
+                DemandeStage::getId,
+                this::extraireEmailCandidat
+        )));
 
         return "admin/demandes";
+    }
+
+    @PostMapping("/demandes/{id}/accepter")
+    public String accepterDemande(@PathVariable Integer id,
+                                  @RequestParam String email,
+                                  @RequestParam String motDePasse,
+                                  RedirectAttributes redirectAttributes) {
+        Optional<DemandeStage> demandeOpt = demandeStageRepository.findById(id);
+        if (demandeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Demande introuvable.");
+            return "redirect:/admin/demandes";
+        }
+
+        DemandeStage demande = demandeOpt.get();
+        String emailNormalise = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (emailNormalise.isBlank() || motDePasse == null || motDePasse.length() < 6) {
+            redirectAttributes.addFlashAttribute("erreur", "L'adresse email et un mot de passe d'au moins 6 caractères sont requis.");
+            return "redirect:/admin/demandes";
+        }
+        if (stagiaireRepository.findByDemandeStageId(id).isPresent()) {
+            redirectAttributes.addFlashAttribute("erreur", "Un compte stagiaire existe déjà pour cette demande.");
+            return "redirect:/admin/demandes";
+        }
+        if (utilisateurRepository.existsByEmail(emailNormalise)) {
+            redirectAttributes.addFlashAttribute("erreur", "Cette adresse email est déjà utilisée.");
+            return "redirect:/admin/demandes";
+        }
+
+        Role roleStagiaire = roleRepository.findByLibelle("STAGIAIRE")
+                .orElseThrow(() -> new IllegalStateException("Le rôle STAGIAIRE est introuvable."));
+        Utilisateur utilisateur = new Utilisateur(
+                roleStagiaire,
+                demande.getNom(),
+                demande.getPrenom(),
+                emailNormalise,
+                passwordEncoder.encode(motDePasse)
+        );
+        utilisateurRepository.save(utilisateur);
+
+        String matricule = genererMatriculeStagiaire();
+        stagiaireRepository.save(new Stagiaire(utilisateur, demande, matricule, LocalDate.now()));
+        demande.setStatut(DemandeStage.StatutDemande.acceptee);
+        demande.setMotifRefus(null);
+        demandeStageRepository.save(demande);
+
+        emailService.envoyerConfirmationAdmission(
+                extraireEmailCandidat(demande),
+                demande.getPrenom() + " " + demande.getNom(),
+                emailNormalise,
+                motDePasse
+        );
+
+        redirectAttributes.addFlashAttribute("succes",
+                "Demande acceptée, compte " + matricule + " créé et réponse envoyée par email.");
+        return "redirect:/admin/demandes";
+    }
+
+    @PostMapping("/demandes/{id}/refuser")
+    public String refuserDemande(@PathVariable Integer id,
+                                 @RequestParam String motif,
+                                 RedirectAttributes redirectAttributes) {
+        Optional<DemandeStage> demandeOpt = demandeStageRepository.findById(id);
+        if (demandeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Demande introuvable.");
+            return "redirect:/admin/demandes";
+        }
+        if (motif == null || motif.trim().length() < 10) {
+            redirectAttributes.addFlashAttribute("erreur", "Veuillez préciser un motif de refus d'au moins 10 caractères.");
+            return "redirect:/admin/demandes";
+        }
+
+        DemandeStage demande = demandeOpt.get();
+        demande.setStatut(DemandeStage.StatutDemande.refusee);
+        demande.setMotifRefus(motif.trim());
+        demandeStageRepository.save(demande);
+        emailService.envoyerRefusDemande(
+                extraireEmailCandidat(demande),
+                demande.getPrenom() + " " + demande.getNom(),
+                motif.trim()
+        );
+
+        redirectAttributes.addFlashAttribute("succes", "Demande refusée et réponse envoyée par email.");
+        return "redirect:/admin/demandes";
+    }
+
+    @GetMapping("/demandes/exporter")
+    public ResponseEntity<byte[]> exporterDemandes() {
+        StringBuilder csv = new StringBuilder("\uFEFF");
+        csv.append("ID;Nom;Prénom;Email;École;Filière;Niveau;Durée souhaitée;Date;Statut;Motif du refus\n");
+        for (DemandeStage demande : demandeStageRepository.findAll()) {
+            csv.append(valeurCsv(demande.getId())).append(';')
+                    .append(valeurCsv(demande.getNom())).append(';')
+                    .append(valeurCsv(demande.getPrenom())).append(';')
+                    .append(valeurCsv(extraireEmailCandidat(demande))).append(';')
+                    .append(valeurCsv(demande.getEcole())).append(';')
+                    .append(valeurCsv(demande.getFiliere())).append(';')
+                    .append(valeurCsv(demande.getNiveau())).append(';')
+                    .append(valeurCsv(demande.getDureeSouhaitee())).append(';')
+                    .append(valeurCsv(demande.getDateDemande())).append(';')
+                    .append(valeurCsv(demande.getStatut())).append(';')
+                    .append(valeurCsv(demande.getMotifRefus())).append('\n');
+        }
+        byte[] contenu = csv.toString().getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"demandes-stage.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .contentLength(contenu.length)
+                .body(contenu);
     }
 
     @GetMapping({"/stagiaires", "/stagiaire"})
@@ -333,6 +470,8 @@ public class AdminController {
         List<Map<String, Object>> stagiairesJson = tousStagiaires.stream().map(s -> {
             Map<String, Object> m = new java.util.HashMap<>();
             m.put("id", s.getId());
+            m.put("prenom", s.getUtilisateur().getPrenom());
+            m.put("nom", s.getUtilisateur().getNom());
             m.put("matricule", s.getMatricule());
             m.put("initiale", s.getUtilisateur().getPrenom().substring(0,1).toUpperCase()
                     + s.getUtilisateur().getNom().substring(0,1).toUpperCase());
@@ -356,8 +495,10 @@ public class AdminController {
             }
 
             java.util.Optional<Stage> stageOpt = stageRepository.findByStagiaireId(s.getId());
+            Stage stageStagiaire = stageOpt.orElse(null);
             if (stageOpt.isPresent()) {
-                Stage st = stageOpt.get();
+                Stage st = stageStagiaire;
+                m.put("stageId", st.getId());
                 m.put("service", st.getService() != null ? st.getService().getNom() : "—");
                 m.put("serviceId", st.getService() != null ? st.getService().getId().toString() : "");
                 m.put("encadreur", st.getEncadreur() != null
@@ -365,6 +506,8 @@ public class AdminController {
                 m.put("encadreurId", st.getEncadreur() != null ? st.getEncadreur().getId().toString() : "");
                 m.put("dateDebut", st.getDateDebut() != null ? sdf.format(java.sql.Date.valueOf(st.getDateDebut())) : "—");
                 m.put("dateFin", st.getDateFin() != null ? sdf.format(java.sql.Date.valueOf(st.getDateFin())) : "—");
+                m.put("dateDebutIso", st.getDateDebut() != null ? st.getDateDebut().toString() : "");
+                m.put("dateFinIso", st.getDateFin() != null ? st.getDateFin().toString() : "");
                 m.put("duree", st.getDuree() != null ? st.getDuree() : "—");
 
                 if (st.getDateFin() != null) {
@@ -390,26 +533,33 @@ public class AdminController {
                     m.put("progression", 0);
                 }
             } else {
+                m.put("stageId", null);
                 m.put("service", "—");
                 m.put("serviceId", "");
                 m.put("encadreur", "—");
                 m.put("encadreurId", "");
                 m.put("dateDebut", "—");
                 m.put("dateFin", "—");
+                m.put("dateDebutIso", "");
+                m.put("dateFinIso", "");
                 m.put("duree", "—");
                 m.put("dureeRestante", "—");
                 m.put("progression", 0);
             }
 
-            List<com.gestionstages.gestion_stages.entities.Document> docs = documentRepository.findAll().stream()
-                    .filter(d -> d.getStage() != null && d.getStage().getId().equals(s.getId())
-                            || (d.getDemandeStage() != null && s.getDemandeStage() != null
-                                && d.getDemandeStage().getId().equals(s.getDemandeStage().getId())))
-                    .collect(java.util.stream.Collectors.toList());
-            List<Map<String, String>> docsJson = docs.stream().map(doc -> {
+            List<Document> dossierDocuments = s.getDemandeStage() == null
+                    ? List.of()
+                    : documentRepository.findByDemandeStageId(s.getDemandeStage().getId());
+            List<Map<String, String>> docsJson = dossierDocuments.stream().map(doc -> {
                 Map<String, String> dm = new java.util.HashMap<>();
+                dm.put("id", doc.getId().toString());
                 dm.put("nom", doc.getNomFichier());
-                dm.put("taille", "—");
+                dm.put("taille", doc.getTailleOctets() != null
+                        ? String.format(Locale.FRANCE, "%.1f Mo", doc.getTailleOctets() / 1048576.0)
+                        : "—");
+                dm.put("date", doc.getDateDepot() != null
+                        ? doc.getDateDepot().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        : "—");
                 String ext = doc.getNomFichier() != null && doc.getNomFichier().contains(".")
                         ? doc.getNomFichier().substring(doc.getNomFichier().lastIndexOf(".")+1).toLowerCase() : "";
                 if (ext.equals("pdf")) { dm.put("cls", "pdf"); dm.put("icon", "fa-solid fa-file-pdf"); }
@@ -421,11 +571,104 @@ public class AdminController {
             m.put("documents", docsJson);
             m.put("documentsCount", docsJson.size());
 
+            List<Livrable> livrables = new ArrayList<>();
+            if (stageStagiaire != null) {
+                livrables.addAll(livrableRepository.findByStageId(stageStagiaire.getId()));
+                for (Tache tache : tacheRepository.findByStageId(stageStagiaire.getId())) {
+                    for (Livrable livrable : livrableRepository.findByTacheId(tache.getId())) {
+                        if (livrables.stream().noneMatch(item -> item.getId().equals(livrable.getId()))) {
+                            livrables.add(livrable);
+                        }
+                    }
+                }
+            }
+            List<Map<String, String>> livrablesJson = livrables.stream().map(livrable -> {
+                Map<String, String> lm = new HashMap<>();
+                lm.put("id", livrable.getId().toString());
+                lm.put("titre", livrable.getTitre());
+                lm.put("categorie", livrable.getCategorie() != null ? livrable.getCategorie() : "Autre");
+                lm.put("statut", livrable.getStatut().name());
+                lm.put("fichier", livrable.getFichier());
+                lm.put("date", livrable.getDateDepot() != null
+                        ? livrable.getDateDepot().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                        : "—");
+                lm.put("taille", livrable.getTailleOctets() != null
+                        ? String.format(Locale.FRANCE, "%.1f Mo", livrable.getTailleOctets() / 1048576.0)
+                        : "—");
+                return lm;
+            }).collect(Collectors.toList());
+            m.put("livrables", livrablesJson);
+            m.put("livrablesCount", livrablesJson.size());
+
+            List<Map<String, String>> tachesJson = stageStagiaire == null
+                    ? List.of()
+                    : tacheRepository.findByStageId(stageStagiaire.getId()).stream().map(tache -> {
+                        Map<String, String> tm = new HashMap<>();
+                        tm.put("titre", tache.getTitre());
+                        tm.put("description", tache.getDescription() != null ? tache.getDescription() : "");
+                        tm.put("statut", tache.getStatut().name());
+                        tm.put("dateLimite", tache.getDateLimite() != null
+                                ? tache.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                : "—");
+                        return tm;
+                    }).collect(Collectors.toList());
+            m.put("taches", tachesJson);
+            m.put("tachesCount", tachesJson.size());
+
             return m;
         }).collect(java.util.stream.Collectors.toList());
 
         model.addAttribute("stagiairesJson", stagiairesJson);
         return "admin/stagiaires";
+    }
+
+    @PostMapping("/stagiaires/{id}/modifier")
+    public String modifierFicheStagiaire(@PathVariable Integer id,
+                                         @RequestParam String prenom,
+                                         @RequestParam String nom,
+                                         @RequestParam String email,
+                                         @RequestParam(required = false) String telephone,
+                                         @RequestParam(required = false) String adresse,
+                                         @RequestParam(required = false) Integer serviceId,
+                                         @RequestParam(required = false) Integer encadreurId,
+                                         @RequestParam(required = false) String dateDebut,
+                                         @RequestParam(required = false) String dateFin,
+                                         RedirectAttributes redirectAttributes) {
+        Optional<Stagiaire> stagiaireOpt = stagiaireRepository.findById(id);
+        if (stagiaireOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Stagiaire introuvable.");
+            return "redirect:/admin/stagiaires";
+        }
+
+        Stagiaire stagiaire = stagiaireOpt.get();
+        Utilisateur utilisateur = stagiaire.getUtilisateur();
+        String emailNormalise = email.trim().toLowerCase(Locale.ROOT);
+        Optional<Utilisateur> compteExistant = utilisateurRepository.findByEmail(emailNormalise);
+        if (compteExistant.isPresent() && !compteExistant.get().getId().equals(utilisateur.getId())) {
+            redirectAttributes.addFlashAttribute("erreur", "Cette adresse email est déjà utilisée.");
+            return "redirect:/admin/stagiaires";
+        }
+        utilisateur.setPrenom(prenom.trim());
+        utilisateur.setNom(nom.trim());
+        utilisateur.setEmail(emailNormalise);
+        utilisateur.setTelephone(telephone);
+        utilisateur.setAdresse(adresse);
+        utilisateurRepository.save(utilisateur);
+
+        stageRepository.findByStagiaireId(id).ifPresent(stage -> {
+            if (serviceId != null) serviceRepository.findById(serviceId).ifPresent(stage::setService);
+            if (encadreurId != null) encadreurRepository.findById(encadreurId).ifPresent(stage::setEncadreur);
+            if (dateDebut != null && !dateDebut.isBlank()) stage.setDateDebut(LocalDate.parse(dateDebut));
+            if (dateFin != null && !dateFin.isBlank()) stage.setDateFin(LocalDate.parse(dateFin));
+            if (stage.getDateDebut() != null && stage.getDateFin() != null) {
+                long jours = java.time.temporal.ChronoUnit.DAYS.between(stage.getDateDebut(), stage.getDateFin());
+                stage.setDuree(jours + " jours");
+            }
+            stageRepository.save(stage);
+        });
+
+        redirectAttributes.addFlashAttribute("succes", "La fiche du stagiaire a été mise à jour.");
+        return "redirect:/admin/stagiaires";
     }
 
     @GetMapping("/encadreurs")
@@ -527,7 +770,163 @@ public class AdminController {
     @GetMapping("/roles-permissions")
     public String afficherRolesPermissions(Model model) {
         model.addAttribute("activePage", "roles-permissions");
+        List<Role> roles = roleRepository.findAll();
+        Set<String> rolesSysteme = Set.of("ADMINISTRATEUR", "RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE");
+        Map<String, Integer> utilisateursParRole = roles.stream().collect(Collectors.toMap(
+                Role::getLibelle,
+                role -> utilisateurRepository.findByRole_Libelle(role.getLibelle()).size()
+        ));
+        model.addAttribute("roles", roles);
+        model.addAttribute("permissions", permissionRepository.findAll());
+        model.addAttribute("utilisateurs", utilisateurRepository.findAll());
+        model.addAttribute("utilisateursParRole", utilisateursParRole);
+        model.addAttribute("rolesPersonnalises", roles.stream()
+                .filter(role -> !rolesSysteme.contains(role.getLibelle()))
+                .toList());
+        model.addAttribute("nombreRoles", roles.size());
+        model.addAttribute("nombrePermissions", permissionRepository.count());
+        model.addAttribute("nombrePermissionsActives", roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getId)
+                .distinct()
+                .count());
+        model.addAttribute("nombreUtilisateursRoles", utilisateurRepository.count());
+        model.addAttribute("nombreAdministrateurs", utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size());
+        model.addAttribute("nombreResponsables", utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size());
+        model.addAttribute("nombreEncadreursRole", utilisateurRepository.findByRole_Libelle("ENCADREUR").size());
+        model.addAttribute("nombreStagiairesRole", utilisateurRepository.findByRole_Libelle("STAGIAIRE").size());
+        model.addAttribute("nomComplet", "Administrateur");
+        model.addAttribute("initiales", "A");
         return "admin/roles-permissions";
+    }
+
+    @PostMapping("/roles-permissions/ajouter")
+    public String ajouterRole(@RequestParam String libelle,
+                              @RequestParam(required = false) String description,
+                              @RequestParam(required = false) List<Integer> permissionIds,
+                              RedirectAttributes redirectAttributes) {
+        String roleLibelle = libelle == null ? "" : java.text.Normalizer
+                .normalize(libelle.trim(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase(Locale.ROOT)
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+        if (roleLibelle.isBlank()) {
+            redirectAttributes.addFlashAttribute("erreur", "Le nom du rôle est obligatoire.");
+            return "redirect:/admin/roles-permissions";
+        }
+        if (roleRepository.findByLibelle(roleLibelle).isPresent()) {
+            redirectAttributes.addFlashAttribute("erreur", "Ce rôle existe déjà.");
+            return "redirect:/admin/roles-permissions";
+        }
+        Role role = new Role(roleLibelle, description);
+        if (permissionIds != null) {
+            role.setPermissions(new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
+        }
+        roleRepository.save(role);
+        redirectAttributes.addFlashAttribute("succes", "Le rôle " + roleLibelle + " a été créé.");
+        return "redirect:/admin/roles-permissions";
+    }
+
+    @PostMapping("/roles-permissions/attribuer")
+    public String attribuerRole(@RequestParam Integer utilisateurId,
+                                @RequestParam Integer roleId,
+                                RedirectAttributes redirectAttributes) {
+        Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findById(utilisateurId);
+        Optional<Role> roleOpt = roleRepository.findById(roleId);
+        if (utilisateurOpt.isEmpty() || roleOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Utilisateur ou rôle introuvable.");
+            return "redirect:/admin/roles-permissions";
+        }
+
+        Utilisateur utilisateur = utilisateurOpt.get();
+        Role ancienRole = utilisateur.getRole();
+        Role nouveauRole = roleOpt.get();
+        utilisateur.setRole(nouveauRole);
+        utilisateurRepository.save(utilisateur);
+
+        emailService.envoyerChangementRole(
+                utilisateur.getEmail(),
+                utilisateur.getPrenom() + " " + utilisateur.getNom(),
+                utilisateur.getTelephone(),
+                nouveauRole.getLibelle(),
+                nouveauRole.getPermissions().stream().map(Permission::getNom).toList()
+        );
+
+        String action = ancienRole != null && ancienRole.getId().equals(nouveauRole.getId())
+                ? "a été confirmé"
+                : "a été changé de " + (ancienRole == null ? "sans rôle" : ancienRole.getLibelle())
+                        + " vers " + nouveauRole.getLibelle();
+        redirectAttributes.addFlashAttribute("succes",
+                "Le rôle de " + utilisateur.getPrenom() + " " + utilisateur.getNom() + " " + action
+                        + ". Un e-mail récapitulatif a été envoyé.");
+        return "redirect:/admin/roles-permissions";
+    }
+
+    @PostMapping("/roles-permissions/roles/{roleId}/permissions")
+    public String modifierPermissionsRole(@PathVariable Integer roleId,
+                                           @RequestParam(required = false) List<Integer> permissionIds,
+                                           RedirectAttributes redirectAttributes) {
+        Optional<Role> roleOpt = roleRepository.findById(roleId);
+        if (roleOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Rôle introuvable.");
+            return "redirect:/admin/roles-permissions";
+        }
+        Role role = roleOpt.get();
+        role.setPermissions(permissionIds == null
+                ? new LinkedHashSet<>()
+                : new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
+        roleRepository.save(role);
+        redirectAttributes.addFlashAttribute("succes",
+                "Les permissions du rôle " + role.getLibelle() + " ont été mises à jour.");
+        return "redirect:/admin/roles-permissions";
+    }
+
+    @PostMapping("/roles-permissions/permissions/ajouter")
+    public String ajouterPermission(@RequestParam String nom,
+                                     @RequestParam(required = false) String description,
+                                     RedirectAttributes redirectAttributes) {
+        if (nom == null || nom.isBlank()) {
+            redirectAttributes.addFlashAttribute("erreur", "Le nom de la permission est obligatoire.");
+            return "redirect:/admin/roles-permissions";
+        }
+        String code = normaliserCode(nom);
+        if (permissionRepository.findByCode(code).isPresent()
+                || permissionRepository.existsByNomIgnoreCase(nom.trim())) {
+            redirectAttributes.addFlashAttribute("erreur", "Cette permission existe déjà.");
+            return "redirect:/admin/roles-permissions";
+        }
+        permissionRepository.save(new Permission(code, nom.trim(), description));
+        redirectAttributes.addFlashAttribute("succes", "La permission " + nom.trim() + " a été ajoutée.");
+        return "redirect:/admin/roles-permissions";
+    }
+
+    @PostMapping("/roles-permissions/permissions/{permissionId}/supprimer")
+    public String supprimerPermission(@PathVariable Integer permissionId,
+                                       RedirectAttributes redirectAttributes) {
+        Optional<Permission> permissionOpt = permissionRepository.findById(permissionId);
+        if (permissionOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Permission introuvable.");
+            return "redirect:/admin/roles-permissions";
+        }
+        Permission permission = permissionOpt.get();
+        roleRepository.findAll().forEach(role -> {
+            if (role.getPermissions().removeIf(item -> item.getId().equals(permissionId))) {
+                roleRepository.save(role);
+            }
+        });
+        permissionRepository.delete(permission);
+        redirectAttributes.addFlashAttribute("succes",
+                "La permission " + permission.getNom() + " a été supprimée.");
+        return "redirect:/admin/roles-permissions";
+    }
+
+    private String normaliserCode(String valeur) {
+        return java.text.Normalizer.normalize(valeur.trim(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase(Locale.ROOT)
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
     }
 
     @GetMapping("/statistiques")
@@ -542,5 +941,41 @@ public class AdminController {
         model.addAttribute("stagesTermines", stageRepository.findByStatut(Stage.StatutStage.termine).size());
 
         return "admin/statistiques";
+    }
+
+    private String extraireEmailCandidat(DemandeStage demande) {
+        String commentaire = demande.getCommentaire();
+        if (commentaire != null) {
+            String marqueur = "Email candidat : ";
+            int index = commentaire.indexOf(marqueur);
+            if (index >= 0) {
+                String email = commentaire.substring(index + marqueur.length()).trim();
+                int finLigne = email.indexOf('\n');
+                return finLigne >= 0 ? email.substring(0, finLigne).trim() : email;
+            }
+        }
+        String prenom = normaliserIdentifiant(demande.getPrenom());
+        String nom = normaliserIdentifiant(demande.getNom());
+        return prenom + "." + nom + "@stagiaire.com";
+    }
+
+    private String normaliserIdentifiant(String valeur) {
+        String normalisee = java.text.Normalizer.normalize(valeur, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return normalisee.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
+    }
+
+    private String genererMatriculeStagiaire() {
+        int numero = (int) stagiaireRepository.count() + 1;
+        String matricule;
+        do {
+            matricule = "STG-" + LocalDate.now().getYear() + "-" + String.format("%03d", numero++);
+        } while (stagiaireRepository.findByMatricule(matricule).isPresent());
+        return matricule;
+    }
+
+    private String valeurCsv(Object valeur) {
+        if (valeur == null) return "\"\"";
+        return "\"" + valeur.toString().replace("\"", "\"\"").replace("\r", " ").replace("\n", " ") + "\"";
     }
 }

@@ -36,6 +36,9 @@ public class DemandeStage {
     @Column(columnDefinition = "TEXT")
     private String commentaire;
 
+    @Column(name = "motif_refus", columnDefinition = "TEXT")
+    private String motifRefus;
+
     @Column(name = "date_demande", nullable = false, updatable = false)
     private LocalDateTime dateDemande = LocalDateTime.now();
 
@@ -127,6 +130,14 @@ public class DemandeStage {
 
     public void setCommentaire(String commentaire) {
         this.commentaire = commentaire;
+    }
+
+    public String getMotifRefus() {
+        return motifRefus;
+    }
+
+    public void setMotifRefus(String motifRefus) {
+        this.motifRefus = motifRefus;
     }
 
     public LocalDateTime getDateDemande() {

@@ -45,6 +45,9 @@
                 </div>
             </div>
 
+            <div th:if="${succes}" class="roles-flash success"><i class="fa-solid fa-circle-check"></i><span th:text="${succes}">Opération réussie.</span></div>
+            <div th:if="${erreur}" class="roles-flash error"><i class="fa-solid fa-circle-exclamation"></i><span th:text="${erreur}">Une erreur est survenue.</span></div>
+
             <!-- ========================================== -->
             <!-- STATISTIQUES (6 cartes)                   -->
             <!-- ========================================== -->
@@ -55,7 +58,7 @@
                         <em>Définis</em>
                     </div>
                     <span class="backup-stat-label">Rôles</span>
-                    <strong>4</strong>
+                    <strong th:text="${nombreRoles}">4</strong>
                     <small>Rôles sur la plateforme</small>
                     <svg viewBox="0 0 180 38" preserveAspectRatio="none">
                         <path class="area" d="M0 34 C22 29,39 33,57 24 S91 27,111 16 S145 20,180 5 L180 38 L0 38 Z"></path>
@@ -69,7 +72,7 @@
                         <em>Définies</em>
                     </div>
                     <span class="backup-stat-label">Permissions</span>
-                    <strong>42</strong>
+                    <strong th:text="${nombrePermissions}">0</strong>
                     <small>Permissions système</small>
                     <svg viewBox="0 0 180 38" preserveAspectRatio="none">
                         <path class="area" d="M0 31 C25 32,37 24,58 26 S90 18,112 19 S148 12,180 8 L180 38 L0 38 Z"></path>
@@ -83,7 +86,7 @@
                         <em>Actives</em>
                     </div>
                     <span class="backup-stat-label">Permissions actives</span>
-                    <strong>39</strong>
+                    <strong th:text="${nombrePermissionsActives}">0</strong>
                     <small>Actuellement en vigueur</small>
                     <svg viewBox="0 0 180 38" preserveAspectRatio="none">
                         <path class="area" d="M0 35 C22 25,38 30,58 23 S89 20,109 21 S144 14,180 7 L180 38 L0 38 Z"></path>
@@ -97,7 +100,7 @@
                         <em>Concernés</em>
                     </div>
                     <span class="backup-stat-label">Utilisateurs concernés</span>
-                    <strong>128</strong>
+                    <strong th:text="${nombreUtilisateursRoles}">128</strong>
                     <small>Ayant un rôle défini</small>
                     <svg viewBox="0 0 180 38" preserveAspectRatio="none">
                         <path class="area" d="M0 32 C24 34,37 23,55 27 S86 18,107 20 S145 11,180 6 L180 38 L0 38 Z"></path>
@@ -149,7 +152,7 @@
                                 <button class="btn-primary" onclick="ouvrirModalRole()">
                                     <i class="fa-solid fa-plus"></i> Nouveau rôle
                                 </button>
-                                <button class="btn-secondary">
+                                <button type="button" class="btn-secondary" onclick="exporterRoles()">
                                     <i class="fa-solid fa-file-export"></i> Exporter
                                 </button>
                             </div>
@@ -193,10 +196,10 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>1</td>
+                                        <td th:text="${nombreAdministrateurs}">1</td>
                                         <td><span class="badge-permissions">42</span></td>
                                         <td><span class="badge-niveau complet">Complet</span></td>
-                                        <td>22/07/2026</td>
+                                        <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
                                         <td>
                                             <button class="btn-action" onclick="event.stopPropagation();editerRole('administrateur')"><i class="fa-regular fa-pen-to-square"></i></button>
@@ -213,10 +216,10 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>6</td>
+                                        <td th:text="${nombreResponsables}">6</td>
                                         <td><span class="badge-permissions">38</span></td>
                                         <td><span class="badge-niveau eleve">Élevé</span></td>
-                                        <td>21/07/2026</td>
+                                        <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
                                         <td>
                                             <button class="btn-action" onclick="event.stopPropagation();editerRole('responsable')"><i class="fa-regular fa-pen-to-square"></i></button>
@@ -233,10 +236,10 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>18</td>
+                                        <td th:text="${nombreEncadreursRole}">18</td>
                                         <td><span class="badge-permissions">24</span></td>
                                         <td><span class="badge-niveau moyen">Moyen</span></td>
-                                        <td>20/07/2026</td>
+                                        <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
                                         <td>
                                             <button class="btn-action" onclick="event.stopPropagation();editerRole('encadreur')"><i class="fa-regular fa-pen-to-square"></i></button>
@@ -253,15 +256,36 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>103</td>
+                                        <td th:text="${nombreStagiairesRole}">103</td>
                                         <td><span class="badge-permissions">12</span></td>
                                         <td><span class="badge-niveau limite">Limité</span></td>
-                                        <td>19/07/2026</td>
+                                        <td>27/07/2026</td>
                                         <td><span class="statut-badge actif">Actif</span></td>
                                         <td>
                                             <button class="btn-action" onclick="event.stopPropagation();editerRole('stagiaire')"><i class="fa-regular fa-pen-to-square"></i></button>
                                             <button class="btn-action" onclick="event.stopPropagation();dupliquerRole('stagiaire')"><i class="fa-regular fa-copy"></i></button>
                                         </td>
+                                    </tr>
+                                    <tr class="role-row" th:each="role : ${rolesPersonnalises}"
+                                        th:data-role="${role.libelle.toLowerCase()}"
+                                        th:data-name="${role.libelle.replace('_', ' ')}"
+                                        th:data-description="${role.description != null ? role.description : 'Rôle personnalisé'}"
+                                        onclick="selectRole(this.dataset.role)">
+                                        <td>
+                                            <div class="role-info">
+                                                <div class="role-avatar bg-cyan"><i class="fa-solid fa-user-shield"></i></div>
+                                                <div>
+                                                    <div class="role-nom" th:text="${role.libelle.replace('_', ' ')}">Rôle personnalisé</div>
+                                                    <div class="role-description" th:text="${role.description != null ? role.description : 'Rôle personnalisé'}">Description</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td th:text="${utilisateursParRole[role.libelle]}">0</td>
+                                        <td><span class="badge-permissions">0</span></td>
+                                        <td><span class="badge-niveau limite">Personnalisé</span></td>
+                                        <td>27/07/2026</td>
+                                        <td><span class="statut-badge actif">Actif</span></td>
+                                        <td><button type="button" class="btn-action" title="Rôle personnalisé"><i class="fa-solid fa-ellipsis"></i></button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -393,113 +417,139 @@
                 </div>
             </section>
 
-            <!-- ========================================== -->
-            <!-- MATRICE DES PERMISSIONS                  -->
-            <!-- ========================================== -->
+            <section class="roles-management-grid">
+                <article class="carte-blanche-roles">
+                    <div class="matrice-header">
+                        <div>
+                            <h3>Attribuer ou changer un rôle</h3>
+                            <span class="matrice-subtitle">Le compte est mis à jour et l'utilisateur reçoit un e-mail récapitulatif.</span>
+                        </div>
+                    </div>
+                    <form th:action="@{/admin/roles-permissions/attribuer}" method="post" class="roles-operation-form">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="form-group">
+                            <label for="roleUser">Utilisateur</label>
+                            <select id="roleUser" name="utilisateurId" class="form-select" required>
+                                <option value="">Sélectionner un utilisateur</option>
+                                <option th:each="utilisateur : ${utilisateurs}" th:value="${utilisateur.id}"
+                                        th:text="${utilisateur.prenom + ' ' + utilisateur.nom + ' · ' + utilisateur.email + ' · ' + utilisateur.role.libelle}">
+                                    Utilisateur
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignedRole">Nouveau rôle</label>
+                            <select id="assignedRole" name="roleId" class="form-select" required>
+                                <option value="">Sélectionner un rôle</option>
+                                <option th:each="role : ${roles}" th:value="${role.id}"
+                                        th:text="${role.libelle + ' · ' + role.permissions.size() + ' permission(s)'}">Rôle</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" type="submit"><i class="fa-solid fa-user-shield"></i> Appliquer le rôle</button>
+                    </form>
+                </article>
+
+                <article class="carte-blanche-roles">
+                    <div class="matrice-header">
+                        <div>
+                            <h3>Ajouter une permission</h3>
+                            <span class="matrice-subtitle">Créez un droit réutilisable dans tous les rôles.</span>
+                        </div>
+                    </div>
+                    <form th:action="@{/admin/roles-permissions/permissions/ajouter}" method="post" class="roles-operation-form">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="form-group">
+                            <label for="permissionName">Nom de la permission</label>
+                            <input id="permissionName" name="nom" class="form-input" required maxlength="120"
+                                   placeholder="Ex. Publier les annonces">
+                        </div>
+                        <div class="form-group">
+                            <label for="permissionDescription">Description</label>
+                            <textarea id="permissionDescription" name="description" class="form-textarea"
+                                      placeholder="Décrivez précisément ce que cette permission autorise."></textarea>
+                        </div>
+                        <button class="btn-primary" type="submit"><i class="fa-solid fa-key"></i> Ajouter la permission</button>
+                    </form>
+                </article>
+            </section>
+
             <section class="matrice-permissions">
                 <div class="carte-blanche-roles">
                     <div class="matrice-header">
-                        <h3>Matrice des permissions</h3>
-                        <span class="matrice-subtitle">Croisement des rôles et des fonctionnalités</span>
+                        <div>
+                            <h3>Permissions disponibles</h3>
+                            <span class="matrice-subtitle">Une permission supprimée est automatiquement retirée de tous les rôles.</span>
+                        </div>
                     </div>
                     <div class="backup-table-container">
                         <table class="backup-table">
                             <thead>
                                 <tr>
-                                    <th>Fonctionnalités</th>
-                                    <th><span class="matrice-role">Administrateur</span></th>
-                                    <th><span class="matrice-role">Responsable</span></th>
-                                    <th><span class="matrice-role">Encadreur</span></th>
-                                    <th><span class="matrice-role">Stagiaire</span></th>
+                                    <th>Permission</th>
+                                    <th>Code technique</th>
+                                    <th>Description</th>
+                                    <th>Rôles concernés</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><i class="fa-solid fa-users"></i> Gérer utilisateurs</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-lock"></i> Gérer rôles</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-building"></i> Gérer services</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-folder-open"></i> Gérer documents</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-hard-drive"></i> Sauvegarde</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-shield-alt"></i> Sécurité</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-gear"></i> Paramètres</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-file-lines"></i> Journaux</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-bell"></i> Notifications</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-chart-line"></i> Statistiques</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-users-gear"></i> Affectations</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                    <td><i class="fa-solid fa-xmark-circle permission-ko"></i></td>
-                                </tr>
-                                <tr>
-                                    <td><i class="fa-solid fa-calendar-check"></i> Planning</td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
-                                    <td><i class="fa-solid fa-check-circle permission-ok"></i></td>
+                                <tr th:each="permission : ${permissions}">
+                                    <td><strong th:text="${permission.nom}">Permission</strong></td>
+                                    <td><code th:text="${permission.code}">CODE</code></td>
+                                    <td th:text="${permission.description != null ? permission.description : 'Aucune description'}">Description</td>
+                                    <td>
+                                        <div class="permission-role-tags">
+                                            <span th:each="role : ${roles}" th:if="${role.permissions.contains(permission)}"
+                                                  th:text="${role.libelle}">Rôle</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/admin/roles-permissions/permissions/{id}/supprimer(id=${permission.id})}"
+                                              method="post" onsubmit="return confirm('Supprimer cette permission de tous les rôles ?');">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                            <button class="btn-action permission-delete" type="submit" title="Supprimer">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="matrice-permissions">
+                <div class="carte-blanche-roles">
+                    <div class="matrice-header">
+                        <div>
+                            <h3>Permissions par rôle</h3>
+                            <span class="matrice-subtitle">Cochez les droits à appliquer puis enregistrez le rôle concerné.</span>
+                        </div>
+                    </div>
+                    <div class="role-permission-editors">
+                        <form th:each="role : ${roles}"
+                              th:action="@{/admin/roles-permissions/roles/{id}/permissions(id=${role.id})}"
+                              method="post" class="role-permission-editor">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <div class="role-permission-editor-head">
+                                <div>
+                                    <strong th:text="${role.libelle}">Rôle</strong>
+                                    <small th:text="${role.permissions.size() + ' permission(s) active(s)'}">0 permission</small>
+                                </div>
+                                <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                            </div>
+                            <div class="role-permission-checks">
+                                <label th:each="permission : ${permissions}">
+                                    <input type="checkbox" name="permissionIds" th:value="${permission.id}"
+                                           th:checked="${role.permissions.contains(permission)}">
+                                    <span>
+                                        <strong th:text="${permission.nom}">Permission</strong>
+                                        <small th:text="${permission.description}">Description</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </section>
@@ -518,6 +568,8 @@
     <!-- ========================================== -->
     <div class="modal" id="modalRole">
         <div class="modal-content">
+            <form th:action="@{/admin/roles-permissions/ajouter}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-plus-circle"></i> Nouveau rôle</h3>
                 <button class="modal-close" onclick="fermerModalRole()"><i class="fa-solid fa-xmark"></i></button>
@@ -525,11 +577,11 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>Nom du rôle</label>
-                    <input type="text" placeholder="Ex: Gestionnaire de stage" class="form-input">
+                    <input type="text" name="libelle" required placeholder="Ex: Gestionnaire de stage" class="form-input">
                 </div>
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea placeholder="Décrivez les responsabilités de ce rôle..." class="form-textarea"></textarea>
+                    <textarea name="description" placeholder="Décrivez les responsabilités de ce rôle..." class="form-textarea"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Niveau d'accès</label>
@@ -543,23 +595,22 @@
                 <div class="form-group">
                     <label>Permissions</label>
                     <div class="permissions-checkbox">
-                        <label><input type="checkbox" checked> Gérer utilisateurs</label>
-                        <label><input type="checkbox"> Gérer rôles</label>
-                        <label><input type="checkbox"> Gérer services</label>
-                        <label><input type="checkbox" checked> Gérer documents</label>
-                        <label><input type="checkbox"> Sauvegarde</label>
-                        <label><input type="checkbox"> Sécurité</label>
+                        <label th:each="permission : ${permissions}">
+                            <input type="checkbox" name="permissionIds" th:value="${permission.id}">
+                            <span th:text="${permission.nom}">Permission</span>
+                        </label>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="fermerModalRole()">Annuler</button>
-                <button class="btn-primary" onclick="fermerModalRole()">Créer le rôle</button>
+                <button type="button" class="btn-secondary" onclick="fermerModalRole()">Annuler</button>
+                <button type="submit" class="btn-primary">Créer le rôle</button>
             </div>
+            </form>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         // ==========================================
         // FONCTIONS DU DASHBOARD
         // ==========================================
@@ -583,8 +634,8 @@
                 administrateur: {
                     nom: 'Administrateur',
                     desc: 'Accès complet à toutes les fonctionnalités',
-                    users: '1',
-                    date: '22/07/2026',
+                    users: /*[[${nombreAdministrateurs}]]*/ '1',
+                    date: '27/07/2026',
                     statut: 'Actif',
                     icon: 'fa-solid fa-crown',
                     couleur: 'bg-bleu'
@@ -592,8 +643,8 @@
                 responsable: {
                     nom: 'Responsable de stage',
                     desc: 'Gestion des stages et affectations',
-                    users: '6',
-                    date: '21/07/2026',
+                    users: /*[[${nombreResponsables}]]*/ '6',
+                    date: '27/07/2026',
                     statut: 'Actif',
                     icon: 'fa-solid fa-user-tie',
                     couleur: 'bg-violet'
@@ -601,8 +652,8 @@
                 encadreur: {
                     nom: 'Encadreur',
                     desc: 'Suivi des stagiaires et évaluations',
-                    users: '18',
-                    date: '20/07/2026',
+                    users: /*[[${nombreEncadreursRole}]]*/ '18',
+                    date: '27/07/2026',
                     statut: 'Actif',
                     icon: 'fa-solid fa-chalkboard-user',
                     couleur: 'bg-vert'
@@ -610,15 +661,26 @@
                 stagiaire: {
                     nom: 'Stagiaire',
                     desc: 'Accès limité aux fonctionnalités de base',
-                    users: '103',
-                    date: '19/07/2026',
+                    users: /*[[${nombreStagiairesRole}]]*/ '103',
+                    date: '27/07/2026',
                     statut: 'Actif',
                     icon: 'fa-solid fa-user-graduate',
                     couleur: 'bg-orange'
                 }
             };
 
-            const data = rolesData[role];
+            let data = rolesData[role];
+            if (!data && row) {
+                data = {
+                    nom: row.dataset.name || row.querySelector('.role-nom')?.textContent || role,
+                    desc: row.dataset.description || row.querySelector('.role-description')?.textContent || 'Rôle personnalisé',
+                    users: row.children[1]?.textContent.trim() || '0',
+                    date: row.children[4]?.textContent.trim() || '27/07/2026',
+                    statut: 'Actif',
+                    icon: 'fa-solid fa-user-shield',
+                    couleur: 'bg-cyan'
+                };
+            }
             if (data) {
                 document.getElementById('detailRoleNom').textContent = data.nom;
                 document.getElementById('detailRoleDesc').textContent = data.desc;
@@ -655,6 +717,27 @@
 
         function dupliquerRole(role) {
             alert('Dupliquer le rôle : ' + role);
+        }
+
+        function exporterRoles() {
+            const lignes = [];
+            lignes.push(['Rôle', 'Utilisateurs', 'Permissions', 'Niveau', 'Statut']);
+            document.querySelectorAll('.role-row').forEach(row => {
+                lignes.push([
+                    row.querySelector('.role-nom')?.textContent.trim() || '',
+                    row.children[1]?.textContent.trim() || '0',
+                    row.children[2]?.textContent.trim() || '0',
+                    row.children[3]?.textContent.trim() || '',
+                    row.children[5]?.textContent.trim() || ''
+                ]);
+            });
+            const csv = lignes.map(ligne => ligne.map(cellule => `"${String(cellule).replaceAll('"', '""')}"`).join(';')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+            const lien = document.createElement('a');
+            lien.href = URL.createObjectURL(blob);
+            lien.download = 'roles-permissions.csv';
+            lien.click();
+            URL.revokeObjectURL(lien.href);
         }
 
         // ==========================================

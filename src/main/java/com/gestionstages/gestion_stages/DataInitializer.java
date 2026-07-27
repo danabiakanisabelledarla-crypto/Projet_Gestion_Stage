@@ -7,11 +7,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final EncadreurRepository encadreurRepository;
     private final ServiceEntrepriseRepository serviceRepository;
@@ -23,6 +26,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(RoleRepository roleRepository,
+                           PermissionRepository permissionRepository,
                            UtilisateurRepository utilisateurRepository,
                            EncadreurRepository encadreurRepository,
                            ServiceEntrepriseRepository serviceRepository,
@@ -33,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
                            StageRepository stageRepository,
                            PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.encadreurRepository = encadreurRepository;
         this.serviceRepository = serviceRepository;
@@ -51,6 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         creerRoleSiAbsent("RESPONSABLE_STAGE", "Responsable des stages");
         creerRoleSiAbsent("ENCADREUR", "Encadreur de stagiaires");
         creerRoleSiAbsent("STAGIAIRE", "Stagiaire");
+        initialiserPermissions();
 
         creerUtilisateurSiAbsent("ADMINISTRATEUR", "Admin", "Test",
                 "admin@gestion-stages.com", "admin1234");
@@ -149,6 +155,65 @@ public class DataInitializer implements CommandLineRunner {
         if (roleRepository.findByLibelle(libelle).isEmpty()) {
             roleRepository.save(new Role(libelle, description));
         }
+    }
+
+    private void initialiserPermissions() {
+        creerPermission("GERER_UTILISATEURS", "Gérer utilisateurs", "Créer, modifier, supprimer et désactiver les comptes");
+        creerPermission("GERER_ROLES", "Gérer rôles", "Créer et modifier les rôles et permissions");
+        creerPermission("GERER_SERVICES", "Gérer services", "Gérer les départements de l'entreprise");
+        creerPermission("GERER_DOCUMENTS", "Gérer documents", "Voir, supprimer et gérer tous les documents");
+        creerPermission("GERER_SAUVEGARDES", "Gérer sauvegardes", "Sauvegarder et restaurer les données");
+        creerPermission("GERER_SECURITE", "Gérer sécurité", "Contrôler les accès, journaux et comptes verrouillés");
+        creerPermission("GERER_PARAMETRES", "Gérer paramètres", "Modifier les paramètres de la plateforme");
+        creerPermission("CONSULTER_JOURNAUX", "Consulter journaux", "Voir les journaux d'activités");
+        creerPermission("GERER_NOTIFICATIONS", "Gérer notifications", "Envoyer des notifications globales");
+        creerPermission("CONSULTER_STATISTIQUES", "Consulter statistiques", "Voir les statistiques générales");
+        creerPermission("GERER_AFFECTATIONS", "Gérer affectations", "Voir toutes les affectations");
+        creerPermission("GERER_DEMANDES_STAGE", "Gérer demandes de stage", "Accepter ou refuser les demandes");
+        creerPermission("GERER_STAGIAIRES", "Gérer stagiaires", "Suivre les stagiaires");
+        creerPermission("AFFECTER_STAGIAIRES", "Affecter les stagiaires", "Affecter un stagiaire à un encadreur");
+        creerPermission("CLOTURER_STAGES", "Clôturer les stages", "Terminer et archiver un stage");
+        creerPermission("GERER_DOSSIERS", "Gérer dossiers", "Consulter et valider les dossiers");
+        creerPermission("CONSULTER_DOCUMENTS", "Consulter documents", "Voir les documents des stagiaires");
+        creerPermission("VALIDER_DOCUMENTS", "Valider documents", "Valider ou refuser certains documents");
+        creerPermission("CONSULTER_PLANNING", "Consulter planning", "Voir le planning des stagiaires");
+        creerPermission("GERER_PLANNING", "Gérer planning", "Ajouter des réunions ou événements");
+        creerPermission("STATISTIQUES_SERVICE", "Consulter statistiques du service", "Voir les statistiques de son service");
+        creerPermission("ENVOYER_NOTIFICATIONS", "Envoyer notifications", "Notifier les stagiaires et encadreurs");
+        creerPermission("CONSULTER_RAPPORTS", "Consulter rapports", "Voir les rapports et versions déposés");
+
+        attribuerPermissionsInitiales("ADMINISTRATEUR",
+                permissionRepository.findAll().stream().map(Permission::getCode).toArray(String[]::new));
+        attribuerPermissionsInitiales("RESPONSABLE_STAGE",
+                "GERER_DEMANDES_STAGE", "GERER_STAGIAIRES", "AFFECTER_STAGIAIRES",
+                "CLOTURER_STAGES", "GERER_DOSSIERS", "CONSULTER_DOCUMENTS",
+                "VALIDER_DOCUMENTS", "CONSULTER_PLANNING", "GERER_PLANNING",
+                "STATISTIQUES_SERVICE", "ENVOYER_NOTIFICATIONS", "CONSULTER_RAPPORTS");
+        attribuerPermissionsInitiales("ENCADREUR",
+                "GERER_STAGIAIRES", "GERER_DOSSIERS", "CONSULTER_DOCUMENTS",
+                "VALIDER_DOCUMENTS", "CONSULTER_PLANNING", "GERER_PLANNING",
+                "STATISTIQUES_SERVICE", "ENVOYER_NOTIFICATIONS", "CONSULTER_RAPPORTS");
+        attribuerPermissionsInitiales("STAGIAIRE",
+                "CONSULTER_DOCUMENTS", "CONSULTER_PLANNING");
+    }
+
+    private void creerPermission(String code, String nom, String description) {
+        if (permissionRepository.findByCode(code).isEmpty()) {
+            permissionRepository.save(new Permission(code, nom, description));
+        }
+    }
+
+    private void attribuerPermissionsInitiales(String roleLibelle, String... codes) {
+        roleRepository.findByLibelle(roleLibelle).ifPresent(role -> {
+            if (!role.getPermissions().isEmpty()) return;
+            LinkedHashSet<Permission> permissions = new LinkedHashSet<>();
+            Arrays.stream(codes)
+                    .map(permissionRepository::findByCode)
+                    .flatMap(java.util.Optional::stream)
+                    .forEach(permissions::add);
+            role.setPermissions(permissions);
+            roleRepository.save(role);
+        });
     }
 
     private Utilisateur creerUtilisateurSiAbsent(String roleLibelle, String nom,

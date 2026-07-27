@@ -822,6 +822,10 @@
     display: flex;
 }
 
+.roles-flash { margin:0 0 18px; padding:13px 16px; display:flex; align-items:center; gap:10px; border:1px solid; border-radius:12px; font-size:12px; font-weight:700; }
+.roles-flash.success { color:#166534; background:#f0fdf4; border-color:#bbf7d0; }
+.roles-flash.error { color:#991b1b; background:#fef2f2; border-color:#fecaca; }
+
 .modal-content {
     background: white;
     border-radius: 20px;
@@ -994,5 +998,124 @@
 @media (max-width: 480px) {
     .stats-grid-roles {
         grid-template-columns: 1fr;
+    }
+}
+.roles-management-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.roles-operation-form {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.permission-role-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.permission-role-tags span {
+    padding: 4px 7px;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.permission-delete {
+    color: #dc2626;
+}
+
+.role-permission-editors {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.role-permission-editor {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.role-permission-editor-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.role-permission-editor-head strong,
+.role-permission-editor-head small {
+    display: block;
+}
+
+.role-permission-editor-head small {
+    margin-top: 4px;
+    color: #64748b;
+}
+
+.role-permission-checks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.role-permission-checks label {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    min-height: 66px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.role-permission-checks input {
+    margin-top: 3px;
+    accent-color: #2563eb;
+}
+
+.role-permission-checks strong,
+.role-permission-checks small {
+    display: block;
+}
+
+.role-permission-checks strong {
+    color: #1e293b;
+    font-size: 12px;
+}
+
+.role-permission-checks small {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+@media (max-width: 1100px) {
+    .role-permission-checks {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .roles-management-grid,
+    .role-permission-checks {
+        grid-template-columns: 1fr;
+    }
+
+    .role-permission-editor-head {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

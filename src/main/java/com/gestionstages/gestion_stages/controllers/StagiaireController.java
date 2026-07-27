@@ -504,6 +504,9 @@ public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDeta
     model.addAttribute("objectifsAtteints", atteints);
     model.addAttribute("objectifsEnCours", enCours);
     model.addAttribute("objectifsNonCommences", enAttente);
+    model.addAttribute("objectifsPrioritaires", objectifs.stream()
+            .filter(o -> o.getPriorite() == Objectif.Priorite.haute)
+            .count());
 
     double progressionMoyenne = objectifs.stream().mapToInt(Objectif::getProgression).average().orElse(0);
     model.addAttribute("progressionMoyenne", (int) Math.round(progressionMoyenne));
@@ -573,7 +576,23 @@ public String changerStatutObjectif(@AuthenticationPrincipal CustomUserDetails u
         }
         objectifRepository.save(obj);
     }
-    return "redirect:/stagiaire/objectifs";
+   return "redirect:/stagiaire/objectifs";
+}
+
+@PostMapping("/objectifs/priorite")
+public String basculerPrioriteObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                       @RequestParam Integer id) {
+   Optional<Stage> stageOpt = getStage(userDetails);
+   objectifRepository.findById(id)
+           .filter(objectif -> stageOpt.isPresent()
+                   && objectif.getStage().getId().equals(stageOpt.get().getId()))
+           .ifPresent(objectif -> {
+               objectif.setPriorite(objectif.getPriorite() == Objectif.Priorite.haute
+                       ? Objectif.Priorite.moyenne
+                       : Objectif.Priorite.haute);
+               objectifRepository.save(objectif);
+           });
+   return "redirect:/stagiaire/objectifs";
 }
 
 @PostMapping("/objectifs/supprimer")
@@ -816,21 +835,25 @@ public String modifierMotDePasse(@AuthenticationPrincipal CustomUserDetails user
         return "redirect:/stagiaire/taches";
     }
 
-    @PostMapping("/taches/ajouter")
+@PostMapping("/taches/ajouter")
 public String ajouterTache(@AuthenticationPrincipal CustomUserDetails userDetails,
-                            @RequestParam String titre,
-                            @RequestParam(required = false) String description,
-                            @RequestParam String dateLimite,
-                            @RequestParam String priorite) {
-    getStage(userDetails).ifPresent(stage -> {
-        Tache tache = new Tache();
-        tache.setTitre(titre);
-        tache.setDescription(description);
-        tache.setDateLimite(LocalDate.parse(dateLimite));
-        tache.setStatut(Tache.StatutTache.a_faire);
-        tache.setStage(stage);
-        tacheRepository.save(tache);
-    });
-    return "redirect:/stagiaire/taches?succes=Tache cree avec succes.";
+                           @RequestParam String titre,
+                           @RequestParam(required = false) String description,
+                           @RequestParam(required = false) String dateLimite,
+                           @RequestParam(defaultValue = "a_faire") Tache.StatutTache statut) {
+   getStage(userDetails).ifPresent(stage -> {
+       Tache tache = new Tache();
+       tache.setTitre(titre.trim());
+       tache.setDescription(description);
+       tache.setDateLimite(dateLimite == null || dateLimite.isBlank()
+               ? LocalDate.now().plusDays(7)
+               : LocalDate.parse(dateLimite));
+       tache.setStatut(statut);
+       tache.setStage(stage);
+       if (!tache.getTitre().isBlank()) {
+           tacheRepository.save(tache);
+       }
+   });
+   return "redirect:/stagiaire/taches?succes=Tache cree avec succes.";
 }
 }

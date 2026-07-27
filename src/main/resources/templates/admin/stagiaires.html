@@ -26,11 +26,10 @@
                 <p class="page-sous-titre">Consultez, gérez et suivez tous les stagiaires de la plateforme.</p>
             </div>
         </div>
-        <div class="page-entete-droite">
-            <button class="btn-outline"><i class="fa-solid fa-download"></i> Importer</button>
-            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Ajouter un stagiaire</button>
-        </div>
     </div>
+
+    <div th:if="${succes}" class="request-flash success"><i class="fa-solid fa-circle-check"></i><span th:text="${succes}">Opération réussie.</span></div>
+    <div th:if="${erreur}" class="request-flash error"><i class="fa-solid fa-circle-exclamation"></i><span th:text="${erreur}">Une erreur est survenue.</span></div>
 
     <!-- STATS CARDS -->
     <div class="stats-row">
@@ -144,8 +143,6 @@
                     <td>
                         <div class="action-btns">
                             <button class="action-btn" th:onclick="'ouvrirDetailsStagiaire(' + ${s.id} + ')'" title="Voir détails"><i class="fa-solid fa-eye"></i></button>
-                            <button class="action-btn" onclick="event.stopPropagation()" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                            <button class="action-btn" onclick="event.stopPropagation()" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -185,6 +182,55 @@
         <div class="modal-details-body" id="modalBodyStagiaire">
             <!-- Rempli par JS -->
         </div>
+    </div>
+</div>
+
+<!-- MODAL DOSSIER / LIVRABLES / TÂCHES -->
+<div class="modal-overlay" id="modalStagiaireResource" onclick="if(event.target===this) fermerRessourceStagiaire()">
+    <div class="modal-box modal-box-large">
+        <div class="modal-details-header">
+            <div><h2 id="resourceTitle">Dossier du stagiaire</h2><p id="resourceSubtitle">Documents et informations</p></div>
+            <button type="button" class="modal-close-btn" onclick="fermerRessourceStagiaire()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-details-body" id="resourceBody"></div>
+    </div>
+</div>
+
+<!-- MODAL MODIFICATION FICHE -->
+<div class="modal-overlay" id="modalEditStagiaire" onclick="if(event.target===this) fermerEditionStagiaire()">
+    <div class="modal-box modal-box-large">
+        <div class="modal-details-header">
+            <div><h2>Modifier la fiche</h2><p>Mettez à jour les coordonnées et l'affectation du stagiaire.</p></div>
+            <button type="button" class="modal-close-btn" onclick="fermerEditionStagiaire()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editStagiaireForm" method="post" class="stagiaire-edit-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="stagiaire-form-grid">
+                <label>Prénom<input type="text" id="editPrenom" name="prenom" required></label>
+                <label>Nom<input type="text" id="editNom" name="nom" required></label>
+                <label>Email<input type="email" id="editEmail" name="email" required></label>
+                <label>Téléphone<input type="text" id="editTelephone" name="telephone"></label>
+                <label class="full">Adresse<input type="text" id="editAdresse" name="adresse"></label>
+                <label>Service
+                    <select id="editService" name="serviceId">
+                        <option value="">Non affecté</option>
+                        <option th:each="service : ${services}" th:value="${service.id}" th:text="${service.nom}">Service</option>
+                    </select>
+                </label>
+                <label>Encadreur
+                    <select id="editEncadreur" name="encadreurId">
+                        <option value="">Non affecté</option>
+                        <option th:each="encadreur : ${encadreurs}" th:value="${encadreur.id}" th:text="${encadreur.utilisateur.prenom + ' ' + encadreur.utilisateur.nom}">Encadreur</option>
+                    </select>
+                </label>
+                <label>Date de début<input type="date" id="editDateDebut" name="dateDebut"></label>
+                <label>Date de fin<input type="date" id="editDateFin" name="dateFin"></label>
+            </div>
+            <div class="stagiaire-form-actions">
+                <button type="button" class="btn-action-secondaire" onclick="fermerEditionStagiaire()">Annuler</button>
+                <button type="submit" class="stagiaire-save-button"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -230,31 +276,14 @@
                 <div class="progress-header" style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Progression globale</span><span>${s.progression || 0}%</span></div>
                 <div class="progress-bar" style="height:8px;background:#E2E8F0;border-radius:10px;overflow:hidden;"><div class="progress-fill" style="height:100%;border-radius:10px;background:linear-gradient(90deg,#2563EB,#3B82F6);transition:width 0.6s ease;width:${s.progression || 0}%"></div></div>
             </div>
-            <div class="sous-carte">
-                <div class="sous-carte-titre"><i class="fa-solid fa-paperclip"></i> Documents (${s.documentsCount || 0})</div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    ${s.documents && s.documents.length > 0 ? s.documents.map(d => `
-                        <div style="flex:1;min-width:80px;background:white;border:1px solid #E2E8F0;border-radius:10px;padding:12px;text-align:center;">
-                            <div style="font-size:24px;margin-bottom:6px;color:${d.cls === 'pdf' ? '#DC2626' : (d.cls === 'word' ? '#2563EB' : (d.cls === 'image' ? '#22C55E' : '#64748B'))}"><i class="${d.icon}"></i></div>
-                            <div style="font-size:11px;font-weight:600;color:#0f172a;word-break:break-all;">${d.nom}</div>
-                            <div style="font-size:10px;color:#94A3B8;">${d.taille}</div>
-                            <button style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #E2E8F0;background:white;color:#2563EB;cursor:pointer;font-family:'Poppins',sans-serif;"><i class="fa-solid fa-download"></i></button>
-                        </div>
-                    `).join('') : '<div style="font-size:12px;color:#94A3B8;">Aucun document</div>'}
-                </div>
-            </div>
             <div class="sous-carte" style="border:2px solid #2563EB;background:white;">
                 <div class="sous-carte-titre"><i class="fa-solid fa-bolt"></i> Actions rapides</div>
                 <div class="actions-admin-grid" style="margin-bottom:0;">
-                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-folder-open"></i> Voir le dossier</button>
-                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-list-check"></i> Voir les tâches</button>
-                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-file-arrow-up"></i> Voir les livrables</button>
-                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-book-open"></i> Voir le journal</button>
-                    <button class="btn-action-secondaire" style="justify-content:center;"><i class="fa-solid fa-user-pen"></i> Modifier la fiche</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;" onclick="ouvrirRessourceStagiaire(${s.id}, 'dossier')"><i class="fa-solid fa-folder-open"></i> Voir le dossier</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;" onclick="ouvrirRessourceStagiaire(${s.id}, 'taches')"><i class="fa-solid fa-list-check"></i> Voir les tâches</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;" onclick="ouvrirRessourceStagiaire(${s.id}, 'livrables')"><i class="fa-solid fa-file-arrow-up"></i> Voir les livrables</button>
+                    <button class="btn-action-secondaire" style="justify-content:center;" onclick="ouvrirEditionStagiaire(${s.id})"><i class="fa-solid fa-user-pen"></i> Modifier la fiche</button>
                 </div>
-                <button style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;">
-                    <i class="fa-solid fa-flag-checkered"></i> Clôturer le stage
-                </button>
             </div>
         `;
         document.getElementById('modalDetailsStagiaire').classList.add('open');
@@ -262,16 +291,128 @@
     function fermerModalStagiaire() {
         document.getElementById('modalDetailsStagiaire').classList.remove('open');
     }
+
+    function ouvrirRessourceStagiaire(id, type) {
+        const s = stagiairesData.find(item => item.id === id);
+        if (!s) return;
+        fermerModalStagiaire();
+        const title = document.getElementById('resourceTitle');
+        const subtitle = document.getElementById('resourceSubtitle');
+        const body = document.getElementById('resourceBody');
+
+        if (type === 'dossier') {
+            title.textContent = `Dossier de ${s.nomComplet}`;
+            subtitle.textContent = 'Documents fournis lors de la demande de stage';
+            body.innerHTML = renderDocuments(s.documents || []);
+        } else if (type === 'livrables') {
+            title.textContent = `Livrables de ${s.nomComplet}`;
+            subtitle.textContent = `${s.livrablesCount || 0} livrable(s) déposé(s)`;
+            body.innerHTML = renderLivrables(s.livrables || []);
+        } else {
+            title.textContent = `Tâches de ${s.nomComplet}`;
+            subtitle.textContent = `${s.tachesCount || 0} tâche(s) affectée(s)`;
+            body.innerHTML = renderTaches(s.taches || []);
+        }
+        document.getElementById('modalStagiaireResource').classList.add('open');
+    }
+
+    function renderDocuments(documents) {
+        if (!documents.length) return emptyResource('fa-folder-open', 'Aucun document fourni dans le dossier.');
+        return `<div class="stagiaire-resource-list">${documents.map(document => `
+            <article class="stagiaire-resource-item">
+                <span class="stagiaire-resource-icon ${document.cls}"><i class="${document.icon}"></i></span>
+                <div><strong>${escapeHtml(document.nom)}</strong><small>${document.taille || '—'} · ${document.date || '—'}</small></div>
+                <div class="stagiaire-resource-actions">
+                    <a href="/documents/${document.id}/preview" target="_blank" title="Visualiser"><i class="fa-regular fa-eye"></i></a>
+                    <a href="/documents/${document.id}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                </div>
+            </article>`).join('')}</div>`;
+    }
+
+    function renderLivrables(livrables) {
+        if (!livrables.length) return emptyResource('fa-file-arrow-up', 'Aucun livrable déposé.');
+        return `<div class="stagiaire-resource-list">${livrables.map(livrable => `
+            <article class="stagiaire-resource-item">
+                <span class="stagiaire-resource-icon livrable"><i class="fa-solid fa-file-arrow-up"></i></span>
+                <div><strong>${escapeHtml(livrable.titre)}</strong><small>${escapeHtml(livrable.categorie)} · ${livrable.date} · ${livrable.taille}</small><span class="resource-status ${livrable.statut}">${formatStatus(livrable.statut)}</span></div>
+                <div class="stagiaire-resource-actions">
+                    <a href="/documents/livrables/${livrable.id}/preview" target="_blank" title="Visualiser"><i class="fa-regular fa-eye"></i></a>
+                    <a href="/documents/livrables/${livrable.id}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                </div>
+            </article>`).join('')}</div>`;
+    }
+
+    function renderTaches(taches) {
+        if (!taches.length) return emptyResource('fa-list-check', 'Aucune tâche affectée.');
+        return `<div class="stagiaire-task-list">${taches.map(tache => `
+            <article class="stagiaire-task-item">
+                <span class="task-status-dot ${tache.statut}"></span>
+                <div><strong>${escapeHtml(tache.titre)}</strong><p>${escapeHtml(tache.description || 'Aucune description')}</p><small><i class="fa-regular fa-calendar"></i> ${tache.dateLimite}</small></div>
+                <span class="resource-status ${tache.statut}">${formatStatus(tache.statut)}</span>
+            </article>`).join('')}</div>`;
+    }
+
+    function emptyResource(icon, text) {
+        return `<div class="stagiaire-resource-empty"><i class="fa-solid ${icon}"></i><p>${text}</p></div>`;
+    }
+
+    function formatStatus(status) {
+        return String(status || '').replaceAll('_', ' ').replace(/^./, character => character.toUpperCase());
+    }
+
+    function fermerRessourceStagiaire() {
+        document.getElementById('modalStagiaireResource').classList.remove('open');
+    }
+
+    function ouvrirEditionStagiaire(id) {
+        const s = stagiairesData.find(item => item.id === id);
+        if (!s) return;
+        fermerModalStagiaire();
+        document.getElementById('editStagiaireForm').action = `/admin/stagiaires/${id}/modifier`;
+        document.getElementById('editPrenom').value = s.prenom || '';
+        document.getElementById('editNom').value = s.nom || '';
+        document.getElementById('editEmail').value = s.email || '';
+        document.getElementById('editTelephone').value = s.telephone === '—' ? '' : (s.telephone || '');
+        document.getElementById('editAdresse').value = s.adresse === '—' ? '' : (s.adresse || '');
+        document.getElementById('editService').value = s.serviceId || '';
+        document.getElementById('editEncadreur').value = s.encadreurId || '';
+        document.getElementById('editDateDebut').value = s.dateDebutIso || '';
+        document.getElementById('editDateFin').value = s.dateFinIso || '';
+        document.getElementById('modalEditStagiaire').classList.add('open');
+    }
+
+    function fermerEditionStagiaire() {
+        document.getElementById('modalEditStagiaire').classList.remove('open');
+    }
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value || '';
+        return element.innerHTML;
+    }
+
     function filterTable() {
         const svc = document.getElementById('filterService').value;
         const enc = document.getElementById('filterEncadreur').value;
         const st = document.getElementById('filterStatut').value;
         document.querySelectorAll('.table-stagiaires tbody tr').forEach(row => {
             if (row.querySelector('td[colspan]')) return;
-            const id = row.querySelector('.action-btn')?.getAttribute('th:onclick')?.match(/\d+/)?.[0];
-            if (!id) { row.style.display = ''; return; }
+            const id = Number(row.dataset.id);
+            const stagiaire = stagiairesData.find(item => item.id === id);
+            if (!stagiaire) { row.style.display = ''; return; }
+            row.style.display = (!svc || stagiaire.serviceId === svc)
+                && (!enc || stagiaire.encadreurId === enc)
+                && (!st || stagiaire.statutCls === st) ? '' : 'none';
         });
     }
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            fermerModalStagiaire();
+            fermerRessourceStagiaire();
+            fermerEditionStagiaire();
+        }
+    });
 </script>
 </body>
 </html>
