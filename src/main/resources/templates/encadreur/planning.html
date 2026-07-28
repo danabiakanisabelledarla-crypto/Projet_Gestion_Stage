@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Planning - Encadreur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
+</head>
+<body class="coach-portal">
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+<div class="coach-main">
+    <header class="coach-topbar">
+        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Rechercher un événement..."></label>
+        <button class="coach-icon-btn"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">3</em></button>
+        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">2</em></a>
+        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
+    </header>
+    <main class="coach-page">
+        <section class="coach-heading">
+            <div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-calendar-days"></i></span><div>
+                <div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Planning</div>
+                <h1>Planning</h1><p>Planifiez les réunions, échéances et activités de vos stagiaires.</p>
+            </div></div>
+            <button class="coach-btn" data-open-event type="button"><i class="fa-solid fa-plus"></i>Ajouter un événement</button>
+        </section>
+        <div class="coach-flash" th:if="${param.succes}"><i class="fa-solid fa-circle-check"></i>Événement ajouté au planning.</div>
+
+        <section class="coach-kpis">
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-calendar"></i></span><strong th:text="${evenementsPlanifies}">0</strong><span>Événements planifiés</span><small>Planning global</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-users"></i></span><strong th:text="${reunionsProgrammees}">0</strong><span>Réunions programmées</span><small>Sessions de suivi</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon red"><i class="fa-solid fa-hourglass-half"></i></span><strong th:text="${echeancesSemaine}">0</strong><span>Échéances cette semaine</span><small>7 prochains jours</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-folder-open"></i></span><strong th:text="${livrablesAttendus}">0</strong><span>Livrables attendus</span><small>À contrôler</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-bullseye"></i></span><strong th:text="${objectifsProches}">0</strong><span>Objectifs proches</span><small>Échéance imminente</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${activitesMois}">0</strong><span>Activités du mois</span><small>Juillet 2026</small></article>
+        </section>
+
+        <section class="coach-grid-70">
+            <article class="coach-card">
+                <div class="coach-calendar-toolbar">
+                    <div class="coach-actions"><button class="coach-action" id="prevMonth"><i class="fa-solid fa-chevron-left"></i></button><button class="coach-btn secondary compact" id="todayButton">Aujourd'hui</button><button class="coach-action" id="nextMonth"><i class="fa-solid fa-chevron-right"></i></button></div>
+                    <h2 id="calendarTitle">Juillet 2026</h2>
+                    <div class="coach-segments"><button class="active">Mois</button><button>Semaine</button><button>Jour</button></div>
+                </div>
+                <div class="coach-calendar-wrap"><div class="coach-calendar" id="calendarGrid"><div class="coach-calendar-head">Lun</div><div class="coach-calendar-head">Mar</div><div class="coach-calendar-head">Mer</div><div class="coach-calendar-head">Jeu</div><div class="coach-calendar-head">Ven</div><div class="coach-calendar-head">Sam</div><div class="coach-calendar-head">Dim</div></div></div>
+            </article>
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Prochains événements</h2><p>Activités planifiées</p></div></div>
+                <div class="coach-timeline">
+                    <div class="coach-timeline-item" th:each="event : ${evenements}"><span class="coach-timeline-icon"><i class="fa-regular fa-calendar"></i></span><div class="coach-timeline-content"><strong th:text="${event.motif}">Événement</strong><span th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(event.date,'dd/MM/yyyy')+(event.heure != null ? ' · '+event.heure : '')}">Date</small></div></div>
+                    <div class="coach-empty" th:if="${evenements.isEmpty()}">Aucun événement planifié.</div>
+                </div>
+            </article>
+        </section>
+
+        <section class="coach-grid-50">
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Calendrier des réunions</h2><p>Prochaines sessions d'encadrement</p></div></div><div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Sujet</th><th>Date</th><th>Heure</th><th>Lieu ou lien</th><th>Statut</th></tr></thead><tbody><tr th:each="event : ${evenements}" th:if="${event.typeCouleur == 'reunion'}"><td th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</td><td th:text="${event.motif}">Sujet</td><td th:text="${#temporals.format(event.date,'dd/MM/yyyy')}">Date</td><td th:text="${event.heure != null ? event.heure : '—'}">Heure</td><td th:text="${event.lieu != null and !event.lieu.isBlank() ? event.lieu : 'À définir'}">Lieu</td><td><span class="coach-badge green">Planifiée</span></td></tr><tr th:if="${reunionsProgrammees == 0}"><td colspan="6" class="coach-empty">Aucune réunion programmée.</td></tr></tbody></table></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Échéances importantes</h2><p>Dates limites à surveiller</p></div></div><div class="coach-timeline"><div class="coach-timeline-item" th:each="tache,stat : ${taches}" th:if="${stat.index < 5}"><span class="coach-timeline-icon"><i class="fa-solid fa-list-check"></i></span><div class="coach-timeline-content"><strong th:text="${tache.titre}">Tâche</strong><span th:text="${tache.stage.stagiaire.utilisateur.prenom+' '+tache.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}">Date</small></div></div><div class="coach-empty" th:if="${taches.isEmpty()}">Aucune échéance importante.</div></div></article>
+        </section>
+
+        <section class="coach-grid-60">
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>Historique du planning</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-plus"></i></span><div class="coach-timeline-content"><strong>Réunion créée</strong><span>Une session de suivi a été planifiée</span><small>Aujourd'hui</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-folder-open"></i></span><div class="coach-timeline-content"><strong>Livrable ajouté</strong><span>Une échéance documentaire est suivie</span><small>Cette semaine</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-star"></i></span><div class="coach-timeline-content"><strong>Évaluation planifiée</strong><span th:text="${#lists.size(evaluations)+' évaluation(s)'}">Évaluation</span><small>À venir</small></div></div></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Catégories d'événements</h2><p>Légende du planning</p></div></div><div class="coach-data-list"><div class="coach-data-row"><span><i style="color:#2563eb" class="fa-solid fa-circle"></i> Tâches</span><strong>Bleu</strong></div><div class="coach-data-row"><span><i style="color:#22c55e" class="fa-solid fa-circle"></i> Livrables</span><strong>Vert</strong></div><div class="coach-data-row"><span><i style="color:#f59e0b" class="fa-solid fa-circle"></i> Réunions</span><strong>Orange</strong></div><div class="coach-data-row"><span><i style="color:#8b5cf6" class="fa-solid fa-circle"></i> Évaluations</span><strong>Violet</strong></div><div class="coach-data-row"><span><i style="color:#ef4444" class="fa-solid fa-circle"></i> Deadlines</span><strong>Rouge</strong></div><div class="coach-data-row"><span><i style="color:#94a3b8" class="fa-solid fa-circle"></i> Personnel</span><strong>Gris</strong></div></div></article>
+        </section>
+        <section class="coach-card"><div class="coach-card-head"><div><h2>Actions rapides</h2><p>Planification et navigation</p></div></div><div class="coach-quick-actions"><button class="coach-quick-action" data-open-event type="button"><i class="fa-solid fa-users"></i>Planifier une réunion</button><button class="coach-quick-action" data-open-event type="button"><i class="fa-solid fa-calendar-plus"></i>Ajouter un événement</button><a class="coach-quick-action" th:href="@{/encadreur/mes-stagiaires}"><i class="fa-solid fa-user-graduate"></i>Voir les stagiaires</a><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Consulter les objectifs</a><a class="coach-quick-action" th:href="@{/encadreur/taches}"><i class="fa-solid fa-list-check"></i>Gérer les tâches</a><a class="coach-quick-action" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i>Consulter les livrables</a></div></section>
+    </main>
+</div>
+
+<div class="coach-modal" id="eventModal">
+    <form class="coach-modal-panel" th:action="@{/encadreur/planning/evenements/ajouter}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="coach-card-head"><div><h2>Ajouter un événement</h2><p>Planifiez une activité de suivi</p></div><button class="coach-action" data-close-event type="button"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="coach-form-grid">
+            <div class="coach-form-group full"><label>Titre</label><input class="coach-input" name="titre" required></div>
+            <div class="coach-form-group"><label>Type</label><select class="coach-select" name="type"><option value="reunion">Réunion</option><option value="tache">Tâche</option><option value="livrable">Livrable</option><option value="evaluation">Évaluation</option><option value="personnel">Personnel</option><option value="deadline">Autre</option></select></div>
+            <div class="coach-form-group"><label>Stagiaire</label><select class="coach-select" name="stageId" required><option value="">Sélectionner</option><option th:each="stage : ${stages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Stagiaire</option></select></div>
+            <div class="coach-form-group"><label>Date</label><input class="coach-input" type="date" name="date" required></div>
+            <div class="coach-form-group"><label>Heure</label><input class="coach-input" type="time" name="heure"></div>
+            <div class="coach-form-group full"><label>Lieu ou lien</label><input class="coach-input" name="lieu"></div>
+            <div class="coach-form-group full"><label>Description</label><textarea class="coach-textarea" name="description"></textarea></div>
+            <div class="coach-form-group"><label>Rappel</label><select class="coach-select" name="rappel"><option value="1_heure">1 heure avant</option><option value="1_jour">1 jour avant</option><option value="1_semaine">1 semaine avant</option></select></div>
+        </div>
+        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-event type="button">Annuler</button><button class="coach-btn" type="submit">Enregistrer</button></div>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const modal=document.getElementById('eventModal');
+ document.querySelectorAll('[data-open-event]').forEach(button=>button.onclick=()=>modal.classList.add('open'));
+ document.querySelectorAll('[data-close-event]').forEach(button=>button.onclick=()=>modal.classList.remove('open'));
+ let current=new Date(2026,6,1);
+ const names=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+ const grid=document.getElementById('calendarGrid'), title=document.getElementById('calendarTitle');
+ const render=()=>{
+  grid.querySelectorAll('.coach-day').forEach(day=>day.remove());
+  title.textContent=names[current.getMonth()]+' '+current.getFullYear();
+  const first=(new Date(current.getFullYear(),current.getMonth(),1).getDay()+6)%7;
+  const days=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
+  for(let i=0;i<first;i++){const day=document.createElement('div');day.className='coach-day muted';grid.appendChild(day);}
+  for(let n=1;n<=days;n++){const day=document.createElement('div');day.className='coach-day';if(n===28&&current.getMonth()===6)day.classList.add('today');day.innerHTML='<span class="coach-day-number">'+n+'</span>';if(n===5)day.innerHTML+='<span class="coach-event orange">Réunion</span>';if(n===12)day.innerHTML+='<span class="coach-event green">Livrable</span>';if(n===20)day.innerHTML+='<span class="coach-event purple">Évaluation</span>';grid.appendChild(day);}
+ };
+ document.getElementById('prevMonth').onclick=()=>{current.setMonth(current.getMonth()-1);render();};
+ document.getElementById('nextMonth').onclick=()=>{current.setMonth(current.getMonth()+1);render();};
+ document.getElementById('todayButton').onclick=()=>{current=new Date(2026,6,28);render();};
+ render();
+});
+</script>
+</body></html>

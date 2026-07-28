@@ -1,73 +1,12 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Detail cloture</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/evaluation.css}">
-</head>
-<body>
-
-<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Cloture du stage</h1>
-        <span class="utilisateur-connecte">Responsable</span>
-    </div>
-
-    <div th:if="${succes}" class="message-succes" th:text="${succes}"></div>
-
-    <div class="grille-evaluation">
-
-        <!-- Indicateurs -->
-        <div class="bloc-evaluation">
-            <h2 th:text="${stage.stagiaire.utilisateur.prenom
-                         + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</h2>
-
-            <div class="indicateur-cloture">
-                <span>Rapport final depose</span>
-                <span th:class="${rapportDepose ? 'badge-ok' : 'badge-non'}"
-                      th:text="${rapportDepose ? 'Oui' : 'Non'}"></span>
-            </div>
-            <div class="indicateur-cloture">
-                <span>Evaluations conservees</span>
-                <span th:class="${evaluationsPresentes ? 'badge-ok' : 'badge-non'}"
-                      th:text="${evaluationsPresentes ? 'Oui' : 'Non'}"></span>
-            </div>
-            <div class="indicateur-cloture">
-                <span>Documents archives</span>
-                <span th:class="${documentsPresents ? 'badge-ok' : 'badge-non'}"
-                      th:text="${documentsPresents ? 'Oui' : 'Non'}"></span>
-            </div>
-
-            <form th:action="@{/responsable/cloture/cloturer/{id}(id=${stage.id})}"
-                  method="post">
-                <button type="submit" class="bouton-cloturer">Cloturer le stage</button>
-            </form>
-        </div>
-
-        <!-- Resume -->
-        <div class="bloc-evaluation">
-            <h2>Resume du stage</h2>
-            <div style="font-size:14px; color:#444; line-height:1.8;">
-                <div><strong>Matricule :</strong>
-                    <span th:text="${stage.stagiaire.matricule}"></span></div>
-                <div><strong>Encadreur :</strong>
-                    <span th:text="${stage.encadreur.utilisateur.prenom
-                                  + ' ' + stage.encadreur.utilisateur.nom}"></span></div>
-                <div><strong>Service :</strong>
-                    <span th:text="${stage.service.nom}"></span></div>
-                <div><strong>Debut :</strong>
-                    <span th:text="${stage.dateDebut}"></span></div>
-                <div><strong>Fin :</strong>
-                    <span th:text="${stage.dateFin}"></span></div>
-                <div><strong>Duree :</strong>
-                    <span th:text="${stage.duree}"></span></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-</body>
-</html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contrôle de clôture</title><link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" th:href="@{/css/responsable-premium.css}"></head>
+<body><div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div><main class="contenu-principal"><div th:replace="~{fragments/header-responsable :: header}"></div>
+<section class="responsable-page-header"><div class="responsable-title"><span class="responsable-title-icon"><i class="fa-solid fa-clipboard-check"></i></span><div><div class="responsable-breadcrumb">Accueil &gt; Responsable &gt; Clôture &gt; Contrôle</div><h1>Contrôle de clôture</h1><p class="responsable-subtitle" th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Stagiaire</p></div></div><a class="responsable-btn secondary" th:href="@{/responsable/cloture}"><i class="fa-solid fa-arrow-left"></i> Retour</a></section>
+<section class="responsable-layout-60"><article class="responsable-card"><div class="responsable-card-head"><div><h2>Éléments obligatoires</h2><p>État du dossier avant archivage.</p></div></div><div class="responsable-data">
+<div class="responsable-data-row"><span>Rapport final déposé</span><strong th:class="${rapportDepose?'responsable-badge green':'responsable-badge red'}" th:text="${rapportDepose?'Disponible':'Manquant'}">État</strong></div>
+<div class="responsable-data-row"><span>Évaluations présentes</span><strong th:class="${evaluationsPresentes?'responsable-badge green':'responsable-badge red'}" th:text="${evaluationsPresentes?'Disponibles':'Manquantes'}">État</strong></div>
+<div class="responsable-data-row"><span>Documents présents</span><strong th:class="${documentsPresents?'responsable-badge green':'responsable-badge red'}" th:text="${documentsPresents?'Disponibles':'Manquants'}">État</strong></div></div>
+<form th:action="@{/responsable/cloture/cloturer/{id}(id=${stage.id})}" method="post" onsubmit="return confirm('Confirmer la clôture définitive de ce stage ?')"><button class="responsable-btn danger" style="width:100%;margin-top:18px" type="submit"><i class="fa-solid fa-lock"></i> Clôturer et archiver le stage</button></form></article>
+<aside class="responsable-card"><div class="responsable-card-head"><div><h2>Résumé du stage</h2><p>Informations d'affectation</p></div></div><div class="responsable-data">
+<div class="responsable-data-row"><span>Matricule</span><strong th:text="${stage.stagiaire.matricule}">—</strong></div><div class="responsable-data-row"><span>N° stage</span><strong th:text="${stage.numeroStage}">—</strong></div><div class="responsable-data-row"><span>Encadreur</span><strong th:text="${stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom}">—</strong></div><div class="responsable-data-row"><span>Service</span><strong th:text="${stage.service.nom}">—</strong></div><div class="responsable-data-row"><span>Période</span><strong th:text="${#temporals.format(stage.dateDebut,'dd/MM/yyyy')+' - '+#temporals.format(stage.dateFin,'dd/MM/yyyy')}">—</strong></div><div class="responsable-data-row"><span>Durée</span><strong th:text="${stage.duree}">—</strong></div></div></aside></section>
+</main></body></html>

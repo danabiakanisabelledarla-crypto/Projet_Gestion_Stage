@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-<div th:fragment="header" class="admin-header">
+<div th:fragment="header" class="responsable-topbar">
+    <label class="responsable-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" placeholder="Rechercher dans l'espace responsable">
+    </label>
     <div class="header-droite">
-        <div class="header-icon-btn">
+        <a th:href="@{/responsable/notifications}" class="header-icon-btn" title="Notifications">
             <i class="fa-solid fa-bell"></i>
-            <span class="notif-dot" th:text="${notificationsCount}">5</span>
-        </div>
-        <a th:href="@{/responsable/notifications}" class="header-icon-btn">
+            <span class="notif-dot" th:text="${notificationsCount ?: 0}">0</span>
+        </a>
+        <a th:href="@{/responsable/notifications}" class="header-icon-btn" title="Messages">
             <i class="fa-solid fa-envelope"></i>
-            <span class="notif-dot" th:text="${messagesCount}">3</span>
+            <span class="notif-dot" th:text="${messagesCount ?: 0}">0</span>
         </a>
         <div class="header-user">
-            <div class="avatar" style="width:55px;height:55px;background:linear-gradient(135deg,#2563EB,#3B82F6);">
-                <span style="font-size:18px;">MA</span>
+            <div class="avatar responsable-avatar"><span>RS</span></div>
+            <div class="info">
+                <div class="name" sec:authentication="name">Responsable</div>
+                <div class="role">Responsable des stages <i class="fa-solid fa-chevron-down"></i></div>
             </div>
-                <div class="info">
-                    <div class="name">Responsable</div>
-                    <div class="role">Connecté <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></div>
-                </div>
         </div>
     </div>
 </div>

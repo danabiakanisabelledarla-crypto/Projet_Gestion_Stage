@@ -1,145 +1,55 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mes Stagiaires - Encadreur</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
-    <link rel="stylesheet" th:href="@{/css/responsable-stagiaires.css}">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mes stagiaires - Encadreur</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
 </head>
-<body>
-
+<body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+<div class="coach-main">
+    <header class="coach-topbar"><label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="globalStudentSearch" type="search" placeholder="Rechercher un stagiaire..."></label><button class="coach-icon-btn"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">3</em></button><a class="coach-icon-btn" th:href="@{/encadreur/messagerie}"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">2</em></a><div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div></header>
+    <main class="coach-page">
+        <section class="coach-heading"><div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-users"></i></span><div><div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Stagiaires</div><h1>Mes stagiaires</h1><p>Suivez la progression, les objectifs, les tâches, les livrables et les évaluations des stagiaires sous votre encadrement.</p></div></div></section>
 
-<main class="contenu-principal backup-page">
+        <section class="coach-kpis">
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-user-graduate"></i></span><strong th:text="${totalStagiaires}">0</strong><span>Stagiaires suivis</span><small>Sous votre supervision</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-circle-play"></i></span><strong th:text="${stagesActifs}">0</strong><span>Stages en cours</span><small>Stages actifs</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-bullseye"></i></span><strong th:text="${objectifsActifs}">0</strong><span>Objectifs actifs</span><small>À suivre</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-folder-open"></i></span><strong th:text="${livrablesAttente}">0</strong><span>Livrables en attente</span><small>À contrôler</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-star"></i></span><strong th:text="${evaluationsRealisees}">0</strong><span>Évaluations réalisées</span><small>Suivis enregistrés</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${progressionMoyenne+'%'}">0%</strong><span>Progression moyenne</span><small>Évolution globale</small></article>
+        </section>
 
-    <div th:replace="~{fragments/header-encadreur :: header}"></div>
+        <section class="coach-grid-70">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Liste des stagiaires</h2><p>Sélectionnez une ligne pour afficher son profil</p></div></div>
+                <div class="coach-toolbar"><label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="studentSearch" type="search" placeholder="Nom, matricule, sujet..."></label><select id="serviceFilter" class="coach-select"><option value="">Tous les services</option><option th:each="item : ${stagiaires}" th:value="${item.stage.service != null ? item.stage.service.nom : ''}" th:text="${item.stage.service != null ? item.stage.service.nom : 'Non renseigné'}">Service</option></select><select id="statusFilter" class="coach-select"><option value="">Tous les statuts</option><option value="en_cours">En cours</option><option value="suspendu">En attente</option><option value="termine">Terminé</option></select><select class="coach-select"><option>Trier par progression</option><option>Date de début</option><option>Date de fin</option></select></div>
+                <div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Service</th><th>Sujet</th><th>Début</th><th>Fin</th><th>Progression</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+                <tr class="student-row" th:each="item : ${stagiaires}" th:attr="data-name=${#strings.toLowerCase(item.utilisateur.prenom+' '+item.utilisateur.nom+' '+item.matricule)},data-service=${item.stage.service != null ? item.stage.service.nom : ''},data-status=${item.stage.statut.name()},data-fullname=${item.utilisateur.prenom+' '+item.utilisateur.nom},data-initials=${#strings.substring(item.utilisateur.prenom,0,1)+#strings.substring(item.utilisateur.nom,0,1)},data-subject=${item.stage.projet != null ? item.stage.projet.titre : 'Sujet à définir'},data-period=${#temporals.format(item.stage.dateDebut,'dd/MM/yyyy')+' - '+#temporals.format(item.stage.dateFin,'dd/MM/yyyy')},data-progress=${item.progression},data-objectives=${item.nombreObjectifs},data-tasks=${item.nombreTaches},data-deliverables=${item.nombreLivrables},data-activity=${item.derniereActivite != null ? #temporals.format(item.derniereActivite,'dd/MM/yyyy') : 'Aucune'},data-statuslabel=${item.stage.statut.name() == 'termine' ? 'Terminé' : (item.stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')}">
+                    <td><div class="coach-person"><span class="coach-avatar" th:text="${#strings.substring(item.utilisateur.prenom,0,1)+#strings.substring(item.utilisateur.nom,0,1)}">AB</span><div><strong th:text="${item.utilisateur.prenom+' '+item.utilisateur.nom}">Nom</strong><small th:text="${item.matricule}">Matricule</small></div></div></td><td th:text="${item.stage.service != null ? item.stage.service.nom : '—'}">Service</td><td th:text="${item.stage.projet != null ? item.stage.projet.titre : 'Sujet à définir'}">Sujet</td><td th:text="${#temporals.format(item.stage.dateDebut,'dd/MM/yyyy')}">Date</td><td th:text="${#temporals.format(item.stage.dateFin,'dd/MM/yyyy')}">Date</td><td><div class="coach-progress-row"><div class="coach-progress"><span th:style="'width:'+${item.progression}+'%'"></span></div><b th:text="${item.progression+'%'}">0%</b></div></td><td><span class="coach-badge" th:classappend="${item.stage.statut.name() == 'termine'} ? ' green' : (${item.stage.statut.name() == 'suspendu'} ? ' orange' : '')" th:text="${item.stage.statut.name() == 'termine' ? 'Terminé' : (item.stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')}">En cours</span></td><td><div class="coach-actions"><button type="button" class="coach-action select-student" title="Voir"><i class="fa-regular fa-eye"></i></button><a class="coach-action" th:href="@{/encadreur/evaluations}" title="Évaluer"><i class="fa-solid fa-star"></i></a><a class="coach-action" th:href="@{/encadreur/livrables}" title="Dossier"><i class="fa-regular fa-folder-open"></i></a></div></td>
+                </tr><tr th:if="${stagiaires.isEmpty()}"><td colspan="8" class="coach-empty">Aucun stagiaire assigné.</td></tr></tbody></table></div>
+                <div class="coach-pagination"><span th:text="${totalStagiaires+' résultat(s)'}">0 résultat</span><div class="coach-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div>
+            </article>
+            <article class="coach-card coach-profile" id="studentProfile">
+                <div th:if="${stagiaireSelectionne != null}"><span class="coach-avatar" id="profileInitials" th:text="${#strings.substring(stagiaireSelectionne.utilisateur.prenom,0,1)+#strings.substring(stagiaireSelectionne.utilisateur.nom,0,1)}">AB</span><h3 id="profileName" th:text="${stagiaireSelectionne.utilisateur.prenom+' '+stagiaireSelectionne.utilisateur.nom}">Nom</h3><p id="profileSubject" th:text="${stagiaireSelectionne.stage.projet != null ? stagiaireSelectionne.stage.projet.titre : 'Sujet à définir'}">Sujet</p><div class="coach-progress-row"><div class="coach-progress"><span id="profileProgressBar" th:style="'width:'+${stagiaireSelectionne.progression}+'%'"></span></div><b id="profileProgress" th:text="${stagiaireSelectionne.progression+'%'}">0%</b></div><div class="coach-data-list"><div class="coach-data-row"><span>Période</span><strong id="profilePeriod" th:text="${#temporals.format(stagiaireSelectionne.stage.dateDebut,'dd/MM/yyyy')+' - '+#temporals.format(stagiaireSelectionne.stage.dateFin,'dd/MM/yyyy')}">Période</strong></div><div class="coach-data-row"><span>Objectifs</span><strong id="profileObjectives" th:text="${stagiaireSelectionne.nombreObjectifs}">0</strong></div><div class="coach-data-row"><span>Tâches</span><strong id="profileTasks" th:text="${stagiaireSelectionne.nombreTaches}">0</strong></div><div class="coach-data-row"><span>Livrables</span><strong id="profileDeliverables" th:text="${stagiaireSelectionne.nombreLivrables}">0</strong></div><div class="coach-data-row"><span>Dernière activité</span><strong id="profileActivity" th:text="${stagiaireSelectionne.derniereActivite != null ? #temporals.format(stagiaireSelectionne.derniereActivite,'dd/MM/yyyy') : 'Aucune'}">Aucune</strong></div><div class="coach-data-row"><span>Statut</span><strong id="profileStatus">En cours</strong></div></div><div class="coach-quick-actions" style="margin-top:14px"><a class="coach-quick-action" href="#activities"><i class="fa-solid fa-book-open"></i>Voir le journal</a><a class="coach-quick-action" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i>Livrables</a><a class="coach-quick-action" th:href="@{/encadreur/evaluations}"><i class="fa-solid fa-star"></i>Évaluer</a></div></div><div class="coach-empty" th:if="${stagiaireSelectionne == null}">Sélectionnez un stagiaire.</div>
+            </article>
+        </section>
 
-    <!-- BACKUP HEADING -->
-    <div class="backup-heading">
-        <div class="backup-heading-left">
-            <div class="backup-heading-icon"><i class="fa-solid fa-user-graduate"></i></div>
-            <div>
-                <h1>Mes Stagiaires</h1>
-                <nav class="backup-breadcrumb">
-                    <a th:href="@{/encadreur/dashboard}">Accueil</a>
-                    <i class="fa-solid fa-chevron-right"></i>
-                    <span>Encadreur</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                    <strong>Mes Stagiaires</strong>
-                </nav>
-                <p>Gérez et suivez les stagiaires qui vous sont assignés.</p>
-            </div>
-        </div>
-    </div>
+        <section class="coach-grid-50"><article class="coach-card"><div class="coach-card-head"><div><h2>Progression</h2><p>Évolution sur les dernières semaines</p></div></div><div class="coach-chart"><svg viewBox="0 0 600 180" preserveAspectRatio="none"><line class="grid" x1="0" y1="40" x2="600" y2="40"/><line class="grid" x1="0" y1="90" x2="600" y2="90"/><line class="grid" x1="0" y1="140" x2="600" y2="140"/><path class="area" d="M0 155 C90 150 105 126 180 132 S275 105 350 99 S455 75 520 68 S570 45 600 38 L600 180 L0 180Z"/><path class="line" d="M0 155 C90 150 105 126 180 132 S275 105 350 99 S455 75 520 68 S570 45 600 38"/></svg></div></article><article class="coach-card"><div class="coach-card-head"><div><h2>Répartition des tâches</h2><p>État global des activités</p></div></div><div class="coach-donut-wrap"><div style="position:relative"><div class="coach-donut"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${tachesTerminees+tachesEnCours+tachesRetard}">0</strong><span>Tâches</span></div></div></div><div class="coach-legend"><div><span><i style="background:#22c55e"></i>Terminées</span><b th:text="${tachesTerminees}">0</b></div><div><span><i style="background:#f59e0b"></i>En cours</span><b th:text="${tachesEnCours}">0</b></div><div><span><i style="background:#ef4444"></i>En retard</span><b th:text="${tachesRetard}">0</b></div></div></div></article></section>
 
-    <!-- ALERT -->
-    <div th:if="${succes}" style="background:#DCFCE7;color:#15803D;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-weight:500;display:flex;align-items:center;gap:10px;">
-        <i class="fa-solid fa-circle-check"></i> <span th:text="${succes}">Succès</span>
-    </div>
+        <section class="coach-grid-60" id="activities"><article class="coach-card"><div class="coach-card-head"><div><h2>Livrables récents</h2><p>Documents des stagiaires sélectionnés</p></div></div><div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Document</th><th>Stagiaire</th><th>Date</th><th>Statut</th><th>Action</th></tr></thead><tbody><tr th:each="doc : ${livrablesRecents}"><td th:text="${doc.titre}">Document</td><td th:text="${doc.tache != null ? doc.tache.stage.stagiaire.utilisateur.prenom+' '+doc.tache.stage.stagiaire.utilisateur.nom : doc.stage.stagiaire.utilisateur.prenom+' '+doc.stage.stagiaire.utilisateur.nom}">Stagiaire</td><td th:text="${#temporals.format(doc.dateDepot,'dd/MM/yyyy')}">Date</td><td><span class="coach-badge" th:text="${doc.statut}">Statut</span></td><td><a class="coach-action" th:href="@{/documents/livrables/{id}/preview(id=${doc.id})}" target="_blank"><i class="fa-regular fa-eye"></i></a></td></tr><tr th:if="${livrablesRecents.isEmpty()}"><td colspan="5" class="coach-empty">Aucun livrable récent.</td></tr></tbody></table></div></article><article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>Derniers événements du suivi</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span><div class="coach-timeline-content"><strong>Nouvelle tâche terminée</strong><span>La progression a été recalculée</span><small>Récemment</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-file-arrow-up"></i></span><div class="coach-timeline-content"><strong>Livrable déposé</strong><span>Un document attend votre contrôle</span><small>Aujourd'hui</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-star"></i></span><div class="coach-timeline-content"><strong>Évaluation ajoutée</strong><span th:text="${evaluationsRealisees+' évaluation(s) enregistrée(s)'}">Évaluation</span><small>Cette période</small></div></div></div></article></section>
 
-    <!-- BACKUP STATS -->
-    <div class="backup-stats">
-        <article class="backup-stat-card blue">
-            <div class="backup-stat-top">
-                <span class="backup-stat-icon" style="background:#DBEAFE;color:#2563EB;"><i class="fa-solid fa-users"></i></span>
-                <em>Total</em>
-            </div>
-            <span class="backup-stat-label">Stagiaires assignés</span>
-            <strong th:text="${totalStagiaires}">0</strong>
-            <small>Sous votre supervision</small>
-            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
-                <path class="area" d="M0 30 C18 28,35 30,52 24 S80 27,100 19 S133 23,180 10 L180 38 L0 38 Z"></path>
-                <path class="line" d="M0 30 C18 28,35 30,52 24 S80 27,100 19 S133 23,180 10"></path>
-            </svg>
-        </article>
-        <article class="backup-stat-card green">
-            <div class="backup-stat-top">
-                <span class="backup-stat-icon" style="background:#DCFCE7;color:#16A34A;"><i class="fa-solid fa-play"></i></span>
-                <em>En cours</em>
-            </div>
-            <span class="backup-stat-label">Stages actifs</span>
-            <strong th:text="${stagesActifs}">0</strong>
-            <small>Stages en progression</small>
-            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
-                <path class="area" d="M0 33 C22 26,37 31,55 23 S89 27,110 20 S147 24,180 8 L180 38 L0 38 Z"></path>
-                <path class="line" d="M0 33 C22 26,37 31,55 23 S89 27,110 20 S147 24,180 8"></path>
-            </svg>
-        </article>
-        <article class="backup-stat-card orange">
-            <div class="backup-stat-top">
-                <span class="backup-stat-icon" style="background:#FEF3C7;color:#D97706;"><i class="fa-solid fa-check-circle"></i></span>
-                <em>Évalués</em>
-            </div>
-            <span class="backup-stat-label">Évaluations complètes</span>
-            <strong th:text="${evaluationsCompletes}">0</strong>
-            <small>Rapports évalués</small>
-            <svg viewBox="0 0 180 38" preserveAspectRatio="none">
-                <path class="area" d="M0 31 C20 34,38 27,57 30 S88 19,109 22 S145 13,180 5 L180 38 L0 38 Z"></path>
-                <path class="line" d="M0 31 C20 34,38 27,57 30 S88 19,109 22 S145 13,180 5"></path>
-            </svg>
-        </article>
-    </div>
-
-    <!-- TABLE -->
-    <div class="backup-card">
-        <div class="backup-card-header">
-            <h3>Liste des stagiaires</h3>
-        </div>
-        <div class="backup-table-wrap">
-            <table class="backup-table">
-                <thead>
-                    <tr>
-                        <th>Stagiaire</th>
-                        <th>Matricule</th>
-                        <th>Service</th>
-                        <th>Date début</th>
-                        <th>Date fin</th>
-                        <th>Progression</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="stagiaire : ${stagiaires}">
-                        <td>
-                            <div class="backup-name-cell">
-                                <div class="backup-user-avatar" th:text="${#strings.substring(stagiaire.utilisateur.prenom,0,1).toUpperCase() + #strings.substring(stagiaire.utilisateur.nom,0,1).toUpperCase()}">AB</div>
-                                <div>
-                                    <div class="user-nom" th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}">Nom</div>
-                                    <div class="user-fonction" th:text="${stagiaire.demandeStage != null ? stagiaire.demandeStage.filiere : '—'}">Filière</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td th:text="${stagiaire.matricule}">—</td>
-                        <td th:text="${stagiaire.stage != null && stagiaire.stage.service != null ? stagiaire.stage.service.nom : '—'}">—</td>
-                        <td th:text="${stagiaire.stage != null && stagiaire.stage.dateDebut != null ? #temporals.format(stagiaire.stage.dateDebut, 'dd/MM/yyyy') : '—'}">—</td>
-                        <td th:text="${stagiaire.stage != null && stagiaire.stage.dateFin != null ? #temporals.format(stagiaire.stage.dateFin, 'dd/MM/yyyy') : '—'}">—</td>
-                        <td>
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <div style="flex:1;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;">
-                                    <div th:style="'width:' + ${stagiaire.progression} + '%;background:#2563EB;height:100%;'"></div>
-                                </div>
-                                <span style="font-size:12px;color:#64748B;" th:text="${stagiaire.progression} + '%'">0%</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <a th:href="@{/encadreur/stagiaire/{id}(id=${stagiaire.id})}" class="backup-btn small" title="Voir détails"><i class="fa-solid fa-eye"></i></a>
-                                <a th:href="@{/encadreur/evaluer/{id}(id=${stagiaire.id})}" class="backup-btn small" title="Évaluer"><i class="fa-solid fa-star"></i></a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(stagiaires)}">
-                        <td colspan="7" class="empty-state">Aucun stagiaire assigné.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-</main>
-
-</body>
-</html>
+        <section class="coach-grid-50"><article class="coach-card"><div class="coach-card-head"><div><h2>Calendrier</h2><p>Réunions, dépôts et dates importantes</p></div></div><div class="coach-calendar-wrap"><div class="coach-calendar"><div class="coach-calendar-head">Lun</div><div class="coach-calendar-head">Mar</div><div class="coach-calendar-head">Mer</div><div class="coach-calendar-head">Jeu</div><div class="coach-calendar-head">Ven</div><div class="coach-calendar-head">Sam</div><div class="coach-calendar-head">Dim</div><div class="coach-day" th:each="n:${#numbers.sequence(1,14)}"><span class="coach-day-number" th:text="${n}">1</span><span class="coach-event orange" th:if="${n==4}">Réunion</span><span class="coach-event green" th:if="${n==9}">Dépôt</span></div></div></div></article><article class="coach-card"><div class="coach-card-head"><div><h2>Actions rapides</h2><p>Outils de suivi</p></div></div><div class="coach-quick-actions"><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Gérer les objectifs</a><a class="coach-quick-action" th:href="@{/encadreur/taches}"><i class="fa-solid fa-list-check"></i>Gérer les tâches</a><a class="coach-quick-action" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i>Consulter les livrables</a><a class="coach-quick-action" href="#activities"><i class="fa-solid fa-book-open"></i>Lire le journal</a><a class="coach-quick-action" th:href="@{/encadreur/evaluations}"><i class="fa-solid fa-star"></i>Évaluer</a><a class="coach-quick-action" th:href="@{/encadreur/planning}"><i class="fa-solid fa-calendar"></i>Ouvrir le planning</a></div></article></section>
+    </main>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const rows=[...document.querySelectorAll('.student-row')], search=document.getElementById('studentSearch'), service=document.getElementById('serviceFilter'), status=document.getElementById('statusFilter');
+ const filter=()=>rows.forEach(row=>row.style.display=(!search.value||row.dataset.name.includes(search.value.toLowerCase()))&&(!service.value||row.dataset.service===service.value)&&(!status.value||row.dataset.status===status.value)?'':'none');
+ search.addEventListener('input',filter); service.addEventListener('change',filter); status.addEventListener('change',filter);
+ rows.forEach(row=>row.querySelector('.select-student')?.addEventListener('click',()=>{const d=row.dataset;document.getElementById('profileInitials').textContent=d.initials;document.getElementById('profileName').textContent=d.fullname;document.getElementById('profileSubject').textContent=d.subject;document.getElementById('profilePeriod').textContent=d.period;document.getElementById('profileProgress').textContent=d.progress+'%';document.getElementById('profileProgressBar').style.width=d.progress+'%';document.getElementById('profileObjectives').textContent=d.objectives;document.getElementById('profileTasks').textContent=d.tasks;document.getElementById('profileDeliverables').textContent=d.deliverables;document.getElementById('profileActivity').textContent=d.activity;document.getElementById('profileStatus').textContent=d.statuslabel;}));
+});
+</script>
+</body></html>

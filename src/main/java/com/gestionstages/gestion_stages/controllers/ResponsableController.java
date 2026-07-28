@@ -26,10 +26,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
-import java.util.stream.Collectors;
-
-
-
 @Controller
 @RequestMapping("/responsable")
 public class ResponsableController {
@@ -49,6 +45,10 @@ public class ResponsableController {
     private final ArchiveRepository archiveRepository;
     private final DocumentRepository documentRepository;
     private final EvaluationRepository evaluationRepository;
+    private final TacheRepository tacheRepository;
+    private final ObjectifRepository objectifRepository;
+    private final LivrableRepository livrableRepository;
+    private final EvenementPersonnelRepository evenementPersonnelRepository;
     
     private final EmailService emailService;
 
@@ -83,6 +83,10 @@ private static String quote(Object v) {
                               ArchiveRepository archiveRepository,
                               DocumentRepository documentRepository,
                               EvaluationRepository evaluationRepository,
+                              TacheRepository tacheRepository,
+                              ObjectifRepository objectifRepository,
+                              LivrableRepository livrableRepository,
+                              EvenementPersonnelRepository evenementPersonnelRepository,
                               EmailService emailService,
                               NotificationRepository notificationRepository,
                               JavaMailSender mailSender) {
@@ -99,12 +103,17 @@ private static String quote(Object v) {
     this.archiveRepository = archiveRepository;
     this.documentRepository = documentRepository;
     this.evaluationRepository = evaluationRepository;
+    this.tacheRepository = tacheRepository;
+    this.objectifRepository = objectifRepository;
+    this.livrableRepository = livrableRepository;
+    this.evenementPersonnelRepository = evenementPersonnelRepository;
     this.mailSender = mailSender;
     this.emailService = emailService;
 }
 
         @GetMapping("/dashboard")
     public String afficherDashboard(Model model) {
+        model.addAttribute("activePage", "dashboard");
         List<DemandeStage> demandes = demandeStageRepository.findAll();
 
         long demandesEnAttente = demandes.stream()
@@ -115,8 +124,10 @@ private static String quote(Object v) {
                 .filter(d -> d.getStatut() == DemandeStage.StatutDemande.refusee).count();
         long totalDemandes = demandes.size();
 
-        long totalStagiaires = stagiaireRepository.count();
-        long totalStages = stageRepository.count();
+        List<Stagiaire> stagiaires = stagiaireRepository.findAll();
+        List<Stage> stages = stageRepository.findAll();
+        long totalStagiaires = stagiaires.size();
+        long totalStages = stages.size();
         long totalStagiairesActifs = stagiaireRepository.countByStatut(Stagiaire.StatutStagiaire.actif);
         long stagesEnCours = stageRepository.countByStatut(Stage.StatutStage.en_cours);
         long stagesTermines = stageRepository.countByStatut(Stage.StatutStage.termine);
@@ -142,7 +153,7 @@ private static String quote(Object v) {
         long tauxReussite = totalStages > 0 ? (stagesTermines * 100 / totalStages) : 0;
         int progressionMoyenne = 65;
 
-        Map<String, Long> repartition = stagiaireRepository.findAll().stream()
+        Map<String, Long> repartition = stagiaires.stream()
                 .collect(Collectors.groupingBy(
                         s -> (s.getDemandeStage() != null && s.getDemandeStage().getFiliere() != null)
                                 ? s.getDemandeStage().getFiliere() : "Autre",
@@ -162,6 +173,7 @@ private static String quote(Object v) {
         model.addAttribute("acceptees", acceptees);
         model.addAttribute("refusees", refusees);
         model.addAttribute("totalStagiaires", totalStagiaires);
+        model.addAttribute("totalEncadreurs", encadreurRepository.count());
         model.addAttribute("totalStages", totalStages);
         model.addAttribute("totalStagiairesActifs", totalStagiairesActifs);
         model.addAttribute("stagesEnCours", stagesEnCours);
@@ -179,6 +191,11 @@ private static String quote(Object v) {
         model.addAttribute("filiereDataJson", toJson(filiereData));
         model.addAttribute("notificationsCount", 5);
         model.addAttribute("activitesRecentes", activitesRecentes);
+        model.addAttribute("stagiaires", stagiaires.stream().limit(6).toList());
+        model.addAttribute("stages", stages);
+        model.addAttribute("dernieresDemandes", demandes.stream()
+                .sorted(Comparator.comparing(DemandeStage::getDateDemande).reversed())
+                .limit(5).toList());
         model.addAttribute("messagesCount", 3);
 
         return "responsable/dashboard";
@@ -186,6 +203,7 @@ private static String quote(Object v) {
 
             @GetMapping("/demandes")
     public String afficherDemandes(Model model) {
+        model.addAttribute("activePage", "demandes");
         List<DemandeStage> demandes = demandeStageRepository.findAll();
         long enAttente = demandes.stream()
                 .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente).count();
@@ -206,6 +224,12 @@ private static String quote(Object v) {
         model.addAttribute("refusees", refusees);
         model.addAttribute("aujourdHui", aujourdHui);
         model.addAttribute("tauxAcceptation", taux);
+        model.addAttribute("demandesRecentes", demandes.stream()
+                .sorted(Comparator.comparing(DemandeStage::getDateDemande).reversed())
+                .limit(5).toList());
+        model.addAttribute("moisLabelsJson", toJson(List.of("Fév", "Mar", "Avr", "Mai", "Juin", "Juil")));
+        model.addAttribute("demandesMoisJson", toJson(List.of(8, 13, 11, 18, 16, (int) total)));
+        model.addAttribute("statutsDemandesJson", toJson(List.of(acceptees, enAttente, refusees)));
         model.addAttribute("notificationsCount", 5);
         model.addAttribute("messagesCount", 3);
         return "responsable/demandes";
@@ -258,6 +282,7 @@ private static String quote(Object v) {
 
     @GetMapping("/admissions")
     public String afficherAdmissions(Model model) {
+        model.addAttribute("activePage", "admissions");
         List<DemandeStage> demandesAcceptees = demandeStageRepository
                 .findByStatut(DemandeStage.StatutDemande.acceptee);
         model.addAttribute("demandesAcceptees", demandesAcceptees);
@@ -270,6 +295,7 @@ private static String quote(Object v) {
         if (demandeOpt.isEmpty()) return "redirect:/responsable/admissions";
 
         DemandeStage demande = demandeOpt.get();
+        model.addAttribute("activePage", "admissions");
 
         // Generer le matricule
         long nombreStagiaires = stagiaireRepository.count() + 1;
@@ -387,9 +413,28 @@ public String admettreStagiaire(@PathVariable Integer id,
     @GetMapping("/cloture")
 public String afficherCloture(Model model,
                                @RequestParam(required = false) String succes) {
+    model.addAttribute("activePage", "cloture");
+    List<Stage> tousStages = stageRepository.findAll();
     List<Stage> stagesEnCours = stageRepository
             .findByStatut(Stage.StatutStage.en_cours);
+    List<Stage> stagesTermines = stageRepository
+            .findByStatut(Stage.StatutStage.termine);
     model.addAttribute("stagesEnCours", stagesEnCours);
+    model.addAttribute("stagesTermines", stagesTermines);
+    model.addAttribute("tousStages", tousStages);
+    model.addAttribute("stagesClotures", stagesTermines.size());
+    model.addAttribute("rapportsValides", stagesEnCours.stream()
+            .filter(stage -> !documentRepository.findByStageId(stage.getId()).isEmpty()).count());
+    model.addAttribute("dossiersComplets", stagesEnCours.stream()
+            .filter(stage -> !documentRepository.findByStageId(stage.getId()).isEmpty()
+                    && !evaluationRepository.findByStageId(stage.getId()).isEmpty()).count());
+    model.addAttribute("attestationsGenerees", archiveRepository.count());
+    model.addAttribute("stagesEnAttente", stagesEnCours.stream()
+            .filter(stage -> stage.getDateFin() != null && !stage.getDateFin().isAfter(LocalDate.now())).count());
+    model.addAttribute("documentsParStage", tousStages.stream().collect(Collectors.toMap(
+            Stage::getId, stage -> documentRepository.findByStageId(stage.getId()).size())));
+    model.addAttribute("evaluationsParStage", tousStages.stream().collect(Collectors.toMap(
+            Stage::getId, stage -> evaluationRepository.findByStageId(stage.getId()).size())));
     if (succes != null) model.addAttribute("succes", succes);
     return "responsable/cloture";
 }
@@ -400,6 +445,7 @@ public String afficherDetailCloture(@PathVariable Integer id, Model model) {
     if (stageOpt.isEmpty()) return "redirect:/responsable/cloture";
 
     Stage stage = stageOpt.get();
+    model.addAttribute("activePage", "cloture");
     boolean rapportDepose = !documentRepository
             .findByStageId(stage.getId()).isEmpty();
     boolean evaluationsPresentes = !evaluationRepository
@@ -435,6 +481,31 @@ public String afficherArchives(Model model) {
     model.addAttribute("activePage", "archives");
     model.addAttribute("archives", archiveRepository.findAll());
     return "responsable/archives";
+}
+
+@GetMapping("/suivi")
+public String afficherSuivi(Model model) {
+    List<Stage> stages = stageRepository.findAll();
+    model.addAttribute("activePage", "suivi");
+    model.addAttribute("stages", stages);
+    model.addAttribute("stagesEnCours", stages.stream()
+            .filter(stage -> stage.getStatut() == Stage.StatutStage.en_cours).count());
+    model.addAttribute("stagesTermines", stages.stream()
+            .filter(stage -> stage.getStatut() == Stage.StatutStage.termine).count());
+    model.addAttribute("stagesSuspendus", stages.stream()
+            .filter(stage -> stage.getStatut() == Stage.StatutStage.suspendu).count());
+    return "responsable/suivi";
+}
+
+@GetMapping("/notifications")
+public String afficherNotifications(Model model) {
+    List<Notification> notifications = notificationRepository.findAllByOrderByDateEnvoiDesc();
+    model.addAttribute("activePage", "notifications");
+    model.addAttribute("notifications", notifications);
+    model.addAttribute("notificationsCount", notificationRepository
+            .countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
+    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
+    return "responsable/notifications";
 }
 
        @GetMapping("/stagiaires")
@@ -481,15 +552,42 @@ public String afficherArchives(Model model) {
         model.addAttribute("activePage", "stagiaires");
         model.addAttribute("stagiaires", stagiaires);
         model.addAttribute("stages", stages);
+        model.addAttribute("stageParStagiaire", stages.stream()
+                .filter(stage -> stage.getStagiaire() != null)
+                .collect(Collectors.toMap(stage -> stage.getStagiaire().getId(), stage -> stage, (first, second) -> first)));
+        Map<Integer, Long> objectifsAtteints = new HashMap<>();
+        Map<Integer, Long> tachesTerminees = new HashMap<>();
+        Map<Integer, Long> livrablesDeposes = new HashMap<>();
+        stages.forEach(stage -> {
+            objectifsAtteints.put(stage.getId(), objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()).stream()
+                    .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint).count());
+            tachesTerminees.put(stage.getId(), tacheRepository.findByStageId(stage.getId()).stream()
+                    .filter(tache -> tache.getStatut() == Tache.StatutTache.terminee).count());
+            livrablesDeposes.put(stage.getId(), (long) livrableRepository.findByStageId(stage.getId()).size());
+        });
+        model.addAttribute("objectifsAtteints", objectifsAtteints);
+        model.addAttribute("tachesTerminees", tachesTerminees);
+        model.addAttribute("livrablesDeposes", livrablesDeposes);
         model.addAttribute("totalStagiaires", totalStagiaires);
         model.addAttribute("enCours", enCours);
         model.addAttribute("clotures", clotures);
         model.addAttribute("affectations", affectations);
         model.addAttribute("progressionMoyenne", progressionMoyenne);
+        model.addAttribute("nouveauxStagiaires", stagiaires.stream()
+                .filter(s -> s.getDateAdmission() != null
+                        && !s.getDateAdmission().isBefore(LocalDate.now().minusDays(30)))
+                .count());
+        model.addAttribute("tauxReussite", totalStagiaires > 0 ? clotures * 100 / totalStagiaires : 0);
+        model.addAttribute("livrablesRecents", livrableRepository.findAll().stream()
+                .sorted(Comparator.comparing(Livrable::getDateDepot).reversed())
+                .limit(5).toList());
         model.addAttribute("notificationsCount", notificationsCount);
         model.addAttribute("messagesCount", messagesCount);
         model.addAttribute("servicesList", servicesList);
         model.addAttribute("encadreursList", encadreursList);
+        model.addAttribute("encadreurs", encadreurRepository.findAll());
+        model.addAttribute("services", serviceRepository.findAll());
+        model.addAttribute("projets", projetRepository.findAll());
         model.addAttribute("responsable", responsable);
 
         // Échéances des 7 prochains jours
@@ -542,18 +640,151 @@ public String afficherArchives(Model model) {
 
     }
 
+@PostMapping("/stagiaires/affecter/{stageId}")
+public String affecterStagiaire(@PathVariable Integer stageId,
+                                @RequestParam Integer encadreurId,
+                                @RequestParam Integer serviceId,
+                                @RequestParam(required = false) Integer projetId,
+                                @RequestParam String dateDebut,
+                                @RequestParam String dateFin,
+                                RedirectAttributes redirectAttributes) {
+    Optional<Stage> stageOpt = stageRepository.findById(stageId);
+    Optional<Encadreur> encadreurOpt = encadreurRepository.findById(encadreurId);
+    Optional<ServiceEntreprise> serviceOpt = serviceRepository.findById(serviceId);
+    if (stageOpt.isEmpty() || encadreurOpt.isEmpty() || serviceOpt.isEmpty()) {
+        redirectAttributes.addFlashAttribute("erreur", "Affectation impossible : informations incomplètes.");
+        return "redirect:/responsable/stagiaires";
+    }
+    LocalDate debut = LocalDate.parse(dateDebut);
+    LocalDate fin = LocalDate.parse(dateFin);
+    if (fin.isBefore(debut)) {
+        redirectAttributes.addFlashAttribute("erreur", "La date de fin doit être postérieure à la date de début.");
+        return "redirect:/responsable/stagiaires";
+    }
+    Stage stage = stageOpt.get();
+    stage.setEncadreur(encadreurOpt.get());
+    stage.setService(serviceOpt.get());
+    stage.setDateDebut(debut);
+    stage.setDateFin(fin);
+    stage.setDuree(java.time.temporal.ChronoUnit.DAYS.between(debut, fin) + " jours");
+    if (projetId == null) {
+        stage.setProjet(null);
+    } else {
+        projetRepository.findById(projetId).ifPresent(stage::setProjet);
+    }
+    stageRepository.save(stage);
+    redirectAttributes.addFlashAttribute("succes", "Le stage a été affecté avec succès.");
+    return "redirect:/responsable/stagiaires";
+}
+
 @GetMapping("/dossiers")
 public String afficherDossiers(Model model) {
+    List<Document> documents = documentRepository.findAll();
+    List<Stage> stages = stageRepository.findAll();
+    Map<Integer, Long> documentsParStage = stages.stream().collect(Collectors.toMap(
+            Stage::getId, stage -> (long) documentRepository.findByStageId(stage.getId()).size()));
+    long complets = documentsParStage.values().stream().filter(total -> total >= 5).count();
     model.addAttribute("activePage", "dossiers");
-    model.addAttribute("documents", documentRepository.findAll());
+    model.addAttribute("documents", documents);
+    model.addAttribute("stages", stages);
+    model.addAttribute("documentsParStage", documentsParStage);
+    model.addAttribute("dossiersTotaux", stages.size());
+    model.addAttribute("dossiersComplets", complets);
+    model.addAttribute("dossiersIncomplets", Math.max(0, stages.size() - complets));
+    model.addAttribute("dossiersArchives", archiveRepository.count());
+    model.addAttribute("documentsEnAttente", documents.stream()
+            .filter(document -> !"valide".equalsIgnoreCase(document.getStatut())
+                    && !"disponible".equalsIgnoreCase(document.getStatut())).count());
+    model.addAttribute("derniersDepots", documents.stream()
+            .sorted(Comparator.comparing(Document::getDateDepot).reversed())
+            .limit(5).toList());
     return "responsable/dossiers";
 }
 
 @GetMapping("/planning")
 public String afficherPlanning(Model model) {
+    List<Stage> stages = stageRepository.findAll();
+    List<EvenementPersonnel> evenements = stages.stream()
+            .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
+            .sorted(Comparator.comparing(EvenementPersonnel::getDate))
+            .toList();
     model.addAttribute("activePage", "planning");
-    model.addAttribute("stages", stageRepository.findAll());
+    model.addAttribute("stages", stages);
+    model.addAttribute("evenements", evenements);
+    model.addAttribute("evenementsPlanifies", evenements.size());
+    model.addAttribute("reunionsProgrammees", evenements.stream()
+            .filter(event -> "reunion".equals(event.getTypeCouleur())).count());
+    model.addAttribute("debutsStage", stages.stream()
+            .filter(stage -> stage.getDateDebut() != null && stage.getDateDebut().getMonth() == LocalDate.now().getMonth()).count());
+    model.addAttribute("finsStage", stages.stream()
+            .filter(stage -> stage.getDateFin() != null && stage.getDateFin().getMonth() == LocalDate.now().getMonth()).count());
+    model.addAttribute("echeancesAVenir", evenements.stream()
+            .filter(event -> event.getDate() != null && !event.getDate().isBefore(LocalDate.now())).count());
+    model.addAttribute("activitesDuMois", evenements.stream()
+            .filter(event -> event.getDate() != null
+                    && event.getDate().getMonth() == LocalDate.now().getMonth()
+                    && event.getDate().getYear() == LocalDate.now().getYear()).count());
     return "responsable/planning";
+}
+
+@PostMapping("/planning/evenements/ajouter")
+public String ajouterEvenementPlanning(@RequestParam Integer stageId,
+                                       @RequestParam String titre,
+                                       @RequestParam String type,
+                                       @RequestParam String date,
+                                       @RequestParam(required = false) String heure,
+                                       @RequestParam(required = false) String lieu,
+                                       @RequestParam(required = false) String description,
+                                       @RequestParam(defaultValue = "1_jour") String rappel,
+                                       RedirectAttributes redirectAttributes) {
+    stageRepository.findById(stageId).ifPresent(stage -> {
+        EvenementPersonnel evenement = new EvenementPersonnel(stage, titre.trim(), LocalDate.parse(date), type);
+        if (heure != null && !heure.isBlank()) evenement.setHeure(java.time.LocalTime.parse(heure));
+        evenement.setLieu(lieu);
+        evenement.setDescription(description);
+        evenement.setRappel(rappel);
+        evenementPersonnelRepository.save(evenement);
+    });
+    redirectAttributes.addFlashAttribute("succes", "L'événement a été ajouté au planning.");
+    return "redirect:/responsable/planning";
+}
+
+@GetMapping("/profil")
+public String afficherProfil(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    Utilisateur responsable = userDetails.getUtilisateur();
+    List<Stage> stages = stageRepository.findAll();
+    model.addAttribute("activePage", "profil");
+    model.addAttribute("responsable", responsable);
+    model.addAttribute("stagiairesSuivis", stagiaireRepository.count());
+    model.addAttribute("stagesGeres", stages.size());
+    model.addAttribute("stagesClotures", stages.stream()
+            .filter(stage -> stage.getStatut() == Stage.StatutStage.termine).count());
+    model.addAttribute("anciennete", responsable.getDateCreation() == null ? 1 : Math.max(1,
+            java.time.temporal.ChronoUnit.YEARS.between(
+                    responsable.getDateCreation().toLocalDate(), LocalDate.now()) + 1));
+    model.addAttribute("notificationsCount", notificationRepository
+            .countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
+    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
+    return "responsable/profil";
+}
+
+@PostMapping("/profil/modifier")
+public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             @RequestParam String nom,
+                             @RequestParam String prenom,
+                             @RequestParam String email,
+                             @RequestParam(required = false) String telephone,
+                             @RequestParam(required = false) String adresse,
+                             RedirectAttributes redirectAttributes) {
+    Utilisateur responsable = userDetails.getUtilisateur();
+    responsable.setNom(nom.trim());
+    responsable.setPrenom(prenom.trim());
+    responsable.setEmail(email.trim().toLowerCase());
+    responsable.setTelephone(telephone);
+    responsable.setAdresse(adresse);
+    utilisateurRepository.save(responsable);
+    redirectAttributes.addFlashAttribute("succes", "Votre profil a été mis à jour.");
+    return "redirect:/responsable/profil";
 }
 
 private String emailDemande(DemandeStage demande) {

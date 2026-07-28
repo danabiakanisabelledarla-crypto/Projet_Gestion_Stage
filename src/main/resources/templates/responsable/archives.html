@@ -1,47 +1,20 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Archives des stages</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
-</head>
-<body>
-
-<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Archives des stages</h1>
-        <span class="utilisateur-connecte">Responsable</span>
-    </div>
-
-    <div class="bloc-blanc">
-        <p th:if="${archives.isEmpty()}" style="color:#64748B; padding:20px;">
-            Aucun stage archivé pour le moment.
-        </p>
-
-        <table th:if="${!archives.isEmpty()}" class="tableau-donnees">
-            <thead>
-                <tr>
-                    <th>Stagiaire</th>
-                    <th>N° Stage</th>
-                    <th>Service</th>
-                    <th>Date de clôture</th>
-                    <th>Motif</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="archive : ${archives}">
-                    <td th:text="${archive.stage.stagiaire.utilisateur.prenom + ' ' + archive.stage.stagiaire.utilisateur.nom}">Nom</td>
-                    <td th:text="${archive.stage.numeroStage}">STG-NUM</td>
-                    <td th:text="${archive.stage.service.nom}">Service</td>
-                    <td th:text="${#temporals.format(archive.dateArchivage, 'dd/MM/yyyy')}">01/01/2026</td>
-                    <td th:text="${archive.motif}">Motif</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Archives - Responsable</title>
+<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" th:href="@{/css/responsable-premium.css}"></head>
+<body><div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div><main class="contenu-principal">
+<div th:replace="~{fragments/header-responsable :: header}"></div>
+<section class="responsable-page-header"><div class="responsable-title"><span class="responsable-title-icon"><i class="fa-solid fa-box-archive"></i></span><div><div class="responsable-breadcrumb">Accueil &gt; Responsable &gt; Archives</div><h1>Archives des stages</h1><p class="responsable-subtitle">Retrouvez les stages clôturés et leurs informations de conservation.</p></div></div><a class="responsable-btn secondary" th:href="@{/responsable/cloture}"><i class="fa-solid fa-circle-check"></i> Clôtures</a></section>
+<section class="responsable-grid">
+<article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></span><strong th:text="${#lists.size(archives)}">0</strong><span>Stages archivés</span></article>
+<article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-shield-halved"></i></span><strong>100 %</strong><span>Dossiers conservés</span></article>
+<article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-calendar-check"></i></span><strong th:text="${#lists.isEmpty(archives) ? '—' : #temporals.format(archives[0].dateArchivage,'dd/MM/yyyy')}">—</strong><span>Dernier archivage</span></article>
+<article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-database"></i></span><strong>Disponible</strong><span>Consultation des dossiers</span></article>
+</section>
+<section class="responsable-card"><div class="responsable-card-head"><div><h2>Registre des archives</h2><p>Historique des stages terminés.</p></div></div>
+<div class="responsable-toolbar"><input id="archiveSearch" class="responsable-input" type="search" placeholder="Stagiaire, numéro ou service"></div>
+<div class="responsable-table-wrap"><table class="responsable-table"><thead><tr><th>Stagiaire</th><th>N° stage</th><th>Service</th><th>Date de clôture</th><th>Motif</th><th>Statut</th></tr></thead><tbody>
+<tr class="archive-row" th:each="archive:${archives}" th:attr="data-search=${#strings.toLowerCase(archive.stage.stagiaire.utilisateur.prenom+' '+archive.stage.stagiaire.utilisateur.nom+' '+archive.stage.numeroStage+' '+archive.stage.service.nom)}">
+<td><strong th:text="${archive.stage.stagiaire.utilisateur.prenom+' '+archive.stage.stagiaire.utilisateur.nom}">Nom</strong></td><td th:text="${archive.stage.numeroStage}">N°</td><td th:text="${archive.stage.service.nom}">Service</td><td th:text="${#temporals.format(archive.dateArchivage,'dd/MM/yyyy HH:mm')}">Date</td><td th:text="${archive.motif ?: 'Clôture normale'}">Motif</td><td><span class="responsable-badge green">Archivé</span></td></tr>
+<tr th:if="${#lists.isEmpty(archives)}"><td colspan="6" class="responsable-empty">Aucun stage archivé pour le moment.</td></tr></tbody></table></div></section>
+</main><script>document.addEventListener('DOMContentLoaded',()=>{const q=document.getElementById('archiveSearch'),rows=[...document.querySelectorAll('.archive-row')];q.addEventListener('input',()=>rows.forEach(r=>r.style.display=!q.value||r.dataset.search.includes(q.value.toLowerCase())?'':'none'));});</script></body></html>

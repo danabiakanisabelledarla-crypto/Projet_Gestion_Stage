@@ -2,101 +2,62 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admissions</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admissions - Responsable</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
 </head>
 <body>
-
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <header class="en-tete-page">
-        <div class="header-gauche">
-            <div>
-                <h1>Admissions</h1>
-                <p class="sous-titre">Gérez les admissions et préparez les fiches stagiaires.</p>
-            </div>
+<main class="contenu-principal">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <section class="responsable-page-header">
+        <div class="responsable-title">
+            <span class="responsable-title-icon"><i class="fa-solid fa-user-check"></i></span>
+            <div><div class="responsable-breadcrumb">Accueil &gt; Responsable &gt; Admissions</div><h1>Admissions</h1>
+                <p class="responsable-subtitle">Transformez les candidatures acceptées en dossiers de stage complets.</p></div>
         </div>
-        <a th:href="@{/responsable/dashboard}" class="btn-principal">Retour au tableau de bord</a>
-    </header>
-
-    <section class="hero-card">
-        <div class="hero-texte">
-            <h2>Admissions</h2>
-            <p>Consultez les candidatures acceptées et créez les fiches stagiaires associées.</p>
-        </div>
-        <div class="hero-illustration">
-            <img src="/images/hero-teamm.png" alt="Illustration admissions" class="hero-image">
-        </div>
+        <a class="responsable-btn secondary" th:href="@{/responsable/demandes}"><i class="fa-solid fa-arrow-left"></i> Demandes</a>
     </section>
 
-    <section class="bloc">
-        <div class="bloc-entete">
-            <h3>Liste des admissions</h3>
+    <section class="responsable-grid">
+        <article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-inbox"></i></span><strong th:text="${#lists.size(demandesAcceptees)}">0</strong><span>Candidatures acceptées</span></article>
+        <article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-id-card"></i></span><strong th:text="${#lists.size(demandesAcceptees)}">0</strong><span>Fiches à préparer</span></article>
+        <article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-school"></i></span><strong th:text="${#lists.size(demandesAcceptees)}">0</strong><span>Dossiers renseignés</span></article>
+        <article class="responsable-kpi"><span class="responsable-kpi-icon"><i class="fa-solid fa-clock"></i></span><strong>À traiter</strong><span>Prochaine étape administrative</span></article>
+    </section>
+
+    <section class="responsable-card">
+        <div class="responsable-card-head"><div><h2>Demandes prêtes pour l'admission</h2><p>Créez le compte, choisissez l'encadreur et affectez le service.</p></div></div>
+        <div class="responsable-toolbar">
+            <input class="responsable-input" id="admissionSearch" type="search" placeholder="Rechercher un candidat">
+            <select class="responsable-select" id="admissionSchool"><option value="">Toutes les écoles</option></select>
+            <button class="responsable-btn secondary" type="button" id="resetAdmissions"><i class="fa-solid fa-rotate-left"></i> Réinitialiser</button>
         </div>
-
-        <div class="barre-filtres">
-            <input class="filtre-input" type="text" id="filtreNom" placeholder="Rechercher par nom..." oninput="filtrerTableau()">
-            <select class="filtre-select" id="filtreEcole" onchange="filtrerTableau()">
-                <option value="">École ▼</option>
-                <option>EST</option>
-                <option>ENSA</option>
-                <option>FS</option>
-            </select>
-            <input class="filtre-input" type="text" id="filtreFiliere" placeholder="Filière" oninput="filtrerTableau()">
-            <select class="filtre-select" id="filtreNiveau" onchange="filtrerTableau()">
-                <option value="">Niveau ▼</option>
-                <option>BTS 1</option>
-                <option>BTS 2</option>
-                <option>Licence 2</option>
-                <option>Licence 3</option>
-            </select>
-            <button class="btn-reinit" onclick="reinitFiltres()">Réinitialiser</button>
-            <button class="btn-filtrer" onclick="filtrerTableau()">Filtrer</button>
-        </div>
-
-        <div class="tableau-wrapper">
-            <div class="tableau-header">
-                <div class="col-header">Nom</div>
-                <div class="col-header">École</div>
-                <div class="col-header">Filière</div>
-                <div class="col-header">Niveau</div>
-                <div class="col-header">Action</div>
-            </div>
-
-            <div class="tableau-ligne" th:each="demande : ${demandesAcceptees}"
-                 th:data-nom="${demande.prenom + ' ' + demande.nom}"
-                 th:data-ecole="${demande.ecole}"
-                 th:data-filiere="${demande.filiere}"
-                 th:data-niveau="${demande.niveau}">
-                <div class="candidat-cell">
-                    <div class="candidat-avatar"
-                         th:text="${#strings.substring(demande.prenom, 0, 1)}">A</div>
-                    <div>
-                        <div class="candidat-nom"
-                             th:text="${demande.prenom + ' ' + demande.nom}">Nom</div>
-                        <div class="candidat-email"
-                             th:text="${demande.ecole != null ? demande.ecole : '—'}">École</div>
-                    </div>
-                </div>
-
-                <div class="col-text" th:text="${demande.ecole}">-</div>
-                <div class="col-text" th:text="${demande.filiere}">-</div>
-                <div class="col-text" th:text="${demande.niveau}">-</div>
-
-                <div class="actions-cell">
-                    <a th:href="@{/responsable/admissions/fiche/{id}(id=${demande.id})}"
-                       class="btn-action">Créer fiche stagiaire</a>
-                </div>
-            </div>
-
-            <div th:if="${#lists.isEmpty(demandesAcceptees)}" class="tableau-vide">
-                Aucune demande acceptée pour le moment.
-            </div>
+        <div class="responsable-table-wrap">
+            <table class="responsable-table">
+                <thead><tr><th>Candidat</th><th>École</th><th>Filière</th><th>Niveau</th><th>Date de demande</th><th>Action</th></tr></thead>
+                <tbody>
+                <tr class="admission-row" th:each="demande : ${demandesAcceptees}" th:attr="data-search=${#strings.toLowerCase(demande.prenom+' '+demande.nom+' '+(demande.ecole ?: '')+' '+(demande.filiere ?: ''))},data-school=${demande.ecole ?: ''}">
+                    <td><div class="responsable-person"><span class="responsable-person-avatar" th:text="${#strings.substring(demande.prenom,0,1)+#strings.substring(demande.nom,0,1)}">CN</span><div><strong th:text="${demande.prenom+' '+demande.nom}">Candidat</strong><div class="responsable-subtitle" th:text="${demande.email ?: 'Email non renseigné'}">Email</div></div></div></td>
+                    <td th:text="${demande.ecole ?: '—'}">—</td><td th:text="${demande.filiere ?: '—'}">—</td><td th:text="${demande.niveau ?: '—'}">—</td>
+                    <td th:text="${demande.dateDemande != null ? #temporals.format(demande.dateDemande,'dd/MM/yyyy') : '—'}">—</td>
+                    <td><a class="responsable-btn" th:href="@{/responsable/admissions/fiche/{id}(id=${demande.id})}"><i class="fa-solid fa-file-circle-plus"></i> Créer la fiche</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(demandesAcceptees)}"><td colspan="6" class="responsable-empty">Aucune candidature acceptée en attente d'admission.</td></tr>
+                </tbody>
+            </table>
         </div>
     </section>
-</div>
-
-</body>
-</html>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const rows=[...document.querySelectorAll('.admission-row')], search=document.getElementById('admissionSearch'), school=document.getElementById('admissionSchool');
+    [...new Set(rows.map(row=>row.dataset.school).filter(Boolean))].sort().forEach(value=>school.add(new Option(value,value)));
+    const filter=()=>rows.forEach(row=>row.style.display=(!search.value||row.dataset.search.includes(search.value.toLowerCase()))&&(!school.value||row.dataset.school===school.value)?'':'none');
+    search.addEventListener('input',filter); school.addEventListener('change',filter);
+    document.getElementById('resetAdmissions').addEventListener('click',()=>{search.value='';school.value='';filter();});
+});
+</script>
+</body></html>

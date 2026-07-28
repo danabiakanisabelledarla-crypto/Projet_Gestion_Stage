@@ -2,44 +2,80 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tableau de bord - Encadreur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
 </head>
-<body>
-
+<body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+<div class="coach-main">
+    <header class="coach-topbar">
+        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Rechercher un stagiaire, une tâche..."></label>
+        <button class="coach-icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">3</em></button>
+        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}" title="Messages"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">2</em></a>
+        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
+    </header>
 
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Suivi du stagiaire</h1>
-        <span class="utilisateur-connecte">Encadreur</span>
-    </div>
+    <main class="coach-page">
+        <section class="coach-heading">
+            <div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-gauge-high"></i></span><div>
+                <div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Tableau de bord</div>
+                <h1>Tableau de bord</h1>
+                <p>Suivez l'avancement de vos stagiaires et pilotez leurs activités.</p>
+            </div></div>
+        </section>
 
-    <div class="grille-cartes-stats">
-        <div class="carte-stat bleu">
-            <div class="libelle">Mes stagiaires</div>
-            <div class="valeur" th:text="${nombreStagiaires}">0</div>
-        </div>
-        <div class="carte-stat vert">
-            <div class="libelle">Taches</div>
-            <div class="valeur" th:text="${nombreTaches}">0</div>
-        </div>
-        <div class="carte-stat orange">
-            <div class="libelle">Livrables</div>
-            <div class="valeur" th:text="${nombreLivrables}">0</div>
-        </div>
-    </div>
+        <section class="coach-kpis">
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-user-graduate"></i></span><strong th:text="${nombreStagiaires}">0</strong><span>Stagiaires suivis</span><small>Stages sous supervision</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,24 13,20 25,22 38,12 50,15 68,5"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-bullseye"></i></span><strong th:text="${objectifsActifs}">0</strong><span>Objectifs actifs</span><small>En cours de réalisation</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,22 12,17 24,19 37,10 49,12 68,4"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-list-check"></i></span><strong th:text="${tachesEnCours}">0</strong><span>Tâches en cours</span><small>Travaux en progression</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,23 13,21 25,14 37,18 51,9 68,7"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon red"><i class="fa-solid fa-folder-open"></i></span><strong th:text="${livrablesAttente}">0</strong><span>Livrables en attente</span><small>À contrôler</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,18 13,21 25,14 37,16 50,8 68,11"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-star"></i></span><strong th:text="${evaluationsRealisees}">0</strong><span>Évaluations réalisées</span><small>Suivis enregistrés</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,25 13,19 25,20 38,13 51,8 68,5"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${progressionMoyenne + '%'}">0%</strong><span>Progression moyenne</span><small>Ensemble des stagiaires</small><svg class="coach-sparkline" viewBox="0 0 70 28"><polyline points="1,24 13,18 25,16 37,12 50,10 68,4"/></svg></article>
+        </section>
 
-    <div class="grille-blocs">
-        <div class="bloc-blanc">
-            <h3>Actions rapides</h3>
-            <a th:href="@{/encadreur/taches}" class="bouton-action">Gerer les taches</a>
-            <a th:href="@{/encadreur/livrables}" class="bouton-action">Consulter les livrables</a>
-            <a th:href="@{/encadreur/evaluations}" class="bouton-action">Effectuer une evaluation</a>
-        </div>
-    </div>
+        <section class="coach-grid-70">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Mes stagiaires</h2><p>Vue synthétique des stages sous votre encadrement</p></div><a class="coach-btn secondary compact" th:href="@{/encadreur/mes-stagiaires}">Voir tout</a></div>
+                <div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Service</th><th>Sujet</th><th>Progression</th><th>Livrables</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+                <tr th:each="stage : ${stages}">
+                    <td><div class="coach-person"><span class="coach-avatar" th:text="${#strings.substring(stage.stagiaire.utilisateur.prenom,0,1)+#strings.substring(stage.stagiaire.utilisateur.nom,0,1)}">AB</span><div><strong th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Nom</strong><small th:text="${stage.stagiaire.matricule}">Matricule</small></div></div></td>
+                    <td th:text="${stage.service != null ? stage.service.nom : 'Non renseigné'}">Service</td>
+                    <td th:text="${stage.projet != null ? stage.projet.titre : 'Sujet à définir'}">Sujet</td>
+                    <td><div class="coach-progress-row"><div class="coach-progress"><span th:style="'width:'+${stage.stagiaire.progression}+'%'"></span></div><b th:text="${stage.stagiaire.progression+'%'}">0%</b></div></td>
+                    <td th:text="${livrablesParStage[stage.id]}">0</td>
+                    <td><span class="coach-badge" th:classappend="${stage.statut.name() == 'termine'} ? ' green' : (${stage.statut.name() == 'suspendu'} ? ' orange' : '')" th:text="${stage.statut.name() == 'termine' ? 'Terminé' : (stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')}">En cours</span></td>
+                    <td><div class="coach-actions"><a class="coach-action" th:href="@{/encadreur/mes-stagiaires}" title="Voir"><i class="fa-regular fa-eye"></i></a><a class="coach-action" th:href="@{/encadreur/evaluations}" title="Évaluer"><i class="fa-solid fa-star"></i></a></div></td>
+                </tr>
+                <tr th:if="${stages.isEmpty()}"><td colspan="7" class="coach-empty">Aucun stagiaire ne vous est actuellement affecté.</td></tr>
+                </tbody></table></div>
+            </article>
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Prochaines échéances</h2><p>Les rendez-vous à surveiller</p></div></div>
+                <div class="coach-timeline">
+                    <div class="coach-timeline-item" th:each="event,stat : ${evenements}" th:if="${stat.index < 5}"><span class="coach-timeline-icon"><i class="fa-regular fa-calendar"></i></span><div class="coach-timeline-content"><strong th:text="${event.motif}">Événement</strong><span th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(event.date,'dd/MM/yyyy')+(event.heure != null ? ' · '+event.heure : '')}">Date</small></div></div>
+                    <div class="coach-empty" th:if="${evenements.isEmpty()}">Aucune échéance planifiée.</div>
+                </div>
+            </article>
+        </section>
+
+        <section class="coach-grid-50">
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Progression des stagiaires</h2><p>Évolution moyenne sur les dernières semaines</p></div></div><div class="coach-chart"><svg viewBox="0 0 600 180" preserveAspectRatio="none"><line class="grid" x1="0" y1="35" x2="600" y2="35"/><line class="grid" x1="0" y1="85" x2="600" y2="85"/><line class="grid" x1="0" y1="135" x2="600" y2="135"/><path class="area" d="M0 154 C80 142 100 128 170 132 S260 102 330 108 S430 76 500 78 S560 54 600 38 L600 180 L0 180Z"/><path class="line" d="M0 154 C80 142 100 128 170 132 S260 102 330 108 S430 76 500 78 S560 54 600 38"/></svg></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Répartition des tâches</h2><p>État d'avancement global</p></div></div><div class="coach-donut-wrap"><div style="position:relative"><div class="coach-donut"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${#lists.size(taches)}">0</strong><span>Tâches</span></div></div></div><div class="coach-legend"><div><span><i style="background:#22c55e"></i>Terminées</span><strong th:text="${tachesTerminees}">0</strong></div><div><span><i style="background:#f59e0b"></i>En cours</span><strong th:text="${tachesEnCours}">0</strong></div><div><span><i style="background:#ef4444"></i>En retard</span><strong th:text="${tachesRetard}">0</strong></div></div></div></article>
+        </section>
+
+        <section class="coach-grid-60">
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Livrables récents</h2><p>Derniers documents reçus</p></div><a class="coach-btn secondary compact" th:href="@{/encadreur/livrables}">Consulter</a></div><div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Livrable</th><th>Date</th><th>Statut</th><th>Action</th></tr></thead><tbody><tr th:each="livrable,stat : ${livrables}" th:if="${stat.index < 5}"><td th:text="${livrable.tache != null ? livrable.tache.stage.stagiaire.utilisateur.prenom+' '+livrable.tache.stage.stagiaire.utilisateur.nom : livrable.stage.stagiaire.utilisateur.prenom+' '+livrable.stage.stagiaire.utilisateur.nom}">Stagiaire</td><td th:text="${livrable.titre}">Document</td><td th:text="${#temporals.format(livrable.dateDepot,'dd/MM/yyyy')}">Date</td><td><span class="coach-badge" th:classappend="${livrable.statut.name() == 'valide'} ? ' green' : (${livrable.statut.name() == 'rejete'} ? ' red' : ' orange')" th:text="${livrable.statut.name() == 'valide' ? 'Validé' : (livrable.statut.name() == 'rejete' ? 'Rejeté' : 'En attente')}">Statut</span></td><td><a class="coach-action" th:href="@{/documents/livrables/{id}/preview(id=${livrable.id})}" target="_blank"><i class="fa-regular fa-eye"></i></a></td></tr><tr th:if="${livrables.isEmpty()}"><td colspan="5" class="coach-empty">Aucun livrable récent.</td></tr></tbody></table></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>Dernières actions de suivi</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-file-arrow-up"></i></span><div class="coach-timeline-content"><strong>Nouveau livrable reçu</strong><span>Un document attend votre validation</span><small>Aujourd'hui</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-bullseye"></i></span><div class="coach-timeline-content"><strong>Objectif mis à jour</strong><span>Progression enregistrée</span><small>Cette semaine</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span><div class="coach-timeline-content"><strong>Tâche terminée</strong><span th:text="${tachesTerminees+' tâche(s) terminée(s)'}">Activité</span><small>Récemment</small></div></div></div></article>
+        </section>
+
+        <section class="coach-grid-50">
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Calendrier</h2><p>Réunions, évaluations et échéances</p></div><a class="coach-btn secondary compact" th:href="@{/encadreur/planning}">Ouvrir</a></div><div class="coach-calendar-wrap"><div class="coach-calendar"><div class="coach-calendar-head">Lun</div><div class="coach-calendar-head">Mar</div><div class="coach-calendar-head">Mer</div><div class="coach-calendar-head">Jeu</div><div class="coach-calendar-head">Ven</div><div class="coach-calendar-head">Sam</div><div class="coach-calendar-head">Dim</div><div class="coach-day" th:each="n : ${#numbers.sequence(1,14)}" th:classappend="${n == 8} ? ' today'"><span class="coach-day-number" th:text="${n}">1</span><span class="coach-event" th:if="${n == 3}">Réunion</span><span class="coach-event green" th:if="${n == 8}">Livrable</span><span class="coach-event purple" th:if="${n == 12}">Évaluation</span></div></div></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Actions rapides</h2><p>Accédez aux fonctions principales</p></div></div><div class="coach-quick-actions"><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Gérer les objectifs</a><a class="coach-quick-action" th:href="@{/encadreur/taches}"><i class="fa-solid fa-list-check"></i>Gérer les tâches</a><a class="coach-quick-action" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i>Consulter les livrables</a><a class="coach-quick-action" th:href="@{/encadreur/mes-stagiaires}"><i class="fa-solid fa-book-open"></i>Suivre les stagiaires</a><a class="coach-quick-action" th:href="@{/encadreur/evaluations}"><i class="fa-solid fa-star"></i>Évaluer un stagiaire</a><a class="coach-quick-action" th:href="@{/encadreur/planning}"><i class="fa-solid fa-calendar"></i>Ouvrir le planning</a></div></article>
+        </section>
+    </main>
 </div>
-
 </body>
 </html>

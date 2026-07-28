@@ -49,6 +49,8 @@ public class SecurityConfig {
 
                 .requestMatchers("/responsable/dashboard")
                     .access(espaceEtPermission("RESPONSABLE_STAGE", null))
+                .requestMatchers("/responsable/profil/**")
+                    .access(espaceEtPermission("RESPONSABLE_STAGE", null))
                 .requestMatchers("/responsable/demandes/**", "/responsable/admissions/**")
                     .access(espaceEtPermission("RESPONSABLE_STAGE", "GERER_DEMANDES_STAGE"))
                 .requestMatchers("/responsable/cloture/**")
@@ -57,10 +59,14 @@ public class SecurityConfig {
                     .access(espaceEtUnePermission("RESPONSABLE_STAGE", "GERER_AFFECTATIONS", "AFFECTER_STAGIAIRES"))
                 .requestMatchers("/responsable/stagiaires/**")
                     .access(espaceEtPermission("RESPONSABLE_STAGE", "GERER_STAGIAIRES"))
+                .requestMatchers("/responsable/suivi/**")
+                    .access(espaceEtPermission("RESPONSABLE_STAGE", "GERER_STAGIAIRES"))
                 .requestMatchers("/responsable/dossiers/**", "/responsable/archives/**")
                     .access(espaceEtPermission("RESPONSABLE_STAGE", "GERER_DOSSIERS"))
                 .requestMatchers("/responsable/planning/**")
                     .access(espaceEtUnePermission("RESPONSABLE_STAGE", "CONSULTER_PLANNING", "GERER_PLANNING"))
+                .requestMatchers("/responsable/notifications/**")
+                    .access(espaceEtUnePermission("RESPONSABLE_STAGE", "ENVOYER_NOTIFICATIONS", "GERER_NOTIFICATIONS"))
                 .requestMatchers("/responsable/**").denyAll()
 
                 .requestMatchers("/stagiaire/**")

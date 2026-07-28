@@ -1,85 +1,11 @@
-<!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestion des taches</title>
-    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
-</head>
-<body>
-
-<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
-
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Gestion des taches</h1>
-        <span class="utilisateur-connecte">Encadreur</span>
-    </div>
-
-    <div th:if="${succes}" class="message-succes">Tache creee avec succes.</div>
-
-    <div class="grille-modules">
-
-        <!-- Formulaire creation tache -->
-        <div class="bloc-module">
-            <h2>Nouvelle tache</h2>
-            <form th:action="@{/encadreur/taches/creer}" method="post">
-
-                <div class="groupe-champ">
-                    <label>Stagiaire</label>
-                    <select name="stageId" required>
-                        <option value="">-- Choisir un stagiaire --</option>
-                        <option th:each="stage : ${mesStages}"
-                                th:value="${stage.id}"
-                                th:text="${stage.stagiaire.utilisateur.prenom
-                                        + ' ' + stage.stagiaire.utilisateur.nom}">
-                        </option>
-                    </select>
-                </div>
-
-                <div class="groupe-champ">
-                    <label>Titre de la tache</label>
-                    <input type="text" name="titre"
-                           placeholder="Ex: Creer le diagramme de classes" required>
-                </div>
-
-                <div class="groupe-champ">
-                    <label>Description</label>
-                    <textarea name="description"
-                              placeholder="Decrivez la tache en detail..."></textarea>
-                </div>
-
-                <div class="groupe-champ">
-                    <label>Date limite</label>
-                    <input type="date" name="dateLimite" required>
-                </div>
-
-                <button type="submit" class="bouton-principal">Creer la tache</button>
-            </form>
-        </div>
-
-        <!-- Liste des taches -->
-        <div class="bloc-module">
-            <h2>Taches en cours</h2>
-            <ul class="liste-taches">
-                <li th:each="tache : ${toutesLesTaches}">
-                    <div>
-                        <div th:text="${tache.titre}" style="font-weight:bold;"></div>
-                        <div th:text="'Echeance : ' + ${tache.dateLimite}"
-                             style="font-size:12px; color:#777; margin-top:3px;"></div>
-                    </div>
-                    <span th:class="'badge-statut ' + ${tache.statut.name()}"
-                          th:text="${tache.statut}"></span>
-                </li>
-                <li th:if="${#lists.isEmpty(toutesLesTaches)}"
-                    style="color:#777; justify-content:center;">
-                    Aucune tache pour le moment.
-                </li>
-            </ul>
-        </div>
-
-    </div>
-</div>
-
-</body>
-</html>
+<!DOCTYPE html><html lang="fr" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gestion des tâches - Encadreur</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/encadreur-premium.css}"></head>
+<body class="coach-portal"><div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div><div class="coach-main"><header class="coach-topbar"><label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Rechercher une tâche..."></label><button class="coach-icon-btn"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">3</em></button><a class="coach-icon-btn" th:href="@{/encadreur/messagerie}"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">2</em></a><div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div></header>
+<main class="coach-page"><section class="coach-heading"><div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-list-check"></i></span><div><div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Tâches</div><h1>Gestion des tâches</h1><p>Créez, attribuez et suivez les tâches confiées à vos stagiaires.</p></div></div><button class="coach-btn" data-open-task type="button"><i class="fa-solid fa-plus"></i>Nouvelle tâche</button></section>
+<div class="coach-flash" th:if="${param.succes}"><i class="fa-solid fa-circle-check"></i>Tâche créée avec succès.</div>
+<section class="coach-kpis"><article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-clipboard-list"></i></span><strong th:text="${tachesTotales}">0</strong><span>Tâches totales</span><small>Ensemble des activités</small></article><article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-check"></i></span><strong th:text="${tachesTerminees}">0</strong><span>Tâches terminées</span><small>Clôturées</small></article><article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-spinner"></i></span><strong th:text="${tachesEnCours}">0</strong><span>Tâches en cours</span><small>En progression</small></article><article class="coach-kpi"><span class="coach-kpi-icon red"><i class="fa-solid fa-clock"></i></span><strong th:text="${tachesRetard}">0</strong><span>Tâches en retard</span><small>À relancer</small></article><article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-user-graduate"></i></span><strong th:text="${stagiairesConcernes}">0</strong><span>Stagiaires concernés</span><small>Participants</small></article><article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${tauxExecution+'%'}">0%</strong><span>Taux d'exécution</span><small>Moyenne globale</small></article></section>
+<section class="coach-grid-70"><article class="coach-card"><div class="coach-card-head"><div><h2>Liste des tâches</h2><p>Travaux assignés à vos stagiaires</p></div></div><div class="coach-toolbar"><label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="taskSearch" placeholder="Titre ou stagiaire..."></label><select id="taskStudent" class="coach-select"><option value="">Tous les stagiaires</option><option th:each="stage:${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Stagiaire</option></select><select id="taskPriority" class="coach-select"><option value="">Toutes priorités</option><option>basse</option><option>moyenne</option><option>haute</option></select><select id="taskStatus" class="coach-select"><option value="">Tous les statuts</option><option value="a_faire">À faire</option><option value="en_cours">En cours</option><option value="terminee">Terminée</option><option value="en_retard">En retard</option></select></div><div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Tâche</th><th>Stagiaire</th><th>Priorité</th><th>Création</th><th>Date limite</th><th>Progression</th><th>Statut</th><th>Actions</th></tr></thead><tbody><tr class="task-row" th:each="tache:${toutesLesTaches}" th:attr="data-title=${#strings.toLowerCase(tache.titre+' '+tache.stage.stagiaire.utilisateur.prenom+' '+tache.stage.stagiaire.utilisateur.nom)},data-stage=${tache.stage.id},data-priority=${tache.priorite},data-status=${tache.statut.name()},data-description=${tache.description},data-student=${tache.stage.stagiaire.utilisateur.prenom+' '+tache.stage.stagiaire.utilisateur.nom},data-deadline=${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}"><td><strong th:text="${tache.titre}">Tâche</strong></td><td th:text="${tache.stage.stagiaire.utilisateur.prenom+' '+tache.stage.stagiaire.utilisateur.nom}">Stagiaire</td><td><span class="coach-badge" th:classappend="${tache.priorite=='haute'}?' red':(${tache.priorite=='moyenne'}?' orange':' gray')" th:text="${tache.priorite}">Priorité</span></td><td th:text="${#temporals.format(tache.dateCreation,'dd/MM/yyyy')}">Date</td><td th:text="${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}">Date</td><td><div class="coach-progress-row"><div class="coach-progress"><span th:style="'width:'+${tache.statut.name()=='terminee'?100:(tache.statut.name()=='en_cours'?55:15)}+'%'"></span></div><b th:text="${tache.statut.name()=='terminee'?'100%':(tache.statut.name()=='en_cours'?'55%':'15%')}">0%</b></div></td><td><form th:action="@{/encadreur/taches/statut}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="id" th:value="${tache.id}"><select name="statut" class="coach-select" onchange="this.form.submit()"><option value="a_faire" th:selected="${tache.statut.name()=='a_faire'}">À faire</option><option value="en_cours" th:selected="${tache.statut.name()=='en_cours'}">En cours</option><option value="en_revue" th:selected="${tache.statut.name()=='en_revue'}">En revue</option><option value="terminee" th:selected="${tache.statut.name()=='terminee'}">Terminée</option><option value="en_retard" th:selected="${tache.statut.name()=='en_retard'}">En retard</option></select></form></td><td><div class="coach-actions"><button class="coach-action task-view" type="button"><i class="fa-regular fa-eye"></i></button><button class="coach-action" data-open-task type="button"><i class="fa-solid fa-pen"></i></button></div></td></tr><tr th:if="${toutesLesTaches.isEmpty()}"><td colspan="8" class="coach-empty">Aucune tâche créée.</td></tr></tbody></table></div><div class="coach-pagination"><span th:text="${tachesTotales+' tâche(s)'}">0 tâche</span><div class="coach-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div></article>
+<article class="coach-card coach-profile"><span class="coach-avatar"><i class="fa-solid fa-list-check"></i></span><h3 id="taskDetailTitle">Sélectionnez une tâche</h3><p id="taskDetailDescription">Les détails apparaîtront ici.</p><div class="coach-data-list"><div class="coach-data-row"><span>Stagiaire</span><strong id="taskDetailStudent">—</strong></div><div class="coach-data-row"><span>Objectif associé</span><strong>Suivi du stage</strong></div><div class="coach-data-row"><span>Priorité</span><strong id="taskDetailPriority">—</strong></div><div class="coach-data-row"><span>Date limite</span><strong id="taskDetailDeadline">—</strong></div><div class="coach-data-row"><span>Pièces jointes</span><strong>0</strong></div><div class="coach-data-row"><span>Statut</span><strong id="taskDetailStatus">—</strong></div></div><div class="coach-quick-actions" style="margin-top:14px"><button class="coach-quick-action" data-open-task type="button"><i class="fa-solid fa-pen"></i>Modifier</button><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Objectifs</a></div></article></section>
+<section class="coach-grid-50"><article class="coach-card"><div class="coach-card-head"><div><h2>Évolution des tâches</h2><p>Tâches réalisées par semaine</p></div></div><div class="coach-chart"><svg viewBox="0 0 600 180" preserveAspectRatio="none"><line class="grid" x1="0" y1="40" x2="600" y2="40"/><line class="grid" x1="0" y1="90" x2="600" y2="90"/><line class="grid" x1="0" y1="140" x2="600" y2="140"/><path class="area" d="M0 154 C70 146 110 132 180 135 S270 112 345 102 S440 80 510 72 S565 49 600 36 L600 180 L0 180Z"/><path class="line" d="M0 154 C70 146 110 132 180 135 S270 112 345 102 S440 80 510 72 S565 49 600 36"/></svg></div></article><article class="coach-card"><div class="coach-card-head"><div><h2>Répartition des tâches</h2><p>État d'exécution</p></div></div><div class="coach-donut-wrap"><div style="position:relative"><div class="coach-donut"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${tachesTotales}">0</strong><span>Tâches</span></div></div></div><div class="coach-legend"><div><span><i style="background:#22c55e"></i>Terminées</span><b th:text="${tachesTerminees}">0</b></div><div><span><i style="background:#f59e0b"></i>En cours</span><b th:text="${tachesEnCours}">0</b></div><div><span><i style="background:#ef4444"></i>En retard</span><b th:text="${tachesRetard}">0</b></div></div></div></article></section>
+<section class="coach-grid-60"><article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>Historique des tâches</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-plus"></i></span><div class="coach-timeline-content"><strong>Nouvelle tâche créée</strong><span>Une activité a été assignée</span><small>Aujourd'hui</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span><div class="coach-timeline-content"><strong>Tâche terminée</strong><span th:text="${tachesTerminees+' tâche(s) clôturée(s)'}">Tâche</span><small>Cette période</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-clock"></i></span><div class="coach-timeline-content"><strong>Date limite dépassée</strong><span th:text="${tachesRetard+' tâche(s) à relancer'}">Retard</span><small>À traiter</small></div></div></div></article><article class="coach-card"><div class="coach-card-head"><div><h2>Actions rapides</h2><p>Gestion opérationnelle</p></div></div><div class="coach-quick-actions"><button class="coach-quick-action" data-open-task type="button"><i class="fa-solid fa-plus"></i>Créer une tâche</button><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Voir les objectifs</a><a class="coach-quick-action" th:href="@{/encadreur/mes-stagiaires}"><i class="fa-solid fa-users"></i>Voir les stagiaires</a><a class="coach-quick-action" th:href="@{/encadreur/planning}"><i class="fa-solid fa-calendar"></i>Planning</a></div></article></section></main></div>
+<div class="coach-modal" id="taskModal"><form class="coach-modal-panel" th:action="@{/encadreur/taches/creer}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><div class="coach-card-head"><div><h2>Créer une tâche</h2><p>Attribuez un nouveau travail</p></div><button class="coach-action" data-close-task type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="coach-form-grid"><div class="coach-form-group full"><label>Titre</label><input class="coach-input" name="titre" required></div><div class="coach-form-group full"><label>Description</label><textarea class="coach-textarea" name="description"></textarea></div><div class="coach-form-group"><label>Stagiaire</label><select class="coach-select" name="stageId" required><option value="">Sélectionner</option><option th:each="stage:${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Stagiaire</option></select></div><div class="coach-form-group"><label>Priorité</label><select class="coach-select" name="priorite"><option value="basse">Basse</option><option value="moyenne">Moyenne</option><option value="haute">Haute</option></select></div><div class="coach-form-group"><label>Date limite</label><input class="coach-input" type="date" name="dateLimite" required></div><div class="coach-form-group"><label>Pièce jointe</label><input class="coach-input" type="file" disabled title="Disponible dans une prochaine version"></div></div><div class="coach-modal-actions"><button class="coach-btn secondary" data-close-task type="button">Annuler</button><button class="coach-btn" type="submit">Enregistrer</button></div></form></div>
+<script>document.addEventListener('DOMContentLoaded',()=>{const m=document.getElementById('taskModal');document.querySelectorAll('[data-open-task]').forEach(b=>b.onclick=()=>m.classList.add('open'));document.querySelectorAll('[data-close-task]').forEach(b=>b.onclick=()=>m.classList.remove('open'));const rows=[...document.querySelectorAll('.task-row')],q=document.getElementById('taskSearch'),s=document.getElementById('taskStatus'),p=document.getElementById('taskPriority'),st=document.getElementById('taskStudent');const f=()=>rows.forEach(r=>r.style.display=(!q.value||r.dataset.title.includes(q.value.toLowerCase()))&&(!s.value||r.dataset.status===s.value)&&(!p.value||r.dataset.priority===p.value)&&(!st.value||r.dataset.stage===st.value)?'':'none');[q,s,p,st].forEach(x=>x.addEventListener(x.tagName==='INPUT'?'input':'change',f));rows.forEach(r=>r.querySelector('.task-view').onclick=()=>{document.getElementById('taskDetailTitle').textContent=r.querySelector('strong').textContent;document.getElementById('taskDetailDescription').textContent=r.dataset.description||'Aucune description';document.getElementById('taskDetailStudent').textContent=r.dataset.student;document.getElementById('taskDetailPriority').textContent=r.dataset.priority;document.getElementById('taskDetailDeadline').textContent=r.dataset.deadline;document.getElementById('taskDetailStatus').textContent=r.dataset.status;});});</script></body></html>

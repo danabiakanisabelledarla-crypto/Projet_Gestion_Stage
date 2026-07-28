@@ -30,6 +30,9 @@ public class EvenementPersonnel {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(length = 255)
+    private String lieu;
+
     @Column(length = 30)
     private String priorite = "moyenne";
 
@@ -59,6 +62,8 @@ public class EvenementPersonnel {
     public void setHeure(LocalTime heure) { this.heure = heure; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getLieu() { return lieu; }
+    public void setLieu(String lieu) { this.lieu = lieu; }
     public String getPriorite() { return priorite; }
     public void setPriorite(String priorite) { this.priorite = priorite; }
     public String getRappel() { return rappel; }

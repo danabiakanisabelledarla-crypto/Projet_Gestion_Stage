@@ -28,6 +28,9 @@ public class Tache {
     @Column(name = "date_limite", nullable = false)
     private LocalDate dateLimite;
 
+    @Column(length = 20)
+    private String priorite = "moyenne";
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutTache statut = StatutTache.a_faire;
@@ -94,6 +97,14 @@ public class Tache {
 
     public void setDateLimite(LocalDate dateLimite) {
         this.dateLimite = dateLimite;
+    }
+
+    public String getPriorite() {
+        return priorite;
+    }
+
+    public void setPriorite(String priorite) {
+        this.priorite = priorite;
     }
 
     public StatutTache getStatut() {

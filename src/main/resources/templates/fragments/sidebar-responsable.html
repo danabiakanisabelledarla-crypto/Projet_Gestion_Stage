@@ -11,13 +11,18 @@
         <a sec:authorize="hasAuthority('PERM_GERER_DEMANDES_STAGE')" th:href="@{/responsable/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
         <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
         <a sec:authorize="hasAuthority('PERM_GERER_DOSSIERS')" th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
+        <a sec:authorize="hasAuthority('PERM_CLOTURER_STAGES')" th:href="@{/responsable/cloture}" th:classappend="${activePage == 'cloture'} ? ' actif'"><i class="fa-solid fa-circle-check"></i> Clôture</a>
         <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')" th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
-        
-        <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
+        <a th:href="@{/responsable/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Mon profil</a>
     </nav>
     <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
     <div class="sidebar-profile-card"><div class="avatar">R</div><div class="info"><div class="name">Responsable</div><div class="badge-online">En ligne</div></div></div>
-    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>
+    <div class="sidebar-user">
+        <form th:action="@{/logout}" method="post" class="logout-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+        </form>
+    </div>
 </div>
 
 </body>

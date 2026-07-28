@@ -1,283 +1,75 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Tableau de bord - Responsable</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/responsable-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
-
-<div class="responsable-main">
+<main class="contenu-principal responsable-main">
     <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main"><div class="rp-heading-icon"><i class="fa-solid fa-chart-line"></i></div><div>
+                <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Tableau de bord</div>
+                <h1>Tableau de bord</h1>
+                <p>Pilotez les stages, les demandes et les affectations de votre service.</p>
+            </div></div>
+            <a class="rp-primary" th:href="@{/responsable/demandes}"><i class="fa-solid fa-inbox"></i> Gérer les demandes</a>
+        </header>
 
-    <!-- STATS -->
-    <section class="stats-grid section-gap">
-        <div class="stat-card">
-            <div class="stat-icon bleu"><i class="fa-solid fa-file-circle-plus"></i></div>
-            <div class="stat-label">Demandes en attente</div>
-            <div class="stat-val" th:text="${demandesEnAttente}">24</div>
-            <div class="stat-trend">+12 % ce mois</div>
-            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#2563EB" stroke-width="2" points="0,22 20,18 40,20 60,12 80,14 100,6"/></svg>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon vert"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-label">Stagiaires actifs</div>
-            <div class="stat-val" th:text="${totalStagiairesActifs}">36</div>
-            <div class="stat-trend">+5 ce mois</div>
-            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#22C55E" stroke-width="2" points="0,20 20,16 40,18 60,10 80,12 100,4"/></svg>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon orange"><i class="fa-solid fa-clipboard-check"></i></div>
-            <div class="stat-label">Stages en cours</div>
-            <div class="stat-val" th:text="${stagesEnCours}">18</div>
-            <div class="stat-trend">En progression</div>
-            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#F59E0B" stroke-width="2" points="0,18 20,20 40,14 60,16 80,8 100,10"/></svg>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon violet"><i class="fa-solid fa-circle-check"></i></div>
-            <div class="stat-label">Stages clôturés</div>
-            <div class="stat-val" th:text="${stagesTermines}">27</div>
-            <div class="stat-trend">Terminés</div>
-            <svg class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#8B5CF6" stroke-width="2" points="0,22 20,18 40,16 60,12 80,10 100,6"/></svg>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon rouge"><i class="fa-solid fa-calendar-days"></i></div>
-            <div class="stat-label">Échéances à venir</div>
-            <div class="stat-val" th:text="${echeancesCount}">7</div>
-            <div class="stat-trend">Prochains 30 jours</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon turq"><i class="fa-solid fa-star"></i></div>
-            <div class="stat-label">Taux de réussite</div>
-            <div class="stat-val" th:text="${tauxReussite + '%'}">92%</div>
-            <div class="resp-progress"><span th:style="'width:' + ${tauxReussite} + '%'"></span></div>
-        </div>
-    </section>
+        <section class="rp-kpis">
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-regular fa-file-lines"></i></div><div class="rp-kpi-value" th:text="${totalDemandes}">0</div><div class="rp-kpi-label">Demandes reçues</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#2563EB" stroke-width="2" points="0,20 12,15 24,18 36,9 48,12 60,4 70,7"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-orange"><i class="fa-regular fa-clock"></i></div><div class="rp-kpi-value" th:text="${demandesEnAttente}">0</div><div class="rp-kpi-label">Demandes en attente</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#F59E0B" stroke-width="2" points="0,17 12,12 24,15 36,8 48,10 60,5 70,9"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-user-graduate"></i></div><div class="rp-kpi-value" th:text="${totalStagiairesActifs}">0</div><div class="rp-kpi-label">Stagiaires actifs</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#22C55E" stroke-width="2" points="0,21 12,18 24,13 36,16 48,8 60,10 70,4"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-chalkboard-user"></i></div><div class="rp-kpi-value" th:text="${totalEncadreurs}">0</div><div class="rp-kpi-label">Encadreurs</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#8B5CF6" stroke-width="2" points="0,19 12,17 24,18 36,12 48,10 60,7 70,5"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-solid fa-briefcase"></i></div><div class="rp-kpi-value" th:text="${stagesEnCours}">0</div><div class="rp-kpi-label">Stages en cours</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#0891B2" stroke-width="2" points="0,18 12,20 24,12 36,14 48,7 60,8 70,3"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-trophy"></i></div><div class="rp-kpi-value" th:text="${tauxReussite + '%'}">0%</div><div class="rp-kpi-label">Taux de réussite</div><div class="rp-progress" style="margin-top:12px"><span th:style="'width:'+${tauxReussite}+'%'"></span></div></article>
+        </section>
 
-    <!-- GRAPHIQUE + DONUT -->
-    <section class="two-col section-gap">
-        <div class="resp-card">
-            <div class="graph-head">
-                <span class="graph-title"><i class="fa-solid fa-chart-line"></i> Vue d'ensemble</span>
-                <select class="graph-select"><option>6 derniers mois</option></select>
-            </div>
-            <canvas id="graphVue" height="120"></canvas>
-        </div>
-        <div class="resp-card">
-            <div class="graph-head"><span class="graph-title"><i class="fa-solid fa-chart-pie"></i> Répartition par filière</span></div>
-            <div style="display:flex;align-items:center;gap:18px;">
-                <div style="position:relative;width:140px;height:140px;">
-                    <canvas id="donutFiliere"></canvas>
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-                        <div class="donut-center-num" th:text="${totalStagiaires}">0</div>
-                        <div style="font-size:10px;color:#94A3B8;">Total</div>
-                    </div>
-                </div>
-                <div style="flex:1;" id="legendeFiliere"></div>
-            </div>
-            <a th:href="@{/responsable/stagiaires}" class="btn-principal-gradient" style="margin-top:16px;width:100%;justify-content:center;"><i class="fa-solid fa-users"></i> Voir tous les stagiaires</a>
-        </div>
-    </section>
+        <section class="rp-grid-70">
+            <article class="rp-card">
+                <div class="rp-card-head"><div><h2>Tableau des stagiaires</h2><p>Suivi opérationnel des stages actifs</p></div><a class="rp-secondary" th:href="@{/responsable/stagiaires}">Voir tous</a></div>
+                <div class="rp-filters" style="grid-template-columns:1.5fr 1fr 1fr"><input class="rp-input rp-filter-search" placeholder="Rechercher un stagiaire"><select class="rp-select rp-filter-service"><option value="">Tous les services</option><option th:each="s:${stages}" th:value="${s.service.nom}" th:text="${s.service.nom}"></option></select><select class="rp-select rp-filter-status"><option value="">Tous les statuts</option><option value="en_cours">En cours</option><option value="termine">Clôturé</option><option value="suspendu">Suspendu</option></select></div>
+                <div class="rp-table-wrap"><table class="rp-table"><thead><tr><th>Nom</th><th>Service</th><th>Encadreur</th><th>Progression</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+                <tr class="rp-filter-row" th:each="stage:${stages}" th:data-search="${#strings.toLowerCase(stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom)}" th:data-service="${stage.service.nom}" th:data-status="${stage.statut}">
+                    <td><div class="rp-person"><div class="rp-avatar" th:text="${#strings.substring(stage.stagiaire.utilisateur.prenom,0,1)+#strings.substring(stage.stagiaire.utilisateur.nom,0,1)}">JD</div><div><strong th:text="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}">Nom</strong><span th:text="${stage.stagiaire.matricule}">Matricule</span></div></div></td>
+                    <td th:text="${stage.service.nom}">Service</td><td th:text="${stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom}">Encadreur</td>
+                    <td><div style="display:flex;align-items:center;gap:8px"><div class="rp-progress"><span th:style="'width:'+${stage.stagiaire.progression}+'%'"></span></div><b th:text="${stage.stagiaire.progression+'%'}">0%</b></div></td>
+                    <td><span class="rp-badge" th:classappend="${stage.statut.name()=='en_cours'?' green':(stage.statut.name()=='termine'?' blue':' orange')}" th:text="${#strings.replace(stage.statut.name(),'_',' ')}">Statut</span></td>
+                    <td><div class="rp-actions"><a class="rp-icon-btn" th:href="@{/responsable/stagiaires}" title="Voir"><i class="fa-regular fa-eye"></i></a><a class="rp-icon-btn" th:href="@{/responsable/dossiers}" title="Dossier"><i class="fa-regular fa-folder-open"></i></a></div></td>
+                </tr></tbody></table><div class="rp-empty" th:if="${#lists.isEmpty(stages)}">Aucun stage à afficher.</div></div>
+            </article>
+            <aside class="rp-card"><div class="rp-card-head"><div><h2>Prochaines échéances</h2><p>30 prochains jours</p></div><i class="fa-regular fa-calendar"></i></div><div class="rp-timeline">
+                <div class="rp-timeline-item" th:each="e:${echeances}"><i class="rp-timeline-dot"></i><strong th:text="${'Fin de stage · '+e.nom}">Fin de stage</strong><span th:text="${#temporals.format(e.dateFin,'dd MMM yyyy')+' · '+e.service+' · J-'+e.joursRestants}">Date</span></div>
+                <div class="rp-empty" th:if="${#lists.isEmpty(echeances)}">Aucune échéance proche.</div>
+            </div></aside>
+        </section>
 
-    <!-- ÉTAPES -->
-    <section class="resp-card section-gap">
-        <div class="graph-head"><span class="graph-title">Étapes des stages</span></div>
-        <div class="etapes-row">
-            <div class="etape">
-                <div class="etape-icone" style="background:#DBEAFE;color:#2563EB;"><i class="fa-solid fa-file-signature"></i></div>
-                <div class="etape-num" th:text="${totalDemandes}">0</div>
-                <div style="font-size:13px;font-weight:600;color:#1E293B;">Demandes</div>
-                <div class="etape-statut" style="color:#F59E0B;">En attente</div>
-            </div>
-            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-            <div class="etape">
-                <div class="etape-icone" style="background:#DCFCE7;color:#22C55E;"><i class="fa-solid fa-user-check"></i></div>
-                <div class="etape-num" th:text="${acceptees}">0</div>
-                <div style="font-size:13px;font-weight:600;color:#1E293B;">Admissions</div>
-                <div class="etape-statut" style="color:#22C55E;">Validées</div>
-            </div>
-            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-            <div class="etape">
-                <div class="etape-icone" style="background:#FEF3C7;color:#F59E0B;"><i class="fa-solid fa-people-arrows"></i></div>
-                <div class="etape-num" th:text="${totalStages}">0</div>
-                <div style="font-size:13px;font-weight:600;color:#1E293B;">Affectations</div>
-                <div class="etape-statut" style="color:#64748B;">En cours</div>
-            </div>
-            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-            <div class="etape">
-                <div class="etape-icone" style="background:#EDE9FE;color:#8B5CF6;"><i class="fa-solid fa-chart-column"></i></div>
-                <div class="etape-num" th:text="${stagesEnCours}">0</div>
-                <div style="font-size:13px;font-weight:600;color:#1E293B;">Suivi</div>
-                <div class="etape-statut" style="color:#8B5CF6;">Actifs</div>
-            </div>
-            <div class="etape-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-            <div class="etape">
-                <div class="etape-icone" style="background:#CCFBF1;color:#14B8A6;"><i class="fa-solid fa-box-archive"></i></div>
-                <div class="etape-num" th:text="${stagesTermines}">0</div>
-                <div style="font-size:13px;font-weight:600;color:#1E293B;">Clôture</div>
-                <div class="etape-statut" style="color:#14B8A6;">Terminés</div>
-            </div>
-        </div>
-        <div class="process-bar"></div>
-    </section>
+        <section class="rp-grid-50">
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Évolution des stages</h2><p>Demandes, stages en cours et clôturés</p></div></div><div class="rp-chart"><canvas id="stagesChart" th:data-labels="${moisLabelsJson}" th:data-demandes="${dataDemandesJson}" th:data-cours="${dataStagesEnCoursJson}" th:data-termines="${dataStagesTerminesJson}"></canvas></div></article>
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Répartition des demandes</h2><p>État actuel des candidatures</p></div></div><div class="rp-donut-wrap"><div class="rp-chart"><canvas id="requestsDonut" th:data-acceptees="${acceptees}" th:data-attente="${demandesEnAttente}" th:data-refusees="${refusees}"></canvas></div><div class="rp-legend"><div class="rp-legend-row"><span><i style="background:#22c55e"></i>Acceptées</span><strong th:text="${acceptees}">0</strong></div><div class="rp-legend-row"><span><i style="background:#f59e0b"></i>En attente</span><strong th:text="${demandesEnAttente}">0</strong></div><div class="rp-legend-row"><span><i style="background:#ef4444"></i>Refusées</span><strong th:text="${refusees}">0</strong></div></div></div></article>
+        </section>
 
-    <!-- 3 COLONNES -->
-    <section class="three-col section-gap">
-        <div class="resp-card">
-            <div class="graph-head"><span class="graph-title">Statut des stages</span></div>
-            <div style="display:flex;align-items:center;gap:18px;">
-                <div style="position:relative;width:130px;height:130px;">
-                    <canvas id="donutStatut"></canvas>
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-                        <div class="donut-center-num" th:text="${totalStages}">0</div>
-                        <div style="font-size:10px;color:#94A3B8;">Total</div>
-                    </div>
-                </div>
-                <div style="flex:1;">
-                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#2563EB;"></span> En cours <b th:text="${stagesEnCours}" style="margin-left:auto;"></b></div>
-                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#22C55E;"></span> En attente <b th:text="${stagesSuspendus}" style="margin-left:auto;"></b></div>
-                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:10px;height:10px;border-radius:3px;background:#F59E0B;"></span> Clôturés <b th:text="${stagesTermines}" style="margin-left:auto;"></b></div>
-                </div>
-            </div>
-        </div>
-        <div class="resp-card">
-            <div class="graph-head"><span class="graph-title">Progression moyenne</span></div>
-            <div class="jauge-wrap">
-                <div style="position:relative;width:110px;height:110px;">
-                    <canvas id="jaugeProg"></canvas>
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-                        <div style="font-size:22px;font-weight:800;color:#1E293B;" th:text="${progressionMoyenne + '%'}">65%</div>
-                        <div style="font-size:9px;color:#94A3B8;">Moyenne</div>
-                    </div>
-                </div>
-                <div class="bars-col">
-                    <div class="bar-item">
-                        <div class="bar-label"><span>Objectifs atteints</span><span th:text="${progressionMoyenne + '%'}">65%</span></div>
-                        <div class="bar-track"><span style="width:65%;background:#2563EB;"></span></div>
-                    </div>
-                    <div class="bar-item">
-                        <div class="bar-label"><span>Livrables remis</span><span>58%</span></div>
-                        <div class="bar-track"><span style="width:58%;background:#22C55E;"></span></div>
-                    </div>
-                    <div class="bar-item">
-                        <div class="bar-label"><span>Évaluations</span><span>72%</span></div>
-                        <div class="bar-track"><span style="width:72%;background:#F59E0B;"></span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="resp-card">
-            <div class="graph-head"><span class="graph-title"><i class="fa-solid fa-clock"></i> Échéances à venir</span></div>
-            <div th:if="${#lists.isEmpty(echeances)}" style="color:#94A3B8;font-size:13px;padding:10px 0;">Aucune échéance proche.</div>
-            <div th:each="e : ${echeances}" class="echeance-item">
-                <div class="echeance-date" style="background:#2563EB;">
-                    <span class="d" th:text="${#temporals.format(e.dateFin, 'dd')}">01</span>
-                    <span class="m" th:text="${#temporals.format(e.dateFin, 'MMM')}">Jan</span>
-                </div>
-                <div>
-                    <div class="echeance-nom" th:text="${e.nom}">Nom</div>
-                    <div class="echeance-serv" th:text="${e.service}">Service</div>
-                </div>
-                <span class="echeance-jours" th:text="${e.joursRestants + ' j'}">5 j</span>
-            </div>
-        </div>
-    </section>
+        <section class="rp-grid-60">
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Dernières demandes</h2><p>Candidatures récemment reçues</p></div><a class="rp-secondary" th:href="@{/responsable/demandes}">Consulter</a></div><div class="rp-table-wrap"><table class="rp-table"><thead><tr><th>Candidat</th><th>Date</th><th>Statut</th><th>Action</th></tr></thead><tbody><tr th:each="d:${dernieresDemandes}"><td><strong th:text="${d.prenom+' '+d.nom}">Candidat</strong><br><small th:text="${d.filiere}">Filière</small></td><td th:text="${#temporals.format(d.dateDemande,'dd/MM/yyyy')}">Date</td><td><span class="rp-badge" th:classappend="${d.statut.name()=='acceptee'?' green':(d.statut.name()=='refusee'?' red':' orange')}" th:text="${#strings.replace(d.statut.name(),'_',' ')}">Statut</span></td><td><a class="rp-icon-btn" th:href="@{/responsable/demandes}"><i class="fa-regular fa-eye"></i></a></td></tr></tbody></table></div></article>
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Activités récentes</h2><p>Dernières actions enregistrées</p></div></div><div class="rp-timeline"><div class="rp-timeline-item" th:each="a:${activitesRecentes}"><i class="rp-timeline-dot"></i><strong th:text="${a.objet}">Nouvelle activité</strong><span th:text="${a.message}">Détail</span></div><div class="rp-empty" th:if="${#lists.isEmpty(activitesRecentes)}">Aucune activité récente.</div></div></article>
+        </section>
 
-    <!-- ACTIVITÉS -->
-    <section class="resp-card section-gap">
-        <div class="graph-head">
-            <span class="graph-title">Activités récentes</span>
-            <a th:href="@{/responsable/notifications}" style="font-size:13px;color:#2563EB;font-weight:600;text-decoration:none;">Voir tout →</a>
-        </div>
-        <div th:if="${#lists.isEmpty(activitesRecentes)}" style="color:#94A3B8;font-size:13px;padding:10px 0;">Aucune activité récente.</div>
-        <div th:each="a : ${activitesRecentes}" class="activ-item">
-            <div th:class="'activ-icone ' + (${a.priorite == 'urgente'} ? 'rouge' : (${a.priorite == 'importante'} ? 'orange' : 'bleu'))">
-                <i th:class="${a.priorite == 'urgente'} ? 'fa-solid fa-circle-exclamation' : (${a.priorite == 'importante'} ? 'fa-solid fa-circle-info' : 'fa-solid fa-bell')"></i>
-            </div>
-            <div>
-                <div class="activ-titre" th:text="${a.objet}">Activité</div>
-                <div class="activ-desc" th:text="${a.message}">Description</div>
-            </div>
-            <div class="activ-date">
-                <div th:text="${#temporals.format(a.dateEnvoi, 'dd/MM')}">01/01</div>
-                <div th:text="${#temporals.format(a.dateEnvoi, 'HH:mm')}">10:00</div>
-            </div>
-        </div>
-    </section>
-</div>
-<div id="dash-data"
-     th:data-mois="${moisLabels}"
-     th:data-demandes="${dataDemandes}"
-     th:data-encours="${dataStagesEnCours}"
-     th:data-termines="${dataStagesTermines}"
-     th:data-filiere-labels="${filiereLabels}"
-     th:data-filiere-data="${filiereData}"
-     th:data-progression="${progressionMoyenne}"
-     th:data-stages-encours="${stagesEnCours}"
-     th:data-stages-suspendus="${stagesSuspendus}"
-     th:data-stages-termines="${stagesTermines}"
-     style="display:none;">
-</div>
+        <section class="rp-grid-50">
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Mini calendrier</h2><p>Événements importants</p></div><a class="rp-secondary" th:href="@{/responsable/planning}">Planning complet</a></div><div class="rp-calendar"><div class="head">Lun</div><div class="head">Mar</div><div class="head">Mer</div><div class="head">Jeu</div><div class="head">Ven</div><div class="head">Sam</div><div class="head">Dim</div><div class="muted">27</div><div class="muted">28</div><div class="muted">29</div><div>30</div><div>31</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5<span class="rp-cal-event">Réunion</span></div><div>6</div><div>7</div><div>8</div><div>9</div></div></article>
+            <article class="rp-card"><div class="rp-card-head"><div><h2>Actions rapides</h2><p>Accès direct aux opérations courantes</p></div></div><div class="rp-quick"><a th:href="@{/responsable/demandes}"><i class="fa-solid fa-inbox"></i>Gérer les demandes</a><a th:href="@{/responsable/stagiaires}"><i class="fa-solid fa-user-plus"></i>Affecter un encadreur</a><a th:href="@{/responsable/dossiers}"><i class="fa-regular fa-folder-open"></i>Consulter les dossiers</a><a th:href="@{/responsable/planning}"><i class="fa-regular fa-calendar"></i>Voir le planning</a><button type="button"><i class="fa-regular fa-file-pdf"></i>Générer un rapport</button><button type="button"><i class="fa-solid fa-file-export"></i>Exporter</button></div></article>
+        </section>
+    </div>
+</main>
 <script>
-    const d = document.getElementById('dash-data');
-    const moisLabels = JSON.parse(d.dataset.mois || '[]');
-    const dataDemandes = JSON.parse(d.dataset.demandes || '[]');
-    const dataStagesEnCours = JSON.parse(d.dataset.encours || '[]');
-    const dataStagesTermines = JSON.parse(d.dataset.termines || '[]');
-    const filiereLabels = JSON.parse(d.dataset.filiereLabels || '[]');
-    const filiereData = JSON.parse(d.dataset.filiereData || '[]');
-    const progressionMoyenne = parseInt(d.dataset.progression || '65', 10);
-
-        const filiereColors = ['#2563EB','#22C55E','#F59E0B','#8B5CF6','#EC4899','#14B8A6'];
-        const legendeFiliere = document.getElementById('legendeFiliere');
-        const totalFil = filiereData.reduce((a,b)=>a+b,0) || 1;
-    filiereLabels.forEach((l,i)=>{
-        const pct = Math.round(filiereData[i]*100/totalFil);
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;';
-        const dot = document.createElement('span');
-        dot.style.cssText = 'width:10px;height:10px;border-radius:3px;background:'+filiereColors[i%filiereColors.length]+';';
-        const txt = document.createElement('span');
-        txt.textContent = l + ' ';
-        const val = document.createElement('b');
-        val.style.marginLeft = 'auto';
-        val.textContent = pct + '% (' + filiereData[i] + ')';
-        div.appendChild(dot); div.appendChild(txt); div.appendChild(val);
-        legendeFiliere.appendChild(div);
-    });
-    
-
-    new Chart(document.getElementById('graphVue'), {
-        type:'line',
-        data:{ labels:moisLabels, datasets:[
-            {label:'Demandes',data:dataDemandes,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.1)',fill:true,tension:.4},
-            {label:'Stages en cours',data:dataStagesEnCours,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4},
-            {label:'Stages clôturés',data:dataStagesTermines,borderColor:'#8B5CF6',backgroundColor:'rgba(139,92,246,.1)',fill:true,tension:.4}
-        ]},
-        options:{ plugins:{legend:{position:'bottom'}}, scales:{x:{grid:{color:'#F1F5F9'}},y:{grid:{color:'#F1F5F9'}}} }
-    });
-
-    new Chart(document.getElementById('donutFiliere'), {
-        type:'doughnut',
-        data:{ labels:filiereLabels, datasets:[{data:filiereData,backgroundColor:filiereColors,cutout:'68%'}] },
-        options:{plugins:{legend:{display:false}}}
-    });
-
-    new Chart(document.getElementById('donutStatut'), {
-        type:'doughnut',
-        data:{ labels:['En cours','En attente','Clôturés'], datasets:[{data:[parseInt(d.dataset.stagesEncours||0), parseInt(d.dataset.stagesSuspendus||0), parseInt(d.dataset.stagesTermines||0)],backgroundColor:['#2563EB','#22C55E','#F59E0B'],cutout:'68%'}] },
-        options:{plugins:{legend:{display:false}}}
-    });
-
-    new Chart(document.getElementById('jaugeProg'), {
-        type:'doughnut',
-        data:{ labels:['Prog','Rest'], datasets:[{data:[progressionMoyenne,100-progressionMoyenne],backgroundColor:['#2563EB','#E5E7EB'],cutout:'72%'}] },
-        options:{plugins:{legend:{display:false}},rotation:-90,circumference:180}
-    });
+const stagesCanvas=document.getElementById('stagesChart'),donutCanvas=document.getElementById('requestsDonut');
+new Chart(stagesCanvas,{type:'line',data:{labels:JSON.parse(stagesCanvas.dataset.labels),datasets:[{label:'Demandes',data:JSON.parse(stagesCanvas.dataset.demandes),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.4},{label:'En cours',data:JSON.parse(stagesCanvas.dataset.cours),borderColor:'#22c55e',tension:.4},{label:'Clôturés',data:JSON.parse(stagesCanvas.dataset.termines),borderColor:'#8b5cf6',tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,grid:{color:'#eef2f7'}},x:{grid:{display:false}}}}});
+new Chart(donutCanvas,{type:'doughnut',data:{labels:['Acceptées','En attente','Refusées'],datasets:[{data:[Number(donutCanvas.dataset.acceptees),Number(donutCanvas.dataset.attente),Number(donutCanvas.dataset.refusees)],backgroundColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false}}}});
+document.querySelectorAll('.rp-filters').forEach(filters=>{const rows=[...filters.parentElement.querySelectorAll('.rp-filter-row')],search=filters.querySelector('.rp-filter-search'),service=filters.querySelector('.rp-filter-service'),status=filters.querySelector('.rp-filter-status');const run=()=>rows.forEach(row=>row.hidden=!((!search.value||row.dataset.search.includes(search.value.toLowerCase()))&&(!service.value||row.dataset.service===service.value)&&(!status.value||row.dataset.status===status.value)));[search,service,status].forEach(x=>x&&x.addEventListener(x.tagName==='INPUT'?'input':'change',run));});
 </script>
-</body>
-</html>
+</body></html>
