@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/profil")
@@ -55,6 +56,7 @@ public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDeta
     public String afficherMotDePasse(@AuthenticationPrincipal CustomUserDetails userDetails,
                                       Model model) {
         model.addAttribute("utilisateur", userDetails.getUtilisateur());
+        model.addAttribute("retourProfil", urlProfil(userDetails.getUtilisateur()));
         return "profil/mot-de-passe";
     }
 
@@ -63,10 +65,12 @@ public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDeta
                                      @RequestParam String ancienMotDePasse,
                                      @RequestParam String nouveauMotDePasse,
                                      @RequestParam String confirmation,
-                                     Model model) {
+                                     Model model,
+                                     RedirectAttributes redirectAttributes) {
         Utilisateur u = utilisateurRepository.findById(userDetails.getUtilisateur().getId())
                 .orElseThrow();
         model.addAttribute("utilisateur", u);
+        model.addAttribute("retourProfil", urlProfil(u));
 
         if (!passwordEncoder.matches(ancienMotDePasse, u.getMotDePasse())) {
             model.addAttribute("erreur", "L'ancien mot de passe est incorrect.");
@@ -83,7 +87,19 @@ public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDeta
 
         u.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
         utilisateurRepository.save(u);
-        model.addAttribute("succes", "Mot de passe modifié avec succès.");
-        return "profil/mot-de-passe";
+        redirectAttributes.addFlashAttribute("succes", "Mot de passe modifié avec succès.");
+        return "redirect:" + urlProfil(u);
+    }
+
+    private String urlProfil(Utilisateur utilisateur) {
+        if (utilisateur.getRole() == null || utilisateur.getRole().getLibelle() == null) {
+            return "/profil";
+        }
+        return switch (utilisateur.getRole().getLibelle()) {
+            case "RESPONSABLE_STAGE" -> "/responsable/profil";
+            case "ENCADREUR" -> "/encadreur/profil";
+            case "STAGIAIRE" -> "/stagiaire/profil";
+            default -> "/profil";
+        };
     }
 }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Document du dossier - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<main class="contenu-principal responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main">
+                <div class="rp-heading-icon"><i class="fa-regular fa-file-lines"></i></div>
+                <div>
+                    <div class="rp-breadcrumb">Responsable &gt; Dossiers &gt; Document</div>
+                    <h1 th:text="${document.nomFichier}">Document</h1>
+                    <p th:text="${document.stage.stagiaire.utilisateur.prenom + ' ' + document.stage.stagiaire.utilisateur.nom + ' · ' + document.typeDocument}">Stagiaire · Type</p>
+                </div>
+            </div>
+            <div class="rp-actions">
+                <a class="rp-secondary" th:href="@{/responsable/dossiers}"><i class="fa-solid fa-arrow-left"></i> Retour aux dossiers</a>
+                <a class="rp-primary" th:href="@{/documents/{id}(id=${document.id})}"><i class="fa-solid fa-download"></i> Télécharger</a>
+            </div>
+        </header>
+
+        <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
+        <div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
+
+        <section class="rp-grid-70">
+            <article class="rp-card">
+                <div class="rp-card-head"><div><h2>Consultation du document</h2><p>Aperçu du fichier déposé</p></div></div>
+                <iframe th:src="@{/documents/{id}/preview(id=${document.id})}"
+                        th:title="${document.nomFichier}"
+                        style="width:100%;height:680px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc"></iframe>
+            </article>
+
+            <aside>
+                <article class="rp-card" style="margin-bottom:18px">
+                    <div class="rp-card-head"><div><h2>Informations</h2><p>Données enregistrées</p></div></div>
+                    <div class="rp-data">
+                        <div class="rp-data-row"><span>Type</span><strong th:text="${document.typeDocument}">Type</strong></div>
+                        <div class="rp-data-row"><span>Date de dépôt</span><strong th:text="${#temporals.format(document.dateDepot,'dd/MM/yyyy HH:mm')}">Date</strong></div>
+                        <div class="rp-data-row"><span>Version</span><strong th:text="${document.version}">1.0</strong></div>
+                        <div class="rp-data-row"><span>Statut actuel</span><strong><span class="rp-badge blue" th:text="${#strings.replace(document.statut,'_',' ')}">Disponible</span></strong></div>
+                    </div>
+                    <form th:action="@{/responsable/dossiers/documents/{id}/statut(id=${document.id})}" method="post">
+                        <div class="rp-field">
+                            <label for="documentStatus">Changer le statut</label>
+                            <select class="rp-select" id="documentStatus" name="statut">
+                                <option value="disponible" th:selected="${document.statut == 'disponible'}">Disponible</option>
+                                <option value="en_validation" th:selected="${document.statut == 'en_validation'}">En validation</option>
+                                <option value="valide" th:selected="${document.statut == 'valide'}">Validé</option>
+                                <option value="a_corriger" th:selected="${document.statut == 'a_corriger'}">À corriger</option>
+                                <option value="rejete" th:selected="${document.statut == 'rejete'}">Rejeté</option>
+                            </select>
+                        </div>
+                        <button class="rp-primary" type="submit" style="margin-top:12px;width:100%">Mettre à jour</button>
+                    </form>
+                </article>
+
+                <article class="rp-card">
+                    <div class="rp-card-head"><div><h2>Commentaires</h2><p>Suivi du document</p></div></div>
+                    <div class="rp-data" th:if="${document.descriptionModifications != null and !#strings.isEmpty(document.descriptionModifications)}">
+                        <div class="rp-data-row" style="white-space:pre-line" th:text="${document.descriptionModifications}">Historique</div>
+                    </div>
+                    <div class="rp-empty" th:if="${document.descriptionModifications == null or #strings.isEmpty(document.descriptionModifications)}">Aucun commentaire.</div>
+                    <form th:action="@{/responsable/dossiers/documents/{id}/commenter(id=${document.id})}" method="post">
+                        <div class="rp-field">
+                            <label for="commentaire">Ajouter un commentaire</label>
+                            <textarea class="rp-textarea" id="commentaire" name="commentaire" required></textarea>
+                        </div>
+                        <button class="rp-primary" type="submit" style="margin-top:12px;width:100%">Enregistrer le commentaire</button>
+                    </form>
+                </article>
+            </aside>
+        </section>
+    </div>
+</main>
+</body>
+</html>

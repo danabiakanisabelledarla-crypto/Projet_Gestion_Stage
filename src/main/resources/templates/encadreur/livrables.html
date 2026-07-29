@@ -2,57 +2,201 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Livrables - Encadreur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/demandes.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
 </head>
-<body>
-
+<body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
 
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Livrables</h1>
-        <span class="utilisateur-connecte">Encadreur</span>
-    </div>
+<div class="coach-main">
+    <header class="coach-topbar">
+        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="globalDeliverySearch" type="search" placeholder="Rechercher un livrable..."></label>
+        <button class="coach-icon-btn" title="Livrables à traiter"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">0</em></button>
+        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}" title="Messages"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">0</em></a>
+        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
+    </header>
 
-    <table class="tableau-demandes">
-        <thead>
-            <tr>
-                <th>Titre</th>
-                <th>Stagiaire</th>
-                <th>Tache</th>
-                <th>Date depot</th>
-                <th>Statut</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="livrable : ${livrables}">
-                <td th:text="${livrable.titre}">-</td>
-                <td th:text="${livrable.tache.stage.stagiaire.utilisateur.prenom
-                             + ' ' + livrable.tache.stage.stagiaire.utilisateur.nom}">-</td>
-                <td th:text="${livrable.tache.titre}">-</td>
-                <td th:text="${livrable.dateDepot}">-</td>
-                <td>
-                    <span th:class="'badge ' + ${livrable.statut.name()}"
-                          th:text="${livrable.statut}">-</span>
-                </td>
-                <td>
-                    <a th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}"
-                       class="btn-accepter">Valider</a>
-                    <a th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}"
-                       class="btn-refuser">Rejeter</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(livrables)}">
-                <td colspan="6" style="text-align:center; color:#777; padding:30px;">
-                    Aucun livrable depose pour le moment.
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <main class="coach-page">
+        <section class="coach-heading">
+            <div class="coach-heading-main">
+                <span class="coach-heading-icon"><i class="fa-solid fa-file-circle-check"></i></span>
+                <div>
+                    <div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Livrables</div>
+                    <h1>Livrables</h1>
+                    <p>Suivez, consultez et validez les livrables soumis par vos stagiaires.</p>
+                </div>
+            </div>
+            <button class="coach-btn secondary" id="exportDeliveries" type="button"><i class="fa-solid fa-download"></i> Exporter la liste</button>
+        </section>
+
+        <div class="coach-flash" th:if="${param.succes}">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="${param.succes[0] == 'valide' ? 'Livrable validé avec succès.' : (param.succes[0] == 'correction' ? 'Demande de correction enregistrée.' : 'Commentaire enregistré.')}">Action enregistrée.</span>
+        </div>
+
+        <section class="coach-kpis">
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-inbox"></i></span><strong th:text="${livrablesTotaux}">0</strong><span>Livrables reçus</span><small>Ensemble des dépôts</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,23 12,19 23,21 35,12 47,15 58,7 69,5"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-hourglass-half"></i></span><strong th:text="${livrablesEnAttente}">0</strong><span>En attente</span><small>À examiner</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,9 12,12 23,8 35,16 47,13 58,20 69,18"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-circle-check"></i></span><strong th:text="${livrablesValides}">0</strong><span>Livrables validés</span><small>Conformes</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,22 12,20 23,18 35,15 47,11 58,12 69,5"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon red"><i class="fa-solid fa-pen-to-square"></i></span><strong th:text="${livrablesACorriger}">0</strong><span>À corriger</span><small>Retours envoyés</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,8 12,11 23,10 35,15 47,14 58,20 69,21"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-chart-pie"></i></span><strong th:text="${tauxValidation + '%'}">0%</strong><span>Taux de validation</span><small>Sur tous les dépôts</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,24 12,19 23,20 35,13 47,10 58,8 69,4"/></svg></article>
+        </section>
+
+        <section class="coach-grid-70">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Liste des livrables</h2><p>Documents déposés par les stagiaires suivis</p></div></div>
+                <div class="coach-toolbar">
+                    <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="deliverySearch" type="search" placeholder="Stagiaire ou document..."></label>
+                    <select id="deliveryStudent" class="coach-select"><option value="">Tous les stagiaires</option><option th:each="stage : ${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</option></select>
+                    <select id="deliveryType" class="coach-select"><option value="">Tous les types</option><option th:each="entry : ${livrablesParCategorie}" th:value="${#strings.toLowerCase(entry.key)}" th:text="${entry.key}">Type</option></select>
+                    <select id="deliveryStatus" class="coach-select"><option value="">Tous les statuts</option><option value="depose">En attente</option><option value="valide">Validé</option><option value="correction_demandee">À corriger</option><option value="rejete">Rejeté</option></select>
+                </div>
+
+                <div class="coach-table-wrap">
+                    <table class="coach-table" id="deliveriesTable">
+                        <thead><tr><th>Stagiaire</th><th>Type</th><th>Document</th><th>Date dépôt</th><th>Référence</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr class="delivery-row" th:each="livrable : ${livrables}"
+                            th:with="stage=${stagesLivrables[livrable.id]}, utilisateur=${stage != null ? stage.stagiaire.utilisateur : null}"
+                            th:attr="data-search=${#strings.toLowerCase((utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : '') + ' ' + livrable.titre + ' ' + livrable.fichier)},data-stage=${stage != null ? stage.id : ''},data-type=${#strings.toLowerCase(livrable.categorie != null ? livrable.categorie : 'autre')},data-status=${livrable.statut.name()},data-id=${livrable.id},data-title=${livrable.titre},data-comment=${livrable.commentaireEncadreur}">
+                            <td><div class="coach-person"><span class="coach-avatar" th:text="${utilisateur != null ? #strings.substring(utilisateur.prenom,0,1) + #strings.substring(utilisateur.nom,0,1) : '--'}">ST</span><div><strong th:text="${utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : 'Stagiaire non associé'}">Stagiaire</strong><small th:text="${stage != null && stage.service != null ? stage.service.nom : 'Service non renseigné'}">Service</small></div></div></td>
+                            <td><span class="coach-badge purple" th:text="${livrable.categorie != null ? livrable.categorie : 'Autre'}">Type</span></td>
+                            <td><div class="coach-file"><i class="fa-regular fa-file-pdf"></i><div><strong th:text="${livrable.titre}">Document</strong><small th:text="${livrable.fichier}">fichier.pdf</small></div></div></td>
+                            <td class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">29/07/2026</td>
+                            <td class="coach-mono" th:text="${'LIV-' + #numbers.formatInteger(livrable.id, 4)}">LIV-0001</td>
+                            <td><span class="coach-badge" th:classappend="${livrable.statut.name() == 'valide'} ? ' green' : (${livrable.statut.name() == 'depose'} ? ' orange' : ' red')" th:text="${livrable.statut.name() == 'valide' ? 'Validé' : (livrable.statut.name() == 'depose' ? 'En attente' : (livrable.statut.name() == 'correction_demandee' ? 'À corriger' : 'Rejeté'))}">Statut</span></td>
+                            <td><div class="coach-actions">
+                                <a class="coach-action" th:href="@{/documents/livrables/{id}/preview(id=${livrable.id})}" target="_blank" title="Consulter"><i class="fa-regular fa-eye"></i></a>
+                                <a class="coach-action" th:href="@{/documents/livrables/{id}(id=${livrable.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                                <button class="coach-action delivery-comment" type="button" title="Commenter"><i class="fa-regular fa-comment"></i></button>
+                                <a class="coach-action" th:if="${livrable.statut.name() != 'valide'}" th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}" title="Valider"><i class="fa-solid fa-check"></i></a>
+                                <a class="coach-action" th:if="${livrable.statut.name() != 'correction_demandee'}" th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}" title="Demander une correction"><i class="fa-solid fa-pen"></i></a>
+                            </div></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(livrables)}"><td colspan="7" class="coach-empty"><i class="fa-regular fa-folder-open"></i><br><br>Aucun livrable déposé pour le moment.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="coach-pagination"><span id="deliveryCount" th:text="${livrablesTotaux + ' livrable(s)'}">0 livrable</span><div class="coach-pages"><button type="button">‹</button><button class="active" type="button">1</button><button type="button">›</button></div></div>
+            </article>
+
+            <div style="display:grid;gap:18px;align-content:start">
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Répartition des livrables</h2><p>État de validation</p></div></div>
+                    <div class="coach-donut-wrap">
+                        <div style="position:relative"><div class="coach-donut" th:style="'background:conic-gradient(#10b981 0 ' + ${tauxValidation} + '%,#f59e0b ' + ${tauxValidation} + '% ' + ${(livrablesTotaux == 0 ? 0 : (livrablesValides + livrablesEnAttente) * 100 / livrablesTotaux)} + '%,#ef4444 ' + ${(livrablesTotaux == 0 ? 0 : (livrablesValides + livrablesEnAttente) * 100 / livrablesTotaux)} + '% 100%)'"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${livrablesTotaux}">0</strong><span>Livrables</span></div></div></div>
+                        <div class="coach-legend"><div><span><i style="background:#10b981"></i>Validés</span><b th:text="${livrablesValides}">0</b></div><div><span><i style="background:#f59e0b"></i>En attente</span><b th:text="${livrablesEnAttente}">0</b></div><div><span><i style="background:#ef4444"></i>À corriger</span><b th:text="${livrablesACorriger}">0</b></div></div>
+                    </div>
+                </article>
+
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Derniers dépôts</h2><p>Activité la plus récente</p></div></div>
+                    <div class="coach-timeline">
+                        <div class="coach-timeline-item" th:each="livrable, stat : ${livrables}" th:if="${stat.index < 4}" th:with="stage=${stagesLivrables[livrable.id]}">
+                            <span class="coach-timeline-icon"><i class="fa-solid fa-file-arrow-up"></i></span>
+                            <div class="coach-timeline-content"><strong th:text="${stage != null ? stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom : 'Stagiaire'}">Stagiaire</strong><span th:text="${livrable.titre}">Livrable</span><small class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy à HH:mm')}">Date</small></div>
+                        </div>
+                        <div class="coach-empty" th:if="${#lists.isEmpty(livrables)}">Aucun dépôt récent.</div>
+                    </div>
+                </article>
+
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Stagiaires les plus actifs</h2><p>Classement par nombre de dépôts</p></div></div>
+                    <div class="coach-ranking">
+                        <div class="coach-rank-row" th:each="stage, stat : ${mesStages}" th:if="${stat.index < 4}">
+                            <span class="coach-rank-number" th:text="${stat.index + 1}">1</span>
+                            <span class="coach-avatar" th:text="${#strings.substring(stage.stagiaire.utilisateur.prenom,0,1) + #strings.substring(stage.stagiaire.utilisateur.nom,0,1)}">ST</span>
+                            <div class="coach-rank-copy"><strong th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</strong><small>Stagiaire encadré</small><div class="coach-progress" style="margin-top:5px"><span th:style="'width:' + ${(livrablesTotaux == 0 ? 0 : livrablesParStage[stage.id] * 100 / livrablesTotaux)} + '%'"></span></div></div>
+                            <b th:text="${livrablesParStage[stage.id]}">0</b>
+                        </div>
+                        <div class="coach-empty" th:if="${#lists.isEmpty(mesStages)}">Aucun stagiaire affecté.</div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="coach-grid-50">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Historique des validations</h2><p>Dernières décisions enregistrées</p></div></div>
+                <div class="coach-timeline">
+                    <div class="coach-timeline-item" th:each="livrable, stat : ${livrables}" th:if="${stat.index < 5 && livrable.statut.name() != 'depose'}" th:with="stage=${stagesLivrables[livrable.id]}">
+                        <span class="coach-timeline-icon"><i th:class="${livrable.statut.name() == 'valide' ? 'fa-solid fa-check' : 'fa-solid fa-pen'}"></i></span>
+                        <div class="coach-timeline-content"><strong th:text="${livrable.statut.name() == 'valide' ? 'Livrable validé' : 'Correction demandée'}">Décision</strong><span th:text="${livrable.titre + (stage != null ? ' · ' + stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom : '')}">Document</span><small class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy')}">Date</small></div>
+                    </div>
+                    <div class="coach-empty" th:if="${livrablesValides + livrablesACorriger == 0}">Aucune validation enregistrée.</div>
+                </div>
+            </article>
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Types de livrables</h2><p>Répartition des documents reçus</p></div></div>
+                <div class="coach-bars">
+                    <div th:each="entry : ${livrablesParCategorie}"><div class="coach-bar-head"><span th:text="${entry.key}">Catégorie</span><b th:text="${entry.value + ' (' + (livrablesTotaux == 0 ? 0 : entry.value * 100 / livrablesTotaux) + '%)'}">0%</b></div><div class="coach-bar-track"><span th:style="'width:' + ${(livrablesTotaux == 0 ? 0 : entry.value * 100 / livrablesTotaux)} + '%'"></span></div></div>
+                    <div class="coach-empty" th:if="${#maps.isEmpty(livrablesParCategorie)}">Aucune catégorie disponible.</div>
+                </div>
+            </article>
+        </section>
+    </main>
 </div>
 
+<div class="coach-modal" id="deliveryCommentModal">
+    <form class="coach-modal-panel" th:action="@{/encadreur/livrables/commenter}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input id="commentDeliveryId" type="hidden" name="id">
+        <div class="coach-card-head"><div><h2>Commenter le livrable</h2><p id="commentDeliveryTitle">Document sélectionné</p></div><button class="coach-action" data-close-comment type="button"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="coach-form-group"><label>Commentaire de l’encadreur</label><textarea id="commentDeliveryText" class="coach-textarea" name="commentaire" required placeholder="Indiquez les points validés ou les corrections attendues..."></textarea></div>
+        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-comment type="button">Annuler</button><button class="coach-btn" type="submit"><i class="fa-solid fa-check"></i> Enregistrer</button></div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const rows = [...document.querySelectorAll('.delivery-row')];
+    const search = document.getElementById('deliverySearch');
+    const globalSearch = document.getElementById('globalDeliverySearch');
+    const student = document.getElementById('deliveryStudent');
+    const type = document.getElementById('deliveryType');
+    const status = document.getElementById('deliveryStatus');
+    const count = document.getElementById('deliveryCount');
+    const filter = () => {
+        const query = (search.value || globalSearch.value).toLowerCase();
+        let visible = 0;
+        rows.forEach(row => {
+            const show = (!query || row.dataset.search.includes(query))
+                && (!student.value || row.dataset.stage === student.value)
+                && (!type.value || row.dataset.type === type.value)
+                && (!status.value || row.dataset.status === status.value);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        count.textContent = visible + ' livrable(s) affiché(s)';
+    };
+    [search, globalSearch].forEach(input => input.addEventListener('input', filter));
+    [student, type, status].forEach(select => select.addEventListener('change', filter));
+
+    const modal = document.getElementById('deliveryCommentModal');
+    rows.forEach(row => row.querySelector('.delivery-comment').addEventListener('click', () => {
+        document.getElementById('commentDeliveryId').value = row.dataset.id;
+        document.getElementById('commentDeliveryTitle').textContent = row.dataset.title;
+        document.getElementById('commentDeliveryText').value = row.dataset.comment || '';
+        modal.classList.add('open');
+    }));
+    document.querySelectorAll('[data-close-comment]').forEach(button => button.addEventListener('click', () => modal.classList.remove('open')));
+    modal.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('open'); });
+
+    document.getElementById('exportDeliveries').addEventListener('click', () => {
+        const lines = [];
+        lines.push(['Stagiaire','Type','Document','Date','Référence','Statut']);
+        rows.filter(row => row.style.display !== 'none').forEach(row => lines.push([...row.cells].slice(0, 6).map(cell => cell.innerText.replace(/\s+/g, ' ').trim())));
+        const csv = lines.map(line => line.map(value => '"' + value.replace(/"/g, '""') + '"').join(';')).join('\n');
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'}));
+        link.download = 'livrables-encadreur.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+});
+</script>
 </body>
 </html>

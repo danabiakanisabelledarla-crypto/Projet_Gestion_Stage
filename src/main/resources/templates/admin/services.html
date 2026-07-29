@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/admin-services.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body class="services-page">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
 <main class="contenu-principal backup-page">
@@ -106,8 +106,8 @@
                     <p><span id="visibleServiceCount" th:text="${totalServices}">0</span> services affichés</p>
                 </div>
                 <div class="svc-view-switch" role="group" aria-label="Mode d'affichage">
-                    <button type="button" class="active" title="Vue tableau"><i class="fa-solid fa-list"></i></button>
-                    <button type="button" title="Vue grille"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button type="button" class="active" title="Vue tableau" onclick="changerVueServices('table', this)"><i class="fa-solid fa-list"></i></button>
+                    <button type="button" title="Vue compacte" onclick="changerVueServices('compact', this)"><i class="fa-solid fa-table-cells-large"></i></button>
                 </div>
             </header>
 
@@ -296,6 +296,7 @@
         </div>
 
         <aside class="svc-details-card" id="serviceDetails">
+            <button type="button" class="svc-detail-close" aria-label="Fermer les détails" onclick="fermerDetailsService()"><i class="fa-solid fa-xmark"></i></button>
             <div class="svc-details-empty" id="detailsEmpty">
                 <div><i class="fa-solid fa-arrow-pointer"></i></div>
                 <h3>Détails du service</h3>
@@ -413,6 +414,7 @@
 
     function selectionnerService(ligne) {
         if (!ligne || !ligne.dataset.id) return;
+        document.getElementById('serviceDetails').classList.add('open');
         document.querySelectorAll('.svc-service-row').forEach(row => row.classList.remove('selected'));
         ligne.classList.add('selected');
         serviceSelectionne = ligne;
@@ -447,6 +449,16 @@
                 liste.appendChild(item);
             });
         }
+    }
+
+    function fermerDetailsService() {
+        document.getElementById('serviceDetails').classList.remove('open');
+    }
+
+    function changerVueServices(mode, bouton) {
+        document.querySelectorAll('.svc-view-switch button').forEach(item => item.classList.remove('active'));
+        bouton.classList.add('active');
+        document.querySelector('.svc-table').classList.toggle('compact-view', mode === 'compact');
     }
 
     function echapperHtml(valeur) {

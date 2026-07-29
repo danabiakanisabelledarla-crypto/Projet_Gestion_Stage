@@ -223,3 +223,26 @@
 .header-user-role { font-size: 11px; color: #64748B; }
 .header-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .header-arrow { font-size: 11px; color: #94A3B8; margin-left: 4px; }
+.document-upload-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .5);
+    backdrop-filter: blur(4px);
+}
+
+.document-upload-modal.open {
+    display: flex;
+}
+
+.document-upload-panel {
+    width: min(560px, 100%);
+    padding: 22px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, .25);
+}

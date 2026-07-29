@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import java.util.ArrayList;
@@ -71,6 +74,34 @@ private static String quote(Object v) {
     return "\"" + v.toString().replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
 }
 
+private static final Locale LOCALE_FR = Locale.FRENCH;
+
+private static List<YearMonth> sixDerniersMois() {
+    YearMonth courant = YearMonth.now();
+    List<YearMonth> mois = new ArrayList<>();
+    for (int i = 5; i >= 0; i--) mois.add(courant.minusMonths(i));
+    return mois;
+}
+
+private static List<String> libellesMois(List<YearMonth> mois) {
+    return mois.stream().map(m -> {
+        String nom = m.getMonth().getDisplayName(TextStyle.SHORT, LOCALE_FR).replace(".", "");
+        return nom.substring(0, 1).toUpperCase(LOCALE_FR) + nom.substring(1);
+    }).toList();
+}
+
+@ModelAttribute
+public void ajouterDonneesCommunes(Model model) {
+    LocalDate aujourdHui = LocalDate.now();
+    model.addAttribute("dateCourante", aujourdHui);
+    model.addAttribute("moisCourant", aujourdHui.getMonth().getDisplayName(TextStyle.FULL, LOCALE_FR));
+    model.addAttribute("moisAnneeCourant",
+            aujourdHui.getMonth().getDisplayName(TextStyle.FULL, LOCALE_FR) + " " + aujourdHui.getYear());
+    model.addAttribute("notificationsCount",
+            notificationRepository.countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
+    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
+}
+
     public ResponsableController(DemandeStageRepository demandeStageRepository,
                               StagiaireRepository stagiaireRepository,
                               StageRepository stageRepository,
@@ -115,6 +146,7 @@ private static String quote(Object v) {
     public String afficherDashboard(Model model) {
         model.addAttribute("activePage", "dashboard");
         List<DemandeStage> demandes = demandeStageRepository.findAll();
+        LocalDate aujourdHui = LocalDate.now();
 
         long demandesEnAttente = demandes.stream()
                 .filter(d -> d.getStatut() == DemandeStage.StatutDemande.en_attente).count();
@@ -126,14 +158,32 @@ private static String quote(Object v) {
 
         List<Stagiaire> stagiaires = stagiaireRepository.findAll();
         List<Stage> stages = stageRepository.findAll();
+        boolean statutsModifies = false;
+        for (Stage stage : stages) {
+            if (stage.getDateFin() != null && stage.getDateFin().isBefore(aujourdHui)
+                    && stage.getStatut() != Stage.StatutStage.termine) {
+                stage.setStatut(Stage.StatutStage.termine);
+                if (stage.getStagiaire() != null) {
+                    stage.getStagiaire().setStatut(Stagiaire.StatutStagiaire.termine);
+                    stagiaireRepository.save(stage.getStagiaire());
+                }
+                statutsModifies = true;
+            }
+        }
+        if (statutsModifies) {
+            stageRepository.saveAll(stages);
+        }
         long totalStagiaires = stagiaires.size();
         long totalStages = stages.size();
-        long totalStagiairesActifs = stagiaireRepository.countByStatut(Stagiaire.StatutStagiaire.actif);
-        long stagesEnCours = stageRepository.countByStatut(Stage.StatutStage.en_cours);
-        long stagesTermines = stageRepository.countByStatut(Stage.StatutStage.termine);
-        long stagesSuspendus = stageRepository.countByStatut(Stage.StatutStage.suspendu);
+        long totalStagiairesActifs = stagiaires.stream()
+                .filter(stagiaire -> stagiaire.getStatut() == Stagiaire.StatutStagiaire.actif).count();
+        long stagesEnCours = stages.stream()
+                .filter(stage -> stage.getStatut() == Stage.StatutStage.en_cours).count();
+        long stagesTermines = stages.stream()
+                .filter(stage -> stage.getStatut() == Stage.StatutStage.termine).count();
+        long stagesEnAttente = stages.stream()
+                .filter(stage -> stage.getStatut() == Stage.StatutStage.suspendu).count();
 
-        LocalDate aujourdHui = LocalDate.now();
         LocalDate limite = aujourdHui.plusDays(30);
         List<Stage> echeancesStages = stageRepository.findByDateFinBetween(aujourdHui, limite);
         echeancesStages.sort(Comparator.comparing(Stage::getDateFin));
@@ -146,12 +196,16 @@ private static String quote(Object v) {
             m.put("nom", nom);
             m.put("service", s.getService() != null ? s.getService().getNom() : "—");
             m.put("dateFin", s.getDateFin());
-            m.put("joursRestants", Math.max(0, aujourdHui.until(s.getDateFin()).getDays()));
+            m.put("joursRestants", Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(aujourdHui, s.getDateFin())));
             return m;
         }).toList();
 
         long tauxReussite = totalStages > 0 ? (stagesTermines * 100 / totalStages) : 0;
-        int progressionMoyenne = 65;
+        int progressionMoyenne = stagiaires.isEmpty() ? 0 : (int) Math.round(stagiaires.stream()
+                .map(Stagiaire::getProgression)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average().orElse(0));
 
         Map<String, Long> repartition = stagiaires.stream()
                 .collect(Collectors.groupingBy(
@@ -163,10 +217,16 @@ private static String quote(Object v) {
 
         List<Notification> activitesRecentes = notificationRepository.findAllByOrderByDateEnvoiDesc().stream().limit(6).toList();
 
-        List<String> moisLabels = List.of("Fév", "Mar", "Avr", "Mai", "Juin", "Juil");
-        List<Integer> dataDemandes = List.of(12, 19, 15, 25, 22, (int) demandesEnAttente);
-        List<Integer> dataStagesEnCours = List.of(8, 12, 14, 16, 17, (int) stagesEnCours);
-        List<Integer> dataStagesTermines = List.of(5, 9, 11, 15, 20, (int) stagesTermines);
+        List<YearMonth> sixMois = sixDerniersMois();
+        List<String> moisLabels = libellesMois(sixMois);
+        List<Long> dataDemandes = sixMois.stream().map(m -> demandes.stream()
+                .filter(d -> d.getDateDemande() != null && YearMonth.from(d.getDateDemande()).equals(m)).count()).toList();
+        List<Long> dataStagesEnCours = sixMois.stream().map(m -> stages.stream()
+                .filter(s -> s.getDateDebut() != null && !YearMonth.from(s.getDateDebut()).isAfter(m)
+                        && (s.getDateFin() == null || !YearMonth.from(s.getDateFin()).isBefore(m))).count()).toList();
+        List<Long> dataStagesTermines = sixMois.stream().map(m -> stages.stream()
+                .filter(s -> s.getStatut() == Stage.StatutStage.termine && s.getDateFin() != null
+                        && YearMonth.from(s.getDateFin()).equals(m)).count()).toList();
 
         model.addAttribute("demandesEnAttente", demandesEnAttente);
         model.addAttribute("totalDemandes", totalDemandes);
@@ -178,7 +238,7 @@ private static String quote(Object v) {
         model.addAttribute("totalStagiairesActifs", totalStagiairesActifs);
         model.addAttribute("stagesEnCours", stagesEnCours);
         model.addAttribute("stagesTermines", stagesTermines);
-        model.addAttribute("stagesSuspendus", stagesSuspendus);
+        model.addAttribute("stagesEnAttente", stagesEnAttente);
         model.addAttribute("echeancesCount", echeancesCount);
         model.addAttribute("echeances", echeances);
         model.addAttribute("tauxReussite", tauxReussite);
@@ -189,14 +249,12 @@ private static String quote(Object v) {
         model.addAttribute("dataStagesTerminesJson", toJson(dataStagesTermines));
         model.addAttribute("filiereLabelsJson", toJson(filiereLabels));
         model.addAttribute("filiereDataJson", toJson(filiereData));
-        model.addAttribute("notificationsCount", 5);
         model.addAttribute("activitesRecentes", activitesRecentes);
         model.addAttribute("stagiaires", stagiaires.stream().limit(6).toList());
         model.addAttribute("stages", stages);
         model.addAttribute("dernieresDemandes", demandes.stream()
                 .sorted(Comparator.comparing(DemandeStage::getDateDemande).reversed())
                 .limit(5).toList());
-        model.addAttribute("messagesCount", 3);
 
         return "responsable/dashboard";
     }
@@ -216,22 +274,33 @@ private static String quote(Object v) {
                 .filter(d -> d.getDateDemande() != null
                         && d.getDateDemande().toLocalDate().equals(java.time.LocalDate.now())).count();
         long taux = total > 0 ? (acceptees * 100 / total) : 0;
+        long demandesTraitees = acceptees + refusees;
+        long tempsMoyenTraitement = demandesTraitees == 0 ? 0 : Math.round(demandes.stream()
+                .filter(d -> d.getStatut() != DemandeStage.StatutDemande.en_attente && d.getDateDemande() != null)
+                .mapToLong(d -> Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(
+                        d.getDateDemande().toLocalDate(), LocalDate.now())))
+                .average().orElse(0));
+        List<YearMonth> sixMois = sixDerniersMois();
 
         model.addAttribute("demandes", demandes);
+        Map<Integer, List<Document>> documentsParDemande = demandes.stream().collect(Collectors.toMap(
+                DemandeStage::getId,
+                demande -> documentRepository.findByDemandeStageId(demande.getId())));
+        model.addAttribute("documentsParDemande", documentsParDemande);
         model.addAttribute("totalDemandes", total);
         model.addAttribute("enAttente", enAttente);
         model.addAttribute("acceptees", acceptees);
         model.addAttribute("refusees", refusees);
         model.addAttribute("aujourdHui", aujourdHui);
         model.addAttribute("tauxAcceptation", taux);
+        model.addAttribute("tempsMoyenTraitement", tempsMoyenTraitement);
         model.addAttribute("demandesRecentes", demandes.stream()
                 .sorted(Comparator.comparing(DemandeStage::getDateDemande).reversed())
                 .limit(5).toList());
-        model.addAttribute("moisLabelsJson", toJson(List.of("Fév", "Mar", "Avr", "Mai", "Juin", "Juil")));
-        model.addAttribute("demandesMoisJson", toJson(List.of(8, 13, 11, 18, 16, (int) total)));
+        model.addAttribute("moisLabelsJson", toJson(libellesMois(sixMois)));
+        model.addAttribute("demandesMoisJson", toJson(sixMois.stream().map(m -> demandes.stream()
+                .filter(d -> d.getDateDemande() != null && YearMonth.from(d.getDateDemande()).equals(m)).count()).toList()));
         model.addAttribute("statutsDemandesJson", toJson(List.of(acceptees, enAttente, refusees)));
-        model.addAttribute("notificationsCount", 5);
-        model.addAttribute("messagesCount", 3);
         return "responsable/demandes";
     }
 
@@ -423,6 +492,7 @@ public String afficherCloture(Model model,
     model.addAttribute("stagesTermines", stagesTermines);
     model.addAttribute("tousStages", tousStages);
     model.addAttribute("stagesClotures", stagesTermines.size());
+    model.addAttribute("tauxCloture", tousStages.isEmpty() ? 0 : (stagesTermines.size() * 100 / tousStages.size()));
     model.addAttribute("rapportsValides", stagesEnCours.stream()
             .filter(stage -> !documentRepository.findByStageId(stage.getId()).isEmpty()).count());
     model.addAttribute("dossiersComplets", stagesEnCours.stream()
@@ -435,6 +505,10 @@ public String afficherCloture(Model model,
             Stage::getId, stage -> documentRepository.findByStageId(stage.getId()).size())));
     model.addAttribute("evaluationsParStage", tousStages.stream().collect(Collectors.toMap(
             Stage::getId, stage -> evaluationRepository.findByStageId(stage.getId()).size())));
+    List<YearMonth> sixMois = sixDerniersMois();
+    model.addAttribute("clotureMoisLabelsJson", toJson(libellesMois(sixMois)));
+    model.addAttribute("cloturesMoisJson", toJson(sixMois.stream().map(m -> stagesTermines.stream()
+            .filter(stage -> stage.getDateFin() != null && YearMonth.from(stage.getDateFin()).equals(m)).count()).toList()));
     if (succes != null) model.addAttribute("succes", succes);
     return "responsable/cloture";
 }
@@ -581,6 +655,10 @@ public String afficherNotifications(Model model) {
         model.addAttribute("livrablesRecents", livrableRepository.findAll().stream()
                 .sorted(Comparator.comparing(Livrable::getDateDepot).reversed())
                 .limit(5).toList());
+        List<YearMonth> sixMois = sixDerniersMois();
+        model.addAttribute("stagiairesMoisLabelsJson", toJson(libellesMois(sixMois)));
+        model.addAttribute("admissionsMoisJson", toJson(sixMois.stream().map(m -> stagiaires.stream()
+                .filter(s -> s.getDateAdmission() != null && YearMonth.from(s.getDateAdmission()).equals(m)).count()).toList()));
         model.addAttribute("notificationsCount", notificationsCount);
         model.addAttribute("messagesCount", messagesCount);
         model.addAttribute("servicesList", servicesList);
@@ -681,6 +759,7 @@ public String affecterStagiaire(@PathVariable Integer stageId,
 public String afficherDossiers(Model model) {
     List<Document> documents = documentRepository.findAll();
     List<Stage> stages = stageRepository.findAll();
+    List<YearMonth> sixMois = sixDerniersMois();
     Map<Integer, Long> documentsParStage = stages.stream().collect(Collectors.toMap(
             Stage::getId, stage -> (long) documentRepository.findByStageId(stage.getId()).size()));
     long complets = documentsParStage.values().stream().filter(total -> total >= 5).count();
@@ -698,7 +777,61 @@ public String afficherDossiers(Model model) {
     model.addAttribute("derniersDepots", documents.stream()
             .sorted(Comparator.comparing(Document::getDateDepot).reversed())
             .limit(5).toList());
+    model.addAttribute("dossiersMoisLabelsJson", toJson(libellesMois(sixMois)));
+    model.addAttribute("documentsMoisJson", toJson(sixMois.stream().map(m -> documents.stream()
+            .filter(d -> d.getDateDepot() != null && YearMonth.from(d.getDateDepot()).equals(m)).count()).toList()));
     return "responsable/dossiers";
+}
+
+@GetMapping("/dossiers/documents/{id}")
+public String consulterDocumentDossier(@PathVariable Integer id,
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
+    Optional<Document> document = documentRepository.findById(id);
+    if (document.isEmpty() || document.get().getStage() == null) {
+        redirectAttributes.addFlashAttribute("erreur", "Le document demandé est introuvable.");
+        return "redirect:/responsable/dossiers";
+    }
+    model.addAttribute("activePage", "dossiers");
+    model.addAttribute("document", document.get());
+    return "responsable/document-detail";
+}
+
+@PostMapping("/dossiers/documents/{id}/statut")
+public String modifierStatutDocument(@PathVariable Integer id,
+                                     @RequestParam String statut,
+                                     RedirectAttributes redirectAttributes) {
+    List<String> statutsAutorises = List.of("disponible", "en_validation", "valide", "a_corriger", "rejete");
+    if (!statutsAutorises.contains(statut)) {
+        redirectAttributes.addFlashAttribute("erreur", "Le statut sélectionné n'est pas valide.");
+        return "redirect:/responsable/dossiers/documents/" + id;
+    }
+    documentRepository.findById(id).ifPresent(document -> {
+        document.setStatut(statut);
+        documentRepository.save(document);
+    });
+    redirectAttributes.addFlashAttribute("succes", "Le statut du document a été mis à jour.");
+    return "redirect:/responsable/dossiers/documents/" + id;
+}
+
+@PostMapping("/dossiers/documents/{id}/commenter")
+public String commenterDocumentDossier(@PathVariable Integer id,
+                                       @RequestParam String commentaire,
+                                       @AuthenticationPrincipal CustomUserDetails userDetails,
+                                       RedirectAttributes redirectAttributes) {
+    documentRepository.findById(id).ifPresent(document -> {
+        String auteur = userDetails.getUtilisateur().getPrenom() + " "
+                + userDetails.getUtilisateur().getNom();
+        String nouveauCommentaire = auteur + " : " + commentaire.trim();
+        String historique = document.getDescriptionModifications();
+        document.setDescriptionModifications(
+                historique == null || historique.isBlank()
+                        ? nouveauCommentaire
+                        : historique + "\n" + nouveauCommentaire);
+        documentRepository.save(document);
+    });
+    redirectAttributes.addFlashAttribute("succes", "Le commentaire a été enregistré.");
+    return "redirect:/responsable/dossiers/documents/" + id;
 }
 
 @GetMapping("/planning")
@@ -708,12 +841,33 @@ public String afficherPlanning(Model model) {
             .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
             .sorted(Comparator.comparing(EvenementPersonnel::getDate))
             .toList();
+    LocalDate aujourdHui = LocalDate.now();
+    LocalDate finSemaine = aujourdHui.plusDays(6);
+    long evenementsPlanifies = evenements.stream()
+            .filter(event -> event.getDate() != null && !event.getDate().isBefore(aujourdHui)).count();
+    long reunionsProgrammees = evenements.stream()
+            .filter(event -> "reunion".equals(event.getTypeCouleur()) && event.getDate() != null
+                    && !event.getDate().isBefore(aujourdHui)).count();
+    long soutenancesProgrammees = evenements.stream()
+            .filter(event -> "soutenance".equals(event.getTypeCouleur()) && event.getDate() != null
+                    && !event.getDate().isBefore(aujourdHui)).count();
+    long echeancesSemaine = evenements.stream()
+            .filter(event -> event.getDate() != null && !event.getDate().isBefore(aujourdHui)
+                    && !event.getDate().isAfter(finSemaine)).count();
+    long stagesPlanifies = stages.stream().filter(stage -> stage.getDateFin() != null).count();
+    long stagesDansDelais = stages.stream().filter(stage -> stage.getDateFin() != null
+            && (stage.getStatut() == Stage.StatutStage.termine || !stage.getDateFin().isBefore(aujourdHui))).count();
+    long tauxRespectPlanning = stagesPlanifies == 0 ? 100 : stagesDansDelais * 100 / stagesPlanifies;
     model.addAttribute("activePage", "planning");
     model.addAttribute("stages", stages);
     model.addAttribute("evenements", evenements);
-    model.addAttribute("evenementsPlanifies", evenements.size());
-    model.addAttribute("reunionsProgrammees", evenements.stream()
-            .filter(event -> "reunion".equals(event.getTypeCouleur())).count());
+    model.addAttribute("evenementsPlanifies", evenementsPlanifies);
+    model.addAttribute("reunionsProgrammees", reunionsProgrammees);
+    model.addAttribute("soutenancesProgrammees", soutenancesProgrammees);
+    model.addAttribute("echeancesSemaine", echeancesSemaine);
+    model.addAttribute("tauxRespectPlanning", tauxRespectPlanning);
+    model.addAttribute("planningAnnee", aujourdHui.getYear());
+    model.addAttribute("planningMoisIndex", aujourdHui.getMonthValue() - 1);
     model.addAttribute("debutsStage", stages.stream()
             .filter(stage -> stage.getDateDebut() != null && stage.getDateDebut().getMonth() == LocalDate.now().getMonth()).count());
     model.addAttribute("finsStage", stages.stream()
@@ -759,6 +913,21 @@ public String afficherProfil(@AuthenticationPrincipal CustomUserDetails userDeta
     model.addAttribute("stagesGeres", stages.size());
     model.addAttribute("stagesClotures", stages.stream()
             .filter(stage -> stage.getStatut() == Stage.StatutStage.termine).count());
+    long rapportsValides = documentRepository.findAll().stream()
+            .filter(document -> "valide".equalsIgnoreCase(document.getStatut())
+                    || "disponible".equalsIgnoreCase(document.getStatut())).count();
+    long reunionsOrganisees = stages.stream()
+            .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
+            .filter(event -> "reunion".equals(event.getTypeCouleur())).count();
+    int tauxSuivi = stages.isEmpty() ? 0 : (int) Math.round(stages.stream()
+            .map(Stage::getStagiaire).filter(java.util.Objects::nonNull)
+            .map(Stagiaire::getProgression).filter(java.util.Objects::nonNull)
+            .mapToInt(Integer::intValue).average().orElse(0));
+    model.addAttribute("rapportsValides", rapportsValides);
+    model.addAttribute("reunionsOrganisees", reunionsOrganisees);
+    model.addAttribute("tauxSuivi", tauxSuivi);
+    model.addAttribute("activitesProfil",
+            notificationRepository.findAllByOrderByDateEnvoiDesc().stream().limit(4).toList());
     model.addAttribute("anciennete", responsable.getDateCreation() == null ? 1 : Math.max(1,
             java.time.temporal.ChronoUnit.YEARS.between(
                     responsable.getDateCreation().toLocalDate(), LocalDate.now()) + 1));

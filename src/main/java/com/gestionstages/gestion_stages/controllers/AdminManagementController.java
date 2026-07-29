@@ -9,15 +9,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/admin")
@@ -400,17 +403,36 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("totalStag", utilisateurRepository.findByRole_Libelle("STAGIAIRE").size());
         model.addAttribute("totalResp", utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size());
         model.addAttribute("totalEnc", utilisateurRepository.findByRole_Libelle("ENCADREUR").size());
+        model.addAttribute("utilisateurs", utilisateurRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(Utilisateur::getNom)
+                        .thenComparing(Utilisateur::getPrenom))
+                .toList());
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/notifications";
     }
 
     @PostMapping("/notifications/envoyer")
     public String envoyerNotification(@RequestParam String objet, @RequestParam String message,
-                                         @RequestParam String destinataireType, @RequestParam String priorite,
+                                         @RequestParam String modeEnvoi,
+                                         @RequestParam(required = false) String destinataireType,
+                                         @RequestParam(required = false) Integer destinataireId,
+                                         @RequestParam String priorite,
                                          @AuthenticationPrincipal CustomUserDetails user) {
-        Notification n = new Notification(objet, message, destinataireType, priorite, adminName(user));
+        String cible = destinataireType;
+        Notification n;
+        if ("personne".equals(modeEnvoi) && destinataireId != null) {
+            Utilisateur destinataire = utilisateurRepository.findById(destinataireId).orElse(null);
+            if (destinataire == null) {
+                return "redirect:/admin/notifications?erreur=Destinataire introuvable.";
+            }
+            cible = destinataire.getPrenom() + " " + destinataire.getNom();
+            n = new Notification(objet, message, "Personne précise", priorite, adminName(user));
+            n.setDestinataireEmail(destinataire.getEmail());
+        } else {
+            n = new Notification(objet, message, cible, priorite, adminName(user));
+        }
         notificationRepository.save(n);
-        activityLogService.log("Notification envoyee", objet + " -> " + destinataireType, adminName(user));
+        activityLogService.log("Notification envoyee", objet + " -> " + cible, adminName(user));
         return "redirect:/admin/notifications?succes=Notification envoyee.";
     }
 
@@ -604,6 +626,55 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("activePage", "parametres");
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/parametres";
+    }
+
+    @PostMapping("/documents/ajouter")
+    public String ajouterDocument(@RequestParam String typeDocument,
+                                  @RequestParam MultipartFile fichier,
+                                  @AuthenticationPrincipal CustomUserDetails user) {
+        if (fichier == null || fichier.isEmpty()) {
+            return "redirect:/admin/documents?succes=Aucun fichier sélectionné.";
+        }
+        try {
+            java.nio.file.Path dossier = Paths.get("uploads", "documents").toAbsolutePath().normalize();
+            Files.createDirectories(dossier);
+            String original = Paths.get(fichier.getOriginalFilename() == null ? "document" : fichier.getOriginalFilename())
+                    .getFileName().toString();
+            java.nio.file.Path cible = dossier.resolve(UUID.randomUUID() + "_" + original).normalize();
+            if (!cible.startsWith(dossier)) throw new IllegalArgumentException("Chemin de fichier invalide");
+            Files.copy(fichier.getInputStream(), cible, StandardCopyOption.REPLACE_EXISTING);
+            Document document = new Document(original, typeDocument, cible.toString());
+            document.setTailleOctets(fichier.getSize());
+            documentRepository.save(document);
+            activityLogService.log("Document ajouté", original, adminName(user));
+        } catch (Exception exception) {
+            return "redirect:/admin/documents?succes=Le document n'a pas pu être ajouté.";
+        }
+        return "redirect:/admin/documents?succes=Document ajouté.";
+    }
+
+    @PostMapping("/documents/commenter")
+    public String commenterDocument(@RequestParam Integer documentId,
+                                    @RequestParam String commentaire,
+                                    @AuthenticationPrincipal CustomUserDetails user) {
+        documentRepository.findById(documentId).ifPresent(document -> {
+            activityLogService.log("Commentaire document",
+                    document.getNomFichier() + " : " + commentaire.trim(), adminName(user));
+            String email = null;
+            if (document.getStage() != null && document.getStage().getStagiaire() != null) {
+                email = document.getStage().getStagiaire().getUtilisateur().getEmail();
+            } else if (document.getDemandeStage() != null) {
+                email = document.getDemandeStage().getEmail();
+            }
+            if (email != null && !email.isBlank()) {
+                Notification notification = new Notification(
+                        "Nouveau commentaire sur votre document",
+                        commentaire.trim(), "Personne précise", "normale", adminName(user));
+                notification.setDestinataireEmail(email);
+                notificationRepository.save(notification);
+            }
+        });
+        return "redirect:/admin/documents?succes=Commentaire envoyé.";
     }
 
     @PostMapping({"/parametres", "/parametre"})

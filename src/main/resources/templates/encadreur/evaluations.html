@@ -2,109 +2,215 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Evaluations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Évaluations - Encadreur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/evaluation.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
 </head>
-<body>
-
+<body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+<div class="coach-main">
+    <header class="coach-topbar">
+        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="globalEvaluationSearch" type="search" placeholder="Rechercher une évaluation..."></label>
+        <button class="coach-icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">0</em></button>
+        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}" title="Messages"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">0</em></a>
+        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
+    </header>
 
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Evaluation finale</h1>
-        <span class="utilisateur-connecte">Encadreur</span>
-    </div>
+    <main class="coach-page">
+        <section class="coach-heading">
+            <div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-star-half-stroke"></i></span><div><div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Évaluations</div><h1>Évaluations</h1><p>Évaluez les performances de vos stagiaires et suivez leur progression.</p></div></div>
+            <button class="coach-btn" data-open-evaluation type="button"><i class="fa-solid fa-plus"></i> Nouvelle évaluation</button>
+        </section>
 
-    <div th:if="${succes}" class="message-succes">Evaluation enregistree avec succes.</div>
+        <div class="coach-flash" th:if="${succes}"><i class="fa-solid fa-circle-check"></i>Évaluation enregistrée avec succès.</div>
 
-    <div class="grille-evaluation">
+        <section class="coach-kpis">
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-clipboard-check"></i></span><strong th:text="${evaluationsTotales}">0</strong><span>Évaluations réalisées</span><small>Historique complet</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,23 12,20 23,21 35,14 47,10 58,12 69,5"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-hourglass-half"></i></span><strong th:text="${evaluationsEnAttente}">0</strong><span>En attente</span><small>Évaluations finales à faire</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,9 12,12 23,11 35,15 47,17 58,20 69,19"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-chart-line"></i></span><strong class="coach-mono" th:text="${moyenneGenerale + '/20'}">0/20</strong><span>Moyenne générale</span><small>Toutes évaluations</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,22 12,19 23,17 35,18 47,12 58,8 69,7"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-award"></i></span><strong th:text="${evaluationsExcellentes}">0</strong><span>Excellent niveau</span><small>Notes de 18 à 20</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,24 12,22 23,18 35,16 47,12 58,10 69,4"/></svg></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-percent"></i></span><strong th:text="${tauxEvaluation + '%'}">0%</strong><span>Taux d’évaluation</span><small>Stagiaires évalués</small><svg class="coach-kpi-spark" viewBox="0 0 70 28"><polyline points="1,25 12,21 23,19 35,15 47,13 58,8 69,5"/></svg></article>
+        </section>
 
-        <!-- Formulaire evaluation -->
-        <div class="bloc-evaluation">
-            <h2>Nouvelle evaluation</h2>
-            <form th:action="@{/encadreur/evaluations/creer}" method="post">
-
-                <div class="groupe-champ">
-                    <label>Stagiaire</label>
-                    <select name="stageId" required>
-                        <option value="">-- Choisir un stagiaire --</option>
-                        <option th:each="stage : ${mesStages}"
-                                th:value="${stage.id}"
-                                th:text="${stage.stagiaire.utilisateur.prenom
-                                        + ' ' + stage.stagiaire.utilisateur.nom}">
-                        </option>
-                    </select>
+        <section class="coach-grid-70">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Liste des évaluations</h2><p>Résultats enregistrés pour vos stagiaires</p></div><button class="coach-btn secondary compact" id="exportEvaluations" type="button"><i class="fa-solid fa-file-export"></i> Exporter</button></div>
+                <div class="coach-toolbar">
+                    <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="evaluationSearch" type="search" placeholder="Stagiaire ou critère..."></label>
+                    <select id="evaluationStudent" class="coach-select"><option value="">Tous les stagiaires</option><option th:each="stage : ${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</option></select>
+                    <select id="evaluationService" class="coach-select"><option value="">Tous les services</option><option th:each="stage : ${mesStages}" th:if="${stage.service != null}" th:value="${#strings.toLowerCase(stage.service.nom)}" th:text="${stage.service.nom}">Service</option></select>
+                    <select id="evaluationPeriod" class="coach-select"><option value="">Toutes les périodes</option><option value="month">Ce mois</option><option value="year">Cette année</option></select>
+                    <select id="evaluationStatus" class="coach-select"><option value="">Tous les statuts</option><option value="validee">Validée</option><option value="revoir">À revoir</option></select>
                 </div>
-
-                <div class="groupe-champ">
-                    <label>Type d'evaluation</label>
-                    <select name="typeEvaluation" required>
-                        <option value="continue_">Evaluation continue</option>
-                        <option value="finale">Evaluation finale</option>
-                    </select>
-                </div>
-
-                <div class="groupe-champ">
-                    <label>Date</label>
-                    <input type="date" name="dateEvaluation"
-                           style="width:100%; padding:10px 14px; border:1px solid #d7dce3; border-radius:6px; font-size:14px;"
-                           required>
-                </div>
-
-                <table class="tableau-criteres">
-                    <thead>
-                        <tr>
-                            <th>Critere</th>
-                            <th>Note (/20)</th>
+                <div class="coach-table-wrap">
+                    <table class="coach-table" id="evaluationsTable">
+                        <thead><tr><th>Stagiaire</th><th>Service</th><th>Note</th><th>Critère principal</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr class="evaluation-row" th:each="evaluation : ${evaluations}"
+                            th:with="user=${evaluation.stage.stagiaire.utilisateur}, moyenne=${moyennesEvaluations[evaluation.id]}, service=${evaluation.stage.service != null ? evaluation.stage.service.nom : 'Non renseigné'}"
+                            th:attr="data-search=${#strings.toLowerCase(user.prenom + ' ' + user.nom + ' ' + (criteresPrincipaux[evaluation.id] != null ? criteresPrincipaux[evaluation.id] : '') + ' ' + service)},data-stage=${evaluation.stage.id},data-service=${#strings.toLowerCase(service)},data-status=${moyenne >= 10 ? 'validee' : 'revoir'},data-date=${evaluation.dateEvaluation},data-student=${user.prenom + ' ' + user.nom},data-score=${moyenne},data-type=${evaluation.typeEvaluation.name()},data-appreciation=${evaluation.appreciation},data-criterion=${criteresPrincipaux[evaluation.id] != null ? criteresPrincipaux[evaluation.id] : 'Non renseigné'}">
+                            <td><div class="coach-person"><span class="coach-avatar" th:text="${#strings.substring(user.prenom,0,1) + #strings.substring(user.nom,0,1)}">ST</span><div><strong th:text="${user.prenom + ' ' + user.nom}">Stagiaire</strong><small th:text="${evaluation.typeEvaluation.name() == 'finale' ? 'Évaluation finale' : 'Évaluation continue'}">Type</small></div></div></td>
+                            <td th:text="${service}">Service</td>
+                            <td><strong class="coach-mono" th:text="${moyenne + '/20'}">0/20</strong></td>
+                            <td th:text="${criteresPrincipaux[evaluation.id] != null ? criteresPrincipaux[evaluation.id] : 'Non renseigné'}">Critère</td>
+                            <td class="coach-mono" th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy')}">29/07/2026</td>
+                            <td><span class="coach-badge" th:classappend="${moyenne >= 10} ? ' green' : ' red'" th:text="${moyenne >= 10 ? 'Validée' : 'À revoir'}">Statut</span></td>
+                            <td><div class="coach-actions"><button class="coach-action evaluation-view" type="button" title="Voir les détails"><i class="fa-regular fa-eye"></i></button><button class="coach-action evaluation-comment" type="button" title="Voir le commentaire"><i class="fa-regular fa-comment"></i></button><button class="coach-action evaluation-print" type="button" title="Imprimer"><i class="fa-solid fa-file-pdf"></i></button></div></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="critere : ${criteres}">
-                            <td th:text="${critere.libelle}">-</td>
-                            <td>
-                                <input type="number" min="0" max="20" step="0.5"
-                                       th:name="'note_' + ${critere.id}"
-                                       placeholder="0">
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(criteres)}">
-                            <td colspan="2" style="color:#777;">
-                                Aucun critere defini. Ajoutez des criteres d'abord.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="groupe-champ">
-                    <label>Appreciation generale</label>
-                    <textarea name="appreciation"
-                              placeholder="Commentaire global sur le stagiaire..."></textarea>
+                        <tr th:if="${#lists.isEmpty(evaluations)}"><td colspan="7" class="coach-empty"><i class="fa-regular fa-star"></i><br><br>Aucune évaluation enregistrée pour le moment.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
+                <div class="coach-pagination"><span id="evaluationCount" th:text="${evaluationsTotales + ' évaluation(s)'}">0 évaluation</span><div class="coach-pages"><button type="button">‹</button><button class="active" type="button">1</button><button type="button">›</button></div></div>
+            </article>
 
-                <button type="submit" class="bouton-evaluer">Enregistrer l'evaluation</button>
-            </form>
+            <div style="display:grid;gap:18px;align-content:start">
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Répartition des notes</h2><p>Niveaux de performance</p></div></div>
+                    <div class="coach-donut-wrap">
+                        <div style="position:relative"><div class="coach-donut" th:style="'background:conic-gradient(#10b981 0 ' + ${(evaluationsTotales == 0 ? 0 : note18a20 * 100 / evaluationsTotales)} + '%,#4f46e5 ' + ${(evaluationsTotales == 0 ? 0 : note18a20 * 100 / evaluationsTotales)} + '% ' + ${(evaluationsTotales == 0 ? 0 : (note18a20 + note15a17) * 100 / evaluationsTotales)} + '%,#f59e0b ' + ${(evaluationsTotales == 0 ? 0 : (note18a20 + note15a17) * 100 / evaluationsTotales)} + '% ' + ${(evaluationsTotales == 0 ? 0 : (note18a20 + note15a17 + note10a14) * 100 / evaluationsTotales)} + '%,#ef4444 ' + ${(evaluationsTotales == 0 ? 0 : (note18a20 + note15a17 + note10a14) * 100 / evaluationsTotales)} + '% 100%)'"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${moyenneGenerale}">0</strong><span>Moyenne /20</span></div></div></div>
+                        <div class="coach-legend"><div><span><i style="background:#10b981"></i>18–20</span><b th:text="${note18a20}">0</b></div><div><span><i style="background:#4f46e5"></i>15–17</span><b th:text="${note15a17}">0</b></div><div><span><i style="background:#f59e0b"></i>10–14</span><b th:text="${note10a14}">0</b></div><div><span><i style="background:#ef4444"></i>&lt; 10</span><b th:text="${noteMoins10}">0</b></div></div>
+                    </div>
+                </article>
+
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Dernières évaluations</h2><p>Résultats les plus récents</p></div></div>
+                    <div class="coach-timeline">
+                        <div class="coach-timeline-item" th:each="evaluation, stat : ${evaluations}" th:if="${stat.index < 4}">
+                            <span class="coach-timeline-icon"><i class="fa-solid fa-star"></i></span>
+                            <div class="coach-timeline-content"><strong th:text="${evaluation.stage.stagiaire.utilisateur.prenom + ' ' + evaluation.stage.stagiaire.utilisateur.nom + ' — ' + moyennesEvaluations[evaluation.id] + '/20'}">Stagiaire</strong><span th:text="${evaluation.typeEvaluation.name() == 'finale' ? 'Évaluation finale' : 'Évaluation continue'}">Type</span><small class="coach-mono" th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy')}">Date</small></div>
+                        </div>
+                        <div class="coach-empty" th:if="${#lists.isEmpty(evaluations)}">Aucune évaluation récente.</div>
+                    </div>
+                </article>
+
+                <article class="coach-card">
+                    <div class="coach-card-head"><div><h2>Meilleurs stagiaires</h2><p>Classement selon la note obtenue</p></div></div>
+                    <div class="coach-ranking">
+                        <div class="coach-rank-row" th:each="evaluation, stat : ${meilleuresEvaluations}">
+                            <span class="coach-rank-number" th:text="${stat.index + 1}">1</span>
+                            <span class="coach-avatar" th:text="${#strings.substring(evaluation.stage.stagiaire.utilisateur.prenom,0,1) + #strings.substring(evaluation.stage.stagiaire.utilisateur.nom,0,1)}">ST</span>
+                            <div class="coach-rank-copy"><strong th:text="${evaluation.stage.stagiaire.utilisateur.prenom + ' ' + evaluation.stage.stagiaire.utilisateur.nom}">Stagiaire</strong><small th:text="${evaluation.stage.service != null ? evaluation.stage.service.nom : 'Service non renseigné'}">Service</small><div class="coach-progress" style="margin-top:5px"><span th:style="'width:' + ${moyennesEvaluations[evaluation.id] * 5} + '%'"></span></div></div>
+                            <b class="coach-mono" th:text="${moyennesEvaluations[evaluation.id] + '/20'}">0/20</b>
+                        </div>
+                        <div class="coach-empty" th:if="${#lists.isEmpty(meilleuresEvaluations)}">Classement indisponible.</div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="coach-grid-50">
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Historique des évaluations</h2><p>Décisions et appréciations récentes</p></div></div>
+                <div class="coach-timeline">
+                    <div class="coach-timeline-item" th:each="evaluation, stat : ${evaluations}" th:if="${stat.index < 5}">
+                        <span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span>
+                        <div class="coach-timeline-content"><strong th:text="${'Évaluation enregistrée pour ' + evaluation.stage.stagiaire.utilisateur.prenom + ' ' + evaluation.stage.stagiaire.utilisateur.nom}">Évaluation</strong><span th:text="${evaluation.appreciation != null && !evaluation.appreciation.isBlank() ? evaluation.appreciation : 'Aucune appréciation renseignée'}">Appréciation</span><small class="coach-mono" th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy')}">Date</small></div>
+                    </div>
+                    <div class="coach-empty" th:if="${#lists.isEmpty(evaluations)}">Aucun historique disponible.</div>
+                </div>
+            </article>
+            <article class="coach-card">
+                <div class="coach-card-head"><div><h2>Critères d’évaluation</h2><p>Moyenne obtenue par critère</p></div></div>
+                <div class="coach-bars">
+                    <div th:each="entry : ${moyennesCriteres}"><div class="coach-bar-head"><span th:text="${entry.key}">Critère</span><b class="coach-mono" th:text="${entry.value + '/20'}">0/20</b></div><div class="coach-bar-track"><span th:style="'width:' + ${entry.value * 5} + '%'"></span></div></div>
+                    <div class="coach-empty" th:if="${#maps.isEmpty(moyennesCriteres)}">Aucune note disponible par critère.</div>
+                </div>
+            </article>
+        </section>
+    </main>
+</div>
+
+<div class="coach-modal" id="newEvaluationModal">
+    <form class="coach-modal-panel" th:action="@{/encadreur/evaluations/creer}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="coach-card-head"><div><h2>Nouvelle évaluation</h2><p>Renseignez les résultats du stagiaire</p></div><button class="coach-action" data-close-evaluation type="button"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="coach-form-grid">
+            <div class="coach-form-group"><label>Stagiaire</label><select class="coach-select" name="stageId" required><option value="">Sélectionner</option><option th:each="stage : ${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</option></select></div>
+            <div class="coach-form-group"><label>Type d’évaluation</label><select class="coach-select" name="typeEvaluation" required><option value="continue_">Évaluation continue</option><option value="finale">Évaluation finale</option></select></div>
+            <div class="coach-form-group"><label>Date</label><input class="coach-input" type="date" name="dateEvaluation" th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}" required></div>
+            <div class="coach-form-group"><label>Référence</label><input class="coach-input coach-mono" value="Générée automatiquement" disabled></div>
+            <div class="coach-form-group full">
+                <label>Notes par critère</label>
+                <div class="coach-table-wrap"><table class="coach-table" style="min-width:0"><thead><tr><th>Critère</th><th>Note /20</th></tr></thead><tbody><tr th:each="critere : ${criteres}"><td><strong th:text="${critere.libelle}">Critère</strong><small style="display:block;color:#94a3b8;margin-top:3px" th:text="${critere.description}">Description</small></td><td><input class="coach-input coach-mono" type="number" min="0" max="20" step="0.5" th:name="'note_' + ${critere.id}" required></td></tr><tr th:if="${#lists.isEmpty(criteres)}"><td colspan="2" class="coach-empty">Aucun critère défini.</td></tr></tbody></table></div>
+            </div>
+            <div class="coach-form-group full"><label>Appréciation générale et recommandations</label><textarea class="coach-textarea" name="appreciation" placeholder="Points forts, axes d’amélioration et recommandations..."></textarea></div>
         </div>
+        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-evaluation type="button">Annuler</button><button class="coach-btn" type="submit"><i class="fa-solid fa-check"></i> Enregistrer</button></div>
+    </form>
+</div>
 
-        <!-- Liste des evaluations existantes -->
-        <div class="bloc-evaluation">
-            <h2>Evaluations enregistrees</h2>
-            <ul class="liste-evaluations">
-                <li th:each="eval : ${evaluations}">
-                    <div style="font-weight:bold;"
-                         th:text="${eval.typeEvaluation + ' - ' + eval.dateEvaluation}"></div>
-                    <div style="color:#777; font-size:13px; margin-top:4px;"
-                         th:text="${eval.appreciation != null ? eval.appreciation : 'Pas d appreciation'}"></div>
-                </li>
-                <li th:if="${#lists.isEmpty(evaluations)}"
-                    style="color:#777;">
-                    Aucune evaluation pour le moment.
-                </li>
-            </ul>
-        </div>
-
+<div class="coach-modal" id="evaluationDetailModal">
+    <div class="coach-modal-panel">
+        <div class="coach-card-head"><div><h2>Détails de l’évaluation</h2><p id="detailEvaluationType">Évaluation</p></div><button class="coach-action" data-close-detail type="button"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="coach-profile" style="margin-bottom:16px"><span class="coach-avatar"><i class="fa-solid fa-user-graduate"></i></span><h3 id="detailEvaluationStudent">Stagiaire</h3><p id="detailEvaluationScore" class="coach-mono">0/20</p></div>
+        <div class="coach-data-list"><div class="coach-data-row"><span>Critère principal</span><strong id="detailEvaluationCriterion">—</strong></div><div class="coach-data-row"><span>Date</span><strong id="detailEvaluationDate" class="coach-mono">—</strong></div><div class="coach-data-row"><span>Statut</span><strong id="detailEvaluationStatus">—</strong></div><div class="coach-data-row"><span>Appréciation</span><strong id="detailEvaluationComment">—</strong></div></div>
+        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-detail type="button">Fermer</button><button class="coach-btn" onclick="window.print()" type="button"><i class="fa-solid fa-file-pdf"></i> Imprimer</button></div>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const creation = document.getElementById('newEvaluationModal');
+    document.querySelectorAll('[data-open-evaluation]').forEach(button => button.addEventListener('click', () => creation.classList.add('open')));
+    document.querySelectorAll('[data-close-evaluation]').forEach(button => button.addEventListener('click', () => creation.classList.remove('open')));
+
+    const rows = [...document.querySelectorAll('.evaluation-row')];
+    const search = document.getElementById('evaluationSearch');
+    const globalSearch = document.getElementById('globalEvaluationSearch');
+    const student = document.getElementById('evaluationStudent');
+    const service = document.getElementById('evaluationService');
+    const period = document.getElementById('evaluationPeriod');
+    const status = document.getElementById('evaluationStatus');
+    const count = document.getElementById('evaluationCount');
+    const now = new Date();
+    const filter = () => {
+        const query = (search.value || globalSearch.value).toLowerCase();
+        let visible = 0;
+        rows.forEach(row => {
+            const date = new Date(row.dataset.date + 'T00:00:00');
+            const periodMatches = !period.value || (period.value === 'month' && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) || (period.value === 'year' && date.getFullYear() === now.getFullYear());
+            const show = (!query || row.dataset.search.includes(query)) && (!student.value || row.dataset.stage === student.value) && (!service.value || row.dataset.service === service.value) && (!status.value || row.dataset.status === status.value) && periodMatches;
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        count.textContent = visible + ' évaluation(s) affichée(s)';
+    };
+    [search, globalSearch].forEach(input => input.addEventListener('input', filter));
+    [student, service, period, status].forEach(select => select.addEventListener('change', filter));
+
+    const detail = document.getElementById('evaluationDetailModal');
+    const openDetail = row => {
+        document.getElementById('detailEvaluationStudent').textContent = row.dataset.student;
+        document.getElementById('detailEvaluationScore').textContent = row.dataset.score + '/20';
+        document.getElementById('detailEvaluationType').textContent = row.dataset.type === 'finale' ? 'Évaluation finale' : 'Évaluation continue';
+        document.getElementById('detailEvaluationCriterion').textContent = row.dataset.criterion;
+        document.getElementById('detailEvaluationDate').textContent = row.cells[4].innerText;
+        document.getElementById('detailEvaluationStatus').textContent = row.dataset.status === 'validee' ? 'Validée' : 'À revoir';
+        document.getElementById('detailEvaluationComment').textContent = row.dataset.appreciation || 'Aucune appréciation renseignée';
+        detail.classList.add('open');
+    };
+    rows.forEach(row => {
+        row.querySelector('.evaluation-view').addEventListener('click', () => openDetail(row));
+        row.querySelector('.evaluation-comment').addEventListener('click', () => openDetail(row));
+        row.querySelector('.evaluation-print').addEventListener('click', () => { openDetail(row); setTimeout(() => window.print(), 150); });
+    });
+    document.querySelectorAll('[data-close-detail]').forEach(button => button.addEventListener('click', () => detail.classList.remove('open')));
+
+    document.getElementById('exportEvaluations').addEventListener('click', () => {
+        const lines = [];
+        lines.push(['Stagiaire','Service','Note','Critère principal','Date','Statut']);
+        rows.filter(row => row.style.display !== 'none').forEach(row => lines.push([...row.cells].slice(0, 6).map(cell => cell.innerText.replace(/\s+/g, ' ').trim())));
+        const csv = lines.map(line => line.map(value => '"' + value.replace(/"/g, '""') + '"').join(';')).join('\n');
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'}));
+        link.download = 'evaluations-encadreur.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+});
+</script>
 </body>
 </html>

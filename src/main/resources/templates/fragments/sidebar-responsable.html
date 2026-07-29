@@ -2,28 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+<aside th:fragment="sidebar" class="barre-laterale portal-sidebar responsable-sidebar">
+    <div class="responsable-sidebar-brand">
+        <div class="responsable-sidebar-logo">D</div>
+        <div><strong>DTA Stages</strong><span>Gestion des stages</span></div>
+    </div>
 
-<div th:fragment="sidebar" class="barre-laterale portal-sidebar">
-    <div class="logo-app">DTA Alliance</div>
-    <div class="sidebar-role">Responsable</div>
-    <nav>
-        <a th:href="@{/responsable/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_DEMANDES_STAGE')" th:href="@{/responsable/demandes}" th:classappend="${activePage == 'demandes'} ? ' actif'"><i class="fa-solid fa-file-lines"></i> Demandes</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/responsable/stagiaires}" th:classappend="${activePage == 'stagiaires'} ? ' actif'"><i class="fa-solid fa-users"></i> Stagiaires</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_DOSSIERS')" th:href="@{/responsable/dossiers}" th:classappend="${activePage == 'dossiers'} ? ' actif'"><i class="fa-solid fa-folder-open"></i> Dossiers</a>
-        <a sec:authorize="hasAuthority('PERM_CLOTURER_STAGES')" th:href="@{/responsable/cloture}" th:classappend="${activePage == 'cloture'} ? ' actif'"><i class="fa-solid fa-circle-check"></i> Clôture</a>
-        <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')" th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
-        <a th:href="@{/responsable/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Mon profil</a>
+    <div class="responsable-sidebar-role">
+        <span>Espace de travail</span>
+        <strong>Responsable</strong>
+    </div>
+
+    <nav class="responsable-sidebar-nav" aria-label="Navigation responsable">
+        <span class="responsable-nav-label">Pilotage</span>
+        <a th:href="@{/responsable/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'">
+            <i data-lucide="layout-dashboard"></i><span>Tableau de bord</span>
+        </a>
+        <a sec:authorize="hasAuthority('PERM_GERER_DEMANDES_STAGE')" th:href="@{/responsable/demandes}"
+           th:classappend="${activePage == 'demandes'} ? ' actif'">
+            <i data-lucide="files"></i><span>Demandes</span>
+        </a>
+        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/responsable/stagiaires}"
+           th:classappend="${activePage == 'stagiaires'} ? ' actif'">
+            <i data-lucide="graduation-cap"></i><span>Stagiaires</span>
+        </a>
+        <a sec:authorize="hasAuthority('PERM_GERER_DOSSIERS')" th:href="@{/responsable/dossiers}"
+           th:classappend="${activePage == 'dossiers'} ? ' actif'">
+            <i data-lucide="folder-open"></i><span>Dossiers</span>
+        </a>
+
+        <span class="responsable-nav-label">Organisation</span>
+        <a sec:authorize="hasAuthority('PERM_CLOTURER_STAGES')" th:href="@{/responsable/cloture}"
+           th:classappend="${activePage == 'cloture'} ? ' actif'">
+            <i data-lucide="circle-check-big"></i><span>Clôture des stages</span>
+        </a>
+        <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')"
+           th:href="@{/responsable/planning}" th:classappend="${activePage == 'planning'} ? ' actif'">
+            <i data-lucide="calendar-days"></i><span>Planning</span>
+        </a>
+        <a th:href="@{/responsable/profil}" th:classappend="${activePage == 'profil'} ? ' actif'">
+            <i data-lucide="user-round"></i><span>Mon profil</span>
+        </a>
     </nav>
-    <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
-    <div class="sidebar-profile-card"><div class="avatar">R</div><div class="info"><div class="name">Responsable</div><div class="badge-online">En ligne</div></div></div>
-    <div class="sidebar-user">
-        <form th:action="@{/logout}" method="post" class="logout-form">
+
+    <div class="responsable-sidebar-footer">
+        <div class="responsable-sidebar-user">
+            <div class="responsable-avatar">RC</div>
+            <div><strong sec:authentication="name">Responsable</strong><span>Compte actif</span></div>
+        </div>
+        <form th:action="@{/logout}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+            <button type="submit" title="Déconnexion"><i data-lucide="log-out"></i></button>
         </form>
     </div>
-</div>
-
+</aside>
 </body>
 </html>

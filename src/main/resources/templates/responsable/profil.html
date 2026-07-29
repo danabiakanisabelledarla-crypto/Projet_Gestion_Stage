@@ -1,12 +1,152 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mon profil - Responsable</title><link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/responsable-premium.css}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></head>
-<body><div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div><main class="contenu-principal responsable-main"><div th:replace="~{fragments/header-responsable :: header}"></div><div class="rp-page">
-<header class="rp-heading"><div class="rp-heading-main"><div class="rp-heading-icon"><i class="fa-regular fa-user"></i></div><div><div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Mon Profil</div><h1>Mon Profil</h1><p>Consultez et mettez à jour vos informations personnelles et professionnelles.</p></div></div><button class="rp-primary" id="focusProfile"><i class="fa-regular fa-pen-to-square"></i>Modifier le profil</button></header><div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
-<section class="rp-kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))"><article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-user-graduate"></i></div><div class="rp-kpi-value" th:text="${stagiairesSuivis}">0</div><div class="rp-kpi-label">Stagiaires suivis</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-briefcase"></i></div><div class="rp-kpi-value" th:text="${stagesGeres}">0</div><div class="rp-kpi-label">Stages gérés</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-medal"></i></div><div class="rp-kpi-value" th:text="${anciennete}">1</div><div class="rp-kpi-label">Années d'expérience</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-solid fa-arrow-right-to-bracket"></i></div><div class="rp-kpi-value" style="font-size:18px">Aujourd'hui</div><div class="rp-kpi-label">Dernière connexion</div></article></section>
-<section class="rp-grid-35"><aside class="rp-card rp-profile-card"><div class="rp-avatar" th:text="${#strings.substring(responsable.prenom,0,1)+#strings.substring(responsable.nom,0,1)}">RA</div><h2 th:text="${responsable.prenom+' '+responsable.nom}">Responsable</h2><p>Responsable des stages</p><span class="rp-badge green">Actif</span><div class="rp-data"><div class="rp-data-row"><span>Service</span><strong>Gestion des stages</strong></div><div class="rp-data-row"><span>Email</span><strong th:text="${responsable.email}">Email</strong></div><div class="rp-data-row"><span>Téléphone</span><strong th:text="${responsable.telephone ?: 'Non renseigné'}">Téléphone</strong></div></div><button class="rp-secondary" style="width:100%"><i class="fa-solid fa-camera"></i>Modifier la photo</button></aside>
-<div><article class="rp-card" id="profileForm"><div class="rp-card-head"><div><h2>Informations personnelles</h2><p>Coordonnées et informations professionnelles</p></div></div><form th:action="@{/responsable/profil/modifier}" method="post"><div class="rp-form-grid"><div class="rp-field"><label>Nom</label><input class="rp-input" name="nom" th:value="${responsable.nom}" required></div><div class="rp-field"><label>Prénom</label><input class="rp-input" name="prenom" th:value="${responsable.prenom}" required></div><div class="rp-field"><label>Email</label><input class="rp-input" type="email" name="email" th:value="${responsable.email}" required></div><div class="rp-field"><label>Téléphone</label><input class="rp-input" name="telephone" th:value="${responsable.telephone}"></div><div class="rp-field full"><label>Adresse</label><input class="rp-input" name="adresse" th:value="${responsable.adresse}"></div><div class="rp-field"><label>Service</label><input class="rp-input" value="Gestion des stages" disabled></div><div class="rp-field"><label>Fonction</label><input class="rp-input" value="Responsable des stages" disabled></div></div><div class="rp-modal-actions"><button class="rp-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i>Enregistrer les modifications</button></div></form></article>
-<article class="rp-card" style="margin-top:18px"><div class="rp-card-head"><div><h2>Sécurité du compte</h2><p>Contrôlez l'accès à votre espace Responsable</p></div></div><div class="rp-data"><a class="rp-data-row" th:href="@{/profil/mot-de-passe}" style="text-decoration:none"><span>Modifier le mot de passe</span><strong><i class="fa-solid fa-chevron-right"></i></strong></a><div class="rp-data-row"><span>Authentification à deux facteurs (2FA)</span><strong><span class="rp-badge orange">Non activée</span></strong></div><div class="rp-data-row"><span>Dernière connexion</span><strong>Aujourd'hui</strong></div><div class="rp-data-row"><span>Appareils connectés</span><strong>1 appareil</strong></div></div></article></div></section>
-<section class="rp-grid-50"><article class="rp-card"><div class="rp-card-head"><div><h2>Activités récentes</h2><p>Historique du compte</p></div></div><div class="rp-timeline"><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Connexion au compte</strong><span>Aujourd'hui · Espace Responsable</span></div><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Modification du profil</strong><span>Informations personnelles actualisées</span></div><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Gestion d'un stage</strong><span>Affectation ou suivi effectué</span></div><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Validation d'un dossier</strong><span>Contrôle documentaire enregistré</span></div></div></article><article class="rp-card"><div class="rp-card-head"><div><h2>Informations professionnelles</h2><p>Résumé de votre activité</p></div></div><div class="rp-data"><div class="rp-data-row"><span>Stagiaires suivis</span><strong th:text="${stagiairesSuivis}">0</strong></div><div class="rp-data-row"><span>Stages clôturés</span><strong th:text="${stagesClotures}">0</strong></div><div class="rp-data-row"><span>Ancienneté</span><strong th:text="${anciennete+' an(s)'}">1 an</strong></div><div class="rp-data-row"><span>Date de création du compte</span><strong th:text="${responsable.dateCreation != null ? #temporals.format(responsable.dateCreation,'dd/MM/yyyy') : 'Non disponible'}">Date</strong></div></div></article></section>
-<article class="rp-card"><div class="rp-card-head"><div><h2>Actions rapides</h2><p>Gérer votre compte et vos données</p></div></div><div class="rp-quick"><button id="quickEdit"><i class="fa-regular fa-pen-to-square"></i>Modifier le profil</button><a th:href="@{/profil/mot-de-passe}"><i class="fa-solid fa-key"></i>Changer le mot de passe</a><button><i class="fa-solid fa-camera"></i>Mettre à jour la photo</button><button><i class="fa-solid fa-shield-halved"></i>Activer le 2FA</button><button><i class="fa-solid fa-download"></i>Télécharger les informations du compte</button></div></article>
-</div></main><script>const focus=()=>document.getElementById('profileForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('focusProfile').onclick=focus;document.getElementById('quickEdit').onclick=focus;</script></body></html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mon profil - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<main class="contenu-principal responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main">
+                <div class="rp-heading-icon"><i class="fa-regular fa-user"></i></div>
+                <div>
+                    <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Mon Profil</div>
+                    <h1>Mon Profil</h1>
+                    <p>Gérez vos informations personnelles et vos préférences.</p>
+                </div>
+            </div>
+            <div class="rp-actions">
+                <button class="rp-primary" id="focusProfile" type="button"><i class="fa-regular fa-pen-to-square"></i> Modifier le profil</button>
+            </div>
+        </header>
+
+        <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
+
+        <article class="rp-card rp-profile-overview">
+            <div class="rp-profile-identity">
+                <div class="rp-profile-photo" th:text="${#strings.substring(responsable.prenom,0,1)+#strings.substring(responsable.nom,0,1)}">RC</div>
+                <div>
+                    <span class="rp-badge green">Compte vérifié</span>
+                    <h2 th:text="${'Responsable '+responsable.prenom+' '+responsable.nom}">Responsable Claire Dupont</h2>
+                    <p>Responsable des stages · Direction des stages</p>
+                    <div class="rp-profile-meta">
+                        <span><i class="fa-regular fa-envelope"></i><b th:text="${responsable.email}">email@dta.cm</b></span>
+                        <span><i class="fa-solid fa-phone"></i><b th:text="${responsable.telephone ?: 'Non renseigné'}">Téléphone</b></span>
+                        <span><i class="fa-regular fa-calendar"></i><b th:text="${responsable.dateCreation != null ? #temporals.format(responsable.dateCreation,'dd/MM/yyyy') : 'Non disponible'}">Date</b></span>
+                    </div>
+                </div>
+            </div>
+            <div class="rp-profile-actions">
+                <button class="rp-secondary" id="overviewEdit" type="button"><i class="fa-regular fa-pen-to-square"></i> Modifier</button>
+                <a class="rp-secondary" th:href="@{/profil/mot-de-passe}"><i class="fa-solid fa-key"></i> Mot de passe</a>
+            </div>
+        </article>
+
+        <section class="rp-kpis rp-kpis-four">
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-user-graduate"></i></div><div class="rp-kpi-value" th:text="${stagiairesSuivis}">68</div><div class="rp-kpi-label">Stagiaires supervisés</div><span class="rp-trend up">+8%</span><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#2563eb" stroke-width="2" points="0,20 12,16 24,18 36,10 48,12 60,5 70,7"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-regular fa-file-circle-check"></i></div><div class="rp-kpi-value" th:text="${rapportsValides}">0</div><div class="rp-kpi-label">Rapports validés</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#22c55e" stroke-width="2" points="0,21 12,17 24,14 36,16 48,9 60,8 70,3"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-people-group"></i></div><div class="rp-kpi-value" th:text="${reunionsOrganisees}">0</div><div class="rp-kpi-label">Réunions organisées</div><svg class="rp-spark" viewBox="0 0 70 25"><polyline fill="none" stroke="#8b5cf6" stroke-width="2" points="0,18 12,19 24,13 36,14 48,8 60,10 70,5"/></svg></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-solid fa-chart-line"></i></div><div class="rp-kpi-value" th:text="${tauxSuivi+'%'}">0%</div><div class="rp-kpi-label">Taux de suivi</div><div class="rp-progress" style="margin-top:12px"><span th:style="'width:'+${tauxSuivi}+'%'"></span></div></article>
+        </section>
+
+        <section class="rp-profile-columns">
+            <div class="rp-profile-left">
+                <article class="rp-card" id="profileForm">
+                    <div class="rp-card-head"><div><h2>Informations personnelles</h2><p>Coordonnées et informations professionnelles</p></div><span class="rp-badge blue">Modifiable</span></div>
+                    <form th:action="@{/responsable/profil/modifier}" method="post">
+                        <div class="rp-form-grid">
+                            <div class="rp-field"><label>Nom complet</label><input class="rp-input" name="nom" th:value="${responsable.nom}" required></div>
+                            <div class="rp-field"><label>Prénom</label><input class="rp-input" name="prenom" th:value="${responsable.prenom}" required></div>
+                            <div class="rp-field"><label>Adresse email</label><input class="rp-input" type="email" name="email" th:value="${responsable.email}" required></div>
+                            <div class="rp-field"><label>Téléphone</label><input class="rp-input" name="telephone" th:value="${responsable.telephone}"></div>
+                            <div class="rp-field"><label>Sexe</label><select class="rp-select"><option>Non renseigné</option><option>Femme</option><option>Homme</option></select></div>
+                            <div class="rp-field"><label>Date de naissance</label><input class="rp-input" type="date"></div>
+                            <div class="rp-field full"><label>Adresse</label><input class="rp-input" name="adresse" th:value="${responsable.adresse}"></div>
+                            <div class="rp-field"><label>Département</label><input class="rp-input" value="Direction des stages" disabled></div>
+                            <div class="rp-field"><label>Fonction</label><input class="rp-input" value="Responsable des stages" disabled></div>
+                        </div>
+                        <div class="rp-modal-actions"><button class="rp-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications</button></div>
+                    </form>
+                </article>
+
+                <article class="rp-card">
+                    <div class="rp-card-head"><div><h2>Sécurité du compte</h2><p>Accès, authentification et sessions</p></div><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="rp-data">
+                        <div class="rp-data-row"><span>Session actuelle</span><strong th:text="${#temporals.format(dateCourante,'dd/MM/yyyy')}">Date</strong></div>
+                        <div class="rp-data-row"><span>Mot de passe</span><strong>••••••••••••</strong></div>
+                        <div class="rp-data-row"><span>Authentification à deux facteurs</span><strong><span class="rp-badge orange">Non activée</span></strong></div>
+                        <div class="rp-data-row"><span>Sessions actives</span><strong>1 appareil</strong></div>
+                    </div>
+                    <div class="rp-actions">
+                        <a class="rp-primary" th:href="@{/profil/mot-de-passe}"><i class="fa-solid fa-key"></i> Changer le mot de passe</a>
+                        <button class="rp-secondary" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnecter les sessions</button>
+                    </div>
+                </article>
+            </div>
+
+            <aside class="rp-profile-right">
+                <article class="rp-card">
+                    <div class="rp-card-head"><div><h2>Activité récente</h2><p>Dernières opérations du compte</p></div></div>
+                    <div class="rp-timeline"><div class="rp-timeline-item" th:each="a:${activitesProfil}"><i class="rp-timeline-dot"></i><strong th:text="${a.objet}">Activité</strong><span th:text="${a.message}">Détail</span></div><div class="rp-empty" th:if="${#lists.isEmpty(activitesProfil)}">Aucune activité récente.</div></div>
+                </article>
+
+                <article class="rp-card">
+                    <div class="rp-card-head"><div><h2>Répartition des activités</h2><p>Volume par catégorie</p></div></div>
+                    <div class="rp-profile-donut"><canvas id="profileActivityChart" th:data-reports="${rapportsValides}" th:data-meetings="${reunionsOrganisees}" th:data-supervision="${stagiairesSuivis}" th:data-closures="${stagesClotures}"></canvas></div>
+                    <div class="rp-legend rp-legend-compact">
+                        <div class="rp-legend-row"><span><i style="background:#4f46e5"></i>Validation rapports</span><strong th:text="${rapportsValides}">0</strong></div>
+                        <div class="rp-legend-row"><span><i style="background:#22c55e"></i>Réunions</span><strong th:text="${reunionsOrganisees}">0</strong></div>
+                        <div class="rp-legend-row"><span><i style="background:#06b6d4"></i>Encadrement</span><strong th:text="${stagiairesSuivis}">0</strong></div>
+                        <div class="rp-legend-row"><span><i style="background:#f59e0b"></i>Clôtures</span><strong th:text="${stagesClotures}">0</strong></div>
+                    </div>
+                </article>
+
+                <article class="rp-card">
+                    <div class="rp-card-head"><div><h2>Compétences et responsabilités</h2><p>Périmètre fonctionnel</p></div></div>
+                    <div class="rp-skills"><span>Gestion des stages</span><span>Encadrement</span><span>Évaluation</span><span>Validation</span><span>Planification</span><span>Reporting</span></div>
+                </article>
+            </aside>
+        </section>
+
+        <section class="rp-grid-60">
+            <article class="rp-card">
+                <div class="rp-card-head"><div><h2>Historique de connexion</h2><p>Connexions récentes à votre compte</p></div><button class="rp-secondary" type="button"><i class="fa-solid fa-download"></i> Exporter</button></div>
+                <div class="rp-table-wrap">
+                    <table class="rp-table">
+                        <thead><tr><th>Date</th><th>Heure</th><th>Appareil</th><th>Localisation</th><th>Statut</th></tr></thead>
+                        <tbody>
+                        <tr><td th:text="${#temporals.format(dateCourante,'dd/MM/yyyy')}">Date</td><td>Session active</td><td>Navigateur actuel</td><td>Non enregistrée</td><td><span class="rp-badge green">Connectée</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+            <article class="rp-card">
+                <div class="rp-card-head"><div><h2>Préférences</h2><p>Personnalisez les alertes de votre espace</p></div></div>
+                <div class="rp-preferences">
+                    <label><span><i class="fa-regular fa-envelope"></i>Notifications email</span><input type="checkbox" checked><i></i></label>
+                    <label><span><i class="fa-regular fa-bell"></i>Notifications système</span><input type="checkbox" checked><i></i></label>
+                    <label><span><i class="fa-regular fa-moon"></i>Mode sombre</span><input type="checkbox"><i></i></label>
+                    <label><span><i class="fa-solid fa-graduation-cap"></i>Alertes de soutenance</span><input type="checkbox" checked><i></i></label>
+                    <label><span><i class="fa-regular fa-file-lines"></i>Alertes de rapport</span><input type="checkbox" checked><i></i></label>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+<script>
+const focusProfile=()=>document.getElementById('profileForm').scrollIntoView({behavior:'smooth',block:'start'});
+document.getElementById('focusProfile').onclick=focusProfile;
+document.getElementById('overviewEdit').onclick=focusProfile;
+const profileActivityChart=document.getElementById('profileActivityChart');
+new Chart(profileActivityChart,{type:'doughnut',data:{labels:['Validation rapports','Réunions','Encadrement','Clôtures'],datasets:[{data:[Number(profileActivityChart.dataset.reports),Number(profileActivityChart.dataset.meetings),Number(profileActivityChart.dataset.supervision),Number(profileActivityChart.dataset.closures)],backgroundColor:['#4f46e5','#22c55e','#06b6d4','#f59e0b'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false}}}});
+</script>
+</body>
+</html>

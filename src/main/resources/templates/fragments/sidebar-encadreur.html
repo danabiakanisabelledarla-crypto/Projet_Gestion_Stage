@@ -2,25 +2,95 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+<th:block th:fragment="sidebar">
+    <button class="workspace-menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="workspace-sidebar-overlay"></div>
+    <aside class="barre-laterale portal-sidebar workspace-sidebar encadreur-sidebar">
+        <a class="workspace-sidebar-brand" th:href="@{/encadreur/dashboard}">
+            <div class="workspace-sidebar-logo">D</div>
+            <div><strong>DTA Stages</strong><span>Gestion des stages</span></div>
+        </a>
 
-<div th:fragment="sidebar" class="barre-laterale portal-sidebar">
-    <div class="logo-app">DTA Alliance</div>
-    <div class="sidebar-role">Encadreur</div>
-    <nav>
-        <a th:href="@{/encadreur/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/mes-stagiaires}" th:classappend="${activePage == 'mes-stagiaires'} ? ' actif'"><i class="fa-solid fa-user-graduate"></i> Mes stagiaires</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/objectifs}" th:classappend="${activePage == 'objectifs'} ? ' actif'"><i class="fa-solid fa-bullseye"></i> Objectifs</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/taches}" th:classappend="${activePage == 'taches'} ? ' actif'"><i class="fa-solid fa-list-check"></i> Tâches</a>
-        <a sec:authorize="hasAuthority('PERM_CONSULTER_RAPPORTS')" th:href="@{/encadreur/livrables}" th:classappend="${activePage == 'livrables'} ? ' actif'"><i class="fa-solid fa-file-arrow-up"></i> Livrables et rapports</a>
-        <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/evaluations}" th:classappend="${activePage == 'evaluations'} ? ' actif'"><i class="fa-solid fa-star"></i> Évaluations</a>
-        <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')" th:href="@{/encadreur/planning}" th:classappend="${activePage == 'planning'} ? ' actif'"><i class="fa-solid fa-calendar"></i> Planning</a>
-        <a sec:authorize="hasAnyAuthority('PERM_ENVOYER_NOTIFICATIONS','PERM_GERER_NOTIFICATIONS')" th:href="@{/encadreur/messagerie}" th:classappend="${activePage == 'messagerie'} ? ' actif'"><i class="fa-solid fa-comments"></i> Messagerie</a>
-        <a th:href="@{/profil}" th:classappend="${activePage == 'profil'} ? ' actif'"><i class="fa-solid fa-user"></i> Profil</a>
-    </nav>
-    <img class="sidebar-deco" th:src="@{/images/hero-background.png}" alt="">
-    <div class="sidebar-profile-card"><div class="avatar">E</div><div class="info"><div class="name">Encadreur</div><div class="badge-online">En ligne</div></div></div>
-    <div th:replace="~{fragments/sidebar-user :: sidebar-user}"></div>
-</div>
+        <div class="workspace-sidebar-role">
+            <span>Espace de travail</span>
+            <strong>Encadreur</strong>
+        </div>
 
+        <nav class="workspace-sidebar-nav" aria-label="Navigation encadreur">
+            <span class="workspace-nav-label">Pilotage</span>
+            <a th:href="@{/encadreur/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' actif'">
+                <i class="fa-solid fa-table-columns"></i><span>Tableau de bord</span>
+            </a>
+            <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/mes-stagiaires}"
+               th:classappend="${activePage == 'mes-stagiaires'} ? ' actif'">
+                <i class="fa-solid fa-graduation-cap"></i><span>Mes stagiaires</span>
+            </a>
+
+            <span class="workspace-nav-label">Suivi opérationnel</span>
+            <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/objectifs}"
+               th:classappend="${activePage == 'objectifs'} ? ' actif'">
+                <i class="fa-solid fa-bullseye"></i><span>Objectifs</span>
+            </a>
+            <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/taches}"
+               th:classappend="${activePage == 'taches'} ? ' actif'">
+                <i class="fa-solid fa-list-check"></i><span>Tâches</span>
+            </a>
+            <a sec:authorize="hasAuthority('PERM_CONSULTER_RAPPORTS')" th:href="@{/encadreur/livrables}"
+               th:classappend="${activePage == 'livrables'} ? ' actif'">
+                <i class="fa-regular fa-folder-open"></i><span>Livrables</span>
+            </a>
+            <a sec:authorize="hasAuthority('PERM_GERER_STAGIAIRES')" th:href="@{/encadreur/evaluations}"
+               th:classappend="${activePage == 'evaluations'} ? ' actif'">
+                <i class="fa-regular fa-star"></i><span>Évaluations</span>
+            </a>
+
+            <span class="workspace-nav-label">Organisation</span>
+            <a sec:authorize="hasAnyAuthority('PERM_CONSULTER_PLANNING','PERM_GERER_PLANNING')"
+               th:href="@{/encadreur/planning}" th:classappend="${activePage == 'planning'} ? ' actif'">
+                <i class="fa-regular fa-calendar-days"></i><span>Planning</span>
+            </a>
+            <a sec:authorize="hasAnyAuthority('PERM_ENVOYER_NOTIFICATIONS','PERM_GERER_NOTIFICATIONS')"
+               th:href="@{/encadreur/messagerie}" th:classappend="${activePage == 'messagerie'} ? ' actif'">
+                <i class="fa-regular fa-comments"></i><span>Messagerie</span>
+            </a>
+            <a th:href="@{/encadreur/profil}" th:classappend="${activePage == 'profil'} ? ' actif'">
+                <i class="fa-regular fa-user"></i><span>Mon profil</span>
+            </a>
+        </nav>
+
+        <div class="workspace-sidebar-footer">
+            <div class="workspace-sidebar-user">
+                <div class="workspace-avatar" th:text="${initiales != null ? initiales : 'EN'}">EN</div>
+                <div><strong th:text="${nomComplet != null ? nomComplet : 'Encadreur'}">Encadreur</strong><span>Compte actif</span></div>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" title="Déconnexion"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </form>
+        </div>
+    </aside>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const button = document.querySelector('.workspace-menu-toggle');
+            const sidebar = document.querySelector('.workspace-sidebar');
+            const overlay = document.querySelector('.workspace-sidebar-overlay');
+            if (!button || !sidebar || !overlay) return;
+            const close = () => {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('visible');
+                button.setAttribute('aria-expanded', 'false');
+            };
+            button.addEventListener('click', () => {
+                const open = sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('visible', open);
+                button.setAttribute('aria-expanded', String(open));
+            });
+            overlay.addEventListener('click', close);
+            sidebar.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
+        });
+    </script>
+</th:block>
 </body>
 </html>

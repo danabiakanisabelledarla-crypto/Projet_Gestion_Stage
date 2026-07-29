@@ -459,6 +459,18 @@ public class AdminController {
         List<Stage> tousStages = stageRepository.findAll();
         List<ServiceEntreprise> tousServices = serviceRepository.findAll();
         List<Encadreur> tousEncadreurs = encadreurRepository.findAll();
+        LocalDate aujourdHui = LocalDate.now();
+        for (Stage stage : tousStages) {
+            if (stage.getDateFin() != null && !stage.getDateFin().isAfter(aujourdHui)
+                    && stage.getStatut() != Stage.StatutStage.termine) {
+                stage.setStatut(Stage.StatutStage.termine);
+                stageRepository.save(stage);
+                stage.getStagiaire().setStatut(Stagiaire.StatutStagiaire.termine);
+                stagiaireRepository.save(stage.getStagiaire());
+            }
+        }
+        Map<Integer, Stage> stagesParStagiaire = tousStages.stream()
+                .collect(Collectors.toMap(stage -> stage.getStagiaire().getId(), stage -> stage, (a, b) -> a));
 
         long totalStagiaires = tousStagiaires.size();
         long enCours = tousStagiaires.stream()
@@ -483,6 +495,7 @@ public class AdminController {
         model.addAttribute("stagiaires", tousStagiaires);
         model.addAttribute("services", tousServices);
         model.addAttribute("encadreurs", tousEncadreurs);
+        model.addAttribute("stagesParStagiaire", stagesParStagiaire);
 
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
         List<Map<String, Object>> stagiairesJson = tousStagiaires.stream().map(s -> {
@@ -686,6 +699,22 @@ public class AdminController {
         });
 
         redirectAttributes.addFlashAttribute("succes", "La fiche du stagiaire a été mise à jour.");
+        return "redirect:/admin/stagiaires";
+    }
+
+    @PostMapping("/stagiaires/{id}/acces")
+    public String modifierAccesStagiaire(@PathVariable Integer id,
+                                         @RequestParam boolean actif,
+                                         RedirectAttributes redirectAttributes) {
+        stagiaireRepository.findById(id).ifPresent(stagiaire -> {
+            Utilisateur utilisateur = stagiaire.getUtilisateur();
+            utilisateur.setStatut(actif
+                    ? Utilisateur.StatutUtilisateur.actif
+                    : Utilisateur.StatutUtilisateur.inactif);
+            utilisateurRepository.save(utilisateur);
+        });
+        redirectAttributes.addFlashAttribute("succes",
+                actif ? "Le compte du stagiaire a été débloqué." : "Le compte du stagiaire a été bloqué.");
         return "redirect:/admin/stagiaires";
     }
 

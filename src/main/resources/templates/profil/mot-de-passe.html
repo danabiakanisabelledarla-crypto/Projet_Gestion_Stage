@@ -16,7 +16,7 @@
 <div class="contenu-principal">
     <div class="en-tete-page">
         <h1>Changer le mot de passe</h1>
-        <a th:href="@{/profil}" class="lien-action"><i class="fa-solid fa-arrow-left"></i> Retour au profil</a>
+        <a th:href="${retourProfil}" class="lien-action"><i class="fa-solid fa-arrow-left"></i> Retour au profil</a>
     </div>
 
     <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>

@@ -37,10 +37,13 @@ public class SecurityConfig {
                         "/encadreur/evaluations/**")
                     .access(espaceEtPermission("ENCADREUR", "GERER_STAGIAIRES"))
                 .requestMatchers("/encadreur/livrables/valider/**",
-                        "/encadreur/livrables/rejeter/**")
+                        "/encadreur/livrables/rejeter/**",
+                        "/encadreur/livrables/commenter")
                     .access(espaceEtPermission("ENCADREUR", "VALIDER_DOCUMENTS"))
                 .requestMatchers("/encadreur/livrables/**")
                     .access(espaceEtPermission("ENCADREUR", "CONSULTER_RAPPORTS"))
+                .requestMatchers("/encadreur/profil/**")
+                    .access(espaceEtPermission("ENCADREUR", null))
                 .requestMatchers("/encadreur/planning/**")
                     .access(espaceEtUnePermission("ENCADREUR", "CONSULTER_PLANNING", "GERER_PLANNING"))
                 .requestMatchers("/encadreur/messagerie/**")
@@ -87,7 +90,8 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            );
+            )
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         return http.build();
     }

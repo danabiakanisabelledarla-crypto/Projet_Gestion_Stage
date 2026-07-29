@@ -113,8 +113,7 @@
                     <th>Matricule</th>
                     <th>Service</th>
                     <th>Encadreur</th>
-                    <th>Début</th>
-                    <th>Fin</th>
+                    <th>Début &amp; fin</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
@@ -133,21 +132,29 @@
                         </div>
                     </td>
                     <td><span class="matricule-tag" th:text="${s.matricule}">STG-001</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
+                    <td th:text="${stagesParStagiaire[s.id] != null && stagesParStagiaire[s.id].service != null ? stagesParStagiaire[s.id].service.nom : '—'}">—</td>
+                    <td th:text="${stagesParStagiaire[s.id] != null && stagesParStagiaire[s.id].encadreur != null ? stagesParStagiaire[s.id].encadreur.utilisateur.prenom + ' ' + stagesParStagiaire[s.id].encadreur.utilisateur.nom : 'Non affecté'}">—</td>
+                    <td th:text="${stagesParStagiaire[s.id] != null ? #temporals.format(stagesParStagiaire[s.id].dateDebut, 'dd/MM/yyyy') + ' → ' + #temporals.format(stagesParStagiaire[s.id].dateFin, 'dd/MM/yyyy') : '—'}">—</td>
                     <td>
                         <span th:class="'badge-statut ' + ${s.statut.name()}" th:text="${s.statut.name() == 'actif' ? 'Actif' : (s.statut.name() == 'termine' ? 'Terminé' : 'Abandonné')}">Statut</span>
                     </td>
                     <td>
                         <div class="action-btns">
                             <button class="action-btn" th:onclick="'ouvrirDetailsStagiaire(' + ${s.id} + ')'" title="Voir détails"><i class="fa-solid fa-eye"></i></button>
+                            <button class="action-btn" th:onclick="'ouvrirEditionStagiaire(' + ${s.id} + ')'" title="Affecter à un encadreur"><i class="fa-solid fa-user-plus"></i></button>
+                            <form th:action="@{/admin/stagiaires/{id}/acces(id=${s.id})}" method="post" style="display:inline">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="actif" th:value="${s.utilisateur.statut.name() != 'actif'}">
+                                <button class="action-btn" type="submit"
+                                        th:title="${s.utilisateur.statut.name() == 'actif' ? 'Bloquer le compte' : 'Débloquer le compte'}">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(stagiaires)}">
-                    <td colspan="9" class="empty-state">Aucun stagiaire trouvé.</td>
+                    <td colspan="8" class="empty-state">Aucun stagiaire trouvé.</td>
                 </tr>
             </tbody>
         </table>

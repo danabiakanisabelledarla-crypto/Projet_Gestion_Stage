@@ -39,14 +39,14 @@
             <i class="fa-regular fa-envelope"></i>
             <span class="notif-dot" th:text="${messagesCount}">0</span>
         </a>
-        <div class="header-user" tabindex="0" title="Compte administrateur">
+        <a class="header-user" th:href="@{/profil}" title="Ouvrir le profil administrateur">
             <div class="header-avatar">AD</div>
             <div>
                 <div class="header-user-nom">Administrateur</div>
                 <div class="header-user-role">admin@gestion-stages.com</div>
             </div>
             <i class="fa-solid fa-chevron-down header-arrow"></i>
-        </div>
+        </a>
     </div>
     <script>
         window.toggleNotifDropdown = function(event) {

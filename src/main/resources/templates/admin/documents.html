@@ -34,8 +34,8 @@
             </div>
         </div>
         <div class="backup-heading-actions">
-            <button type="button" class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button type="button" class="backup-btn primary"><i class="fa-solid fa-plus"></i> Ajouter un document</button>
+            <button type="button" class="backup-btn secondary" onclick="exporterDocuments()"><i class="fa-solid fa-download"></i> Exporter</button>
+            <button type="button" class="backup-btn primary" onclick="document.getElementById('newDocumentModal').classList.add('open')"><i class="fa-solid fa-plus"></i> Ajouter un document</button>
         </div>
     </section>
 
@@ -139,8 +139,6 @@
         </div>
         <div class="action-bar-right">
             <button class="backup-btn secondary"><i class="fa-solid fa-filter"></i> Filtrer</button>
-            <button class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter</button>
-            <button class="backup-btn primary"><i class="fa-solid fa-upload"></i> Nouveau document</button>
         </div>
     </div>
 
@@ -274,8 +272,20 @@
     </section>
 </main>
 
+<div class="document-upload-modal" id="newDocumentModal">
+    <form class="document-upload-panel" th:action="@{/admin/documents/ajouter}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="backup-card-head"><div><h2>Nouveau document</h2><p>Ajouter un document administratif</p></div><button type="button" class="action-btn" onclick="document.getElementById('newDocumentModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="form-group"><label>Type de document</label><select name="typeDocument" required><option value="rapport_final">Rapport final</option><option value="rapport_hebdomadaire">Rapport hebdomadaire</option><option value="attestation">Attestation</option><option value="fiche_note">Fiche de note</option><option value="autre">Autre</option></select></div>
+        <div class="form-group"><label>Fichier</label><input type="file" name="fichier" required></div>
+        <div class="backup-heading-actions"><button type="button" class="backup-btn secondary" onclick="document.getElementById('newDocumentModal').classList.remove('open')">Annuler</button><button class="backup-btn primary" type="submit">Ajouter</button></div>
+    </form>
+</div>
+
 <script th:inline="javascript">
     const docsData = /*[[${documentsJson}]]*/ [];
+    const csrfName = /*[[${_csrf.parameterName}]]*/ '_csrf';
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
 </script>
 <script>
     function getExtIcon(ext) {
@@ -403,23 +413,20 @@
                         <div class="comment-texte">Document validé. Merci de procéder à l'archivage.</div>
                     </div>
                 </div>
-                <div class="comment-input-area">
-                    <input type="text" placeholder="Ajouter un commentaire...">
-                    <button><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
+                <form class="comment-input-area" action="/admin/documents/commenter" method="post">
+                    <input type="hidden" name="${csrfName}" value="${csrfToken}">
+                    <input type="hidden" name="documentId" value="${d.id}">
+                    <input type="text" name="commentaire" required placeholder="Ajouter un commentaire...">
+                    <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
             </div>
 
             <div class="detail-section" style="border:2px solid #2563EB;background:white;">
                 <div class="detail-section-title"><i class="fa-solid fa-shield-halved"></i> Actions administratives</div>
                 <div class="actions-admin-row">
-                    <button class="btn-action-admin primary" onclick="window.location.href='/documents/${d.id}'"><i class="fa-solid fa-download"></i> Télécharger</button>
-                    <button class="btn-action-admin vert"><i class="fa-solid fa-box-archive"></i> Archiver</button>
-                    <button class="btn-action-admin"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
-                </div>
-                <div class="actions-admin-row">
                     <button class="btn-action-admin"><i class="fa-solid fa-pen"></i> Modifier</button>
-                    <button class="btn-action-admin danger"><i class="fa-solid fa-trash"></i> Supprimer</button>
-                    <button class="btn-action-admin"><i class="fa-solid fa-share-nodes"></i> Partager</button>
+                    <button class="btn-action-admin danger" onclick="supprimerDocument(${d.id})"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                    <button class="btn-action-admin" onclick="partagerDocument(${d.id})"><i class="fa-solid fa-share-nodes"></i> Partager</button>
                 </div>
             </div>
         `;
@@ -462,6 +469,34 @@
             const name = row.querySelector('.doc-name')?.textContent?.toLowerCase() || '';
             row.style.display = name.includes(q) ? '' : 'none';
         });
+    }
+
+    function exporterDocuments() {
+        const rows = [];
+        rows.push(['Nom', 'Type', 'Propriétaire', 'Date', 'Taille', 'Statut']);
+        docsData.forEach(d => rows.push([d.nomFichier, d.typeDocument, d.proprietaireNom, d.dateDepot, d.taille, d.statut]));
+        const csv = rows.map(row => row.map(value => `"${String(value || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'}));
+        link.download = 'documents.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function supprimerDocument(id) {
+        if (!confirm('Supprimer ce document ?')) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `/admin/documents/supprimer/${id}`;
+        form.innerHTML = `<input type="hidden" name="${csrfName}" value="${csrfToken}">`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function partagerDocument(id) {
+        const url = `${window.location.origin}/documents/${id}/preview`;
+        if (navigator.share) navigator.share({title: 'Document', url});
+        else navigator.clipboard.writeText(url).then(() => alert('Lien copié.'));
     }
 </script>
 </body>

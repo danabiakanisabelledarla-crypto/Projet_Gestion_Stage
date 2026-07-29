@@ -17,6 +17,7 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -85,13 +86,20 @@ public class EncadreurController {
 
     private void ajouterIdentite(Model model, CustomUserDetails userDetails, String activePage) {
         Utilisateur utilisateur = userDetails.getUtilisateur();
+        List<Stage> stages = getStages(userDetails);
+        long notifications = livrablesDesStages(stages).stream()
+                .filter(livrable -> livrable.getStatut() == Livrable.StatutLivrable.depose)
+                .count();
+        long messages = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(utilisateur.getId()).stream()
+                .mapToLong(conversation -> conversationRepository.countNonLuByConversation(conversation.getId(), utilisateur.getId()))
+                .sum();
         model.addAttribute("activePage", activePage);
         model.addAttribute("nomComplet", utilisateur.getPrenom() + " " + utilisateur.getNom());
         model.addAttribute("initiales",
                 utilisateur.getPrenom().substring(0, 1).toUpperCase()
                         + utilisateur.getNom().substring(0, 1).toUpperCase());
-        model.addAttribute("notificationsCount", 3);
-        model.addAttribute("messagesCount", 2);
+        model.addAttribute("notificationsCount", notifications);
+        model.addAttribute("messagesCount", messages);
     }
 
     private List<Tache> tachesDesStages(List<Stage> stages) {
@@ -335,6 +343,9 @@ public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails use
             .sorted(Comparator.comparing(Evaluation::getDateEvaluation).reversed())
             .toList();
     Map<Integer, BigDecimal> moyennes = new HashMap<>();
+    Map<Integer, String> criteresPrincipaux = new HashMap<>();
+    Map<String, BigDecimal> moyennesCriteres = new LinkedHashMap<>();
+    Map<String, Integer> nombresNotesCriteres = new HashMap<>();
     evaluations.forEach(evaluation -> {
         List<NoteEvaluation> notes = noteRepository.findByEvaluationId(evaluation.getId());
         BigDecimal moyenne = notes.isEmpty() ? BigDecimal.ZERO : notes.stream()
@@ -342,23 +353,59 @@ public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails use
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(notes.size()), 1, java.math.RoundingMode.HALF_UP);
         moyennes.put(evaluation.getId(), moyenne);
+        notes.stream().max(Comparator.comparing(NoteEvaluation::getNote))
+                .ifPresent(note -> criteresPrincipaux.put(evaluation.getId(), note.getCritere().getLibelle()));
+        notes.forEach(note -> {
+            String libelle = note.getCritere().getLibelle();
+            moyennesCriteres.merge(libelle, note.getNote(), BigDecimal::add);
+            nombresNotesCriteres.merge(libelle, 1, Integer::sum);
+        });
     });
+    moyennesCriteres.replaceAll((libelle, total) -> total.divide(
+            BigDecimal.valueOf(nombresNotesCriteres.get(libelle)), 1, java.math.RoundingMode.HALF_UP));
     long finales = evaluations.stream()
             .filter(evaluation -> evaluation.getTypeEvaluation() == Evaluation.TypeEvaluation.finale).count();
     long continues = evaluations.size() - finales;
     BigDecimal moyenneGenerale = moyennes.isEmpty() ? BigDecimal.ZERO : moyennes.values().stream()
             .reduce(BigDecimal.ZERO, BigDecimal::add)
             .divide(BigDecimal.valueOf(moyennes.size()), 1, java.math.RoundingMode.HALF_UP);
+    long excellentes = moyennes.values().stream()
+            .filter(moyenne -> moyenne.compareTo(BigDecimal.valueOf(18)) >= 0).count();
+    long enAttente = mesStages.stream()
+            .filter(stage -> evaluations.stream().noneMatch(evaluation -> evaluation.getStage().getId().equals(stage.getId())
+                    && evaluation.getTypeEvaluation() == Evaluation.TypeEvaluation.finale))
+            .count();
+    long note18a20 = moyennes.values().stream().filter(n -> n.compareTo(BigDecimal.valueOf(18)) >= 0).count();
+    long note15a17 = moyennes.values().stream().filter(n -> n.compareTo(BigDecimal.valueOf(15)) >= 0
+            && n.compareTo(BigDecimal.valueOf(18)) < 0).count();
+    long note10a14 = moyennes.values().stream().filter(n -> n.compareTo(BigDecimal.TEN) >= 0
+            && n.compareTo(BigDecimal.valueOf(15)) < 0).count();
+    long noteMoins10 = moyennes.values().stream().filter(n -> n.compareTo(BigDecimal.TEN) < 0).count();
+    List<Evaluation> meilleuresEvaluations = evaluations.stream()
+            .sorted(Comparator.comparing((Evaluation evaluation) ->
+                    moyennes.getOrDefault(evaluation.getId(), BigDecimal.ZERO)).reversed())
+            .limit(4).toList();
     model.addAttribute("mesStages", mesStages);
     model.addAttribute("criteres", critereRepository.findAll());
     model.addAttribute("evaluations", evaluations);
     model.addAttribute("moyennesEvaluations", moyennes);
+    model.addAttribute("criteresPrincipaux", criteresPrincipaux);
+    model.addAttribute("moyennesCriteres", moyennesCriteres);
     model.addAttribute("evaluationsTotales", evaluations.size());
     model.addAttribute("evaluationsFinales", finales);
     model.addAttribute("evaluationsContinues", continues);
     model.addAttribute("stagiairesEvalues", evaluations.stream()
             .map(evaluation -> evaluation.getStage().getStagiaire().getId()).distinct().count());
     model.addAttribute("moyenneGenerale", moyenneGenerale);
+    model.addAttribute("evaluationsEnAttente", enAttente);
+    model.addAttribute("evaluationsExcellentes", excellentes);
+    model.addAttribute("tauxEvaluation", mesStages.isEmpty() ? 0
+            : Math.min(100, Math.round((mesStages.size() - enAttente) * 100.0 / mesStages.size())));
+    model.addAttribute("note18a20", note18a20);
+    model.addAttribute("note15a17", note15a17);
+    model.addAttribute("note10a14", note10a14);
+    model.addAttribute("noteMoins10", noteMoins10);
+    model.addAttribute("meilleuresEvaluations", meilleuresEvaluations);
     model.addAttribute("evaluationsCeMois", evaluations.stream()
             .filter(evaluation -> evaluation.getDateEvaluation().getMonth() == LocalDate.now().getMonth()
                     && evaluation.getDateEvaluation().getYear() == LocalDate.now().getYear()).count());
@@ -464,40 +511,132 @@ public String modifierStatutObjectif(@AuthenticationPrincipal CustomUserDetails 
 @GetMapping("/livrables")
 public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userDetails,
                                 Model model) {
-    Encadreur encadreur = getEncadreur(userDetails);
-    List<Livrable> livrables = new ArrayList<>();
-
-    if (encadreur != null) {
-        List<Stage> mesStages = stageRepository.findByEncadreurId(encadreur.getId());
-        for (Stage stage : mesStages) {
-            List<Tache> taches = tacheRepository.findByStageId(stage.getId());
-            for (Tache tache : taches) {
-                livrables.addAll(livrableRepository.findByTacheId(tache.getId()));
-            }
-        }
-    }
-
+    ajouterIdentite(model, userDetails, "livrables");
+    List<Stage> mesStages = getStages(userDetails);
+    List<Livrable> livrables = livrablesDesStages(mesStages).stream()
+            .sorted(Comparator.comparing(Livrable::getDateDepot).reversed())
+            .toList();
+    Map<Integer, Stage> stagesLivrables = new HashMap<>();
+    livrables.forEach(livrable -> stagesLivrables.put(livrable.getId(), stageDuLivrable(livrable)));
+    long enAttente = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.depose).count();
+    long valides = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.valide).count();
+    long corrections = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.correction_demandee
+            || l.getStatut() == Livrable.StatutLivrable.rejete).count();
+    Map<String, Long> livrablesParCategorie = livrables.stream().collect(Collectors.groupingBy(
+            livrable -> livrable.getCategorie() == null || livrable.getCategorie().isBlank()
+                    ? "Autre" : livrable.getCategorie(),
+            LinkedHashMap::new, Collectors.counting()));
+    Map<Integer, Long> livrablesParStage = mesStages.stream().collect(Collectors.toMap(
+            Stage::getId, stage -> livrables.stream()
+                    .filter(livrable -> {
+                        Stage stageLivrable = stagesLivrables.get(livrable.getId());
+                        return stageLivrable != null && stageLivrable.getId().equals(stage.getId());
+                    }).count(),
+            (a, b) -> a, LinkedHashMap::new));
     model.addAttribute("livrables", livrables);
+    model.addAttribute("mesStages", mesStages);
+    model.addAttribute("stagesLivrables", stagesLivrables);
+    model.addAttribute("livrablesTotaux", livrables.size());
+    model.addAttribute("livrablesEnAttente", enAttente);
+    model.addAttribute("livrablesValides", valides);
+    model.addAttribute("livrablesACorriger", corrections);
+    model.addAttribute("tauxValidation", livrables.isEmpty() ? 0 : Math.round(valides * 100.0 / livrables.size()));
+    model.addAttribute("livrablesParCategorie", livrablesParCategorie);
+    model.addAttribute("livrablesParStage", livrablesParStage);
     return "encadreur/livrables";
 }
 
 
 @GetMapping("/livrables/valider/{id}")
-public String validerLivrable(@PathVariable Integer id) {
-    livrableRepository.findById(id).ifPresent(livrable -> {
+public String validerLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @PathVariable Integer id) {
+    livrableRepository.findById(id)
+            .filter(livrable -> stageAppartient(userDetails, stageDuLivrable(livrable)))
+            .ifPresent(livrable -> {
         livrable.setStatut(Livrable.StatutLivrable.valide);
         livrableRepository.save(livrable);
     });
-    return "redirect:/encadreur/livrables";
+    return "redirect:/encadreur/livrables?succes=valide";
 }
 
 @GetMapping("/livrables/rejeter/{id}")
-public String rejeterLivrable(@PathVariable Integer id) {
-    livrableRepository.findById(id).ifPresent(livrable -> {
-        livrable.setStatut(Livrable.StatutLivrable.rejete);
+public String rejeterLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @PathVariable Integer id) {
+    livrableRepository.findById(id)
+            .filter(livrable -> stageAppartient(userDetails, stageDuLivrable(livrable)))
+            .ifPresent(livrable -> {
+        livrable.setStatut(Livrable.StatutLivrable.correction_demandee);
         livrableRepository.save(livrable);
     });
-    return "redirect:/encadreur/livrables";
+    return "redirect:/encadreur/livrables?succes=correction";
+}
+
+@PostMapping("/livrables/commenter")
+public String commenterLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam Integer id,
+                                @RequestParam String commentaire) {
+    livrableRepository.findById(id)
+            .filter(livrable -> stageAppartient(userDetails, stageDuLivrable(livrable)))
+            .ifPresent(livrable -> {
+                livrable.setCommentaireEncadreur(commentaire.trim());
+                livrableRepository.save(livrable);
+            });
+    return "redirect:/encadreur/livrables?succes=commentaire";
+}
+
+@GetMapping("/profil")
+public String afficherProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             Model model) {
+    ajouterIdentite(model, userDetails, "profil");
+    Encadreur encadreur = getEncadreur(userDetails);
+    if (encadreur == null) return "redirect:/login";
+    List<Stage> stages = getStages(userDetails);
+    List<Evaluation> evaluations = evaluationsDesStages(stages);
+    List<Livrable> livrables = livrablesDesStages(stages);
+    List<EvenementPersonnel> evenements = stages.stream()
+            .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
+            .sorted(Comparator.comparing(EvenementPersonnel::getDate).reversed())
+            .toList();
+    long valides = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.valide).count();
+    long reunions = evenements.stream().filter(e -> "reunion".equalsIgnoreCase(e.getTypeCouleur())).count();
+    model.addAttribute("encadreur", encadreur);
+    model.addAttribute("utilisateur", encadreur.getUtilisateur());
+    model.addAttribute("stages", stages);
+    model.addAttribute("evaluations", evaluations);
+    model.addAttribute("livrables", livrables);
+    model.addAttribute("evenements", evenements);
+    model.addAttribute("stagiairesEncadres", stages.size());
+    model.addAttribute("evaluationsRealisees", evaluations.size());
+    model.addAttribute("livrablesValides", valides);
+    model.addAttribute("reunionsEffectuees", reunions);
+    model.addAttribute("tauxSuivi", stages.isEmpty() ? 0 : Math.min(100,
+            Math.round((evaluations.size() + valides) * 100.0 / (stages.size() * 2))));
+    return "encadreur/profil";
+}
+
+@PostMapping("/profil/modifier")
+public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             @RequestParam String nom,
+                             @RequestParam String prenom,
+                             @RequestParam String email,
+                             @RequestParam(required = false) String telephone,
+                             @RequestParam(required = false) String adresse,
+                             @RequestParam(required = false) String fonction,
+                             @RequestParam(required = false) String specialite) {
+    Encadreur encadreur = getEncadreur(userDetails);
+    if (encadreur != null) {
+        Utilisateur utilisateur = encadreur.getUtilisateur();
+        utilisateur.setNom(nom.trim());
+        utilisateur.setPrenom(prenom.trim());
+        utilisateur.setEmail(email.trim());
+        utilisateur.setTelephone(telephone == null ? null : telephone.trim());
+        utilisateur.setAdresse(adresse == null ? null : adresse.trim());
+        utilisateurRepository.save(utilisateur);
+        encadreur.setFonction(fonction == null ? null : fonction.trim());
+        encadreur.setSpecialite(specialite == null ? null : specialite.trim());
+        encadreurRepository.save(encadreur);
+    }
+    return "redirect:/encadreur/profil?succes=true";
 }
 
 @GetMapping("/planning")
@@ -559,8 +698,23 @@ public String ajouterEvenement(@AuthenticationPrincipal CustomUserDetails userDe
 }
 
 @GetMapping("/messagerie")
-public String messagerie(Model model) {
-    model.addAttribute("activePage", "messagerie");
+public String messagerie(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    ajouterIdentite(model, userDetails, "messagerie");
+    Utilisateur utilisateur = userDetails.getUtilisateur();
+    List<Conversation> conversations = conversationRepository
+            .findByParticipantIdOrderByDernierMessageDesc(utilisateur.getId());
+    Map<Integer, List<Message>> messagesParConversation = new HashMap<>();
+    Map<Integer, Long> nonLusParConversation = new HashMap<>();
+    conversations.forEach(conversation -> {
+        messagesParConversation.put(conversation.getId(),
+                messageRepository.findByConversationIdOrderByDateEnvoiAsc(conversation.getId()));
+        nonLusParConversation.put(conversation.getId(),
+                conversationRepository.countNonLuByConversation(conversation.getId(), utilisateur.getId()));
+    });
+    model.addAttribute("utilisateurConnecte", utilisateur);
+    model.addAttribute("conversations", conversations);
+    model.addAttribute("messagesParConversation", messagesParConversation);
+    model.addAttribute("nonLusParConversation", nonLusParConversation);
     return "encadreur/messagerie";
 }
 
