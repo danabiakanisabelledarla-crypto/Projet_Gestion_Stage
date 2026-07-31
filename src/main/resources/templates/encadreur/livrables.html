@@ -102,40 +102,10 @@
                         <div class="coach-empty" th:if="${#lists.isEmpty(livrables)}">Aucun dépôt récent.</div>
                     </div>
                 </article>
-
-                <article class="coach-card">
-                    <div class="coach-card-head"><div><h2>Stagiaires les plus actifs</h2><p>Classement par nombre de dépôts</p></div></div>
-                    <div class="coach-ranking">
-                        <div class="coach-rank-row" th:each="stage, stat : ${mesStages}" th:if="${stat.index < 4}">
-                            <span class="coach-rank-number" th:text="${stat.index + 1}">1</span>
-                            <span class="coach-avatar" th:text="${#strings.substring(stage.stagiaire.utilisateur.prenom,0,1) + #strings.substring(stage.stagiaire.utilisateur.nom,0,1)}">ST</span>
-                            <div class="coach-rank-copy"><strong th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</strong><small>Stagiaire encadré</small><div class="coach-progress" style="margin-top:5px"><span th:style="'width:' + ${(livrablesTotaux == 0 ? 0 : livrablesParStage[stage.id] * 100 / livrablesTotaux)} + '%'"></span></div></div>
-                            <b th:text="${livrablesParStage[stage.id]}">0</b>
-                        </div>
-                        <div class="coach-empty" th:if="${#lists.isEmpty(mesStages)}">Aucun stagiaire affecté.</div>
-                    </div>
-                </article>
             </div>
         </section>
 
         <section class="coach-grid-50">
-            <article class="coach-card">
-                <div class="coach-card-head"><div><h2>Historique des validations</h2><p>Dernières décisions enregistrées</p></div></div>
-                <div class="coach-timeline">
-                    <div class="coach-timeline-item" th:each="livrable, stat : ${livrables}" th:if="${stat.index < 5 && livrable.statut.name() != 'depose'}" th:with="stage=${stagesLivrables[livrable.id]}">
-                        <span class="coach-timeline-icon"><i th:class="${livrable.statut.name() == 'valide' ? 'fa-solid fa-check' : 'fa-solid fa-pen'}"></i></span>
-                        <div class="coach-timeline-content"><strong th:text="${livrable.statut.name() == 'valide' ? 'Livrable validé' : 'Correction demandée'}">Décision</strong><span th:text="${livrable.titre + (stage != null ? ' · ' + stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom : '')}">Document</span><small class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy')}">Date</small></div>
-                    </div>
-                    <div class="coach-empty" th:if="${livrablesValides + livrablesACorriger == 0}">Aucune validation enregistrée.</div>
-                </div>
-            </article>
-            <article class="coach-card">
-                <div class="coach-card-head"><div><h2>Types de livrables</h2><p>Répartition des documents reçus</p></div></div>
-                <div class="coach-bars">
-                    <div th:each="entry : ${livrablesParCategorie}"><div class="coach-bar-head"><span th:text="${entry.key}">Catégorie</span><b th:text="${entry.value + ' (' + (livrablesTotaux == 0 ? 0 : entry.value * 100 / livrablesTotaux) + '%)'}">0%</b></div><div class="coach-bar-track"><span th:style="'width:' + ${(livrablesTotaux == 0 ? 0 : entry.value * 100 / livrablesTotaux)} + '%'"></span></div></div>
-                    <div class="coach-empty" th:if="${#maps.isEmpty(livrablesParCategorie)}">Aucune catégorie disponible.</div>
-                </div>
-            </article>
         </section>
     </main>
 </div>
@@ -198,5 +168,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-</body>
+<script th:src="@{/js/encadreur-topbar.js}"></script></body>
 </html>

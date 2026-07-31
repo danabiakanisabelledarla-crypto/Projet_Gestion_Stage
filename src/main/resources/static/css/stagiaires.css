@@ -58,6 +58,16 @@
 .badge-statut.abandonne { background: #FEE2E2; color: #B91C1C; }
 .badge-statut.en_attente { background: #FFF7ED; color: #C2410C; }
 .action-btns { display: flex; gap: 6px; }
+.stage-period { display:flex; align-items:center; gap:7px; white-space:nowrap; font-size:12px; }
+.stage-period i { color:#94a3b8; font-size:9px; }
+.student-actions-menu { position:relative; display:inline-flex; justify-content:center; }
+.student-menu-popover { position:absolute; z-index:30; top:calc(100% + 6px); right:0; display:none; width:150px; padding:6px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; box-shadow:0 12px 30px rgba(15,23,42,.14); }
+.student-menu-popover.open { display:grid; }
+.student-menu-popover form { margin:0; }
+.student-menu-item { width:100%; padding:9px 10px; border:0; border-radius:6px; background:transparent; color:#334155; text-align:left; font:inherit; font-size:12px; cursor:pointer; }
+.student-menu-item:hover:not(:disabled) { background:#eff6ff; color:#1d4ed8; }
+.student-menu-item.danger:hover:not(:disabled) { background:#fef2f2; color:#dc2626; }
+.student-menu-item:disabled { color:#cbd5e1; cursor:not-allowed; }
 .action-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E2E8F0; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94A3B8; transition: all 0.3s; font-size: 13px; }
 .action-btn:hover { background: #EFF6FF; color: #2563EB; border-color: #2563EB; }
 

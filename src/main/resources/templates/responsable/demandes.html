@@ -1,30 +1,328 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demandes - Responsable</title>
-<link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/responsable-premium.css}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
-<body><div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div><main class="contenu-principal responsable-main"><div th:replace="~{fragments/header-responsable :: header}"></div><div class="rp-page">
-<header class="rp-heading"><div class="rp-heading-main"><div class="rp-heading-icon"><i class="fa-regular fa-file-lines"></i></div><div><div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Demandes</div><h1>Demandes de stage</h1><p>Consultez, analysez et traitez les demandes de stage reçues.</p></div></div><button class="rp-secondary" type="button"><i class="fa-solid fa-file-export"></i> Exporter</button></header>
-<div class="rp-flash" th:if="${succes}" th:text="${succes}"></div><div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
-<section class="rp-kpis">
-<article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-layer-group"></i></div><div class="rp-kpi-value" th:text="${totalDemandes}">0</div><div class="rp-kpi-label">Demandes totales</div></article>
-<article class="rp-kpi"><div class="rp-kpi-icon rp-orange"><i class="fa-regular fa-clock"></i></div><div class="rp-kpi-value" th:text="${enAttente}">0</div><div class="rp-kpi-label">En attente</div></article>
-<article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-check"></i></div><div class="rp-kpi-value" th:text="${acceptees}">0</div><div class="rp-kpi-label">Acceptées</div></article>
-<article class="rp-kpi"><div class="rp-kpi-icon rp-red"><i class="fa-solid fa-xmark"></i></div><div class="rp-kpi-value" th:text="${refusees}">0</div><div class="rp-kpi-label">Refusées</div></article>
-<article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-magnifying-glass-chart"></i></div><div class="rp-kpi-value" th:text="${enAttente}">0</div><div class="rp-kpi-label">En cours d'analyse</div></article>
-<article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-solid fa-stopwatch"></i></div><div class="rp-kpi-value" th:text="${tempsMoyenTraitement+' j'}">0 j</div><div class="rp-kpi-label">Temps moyen de traitement</div></article>
-</section>
-<section class="rp-grid-70">
-<article class="rp-card"><div class="rp-card-head"><div><h2>Liste des demandes</h2><p>Sélectionnez une candidature pour afficher son dossier</p></div><span class="rp-badge blue" th:text="${totalDemandes+' demandes'}">0 demandes</span></div>
-<div class="rp-filters"><input id="requestSearch" class="rp-input" placeholder="Rechercher un candidat"><select id="requestStatus" class="rp-select"><option value="">Tous les statuts</option><option value="en_attente">En attente</option><option value="acceptee">Acceptée</option><option value="refusee">Refusée</option></select><select id="requestField" class="rp-select"><option value="">Toutes les filières</option><option th:each="d:${demandes}" th:value="${d.filiere}" th:text="${d.filiere}"></option></select><select id="requestSchool" class="rp-select"><option value="">Tous les établissements</option><option th:each="d:${demandes}" th:value="${d.ecole}" th:text="${d.ecole}"></option></select><input id="requestDate" class="rp-input" type="date"></div>
-<div class="rp-table-wrap"><table class="rp-table"><thead><tr><th>Candidat</th><th>Matricule</th><th>Établissement</th><th>Filière</th><th>Date de dépôt</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
-<tr class="request-row" th:each="d:${demandes}" th:data-id="${d.id}" th:data-search="${#strings.toLowerCase(d.prenom+' '+d.nom)}" th:data-status="${d.statut}" th:data-field="${d.filiere}" th:data-school="${d.ecole}" th:data-date="${#temporals.format(d.dateDemande,'yyyy-MM-dd')}" th:data-name="${d.prenom+' '+d.nom}" th:data-email="${d.email ?: 'Non renseigné'}" th:data-school-name="${d.ecole}" th:data-field-name="${d.filiere}" th:data-level="${d.niveau}" th:data-period="${d.dureeSouhaitee}">
-<td><div class="rp-person"><div class="rp-avatar" th:text="${#strings.substring(d.prenom,0,1)+#strings.substring(d.nom,0,1)}">JD</div><div><strong th:text="${d.prenom+' '+d.nom}">Nom</strong><span th:text="${d.email ?: 'Email non renseigné'}">Email</span></div></div></td><td th:text="${'DEM-'+#numbers.formatInteger(d.id,5)}">DEM-00001</td><td th:text="${d.ecole}">École</td><td th:text="${d.filiere}">Filière</td><td th:text="${#temporals.format(d.dateDemande,'dd/MM/yyyy')}">Date</td><td><span class="rp-badge" th:classappend="${d.statut.name()=='acceptee'?' green':(d.statut.name()=='refusee'?' red':' orange')}" th:text="${#strings.capitalize(#strings.replace(d.statut.name(),'_',' '))}">Statut</span></td><td><div class="rp-actions"><button class="rp-icon-btn show-request" type="button" title="Voir les détails"><i class="fa-regular fa-eye"></i></button></div></td>
-</tr></tbody></table><div class="rp-empty" th:if="${#lists.isEmpty(demandes)}">Aucune demande enregistrée.</div></div><div class="rp-pagination"><span th:text="${totalDemandes+' résultat(s)'}">0 résultat</span><div class="rp-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div></article>
-<aside class="rp-card" id="requestDetail"><div class="rp-card-head"><div><h2>Détails de la demande</h2><p>Dossier candidat</p></div><span id="detailStatus" class="rp-badge orange">En attente</span></div><div class="rp-detail-profile"><div class="rp-avatar" id="detailAvatar">?</div><h3 id="detailName">Sélectionnez une demande</h3><p id="detailEmail">Les informations apparaîtront ici</p></div><div class="rp-data"><div class="rp-data-row"><span>Email candidat</span><strong id="detailEmailData">—</strong></div><div class="rp-data-row"><span>Établissement</span><strong id="detailSchool">—</strong></div><div class="rp-data-row"><span>Filière</span><strong id="detailField">—</strong></div><div class="rp-data-row"><span>Niveau</span><strong id="detailLevel">—</strong></div><div class="rp-data-row"><span>Période souhaitée</span><strong id="detailPeriod">—</strong></div><div class="rp-data-row"><span>Service demandé</span><strong>À définir</strong></div></div><div class="rp-card-head" style="margin-top:18px"><div><h3>Documents du candidat</h3><p>Visualiser ou télécharger les pièces déposées</p></div></div><div id="detailDocuments"><div class="rp-empty">Sélectionnez une demande.</div></div><div class="rp-detail-buttons" style="margin-top:18px"><a id="acceptDetail" class="rp-primary" href="#"><i class="fa-solid fa-check"></i>Accepter</a><a id="rejectDetail" class="rp-danger" href="#"><i class="fa-solid fa-xmark"></i>Refuser</a></div></aside>
-</section>
-</div></main>
-<div hidden><div class="request-documents" th:each="demande:${demandes}" th:data-request-id="${demande.id}"><div class="rp-data"><div class="rp-data-row" th:each="doc:${documentsParDemande[demande.id]}"><span><b th:text="${doc.typeDocument}">Document</b><br><small th:text="${doc.nomFichier}">fichier.pdf</small></span><strong class="rp-actions"><a class="rp-icon-btn" th:href="@{/documents/{id}/preview(id=${doc.id})}" target="_blank" title="Visualiser"><i class="fa-regular fa-eye"></i></a><a class="rp-icon-btn" th:href="@{/documents/{id}(id=${doc.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a></strong></div><div class="rp-empty" th:if="${#lists.isEmpty(documentsParDemande[demande.id])}">Aucun document déposé.</div></div></div></div>
-<script th:inline="javascript">
-const rows=[...document.querySelectorAll('.request-row')], search=document.getElementById('requestSearch'),status=document.getElementById('requestStatus'),field=document.getElementById('requestField'),school=document.getElementById('requestSchool'),date=document.getElementById('requestDate');function filter(){rows.forEach(r=>r.hidden=!((!search.value||r.dataset.search.includes(search.value.toLowerCase()))&&(!status.value||r.dataset.status===status.value)&&(!field.value||r.dataset.field===field.value)&&(!school.value||r.dataset.school===school.value)&&(!date.value||r.dataset.date===date.value)))}[search,status,field,school,date].forEach(x=>x.addEventListener(x.tagName==='INPUT'?'input':'change',filter));
-rows.forEach(r=>r.querySelector('.show-request').onclick=()=>{const initials=r.dataset.name.split(' ').map(x=>x[0]).join('').slice(0,2);document.getElementById('detailAvatar').textContent=initials;['Name','Email','School','Field','Level','Period'].forEach(k=>document.getElementById('detail'+k).textContent=r.dataset[k.toLowerCase()]||'—');document.getElementById('detailEmailData').textContent=r.dataset.email||'—';const badge=document.getElementById('detailStatus');badge.textContent=r.dataset.status.replace('_',' ');badge.className='rp-badge '+(r.dataset.status==='acceptee'?'green':r.dataset.status==='refusee'?'red':'orange');const documents=document.querySelector(`.request-documents[data-request-id="${r.dataset.id}"]`);document.getElementById('detailDocuments').replaceChildren(documents?documents.cloneNode(true):document.createTextNode('Aucun document déposé.'));document.getElementById('acceptDetail').href='/responsable/demandes/accepter/'+r.dataset.id;document.getElementById('rejectDetail').href='/responsable/demandes/refuser/'+r.dataset.id;});
-</script></body></html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demandes - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css(v=4)}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<main class="contenu-principal responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main">
+                <div class="rp-heading-icon"><i class="fa-regular fa-file-lines"></i></div>
+                <div>
+                    <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Demandes</div>
+                    <h1>Demandes de stage</h1>
+                    <p>Consultez, analysez et traitez les demandes de stage reçues.</p>
+                </div>
+            </div>
+            <button class="rp-secondary" type="button"><i class="fa-solid fa-file-export"></i> Exporter</button>
+        </header>
+
+        <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
+        <div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
+
+        <section class="rp-kpis">
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-layer-group"></i></div><div class="rp-kpi-value" th:text="${totalDemandes}">0</div><div class="rp-kpi-label">Demandes totales</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-orange"><i class="fa-regular fa-clock"></i></div><div class="rp-kpi-value" th:text="${enAttente}">0</div><div class="rp-kpi-label">En attente</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-check"></i></div><div class="rp-kpi-value" th:text="${acceptees}">0</div><div class="rp-kpi-label">Acceptées</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-red"><i class="fa-solid fa-xmark"></i></div><div class="rp-kpi-value" th:text="${refusees}">0</div><div class="rp-kpi-label">Refusées</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-magnifying-glass-chart"></i></div><div class="rp-kpi-value" th:text="${enAttente}">0</div><div class="rp-kpi-label">En cours d'analyse</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-solid fa-stopwatch"></i></div><div class="rp-kpi-value" th:text="${tempsMoyenTraitement+' j'}">0 j</div><div class="rp-kpi-label">Temps moyen de traitement</div></article>
+        </section>
+
+        <section>
+            <article class="rp-card">
+                <div class="rp-card-head">
+                    <div><h2>Liste des demandes</h2><p>Ouvrez une candidature pour consulter et traiter son dossier.</p></div>
+                    <span class="rp-badge blue" th:text="${totalDemandes+' demandes'}">0 demandes</span>
+                </div>
+                <div class="rp-filters">
+                    <input id="requestSearch" class="rp-input" placeholder="Rechercher un candidat">
+                    <select id="requestStatus" class="rp-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="acceptee">Acceptée</option>
+                        <option value="refusee">Refusée</option>
+                    </select>
+                    <select id="requestField" class="rp-select">
+                        <option value="">Toutes les filières</option>
+                        <option th:each="d:${demandes}" th:value="${d.filiere}" th:text="${d.filiere}"></option>
+                    </select>
+                    <select id="requestSchool" class="rp-select">
+                        <option value="">Tous les établissements</option>
+                        <option th:each="d:${demandes}" th:value="${d.ecole}" th:text="${d.ecole}"></option>
+                    </select>
+                    <input id="requestDate" class="rp-input" type="date">
+                </div>
+
+                <div class="rp-table-wrap">
+                    <table class="rp-table">
+                        <thead><tr><th>Candidat</th><th>Matricule</th><th>Établissement</th><th>Filière</th><th>Date de dépôt</th><th>Statut</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <tr class="request-row"
+                            th:each="d:${demandes}"
+                            th:data-id="${d.id}"
+                            th:data-search="${#strings.toLowerCase(d.prenom+' '+d.nom)}"
+                            th:data-status="${d.statut.name()}"
+                            th:data-field="${d.filiere}"
+                            th:data-school="${d.ecole}"
+                            th:data-date="${#temporals.format(d.dateDemande,'yyyy-MM-dd')}"
+                            th:data-name="${d.prenom+' '+d.nom}"
+                            th:data-email="${d.email ?: ''}"
+                            th:data-school-name="${d.ecole}"
+                            th:data-field-name="${d.filiere}"
+                            th:data-level="${d.niveau}"
+                            th:data-period="${d.dureeSouhaitee}"
+                            data-service="À définir">
+                            <td>
+                                <div class="rp-person">
+                                    <div class="rp-avatar" th:text="${#strings.substring(d.prenom,0,1)+#strings.substring(d.nom,0,1)}">JD</div>
+                                    <div><strong th:text="${d.prenom+' '+d.nom}">Nom</strong><span th:text="${d.email ?: 'Email non renseigné'}">Email</span></div>
+                                </div>
+                            </td>
+                            <td th:text="${'DEM-'+#numbers.formatInteger(d.id,5)}">DEM-00001</td>
+                            <td th:text="${d.ecole}">École</td>
+                            <td th:text="${d.filiere}">Filière</td>
+                            <td th:text="${#temporals.format(d.dateDemande,'dd/MM/yyyy')}">Date</td>
+                            <td><span class="rp-badge" th:classappend="${d.statut.name()=='acceptee'?' green':(d.statut.name()=='refusee'?' red':' orange')}" th:text="${#strings.capitalize(#strings.replace(d.statut.name(),'_',' '))}">Statut</span></td>
+                            <td><button class="rp-secondary show-request" type="button"><i class="fa-regular fa-eye"></i> Voir détails</button></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="rp-empty" th:if="${#lists.isEmpty(demandes)}">Aucune demande enregistrée.</div>
+                </div>
+                <div class="rp-pagination"><span th:text="${totalDemandes+' résultat(s)'}">0 résultat</span><div class="rp-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div>
+            </article>
+        </section>
+    </div>
+</main>
+
+<div class="rp-modal" id="requestModal" aria-hidden="true">
+    <div class="rp-modal-panel rp-modal-wide">
+        <div class="rp-modal-head">
+            <div><h2>Détails de la demande</h2><p id="requestReference">Dossier candidat</p></div>
+            <button class="rp-icon-btn" type="button" data-close-modal="requestModal" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="rp-request-summary">
+            <div class="rp-detail-profile">
+                <div class="rp-avatar" id="detailAvatar">?</div>
+                <h3 id="detailName">Candidat</h3>
+                <p id="detailEmail">—</p>
+            </div>
+            <div class="rp-data">
+                <div class="rp-data-row"><span>Email</span><strong id="detailEmailData">—</strong></div>
+                <div class="rp-data-row"><span>Établissement</span><strong id="detailSchool">—</strong></div>
+                <div class="rp-data-row"><span>Filière</span><strong id="detailField">—</strong></div>
+                <div class="rp-data-row"><span>Niveau</span><strong id="detailLevel">—</strong></div>
+                <div class="rp-data-row"><span>Période souhaitée</span><strong id="detailPeriod">—</strong></div>
+                <div class="rp-data-row"><span>Service demandé</span><strong id="detailService">—</strong></div>
+                <div class="rp-data-row"><span>Statut</span><strong><span id="detailStatus" class="rp-badge orange">En attente</span></strong></div>
+            </div>
+        </div>
+
+        <div class="rp-card-head rp-documents-heading">
+            <div><h3>Documents joints</h3><p>Consultez les pièces déposées par le candidat.</p></div>
+        </div>
+        <div id="detailDocuments"></div>
+
+        <section class="rp-document-preview" id="requestDocumentPreview" hidden>
+            <div class="rp-card-head">
+                <div><h3 id="previewDocumentTitle">Aperçu du document</h3><p>Visualisation intégrée au dossier de candidature.</p></div>
+                <a id="previewDocumentLarge" class="rp-secondary" href="#" target="_blank" rel="noopener"><i class="fa-solid fa-expand"></i> Voir plus grand</a>
+            </div>
+            <iframe id="previewDocumentFrame" title="Aperçu du document"></iframe>
+        </section>
+
+        <div class="rp-modal-actions" id="requestDecisionActions">
+            <button class="rp-secondary" type="button" data-close-modal="requestModal">Fermer</button>
+            <button id="openRejectModal" class="rp-danger" type="button"><i class="fa-solid fa-xmark"></i> Refuser</button>
+            <button id="openAcceptModal" class="rp-primary" type="button"><i class="fa-solid fa-check"></i> Accepter</button>
+        </div>
+    </div>
+</div>
+
+<div class="rp-modal" id="acceptModal" aria-hidden="true">
+    <form id="acceptForm" class="rp-modal-panel" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="rp-modal-head">
+            <div><h2>Créer le compte stagiaire</h2><p>Acceptation et envoi des identifiants.</p></div>
+            <button class="rp-icon-btn" type="button" data-close-modal="acceptModal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="rp-decision-identity"><span class="rp-avatar" id="acceptAvatar">?</span><div><strong id="acceptName">Candidat</strong><small id="acceptCandidateEmail">—</small></div></div>
+        <div class="rp-field"><label for="accountEmail">Adresse email de connexion</label><input id="accountEmail" class="rp-input" type="email" name="emailConnexion" required></div>
+        <div class="rp-field">
+            <label for="temporaryPassword">Mot de passe temporaire</label>
+            <div class="rp-password-generator"><input id="temporaryPassword" class="rp-input" name="motDePasseTemporaire" minlength="8" required readonly><button id="generatePassword" class="rp-secondary" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> Générer</button></div>
+        </div>
+        <div class="rp-notice"><i class="fa-solid fa-circle-info"></i><span>La demande sera acceptée, le compte créé et les identifiants envoyés au candidat par e-mail.</span></div>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="acceptModal">Annuler</button><button class="rp-primary" type="submit">Terminer et envoyer</button></div>
+    </form>
+</div>
+
+<div class="rp-modal" id="rejectModal" aria-hidden="true">
+    <form id="rejectForm" class="rp-modal-panel" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="rp-modal-head">
+            <div><h2>Refuser la demande</h2><p>Le motif sera envoyé automatiquement au candidat.</p></div>
+            <button class="rp-icon-btn" type="button" data-close-modal="rejectModal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="rp-decision-identity"><span class="rp-avatar" id="rejectAvatar">?</span><div><strong id="rejectName">Candidat</strong><small id="rejectEmail">—</small></div></div>
+        <div class="rp-field"><label for="rejectionReason">Motif du refus</label><textarea id="rejectionReason" class="rp-input rp-textarea" name="motifRefus" minlength="10" required placeholder="Expliquez clairement le motif du refus (minimum 10 caractères)."></textarea><small class="rp-field-help"><span id="reasonLength">0</span>/10 caractères minimum</small></div>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="rejectModal">Annuler</button><button class="rp-danger" type="submit">Refuser et envoyer</button></div>
+    </form>
+</div>
+
+<div hidden>
+    <div class="request-documents" th:each="demande:${demandes}" th:data-request-id="${demande.id}">
+        <div class="rp-data">
+            <div class="rp-data-row request-document-row" th:each="doc:${documentsParDemande[demande.id]}">
+                <span><b th:text="${doc.typeDocument}">Document</b><br><small th:text="${doc.nomFichier}">fichier.pdf</small></span>
+                <strong class="rp-actions">
+                    <button class="rp-secondary preview-request-document"
+                            type="button"
+                            th:data-title="${doc.nomFichier}"
+                            th:data-preview-url="@{/documents/{id}/preview(id=${doc.id})}">
+                        <i class="fa-regular fa-eye"></i> Voir détail
+                    </button>
+                    <a class="rp-icon-btn" th:href="@{/documents/{id}(id=${doc.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                </strong>
+            </div>
+            <div class="rp-empty" th:if="${#lists.isEmpty(documentsParDemande[demande.id])}">Aucun document déposé.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const rows = [...document.querySelectorAll('.request-row')];
+    const search = document.getElementById('requestSearch');
+    const status = document.getElementById('requestStatus');
+    const field = document.getElementById('requestField');
+    const school = document.getElementById('requestSchool');
+    const date = document.getElementById('requestDate');
+    const requestModal = document.getElementById('requestModal');
+    const acceptModal = document.getElementById('acceptModal');
+    const rejectModal = document.getElementById('rejectModal');
+    let selectedRow = null;
+
+    const openModal = modal => {
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+    const closeModal = modal => {
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    };
+    document.querySelectorAll('[data-close-modal]').forEach(button => {
+        button.addEventListener('click', () => closeModal(document.getElementById(button.dataset.closeModal)));
+    });
+    [requestModal, acceptModal, rejectModal].forEach(modal => {
+        modal?.addEventListener('click', event => {
+            if (event.target === modal) closeModal(modal);
+        });
+    });
+
+    const filterRows = () => {
+        rows.forEach(row => {
+            row.hidden = !(
+                (!search.value || row.dataset.search.includes(search.value.toLowerCase())) &&
+                (!status.value || row.dataset.status === status.value) &&
+                (!field.value || row.dataset.field === field.value) &&
+                (!school.value || row.dataset.school === school.value) &&
+                (!date.value || row.dataset.date === date.value)
+            );
+        });
+    };
+    [search, status, field, school, date].filter(Boolean).forEach(control => {
+        control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', filterRows);
+    });
+
+    const initials = name => name.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+    const fillDecisionIdentity = (prefix, row) => {
+        document.getElementById(prefix + 'Avatar').textContent = initials(row.dataset.name);
+        document.getElementById(prefix + 'Name').textContent = row.dataset.name;
+        document.getElementById(prefix === 'accept' ? 'acceptCandidateEmail' : 'rejectEmail').textContent = row.dataset.email || 'Email non renseigné';
+    };
+
+    rows.forEach(row => {
+        row.querySelector('.show-request')?.addEventListener('click', () => {
+            selectedRow = row;
+            document.getElementById('requestReference').textContent = 'DEM-' + String(row.dataset.id).padStart(5, '0');
+            document.getElementById('detailAvatar').textContent = initials(row.dataset.name);
+            document.getElementById('detailName').textContent = row.dataset.name;
+            document.getElementById('detailEmail').textContent = row.dataset.email || 'Email non renseigné';
+            document.getElementById('detailEmailData').textContent = row.dataset.email || 'Non renseigné';
+            document.getElementById('detailSchool').textContent = row.dataset.schoolName || '—';
+            document.getElementById('detailField').textContent = row.dataset.fieldName || '—';
+            document.getElementById('detailLevel').textContent = row.dataset.level || '—';
+            document.getElementById('detailPeriod').textContent = row.dataset.period || '—';
+            document.getElementById('detailService').textContent = row.dataset.service || 'À définir';
+
+            const badge = document.getElementById('detailStatus');
+            badge.textContent = row.dataset.status.replace('_', ' ');
+            badge.className = 'rp-badge ' + (row.dataset.status === 'acceptee' ? 'green' : row.dataset.status === 'refusee' ? 'red' : 'orange');
+
+            const source = document.querySelector(`.request-documents[data-request-id="${row.dataset.id}"]`);
+            document.getElementById('detailDocuments').replaceChildren(
+                source ? source.cloneNode(true) : document.createTextNode('Aucun document déposé.')
+            );
+            document.getElementById('requestDocumentPreview').hidden = true;
+            document.getElementById('previewDocumentFrame').src = 'about:blank';
+            document.getElementById('requestDecisionActions').hidden = row.dataset.status !== 'en_attente';
+            openModal(requestModal);
+        });
+    });
+
+    document.getElementById('detailDocuments').addEventListener('click', event => {
+        const button = event.target.closest('.preview-request-document');
+        if (!button) return;
+        const preview = document.getElementById('requestDocumentPreview');
+        document.getElementById('previewDocumentTitle').textContent = button.dataset.title || 'Aperçu du document';
+        document.getElementById('previewDocumentFrame').src = button.dataset.previewUrl;
+        document.getElementById('previewDocumentLarge').href = button.dataset.previewUrl;
+        preview.hidden = false;
+        preview.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    });
+
+    document.getElementById('openAcceptModal').addEventListener('click', () => {
+        if (!selectedRow) return;
+        fillDecisionIdentity('accept', selectedRow);
+        document.getElementById('accountEmail').value = selectedRow.dataset.email || '';
+        document.getElementById('acceptForm').action = `/responsable/demandes/${selectedRow.dataset.id}/accepter`;
+        document.getElementById('generatePassword').click();
+        closeModal(requestModal);
+        openModal(acceptModal);
+    });
+    document.getElementById('openRejectModal').addEventListener('click', () => {
+        if (!selectedRow) return;
+        fillDecisionIdentity('reject', selectedRow);
+        document.getElementById('rejectForm').action = `/responsable/demandes/${selectedRow.dataset.id}/refuser`;
+        document.getElementById('rejectionReason').value = '';
+        document.getElementById('reasonLength').textContent = '0';
+        closeModal(requestModal);
+        openModal(rejectModal);
+    });
+
+    document.getElementById('generatePassword').addEventListener('click', () => {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
+        const values = new Uint32Array(12);
+        crypto.getRandomValues(values);
+        document.getElementById('temporaryPassword').value = [...values].map(value => alphabet[value % alphabet.length]).join('');
+    });
+    document.getElementById('rejectionReason').addEventListener('input', event => {
+        document.getElementById('reasonLength').textContent = event.target.value.trim().length;
+    });
+})();
+</script>
+</body>
+</html>

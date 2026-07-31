@@ -243,6 +243,28 @@ body.coach-portal {
     backdrop-filter: blur(14px);
 }
 
+.coach-notifications-popover {
+    position: absolute;
+    z-index: 1200;
+    top: calc(100% - 4px);
+    right: 88px;
+    width: min(360px, calc(100vw - 32px));
+    max-height: 430px;
+    overflow: auto;
+    display: none;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+}
+
+.coach-notifications-popover.open { display: block; }
+.coach-notifications-head { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+.coach-notifications-list article { display: grid; gap: 4px; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+.coach-notifications-list article span { color: #475569; font-size: .86rem; line-height: 1.45; }
+.coach-notifications-list article small { color: #94a3b8; }
+.coach-notifications-list p { margin: 0; padding: 18px 16px; color: #64748b; }
+
 .coach-search {
     position: relative;
     width: min(320px, 34vw);

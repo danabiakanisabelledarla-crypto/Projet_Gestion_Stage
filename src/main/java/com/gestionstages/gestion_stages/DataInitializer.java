@@ -71,6 +71,7 @@ public class DataInitializer implements CommandLineRunner {
         Utilisateur utilisateurEncadreur = creerUtilisateurSiAbsent(
                 "ENCADREUR", "Nikoa", "M",
                 "encadreur@gestion-stages.com", "enc1234");
+        utilisateurEncadreur = synchroniserRoleEncadreurDeReference(utilisateurEncadreur);
 
         Utilisateur utilisateurStagiaire = creerUtilisateurSiAbsent(
                 "STAGIAIRE", "Mebale", "Darla",
@@ -106,6 +107,20 @@ public class DataInitializer implements CommandLineRunner {
         creerCritereSiAbsent("Initiative", "Prise d initiative et propositions");
 
         creerStageDemo(utilisateurStagiaire, utilisateurEncadreur);
+    }
+
+    private Utilisateur synchroniserRoleEncadreurDeReference(Utilisateur utilisateur) {
+        if (utilisateur == null) {
+            return null;
+        }
+        Role roleEncadreur = roleRepository.findByLibelle("ENCADREUR").orElseThrow();
+        if (utilisateur.getRole() == null
+                || !"ENCADREUR".equals(utilisateur.getRole().getLibelle())) {
+            utilisateur.setRole(roleEncadreur);
+            utilisateurRepository.save(utilisateur);
+            System.out.println(">>> Role ENCADREUR restaure pour : " + utilisateur.getEmail());
+        }
+        return utilisateur;
     }
 
     private void creerStageDemo(Utilisateur utilisateurStagiaire, Utilisateur utilisateurEncadreur) {

@@ -2,128 +2,263 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Plateforme de Gestion des Stages — DTA Alliance</title>
+    <title>DTA Alliance — Gestion et suivi des stages</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Plateforme de gestion et de suivi des stages — DTA Alliance">
+    <meta name="description" content="Déposez votre candidature et suivez votre stage avec la plateforme DTA Alliance.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/accueil.css(v=3)}">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=5)}">
 </head>
 <body>
+    <div th:if="${messageSucces}" class="alert-success banner-alert" role="status" th:text="${messageSucces}"></div>
 
-    <div th:if="${messageSucces}" class="alert-success banner-alert" th:text="${messageSucces}"></div>
+    <header class="site-header">
+        <div th:replace="~{fragments/navbar-public :: navbar('accueil')}"></div>
+    </header>
 
-    <div th:replace="~{fragments/navbar-public :: navbar('accueil')}"></div>
+    <main>
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-inner">
+                <div class="hero-content reveal is-visible">
+                    <span class="eyebrow eyebrow-light">
+                        <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+                        Plateforme de stages DTA Alliance
+                    </span>
+                    <h1 id="hero-title">Votre stage, <span>simplement piloté.</span></h1>
+                    <p>
+                        Déposez votre candidature, suivez chaque étape de votre dossier et réalisez
+                        votre stage dans un environnement clair, sécurisé et structuré.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" th:href="@{/candidat/demande}">
+                            Déposer une candidature
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                        <a class="button button-ghost" th:href="@{/candidat/suivi}">
+                            <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                            Suivre ma demande
+                        </a>
+                    </div>
+                    <div class="hero-trust" aria-label="Avantages de la plateforme">
+                        <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Dépôt sécurisé</span>
+                        <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Suivi en temps réel</span>
+                    </div>
+                </div>
 
-    <section class="hero">
-        <div class="hero-content">
-            <p class="hero-eyebrow">DTA ALLIANCE</p>
-            <h1>
-                Plateforme de <br>
-                <span>Gestion et de</span> <br>
-                Suivi des Stages
-            </h1>
-
-            <p class="hero-text">
-                Déposez votre candidature, suivez l'état de votre dossier et réalisez votre stage
-                dans un environnement clair, sécurisé et structuré.
-            </p>
-
-            <div class="hero-actions">
-                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer une candidature</a>
-                <a class="btn-outline" th:href="@{/candidat/suivi}">Suivre ma demande</a>
+                <div class="hero-visual reveal is-visible" aria-hidden="true">
+                    <div class="hero-visual-frame">
+                        <img th:src="@{/images/stage-he.PNG}" alt="">
+                    </div>
+                    <div class="hero-float hero-float-status">
+                        <span class="status-icon"><i class="fa-solid fa-check"></i></span>
+                        <span><small>Dossier</small><strong>Validé</strong></span>
+                    </div>
+                    <div class="hero-float hero-float-progress">
+                        <small>Progression du stage</small> 
+                        <strong>72%</strong>
+                        <span class="mini-progress"><span></span></span>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="hero-visual">
-            <div class="hero-glow"></div>
-            <div class="hero-network"></div>
+        <section class="section process-section" id="processus" aria-labelledby="process-title">
+            <div class="container">
+                <div class="section-heading reveal">
+                    <span class="eyebrow">Processus</span>
+                    <h2 id="process-title">Comment ça fonctionne ?</h2>
+                    <p>Un processus simple en 4 étapes</p>
+                </div>
 
-            <div class="floating-icon icon-doc"><i class="fa-solid fa-file-lines"></i></div>
-            <div class="floating-icon icon-cloud"><i class="fa-solid fa-cloud"></i></div>
-            <div class="floating-icon icon-lock"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="process-timeline">
+                    <article class="process-step reveal" style="--delay: 0ms; --accent: #3B82F6; --soft: #EFF6FF;">
+                        <div class="process-icon">
+                            <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                            <span class="step-number">1</span>
+                        </div>
+                        <div class="process-copy">
+                            <h3>Déposer un dossier</h3>
+                            <p>Soumettez votre candidature et joignez les documents nécessaires.</p>
+                        </div>
+                    </article>
 
-            <img th:src="@{/images/hero-team.png}" alt="Équipe et stage professionnel">
-        </div>
-    </section>
+                    <article class="process-step reveal" style="--delay: 100ms; --accent: #6366F1; --soft: #EEF2FF;">
+                        <div class="process-icon">
+                            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                            <span class="step-number">2</span>
+                        </div>
+                        <div class="process-copy">
+                            <h3>Validation</h3>
+                            <p>Votre dossier est examiné et les informations vérifiées par notre équipe.</p>
+                        </div>
+                    </article>
 
-    <section class="process-section">
-        <div class="section-title">
-            <h2>Comment ça fonctionne ?</h2>
-            <p>Un processus simple en 4 étapes</p>
-            <div class="title-line"></div>
-        </div>
+                    <article class="process-step reveal" style="--delay: 200ms; --accent: #8B5CF6; --soft: #F5F3FF;">
+                        <div class="process-icon">
+                            <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+                            <span class="step-number">3</span>
+                        </div>
+                        <div class="process-copy">
+                            <h3>Affectation</h3>
+                            <p>Vous êtes assigné à un encadreur et à un service d'accueil.</p>
+                        </div>
+                    </article>
 
-        <div class="process-grid">
-            <div class="process-card">
-                <div class="step-number">1</div>
-                <div class="step-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
-                <h3>Déposer votre dossier</h3>
-                <p>Remplissez le formulaire et joignez vos documents.</p>
+                    <article class="process-step reveal" style="--delay: 300ms; --accent: #0EA5E9; --soft: #F0F9FF;">
+                        <div class="process-icon">
+                            <i class="fa-solid fa-display" aria-hidden="true"></i>
+                            <span class="step-number">4</span>
+                        </div>
+                        <div class="process-copy">
+                            <h3>Suivi du stage</h3>
+                            <p>Suivez vos tâches, livrables et rapports tout au long de votre stage.</p>
+                        </div>
+                    </article>
+                </div>
             </div>
+        </section>
 
-            <div class="process-card">
-                <div class="step-number">2</div>
-                <div class="step-icon"><i class="fa-solid fa-gears"></i></div>
-                <h3>Traitement de la demande</h3>
-                <p>Le responsable examine votre candidature et valide les informations.</p>
-            </div>
+        <section class="section stats-section" aria-labelledby="stats-title">
+            <div class="container">
+                <div class="section-heading reveal">
+                    <span class="eyebrow">Impact</span>
+                    <h2 id="stats-title">DTA Alliance en chiffres</h2>
+                    <p>Des résultats concrets au service des talents et des organisations.</p>
+                </div>
 
-            <div class="process-card">
-                <div class="step-number">3</div>
-                <div class="step-icon"><i class="fa-solid fa-users"></i></div>
-                <h3>Assignation</h3>
-                <p>Vous êtes affecté à un encadreur et à un service.</p>
+                <div class="stats-grid">
+                    <article class="stat-card reveal" style="--delay: 0ms; --accent: #3B82F6;">
+                        <div class="stat-icon"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></div>
+                        <strong class="stat-value" data-counter="500" data-suffix="+">500+</strong>
+                        <span>Candidatures traitées</span>
+                        <div class="stat-accent"></div>
+                    </article>
+                    <article class="stat-card reveal" style="--delay: 100ms; --accent: #6366F1;">
+                        <div class="stat-icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></div>
+                        <strong class="stat-value" data-counter="120" data-suffix="+">120+</strong>
+                        <span>Stages réalisés</span>
+                        <div class="stat-accent"></div>
+                    </article>
+                    <article class="stat-card reveal" style="--delay: 200ms; --accent: #F59E0B;">
+                        <div class="stat-icon"><i class="fa-solid fa-star" aria-hidden="true"></i></div>
+                        <strong class="stat-value" data-counter="95" data-suffix="%">95%</strong>
+                        <span>Taux de satisfaction</span>
+                        <div class="stat-accent"></div>
+                    </article>
+                    <article class="stat-card reveal" style="--delay: 300ms; --accent: #10B981;">
+                        <div class="stat-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+                        <strong class="stat-value" data-counter="20" data-suffix="+">20+</strong>
+                        <span>Services partenaires</span>
+                        <div class="stat-accent"></div>
+                    </article>
+                </div>
             </div>
+        </section>
 
-            <div class="process-card">
-                <div class="step-number">4</div>
-                <div class="step-icon"><i class="fa-solid fa-chart-line"></i></div>
-                <h3>Suivi du stage</h3>
-                <p>Vous gérez vos tâches, livrables et rapports en ligne.</p>
-            </div>
-        </div>
-    </section>
+        <section class="section advantages-section" aria-labelledby="advantages-title">
+            <div class="container">
+                <div class="section-heading reveal">
+                    <span class="eyebrow">Avantages</span>
+                    <h2 id="advantages-title">Pourquoi choisir DTA Alliance ?</h2>
+                    <p>Une expérience complète, pensée pour accompagner chaque étape de votre parcours.</p>
+                </div>
 
-    <section class="advantages-section">
-        <div class="advantages-card">
-            <div class="adv-item">
-                <div class="adv-icon"><i class="fa-solid fa-lock"></i></div>
-                <h3>Dépôt sécurisé</h3>
-                <p>Vos fichiers sont transmis dans un environnement fiable.</p>
+                <div class="advantages-card reveal">
+                    <article class="advantage-item" style="--accent: #3B82F6; --soft: #EFF6FF;">
+                        <div class="advantage-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+                        <h3>Dépôt sécurisé</h3>
+                        <p>Vos fichiers sont transmis dans un environnement fiable et protégé.</p>
+                        <a th:href="@{/candidat/demande}">En savoir plus <i class="fa-solid fa-arrow-right"></i></a>
+                    </article>
+                    <article class="advantage-item" style="--accent: #6366F1; --soft: #EEF2FF;">
+                        <div class="advantage-icon"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i></div>
+                        <h3>Suivi transparent</h3>
+                        <p>Vous suivez l'avancement de votre demande en temps réel.</p>
+                        <a th:href="@{/candidat/suivi}">En savoir plus <i class="fa-solid fa-arrow-right"></i></a>
+                    </article>
+                    <article class="advantage-item" style="--accent: #8B5CF6; --soft: #F5F3FF;">
+                        <div class="advantage-icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></div>
+                        <h3>Encadrement professionnel</h3>
+                        <p>Un accompagnement clair et personnalisé tout au long du processus.</p>
+                        <a th:href="@{/a-propos}">En savoir plus <i class="fa-solid fa-arrow-right"></i></a>
+                    </article>
+                    <article class="advantage-item" style="--accent: #0EA5E9; --soft: #F0F9FF;">
+                        <div class="advantage-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></div>
+                        <h3>Transformation numérique</h3>
+                        <p>Une expérience moderne et simplifiée pour les étudiants.</p>
+                        <a th:href="@{/a-propos}">En savoir plus <i class="fa-solid fa-arrow-right"></i></a>
+                    </article>
+                </div>
             </div>
+        </section>
 
-            <div class="adv-item">
-                <div class="adv-icon"><i class="fa-solid fa-chart-column"></i></div>
-                <h3>Suivi transparent</h3>
-                <p>Vous voyez l'avancement de votre demande à tout moment.</p>
-            </div>
+        <section class="cta-section" aria-labelledby="cta-title">
+            <div class="container">
+                <div class="cta-banner reveal">
+                    <div class="cta-content">
+                        <span class="cta-badge">Commencer maintenant</span>
+                        <h2 id="cta-title">Prêt à commencer<br>votre stage ?</h2>
+                        <p>
+                            Rejoignez DTA Alliance et développez vos compétences
+                            dans un environnement professionnel moderne.
+                        </p>
+                        <div class="cta-actions">
+                            <a class="button cta-primary" th:href="@{/candidat/demande}">
+                                Déposer ma candidature
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                            <a class="button cta-secondary" th:href="@{/candidat/suivi}">
+                                Suivre ma demande
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </div>
 
-            <div class="adv-item">
-                <div class="adv-icon"><i class="fa-solid fa-handshake-angle"></i></div>
-                <h3>Encadrement</h3>
-                <p>Un accompagnement clair tout au long du processus.</p>
+                    <div class="dashboard-mockup" aria-hidden="true">
+                        <div class="mockup-chrome">
+                            <span class="chrome-dots"><i></i><i></i><i></i></span>
+                            <span class="mock-url">app.dta-alliance.com/stage</span>
+                        </div>
+                        <div class="mockup-body">
+                            <aside class="mock-sidebar">
+                                <span class="mock-logo">DTA</span>
+                                <i class="active"></i><i></i><i></i><i></i><i></i>
+                            </aside>
+                            <div class="mock-main">
+                                <div class="mock-header">
+                                    <span><i></i><i></i></span>
+                                    <b></b>
+                                </div>
+                                <div class="mock-stats">
+                                    <div><i class="fa-solid fa-file-lines"></i><span><b>12</b><small>Documents</small></span></div>
+                                    <div><i class="fa-solid fa-list-check"></i><span><b>72%</b><small>Progression</small></span></div>
+                                    <div><i class="fa-solid fa-calendar-check"></i><span><b>28 j</b><small>Restants</small></span></div>
+                                </div>
+                                <div class="mock-content">
+                                    <div class="mock-chart">
+                                        <span class="chart-title"></span>
+                                        <div class="chart-bars">
+                                            <i style="height: 38%"></i><i style="height: 58%"></i>
+                                            <i style="height: 48%"></i><i style="height: 76%"></i>
+                                            <i style="height: 68%"></i><i style="height: 92%"></i>
+                                        </div>
+                                    </div>
+                                    <div class="mock-list">
+                                        <span></span><span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="adv-item">
-                <div class="adv-icon"><i class="fa-solid fa-lightbulb"></i></div>
-                <h3>Transformation numérique</h3>
-                <p>Une expérience moderne et simplifiée pour les étudiants.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="cta-section">
-        <div class="cta-card">
-            <h2>Prêt à commencer votre stage ?</h2>
-            <p>Rejoignez DTA Alliance et développez vos compétences dans un environnement professionnel.</p>
-            <div class="cta-actions">
-                <a class="btn-primary" th:href="@{/candidat/demande}">Déposer ma candidature</a>
-                <a class="btn-outline-light" th:href="@{/a-propos}">En savoir plus</a>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
 
+    <script th:src="@{/js/accueil.js(v=2)}" defer></script>
 </body>
 </html>

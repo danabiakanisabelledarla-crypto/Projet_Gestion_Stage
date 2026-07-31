@@ -15,10 +15,18 @@
 .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
 
 /* ===== STATS CARDS (6) ===== */
-.stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
+.stats-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 22px; }
 @media (max-width:1200px){ .stats-row { grid-template-columns: repeat(3,1fr); } }
 @media (max-width:700px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
-.stat-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); display: flex; gap: 14px; align-items: center; transition: all 0.3s; }
+.stat-card { background: white; border-radius: 10px; padding: 14px; box-shadow: 0 5px 18px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; transition: all 0.3s; }
+.document-filter-select { min-width:145px; height:38px; padding:0 10px; border:1px solid #dbe3ef; border-radius:8px; background:#fff; color:#334155; font:inherit; font-size:12px; }
+.owner-documents-menu { position:relative; display:inline-block; }
+.owner-documents-dropdown { position:absolute; z-index:40; top:calc(100% + 6px); left:0; display:none; width:min(330px,70vw); padding:7px; border:1px solid #dbe3ef; border-radius:9px; background:#fff; box-shadow:0 15px 35px rgba(15,23,42,.16); }
+.owner-documents-dropdown.open { display:grid; gap:4px; }
+.owner-document-item { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:8px; width:100%; padding:9px; border:0; border-radius:7px; background:transparent; color:#334155; text-align:left; cursor:pointer; }
+.owner-document-item:hover { background:#eff6ff; color:#1d4ed8; }
+.owner-document-item span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.owner-document-item small { color:#94a3b8; }
 .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 35px rgba(0,0,0,0.1); }
 .stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .stat-card.bleu .stat-icon { background: #DBEAFE; color: #2563EB; }

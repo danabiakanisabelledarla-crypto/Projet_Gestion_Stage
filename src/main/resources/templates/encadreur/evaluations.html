@@ -57,7 +57,7 @@
                             <td th:text="${criteresPrincipaux[evaluation.id] != null ? criteresPrincipaux[evaluation.id] : 'Non renseigné'}">Critère</td>
                             <td class="coach-mono" th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy')}">29/07/2026</td>
                             <td><span class="coach-badge" th:classappend="${moyenne >= 10} ? ' green' : ' red'" th:text="${moyenne >= 10 ? 'Validée' : 'À revoir'}">Statut</span></td>
-                            <td><div class="coach-actions"><button class="coach-action evaluation-view" type="button" title="Voir les détails"><i class="fa-regular fa-eye"></i></button><button class="coach-action evaluation-comment" type="button" title="Voir le commentaire"><i class="fa-regular fa-comment"></i></button><button class="coach-action evaluation-print" type="button" title="Imprimer"><i class="fa-solid fa-file-pdf"></i></button></div></td>
+                            <td><div class="coach-actions"><button class="coach-action evaluation-view" type="button" title="Voir les détails"><i class="fa-regular fa-eye"></i></button><a class="coach-action" th:href="@{/encadreur/evaluations/{id}/pdf(id=${evaluation.id})}" title="Télécharger le PDF"><i class="fa-solid fa-file-pdf"></i></a></div><div class="evaluation-notes" hidden><span class="evaluation-note" th:each="note : ${notesEvaluations[evaluation.id]}" th:attr="data-label=${note.critere.libelle},data-score=${note.note},data-comment=${note.commentaire}"></span></div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(evaluations)}"><td colspan="7" class="coach-empty"><i class="fa-regular fa-star"></i><br><br>Aucune évaluation enregistrée pour le moment.</td></tr>
                         </tbody>
@@ -147,7 +147,9 @@
         <div class="coach-card-head"><div><h2>Détails de l’évaluation</h2><p id="detailEvaluationType">Évaluation</p></div><button class="coach-action" data-close-detail type="button"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="coach-profile" style="margin-bottom:16px"><span class="coach-avatar"><i class="fa-solid fa-user-graduate"></i></span><h3 id="detailEvaluationStudent">Stagiaire</h3><p id="detailEvaluationScore" class="coach-mono">0/20</p></div>
         <div class="coach-data-list"><div class="coach-data-row"><span>Critère principal</span><strong id="detailEvaluationCriterion">—</strong></div><div class="coach-data-row"><span>Date</span><strong id="detailEvaluationDate" class="coach-mono">—</strong></div><div class="coach-data-row"><span>Statut</span><strong id="detailEvaluationStatus">—</strong></div><div class="coach-data-row"><span>Appréciation</span><strong id="detailEvaluationComment">—</strong></div></div>
-        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-detail type="button">Fermer</button><button class="coach-btn" onclick="window.print()" type="button"><i class="fa-solid fa-file-pdf"></i> Imprimer</button></div>
+        <div class="coach-card-head" style="margin-top:18px"><div><h3>Fiche complète de notes</h3><p>Détail par critère</p></div></div>
+        <div class="coach-data-list" id="detailEvaluationNotes"></div>
+        <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-detail type="button">Fermer</button></div>
     </div>
 </div>
 
@@ -190,12 +192,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detailEvaluationDate').textContent = row.cells[4].innerText;
         document.getElementById('detailEvaluationStatus').textContent = row.dataset.status === 'validee' ? 'Validée' : 'À revoir';
         document.getElementById('detailEvaluationComment').textContent = row.dataset.appreciation || 'Aucune appréciation renseignée';
+        const notesContainer = document.getElementById('detailEvaluationNotes');
+        notesContainer.replaceChildren();
+        const notes = [...row.querySelectorAll('.evaluation-note')];
+        if (!notes.length) {
+            const empty = document.createElement('div');
+            empty.className = 'coach-empty';
+            empty.textContent = 'Aucune note enregistrée.';
+            notesContainer.appendChild(empty);
+        }
+        notes.forEach(note => {
+            const item = document.createElement('div');
+            item.className = 'coach-data-row';
+            const label = document.createElement('span');
+            label.textContent = note.dataset.label || 'Critère';
+            const score = document.createElement('strong');
+            score.textContent = (note.dataset.score || '0') + '/20'
+                + (note.dataset.comment ? ' · ' + note.dataset.comment : '');
+            item.append(label, score);
+            notesContainer.appendChild(item);
+        });
         detail.classList.add('open');
     };
     rows.forEach(row => {
         row.querySelector('.evaluation-view').addEventListener('click', () => openDetail(row));
-        row.querySelector('.evaluation-comment').addEventListener('click', () => openDetail(row));
-        row.querySelector('.evaluation-print').addEventListener('click', () => { openDetail(row); setTimeout(() => window.print(), 150); });
     });
     document.querySelectorAll('[data-close-detail]').forEach(button => button.addEventListener('click', () => detail.classList.remove('open')));
 
@@ -212,5 +232,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-</body>
+<script th:src="@{/js/encadreur-topbar.js}"></script></body>
 </html>

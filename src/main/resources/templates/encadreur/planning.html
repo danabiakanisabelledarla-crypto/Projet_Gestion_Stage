@@ -33,7 +33,7 @@
             <article class="coach-kpi"><span class="coach-kpi-icon red"><i class="fa-solid fa-hourglass-half"></i></span><strong th:text="${echeancesSemaine}">0</strong><span>Échéances cette semaine</span><small>7 prochains jours</small></article>
             <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-folder-open"></i></span><strong th:text="${livrablesAttendus}">0</strong><span>Livrables attendus</span><small>À contrôler</small></article>
             <article class="coach-kpi"><span class="coach-kpi-icon purple"><i class="fa-solid fa-bullseye"></i></span><strong th:text="${objectifsProches}">0</strong><span>Objectifs proches</span><small>Échéance imminente</small></article>
-            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${activitesMois}">0</strong><span>Activités du mois</span><small>Juillet 2026</small></article>
+            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-chart-line"></i></span><strong th:text="${activitesMois}">0</strong><span>Activités du mois</span><small th:text="${moisCourant}">Mois courant</small></article>
         </section>
 
         <section class="coach-grid-70">
@@ -41,7 +41,7 @@
                 <div class="coach-calendar-toolbar">
                     <div class="coach-actions"><button class="coach-action" id="prevMonth"><i class="fa-solid fa-chevron-left"></i></button><button class="coach-btn secondary compact" id="todayButton">Aujourd'hui</button><button class="coach-action" id="nextMonth"><i class="fa-solid fa-chevron-right"></i></button></div>
                     <h2 id="calendarTitle">Juillet 2026</h2>
-                    <div class="coach-segments"><button class="active">Mois</button><button>Semaine</button><button>Jour</button></div>
+                    <div class="coach-segments"><button class="active" type="button" data-calendar-view="month">Mois</button><button type="button" data-calendar-view="week">Semaine</button><button type="button" data-calendar-view="day">Jour</button></div>
                 </div>
                 <div class="coach-calendar-wrap"><div class="coach-calendar" id="calendarGrid"><div class="coach-calendar-head">Lun</div><div class="coach-calendar-head">Mar</div><div class="coach-calendar-head">Mer</div><div class="coach-calendar-head">Jeu</div><div class="coach-calendar-head">Ven</div><div class="coach-calendar-head">Sam</div><div class="coach-calendar-head">Dim</div></div></div>
             </article>
@@ -55,7 +55,7 @@
         </section>
 
         <section class="coach-grid-50">
-            <article class="coach-card"><div class="coach-card-head"><div><h2>Calendrier des réunions</h2><p>Prochaines sessions d'encadrement</p></div></div><div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Sujet</th><th>Date</th><th>Heure</th><th>Lieu ou lien</th><th>Statut</th></tr></thead><tbody><tr th:each="event : ${evenements}" th:if="${event.typeCouleur == 'reunion'}"><td th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</td><td th:text="${event.motif}">Sujet</td><td th:text="${#temporals.format(event.date,'dd/MM/yyyy')}">Date</td><td th:text="${event.heure != null ? event.heure : '—'}">Heure</td><td th:text="${event.lieu != null and !event.lieu.isBlank() ? event.lieu : 'À définir'}">Lieu</td><td><span class="coach-badge green">Planifiée</span></td></tr><tr th:if="${reunionsProgrammees == 0}"><td colspan="6" class="coach-empty">Aucune réunion programmée.</td></tr></tbody></table></div></article>
+
             <article class="coach-card"><div class="coach-card-head"><div><h2>Échéances importantes</h2><p>Dates limites à surveiller</p></div></div><div class="coach-timeline"><div class="coach-timeline-item" th:each="tache,stat : ${taches}" th:if="${stat.index < 5}"><span class="coach-timeline-icon"><i class="fa-solid fa-list-check"></i></span><div class="coach-timeline-content"><strong th:text="${tache.titre}">Tâche</strong><span th:text="${tache.stage.stagiaire.utilisateur.prenom+' '+tache.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}">Date</small></div></div><div class="coach-empty" th:if="${taches.isEmpty()}">Aucune échéance importante.</div></div></article>
         </section>
 
@@ -63,7 +63,7 @@
             <article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>Historique du planning</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-plus"></i></span><div class="coach-timeline-content"><strong>Réunion créée</strong><span>Une session de suivi a été planifiée</span><small>Aujourd'hui</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-folder-open"></i></span><div class="coach-timeline-content"><strong>Livrable ajouté</strong><span>Une échéance documentaire est suivie</span><small>Cette semaine</small></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-star"></i></span><div class="coach-timeline-content"><strong>Évaluation planifiée</strong><span th:text="${#lists.size(evaluations)+' évaluation(s)'}">Évaluation</span><small>À venir</small></div></div></div></article>
             <article class="coach-card"><div class="coach-card-head"><div><h2>Catégories d'événements</h2><p>Légende du planning</p></div></div><div class="coach-data-list"><div class="coach-data-row"><span><i style="color:#2563eb" class="fa-solid fa-circle"></i> Tâches</span><strong>Bleu</strong></div><div class="coach-data-row"><span><i style="color:#22c55e" class="fa-solid fa-circle"></i> Livrables</span><strong>Vert</strong></div><div class="coach-data-row"><span><i style="color:#f59e0b" class="fa-solid fa-circle"></i> Réunions</span><strong>Orange</strong></div><div class="coach-data-row"><span><i style="color:#8b5cf6" class="fa-solid fa-circle"></i> Évaluations</span><strong>Violet</strong></div><div class="coach-data-row"><span><i style="color:#ef4444" class="fa-solid fa-circle"></i> Deadlines</span><strong>Rouge</strong></div><div class="coach-data-row"><span><i style="color:#94a3b8" class="fa-solid fa-circle"></i> Personnel</span><strong>Gris</strong></div></div></article>
         </section>
-        <section class="coach-card"><div class="coach-card-head"><div><h2>Actions rapides</h2><p>Planification et navigation</p></div></div><div class="coach-quick-actions"><button class="coach-quick-action" data-open-event type="button"><i class="fa-solid fa-users"></i>Planifier une réunion</button><button class="coach-quick-action" data-open-event type="button"><i class="fa-solid fa-calendar-plus"></i>Ajouter un événement</button><a class="coach-quick-action" th:href="@{/encadreur/mes-stagiaires}"><i class="fa-solid fa-user-graduate"></i>Voir les stagiaires</a><a class="coach-quick-action" th:href="@{/encadreur/objectifs}"><i class="fa-solid fa-bullseye"></i>Consulter les objectifs</a><a class="coach-quick-action" th:href="@{/encadreur/taches}"><i class="fa-solid fa-list-check"></i>Gérer les tâches</a><a class="coach-quick-action" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i>Consulter les livrables</a></div></section>
+
     </main>
 </div>
 
@@ -84,26 +84,38 @@
         <div class="coach-modal-actions"><button class="coach-btn secondary" data-close-event type="button">Annuler</button><button class="coach-btn" type="submit">Enregistrer</button></div>
     </form>
 </div>
+<div id="planningEvents" hidden><span th:each="event : ${evenements}" th:attr="data-date=${event.date},data-title=${event.motif},data-type=${event.typeCouleur},data-time=${event.heure},data-student=${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}"></span></div>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
  const modal=document.getElementById('eventModal');
  document.querySelectorAll('[data-open-event]').forEach(button=>button.onclick=()=>modal.classList.add('open'));
  document.querySelectorAll('[data-close-event]').forEach(button=>button.onclick=()=>modal.classList.remove('open'));
- let current=new Date(2026,6,1);
+ let current=new Date(), view='month';
+ const events=[...document.querySelectorAll('#planningEvents span')].map(item=>({date:item.dataset.date,title:item.dataset.title,type:item.dataset.type||'personnel',time:item.dataset.time||'',student:item.dataset.student||''}));
  const names=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+ const weekNames=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
  const grid=document.getElementById('calendarGrid'), title=document.getElementById('calendarTitle');
+ const iso=date=>date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+ const startOfWeek=date=>{const start=new Date(date);start.setDate(date.getDate()-((date.getDay()+6)%7));return start;};
+ const addEvent=(cell,event)=>{const badge=document.createElement('span');badge.className='coach-event '+(event.type==='reunion'?'orange':event.type==='livrable'?'green':event.type==='evaluation'?'purple':'');badge.textContent=(event.time?event.time+' · ':'')+event.title;badge.title=event.student;cell.appendChild(badge);};
  const render=()=>{
-  grid.querySelectorAll('.coach-day').forEach(day=>day.remove());
-  title.textContent=names[current.getMonth()]+' '+current.getFullYear();
-  const first=(new Date(current.getFullYear(),current.getMonth(),1).getDay()+6)%7;
-  const days=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
-  for(let i=0;i<first;i++){const day=document.createElement('div');day.className='coach-day muted';grid.appendChild(day);}
-  for(let n=1;n<=days;n++){const day=document.createElement('div');day.className='coach-day';if(n===28&&current.getMonth()===6)day.classList.add('today');day.innerHTML='<span class="coach-day-number">'+n+'</span>';if(n===5)day.innerHTML+='<span class="coach-event orange">Réunion</span>';if(n===12)day.innerHTML+='<span class="coach-event green">Livrable</span>';if(n===20)day.innerHTML+='<span class="coach-event purple">Évaluation</span>';grid.appendChild(day);}
+  grid.replaceChildren(); grid.style.gridTemplateColumns=view==='day'?'minmax(0,1fr)':'repeat(7,minmax(0,1fr))'; const today=iso(new Date());
+  if(view==='month'){
+   weekNames.forEach(name=>{const head=document.createElement('div');head.className='coach-calendar-head';head.textContent=name;grid.appendChild(head);});
+   title.textContent=names[current.getMonth()]+' '+current.getFullYear(); const first=(new Date(current.getFullYear(),current.getMonth(),1).getDay()+6)%7; const days=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
+   for(let i=0;i<first;i++){const day=document.createElement('div');day.className='coach-day muted';grid.appendChild(day);}
+   for(let n=1;n<=days;n++){const date=new Date(current.getFullYear(),current.getMonth(),n),key=iso(date),day=document.createElement('div');day.className='coach-day'+(key===today?' today':'');const number=document.createElement('span');number.className='coach-day-number';number.textContent=n;day.appendChild(number);events.filter(event=>event.date===key).forEach(event=>addEvent(day,event));grid.appendChild(day);}
+  } else if(view==='week'){
+   const start=startOfWeek(current),end=new Date(start);end.setDate(start.getDate()+6);title.textContent='Semaine du '+start.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})+' au '+end.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+   for(let index=0;index<7;index++){const date=new Date(start);date.setDate(start.getDate()+index);const key=iso(date),day=document.createElement('div');day.className='coach-day'+(key===today?' today':'');const number=document.createElement('span');number.className='coach-day-number';number.textContent=weekNames[index]+' '+date.getDate();day.appendChild(number);events.filter(event=>event.date===key).forEach(event=>addEvent(day,event));grid.appendChild(day);}
+  } else {
+   const key=iso(current);title.textContent=current.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});const day=document.createElement('div');day.className='coach-day'+(key===today?' today':'');events.filter(event=>event.date===key).forEach(event=>addEvent(day,event));if(!day.children.length){const empty=document.createElement('span');empty.className='coach-empty';empty.textContent='Aucun événement ce jour.';day.appendChild(empty);}grid.appendChild(day);
+  }
  };
- document.getElementById('prevMonth').onclick=()=>{current.setMonth(current.getMonth()-1);render();};
- document.getElementById('nextMonth').onclick=()=>{current.setMonth(current.getMonth()+1);render();};
- document.getElementById('todayButton').onclick=()=>{current=new Date(2026,6,28);render();};
+ document.getElementById('prevMonth').onclick=()=>{view==='month'?current.setMonth(current.getMonth()-1):current.setDate(current.getDate()-(view==='week'?7:1));render();};
+ document.getElementById('nextMonth').onclick=()=>{view==='month'?current.setMonth(current.getMonth()+1):current.setDate(current.getDate()+(view==='week'?7:1));render();};
+ document.getElementById('todayButton').onclick=()=>{current=new Date();render();};
+ document.querySelectorAll('[data-calendar-view]').forEach(button=>button.onclick=()=>{view=button.dataset.calendarView;document.querySelectorAll('[data-calendar-view]').forEach(item=>item.classList.toggle('active',item===button));render();});
  render();
 });
-</script>
-</body></html>
+</script><script th:src="@{/js/encadreur-topbar.js}"></script></body></html>

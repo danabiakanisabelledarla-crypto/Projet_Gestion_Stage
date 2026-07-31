@@ -471,6 +471,18 @@ public class AdminController {
         }
         Map<Integer, Stage> stagesParStagiaire = tousStages.stream()
                 .collect(Collectors.toMap(stage -> stage.getStagiaire().getId(), stage -> stage, (a, b) -> a));
+        Map<Integer, Map<String, LocalDate>> datesParStagiaire = new HashMap<>();
+        for (Stagiaire stagiaire : tousStagiaires) {
+            Stage stage = stagesParStagiaire.get(stagiaire.getId());
+            LocalDate debut = stage != null ? stage.getDateDebut() : stagiaire.getDateAdmission();
+            LocalDate fin = stage != null ? stage.getDateFin()
+                    : calculerDateFin(debut, stagiaire.getDemandeStage() != null
+                            ? stagiaire.getDemandeStage().getDureeSouhaitee() : null);
+            Map<String, LocalDate> periode = new HashMap<>();
+            periode.put("debut", debut);
+            periode.put("fin", fin);
+            datesParStagiaire.put(stagiaire.getId(), periode);
+        }
 
         long totalStagiaires = tousStagiaires.size();
         long enCours = tousStagiaires.stream()
@@ -496,6 +508,7 @@ public class AdminController {
         model.addAttribute("services", tousServices);
         model.addAttribute("encadreurs", tousEncadreurs);
         model.addAttribute("stagesParStagiaire", stagesParStagiaire);
+        model.addAttribute("datesParStagiaire", datesParStagiaire);
 
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
         List<Map<String, Object>> stagiairesJson = tousStagiaires.stream().map(s -> {
@@ -651,6 +664,25 @@ public class AdminController {
 
         model.addAttribute("stagiairesJson", stagiairesJson);
         return "admin/stagiaires";
+    }
+
+    private LocalDate calculerDateFin(LocalDate dateDebut, String duree) {
+        if (dateDebut == null || duree == null || duree.isBlank()) {
+            return null;
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("(\\d+)\\s*(jour|jours|semaine|semaines|mois|an|ans|année|années)",
+                        java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(duree.trim());
+        if (!matcher.find()) {
+            return null;
+        }
+        long valeur = Long.parseLong(matcher.group(1));
+        String unite = matcher.group(2).toLowerCase(java.util.Locale.FRENCH);
+        if (unite.startsWith("jour")) return dateDebut.plusDays(valeur);
+        if (unite.startsWith("semaine")) return dateDebut.plusWeeks(valeur);
+        if (unite.equals("mois")) return dateDebut.plusMonths(valeur);
+        return dateDebut.plusYears(valeur);
     }
 
     @PostMapping("/stagiaires/{id}/modifier")

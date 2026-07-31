@@ -297,13 +297,7 @@
 
         <aside class="svc-details-card" id="serviceDetails">
             <button type="button" class="svc-detail-close" aria-label="Fermer les détails" onclick="fermerDetailsService()"><i class="fa-solid fa-xmark"></i></button>
-            <div class="svc-details-empty" id="detailsEmpty">
-                <div><i class="fa-solid fa-arrow-pointer"></i></div>
-                <h3>Détails du service</h3>
-                <p>Sélectionnez un service dans le tableau.</p>
-            </div>
-
-            <div class="svc-details-content" id="detailsContent" hidden>
+            <div class="svc-details-content" id="detailsContent">
                 <header class="svc-detail-hero">
                     <div class="svc-detail-icon bleu" id="detailIcon"><i class="fa-solid fa-building-columns"></i></div>
                     <div>
@@ -419,8 +413,6 @@
         ligne.classList.add('selected');
         serviceSelectionne = ligne;
 
-        document.getElementById('detailsEmpty').hidden = true;
-        document.getElementById('detailsContent').hidden = false;
         document.getElementById('detailNom').textContent = ligne.dataset.nom;
         document.getElementById('detailDescription').textContent = ligne.dataset.description || 'Aucune description renseignée.';
         document.getElementById('detailResponsable').textContent = ligne.dataset.responsable;
@@ -458,7 +450,7 @@
     function changerVueServices(mode, bouton) {
         document.querySelectorAll('.svc-view-switch button').forEach(item => item.classList.remove('active'));
         bouton.classList.add('active');
-        document.querySelector('.svc-table').classList.toggle('compact-view', mode === 'compact');
+        document.getElementById('servicesTable').classList.toggle('compact-view', mode === 'compact');
     }
 
     function echapperHtml(valeur) {

@@ -342,10 +342,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
             m.put("proprietaireRole", "Candidat");
             m.put("proprietaireService", "");
         } else {
-            m.put("proprietaireNom", "—");
-            m.put("proprietaireInitiales", "—");
-            m.put("proprietaireRole", "—");
-            m.put("proprietaireService", "");
+            m.put("proprietaireNom", "Administration");
+            m.put("proprietaireInitiales", "AD");
+            m.put("proprietaireRole", "Document externe");
+            m.put("proprietaireService", "Administration");
         }
 
         // Documents liés (même stagiaire)
@@ -386,11 +386,15 @@ public String documents(Model model, @RequestParam(required = false) String succ
     }
 
     @PostMapping("/documents/supprimer/{id}")
-    public String supprimerDocument(@PathVariable Integer id) {
+    public String supprimerDocument(@PathVariable Integer id,
+                                     @RequestParam(defaultValue = "documents") String retour) {
         documentRepository.findById(id).ifPresent(d -> {
             try { Files.deleteIfExists(Paths.get(d.getCheminFichier())); } catch (Exception ignored) {}
             documentRepository.delete(d);
         });
+        if ("rapports".equals(retour)) {
+            return "redirect:/admin/rapports?succes=Document supprime.";
+        }
         return "redirect:/admin/documents?succes=Document supprime.";
     }
 
@@ -631,9 +635,11 @@ public String documents(Model model, @RequestParam(required = false) String succ
     @PostMapping("/documents/ajouter")
     public String ajouterDocument(@RequestParam String typeDocument,
                                   @RequestParam MultipartFile fichier,
-                                  @AuthenticationPrincipal CustomUserDetails user) {
+                                  @AuthenticationPrincipal CustomUserDetails user,
+                                  RedirectAttributes redirectAttributes) {
         if (fichier == null || fichier.isEmpty()) {
-            return "redirect:/admin/documents?succes=Aucun fichier sélectionné.";
+            redirectAttributes.addFlashAttribute("succes", "Aucun fichier sélectionné.");
+            return "redirect:/admin/documents";
         }
         try {
             java.nio.file.Path dossier = Paths.get("uploads", "documents").toAbsolutePath().normalize();
@@ -648,9 +654,11 @@ public String documents(Model model, @RequestParam(required = false) String succ
             documentRepository.save(document);
             activityLogService.log("Document ajouté", original, adminName(user));
         } catch (Exception exception) {
-            return "redirect:/admin/documents?succes=Le document n'a pas pu être ajouté.";
+            redirectAttributes.addFlashAttribute("succes", "Le document n'a pas pu être ajouté.");
+            return "redirect:/admin/documents";
         }
-        return "redirect:/admin/documents?succes=Document ajouté.";
+        redirectAttributes.addFlashAttribute("succes", "Document ajouté.");
+        return "redirect:/admin/documents";
     }
 
     @PostMapping("/documents/commenter")
@@ -692,15 +700,12 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("stagesTermines", stageRepository.findByStatut(Stage.StatutStage.termine).size());
         model.addAttribute("totalDocuments", documentRepository.count());
 
-        // Documents exportés simulés
-        List<Map<String,String>> docsExportes = List.of(
-            Map.of("nom","rapport-mensuel-juillet-2026","stagiaire","Jean Dupont","typeCls","rapport","typeLabel","Rapport final","dateExport","17/07/2026","taille","2.5 Mo","formatCls","pdf"),
-            Map.of("nom","attestation-stage-martin","stagiaire","Marie Martin","typeCls","attestation","typeLabel","Attestation","dateExport","16/07/2026","taille","1.2 Mo","formatCls","pdf"),
-            Map.of("nom","fiche-note-bertrand","stagiaire","Pierre Bertrand","typeCls","fiche","typeLabel","Fiche de note","dateExport","15/07/2026","taille","0.8 Mo","formatCls","excel"),
-            Map.of("nom","rapport-hebdo-S29","stagiaire","Sophie Bernard","typeCls","hebdo","typeLabel","Rapport hebdo","dateExport","14/07/2026","taille","1.8 Mo","formatCls","pdf"),
-            Map.of("nom","rapport-final-nguyen","stagiaire","Lucas Nguyen","typeCls","rapport","typeLabel","Rapport final","dateExport","12/07/2026","taille","3.1 Mo","formatCls","pdf")
-        );
-        model.addAttribute("documentsExportes", docsExportes);
+        List<String> typesAdministratifs = List.of(
+                "rapport_hebdomadaire", "rapport_final", "fiche_note", "attestation");
+        model.addAttribute("documentsExportes", documentRepository.findAll().stream()
+                .filter(document -> typesAdministratifs.contains(document.getTypeDocument()))
+                .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
+                .toList());
         return "admin/rapports";
     }
 

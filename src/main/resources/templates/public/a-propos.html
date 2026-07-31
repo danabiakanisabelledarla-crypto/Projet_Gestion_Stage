@@ -4,81 +4,308 @@
     <meta charset="UTF-8">
     <title>À propos — DTA Alliance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Découvrez la mission, les valeurs et l'engagement de DTA Alliance pour la transformation numérique en Afrique.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/accueil.css}">
-    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=5)}">
+    <link rel="stylesheet" th:href="@{/css/a-propos.css(v=1)}">
 </head>
-<body>
+<body class="about-page">
+    <header class="about-header">
+        <div th:replace="~{fragments/navbar-public :: navbar('a-propos')}"></div>
+    </header>
 
-<div th:replace="~{fragments/navbar-public :: navbar('a-propos')}"></div>
+    <main>
+        <section class="about-hero" aria-labelledby="about-hero-title">
+            <div class="about-container about-hero-grid">
+                <div class="about-hero-content about-reveal is-visible">
+                    <span class="about-badge">À propos de DTA Alliance</span>
+                    <h1 id="about-hero-title">
+                        Découvrez notre mission, nos valeurs et notre engagement
+                        <span>pour la transformation numérique en Afrique</span>
+                    </h1>
+                    <p>
+                        DTA Alliance accompagne les talents numériques et les organisations dans leur transformation
+                        digitale grâce à des stages professionnels structurés, innovants et orientés vers l'excellence.
+                    </p>
+                    <div class="about-actions">
+                        <a class="about-button about-button-primary" href="#mission">
+                            Notre mission
+                            <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                        </a>
+                        <a class="about-button about-button-secondary" th:href="@{/contact}">
+                            Nous contacter
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
 
-<section class="page-hero">
-    <h1>À propos de DTA Alliance</h1>
-    <p>Découvrez notre mission, nos valeurs et notre engagement pour la transformation numérique en Afrique.</p>
-</section>
+                <div class="about-hero-visual about-reveal is-visible">
+                    <div class="hero-illustration-shell">
+                        <img th:src="@{/images/hero-teamm.png}" alt="Collaboration et transformation numérique chez DTA Alliance">
+                    </div>
+                    <div class="about-floating-card floating-innovation">
+                        <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
+                        <div><strong>Innovation</strong><small>Solutions numériques</small></div>
+                    </div>
+                    <div class="about-floating-card floating-talents">
+                        <span><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                        <div><strong>Talents</strong><small>Compétences d'avenir</small></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-<div class="page-content">
-    <div class="content-card">
-        <h2>Qui sommes-nous ?</h2>
-        <p>
-            <strong>DTA Alliance</strong> (Digital Transformation Alliance) est une organisation dédiée à
-            l'accompagnement des talents numériques et à la modernisation des processus organisationnels.
-            Nous offrons un cadre structuré pour les stages professionnels, permettant aux étudiants
-            de développer leurs compétences dans un environnement innovant.
-        </p>
-        <p>
-            Notre plateforme de gestion des stages centralise l'ensemble du cycle de vie d'un stage :
-            de la candidature à l'archivage, en passant par l'encadrement, le suivi des tâches et l'évaluation.
-        </p>
-    </div>
+        <section class="about-section identity-section" id="identite" aria-labelledby="identity-title">
+            <div class="about-container identity-grid">
+                <div class="identity-visual about-reveal">
+                    <img th:src="@{/images/hero-team.png.png}" alt="Étudiants et professionnels travaillant ensemble">
+                    <div class="identity-highlight">
+                        <strong>Une alliance</strong>
+                        <span>entre talents, expertise et innovation</span>
+                    </div>
+                </div>
 
-    <div class="grid-2">
-        <div class="content-card">
-            <h2>Notre mission</h2>
-            <p>Former la prochaine génération de professionnels du numérique en offrant :</p>
-            <ul>
-                <li>Des stages encadrés par des experts du domaine</li>
-                <li>Un suivi transparent et structuré des parcours</li>
-                <li>Des projets concrets à fort impact</li>
-                <li>Un environnement propice à l'innovation</li>
-            </ul>
-        </div>
-        <div class="content-card">
-            <h2>Nos domaines d'action</h2>
-            <div class="info-box" style="margin-bottom:12px;">
-                <h3><i class="fa-solid fa-code"></i> Développement logiciel</h3>
-                <p>Applications web, mobiles et solutions métier sur mesure.</p>
+                <div class="identity-content about-reveal">
+                    <span class="about-badge">Notre identité</span>
+                    <h2 id="identity-title">Qui sommes-nous ?</h2>
+                    <p>
+                        <strong>DTA Alliance</strong> (Digital Transformation Alliance) est une organisation dédiée à
+                        l'accompagnement des talents numériques et à la modernisation des processus organisationnels.
+                    </p>
+                    <p>
+                        Nous offrons un cadre structuré pour les stages professionnels permettant aux étudiants
+                        de développer leurs compétences dans un environnement innovant.
+                    </p>
+                    <h3>Notre plateforme centralise l'ensemble du cycle de vie d'un stage :</h3>
+                    <ul class="lifecycle-list">
+                        <li><i class="fa-solid fa-check"></i> Candidature</li>
+                        <li><i class="fa-solid fa-check"></i> Validation</li>
+                        <li><i class="fa-solid fa-check"></i> Affectation</li>
+                        <li><i class="fa-solid fa-check"></i> Encadrement</li>
+                        <li><i class="fa-solid fa-check"></i> Suivi des tâches</li>
+                        <li><i class="fa-solid fa-check"></i> Évaluation</li>
+                        <li><i class="fa-solid fa-check"></i> Archivage</li>
+                    </ul>
+                </div>
             </div>
-            <div class="info-box" style="margin-bottom:12px;">
-                <h3><i class="fa-solid fa-server"></i> Infrastructure &amp; Cloud</h3>
-                <p>Administration systèmes, réseaux et déploiement cloud.</p>
-            </div>
-            <div class="info-box">
-                <h3><i class="fa-solid fa-brain"></i> Data &amp; Intelligence Artificielle</h3>
-                <p>Analyse de données, machine learning et solutions IA.</p>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="content-card">
-        <h2>Nos partenaires</h2>
-        <div class="grid-3">
-            <div class="partner-card">
-                <div class="icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                <h3>Universités &amp; Écoles</h3>
-            </div>
-            <div class="partner-card">
-                <div class="icon"><i class="fa-solid fa-building"></i></div>
-                <h3>Entreprises technologiques</h3>
-            </div>
-            <div class="partner-card">
-                <div class="icon"><i class="fa-solid fa-handshake"></i></div>
-                <h3>Institutions publiques</h3>
-            </div>
-        </div>
-    </div>
-</div>
+        <section class="mission-section" id="mission" aria-labelledby="mission-title">
+            <div class="about-container">
+                <div class="about-heading about-heading-light about-reveal">
+                    <span class="about-badge about-badge-dark">Notre engagement</span>
+                    <h2 id="mission-title">Notre mission</h2>
+                    <p>Former la prochaine génération de professionnels du numérique.</p>
+                </div>
 
-<div th:replace="~{fragments/footer :: footer}"></div>
+                <div class="mission-grid">
+                    <article class="mission-card about-reveal" style="--delay: 0ms;">
+                        <span class="mission-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                        <h3>Stages encadrés</h3>
+                        <p>Des experts accompagnent les stagiaires tout au long du parcours.</p>
+                    </article>
+                    <article class="mission-card about-reveal" style="--delay: 100ms;">
+                        <span class="mission-icon"><i class="fa-solid fa-chart-column"></i></span>
+                        <h3>Suivi structuré</h3>
+                        <p>Des outils modernes pour un suivi transparent.</p>
+                    </article>
+                    <article class="mission-card about-reveal" style="--delay: 200ms;">
+                        <span class="mission-icon"><i class="fa-solid fa-rocket"></i></span>
+                        <h3>Projets concrets</h3>
+                        <p>Participation à des projets réels à fort impact.</p>
+                    </article>
+                    <article class="mission-card about-reveal" style="--delay: 300ms;">
+                        <span class="mission-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                        <h3>Innovation</h3>
+                        <p>Un environnement favorisant la créativité et l'amélioration continue.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section expertise-section" aria-labelledby="expertise-title">
+            <div class="about-container">
+                <div class="about-heading about-reveal">
+                    <span class="about-badge">Expertise</span>
+                    <h2 id="expertise-title">Nos domaines d'action</h2>
+                    <p>Des compétences complémentaires pour construire des solutions numériques utiles et durables.</p>
+                </div>
+
+                <div class="expertise-grid">
+                    <article class="expertise-card expertise-blue about-reveal" style="--delay: 0ms;">
+                        <div class="expertise-icon"><i class="fa-solid fa-code"></i></div>
+                        <h3>Développement logiciel</h3>
+                        <ul>
+                            <li>Applications web</li>
+                            <li>Applications mobiles</li>
+                            <li>Solutions métier</li>
+                            <li>Plateformes SaaS</li>
+                        </ul>
+                    </article>
+                    <article class="expertise-card expertise-purple about-reveal" style="--delay: 120ms;">
+                        <div class="expertise-icon"><i class="fa-solid fa-cloud"></i></div>
+                        <h3>Infrastructure &amp; Cloud</h3>
+                        <ul>
+                            <li>Administration systèmes</li>
+                            <li>Administration réseaux</li>
+                            <li>Virtualisation</li>
+                            <li>Cloud Computing</li>
+                        </ul>
+                    </article>
+                    <article class="expertise-card expertise-emerald about-reveal" style="--delay: 240ms;">
+                        <div class="expertise-icon"><i class="fa-solid fa-brain"></i></div>
+                        <h3>Data &amp; Intelligence Artificielle</h3>
+                        <ul>
+                            <li>Analyse de données</li>
+                            <li>Machine Learning</li>
+                            <li>Business Intelligence</li>
+                            <li>Solutions IA</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section partners-section" aria-labelledby="partners-title">
+            <div class="about-container">
+                <div class="about-heading about-reveal">
+                    <span class="about-badge">Écosystème</span>
+                    <h2 id="partners-title">Ils nous font confiance</h2>
+                    <p>Un écosystème construit autour de l'innovation.</p>
+                </div>
+
+                <div class="partners-grid">
+                    <article class="partner-card about-reveal" style="--delay: 0ms;">
+                        <div class="partner-logo"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <span>Partenaires académiques</span>
+                            <h3>Universités &amp; Écoles</h3>
+                            <p>Des parcours rapprochant la formation des réalités professionnelles.</p>
+                        </div>
+                    </article>
+                    <article class="partner-card about-reveal" style="--delay: 120ms;">
+                        <div class="partner-logo"><i class="fa-solid fa-laptop-code"></i></div>
+                        <div>
+                            <span>Partenaires métiers</span>
+                            <h3>Entreprises technologiques</h3>
+                            <p>Des environnements concrets pour développer des compétences opérationnelles.</p>
+                        </div>
+                    </article>
+                    <article class="partner-card about-reveal" style="--delay: 240ms;">
+                        <div class="partner-logo"><i class="fa-solid fa-landmark"></i></div>
+                        <div>
+                            <span>Partenaires institutionnels</span>
+                            <h3>Institutions publiques</h3>
+                            <p>Des collaborations durables au service de la transformation numérique.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section values-section" aria-labelledby="values-title">
+            <div class="about-container">
+                <div class="about-heading about-reveal">
+                    <span class="about-badge">Notre culture</span>
+                    <h2 id="values-title">Nos valeurs</h2>
+                    <p>Les principes qui orientent notre manière d'accompagner, de construire et de progresser.</p>
+                </div>
+
+                <div class="values-grid">
+                    <article class="value-card about-reveal" style="--delay: 0ms; --value-color: #3B82F6;">
+                        <span><i class="fa-solid fa-handshake"></i></span>
+                        <h3>Collaboration</h3>
+                        <p>Nous réunissons les talents et les expertises autour d'objectifs communs.</p>
+                    </article>
+                    <article class="value-card about-reveal" style="--delay: 80ms; --value-color: #F59E0B;">
+                        <span><i class="fa-solid fa-star"></i></span>
+                        <h3>Excellence</h3>
+                        <p>Nous cultivons la rigueur, la qualité et le goût du travail bien réalisé.</p>
+                    </article>
+                    <article class="value-card about-reveal" style="--delay: 160ms; --value-color: #10B981;">
+                        <span><i class="fa-solid fa-lock"></i></span>
+                        <h3>Transparence</h3>
+                        <p>Nous favorisons des échanges clairs et un suivi accessible à chaque acteur.</p>
+                    </article>
+                    <article class="value-card about-reveal" style="--delay: 240ms; --value-color: #8B5CF6;">
+                        <span><i class="fa-solid fa-rocket"></i></span>
+                        <h3>Innovation</h3>
+                        <p>Nous expérimentons et améliorons continuellement nos méthodes et nos outils.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="numbers-section" aria-labelledby="numbers-title">
+            <div class="about-container">
+                <div class="about-heading about-reveal">
+                    <span class="about-badge">Notre impact</span>
+                    <h2 id="numbers-title">DTA Alliance en chiffres</h2>
+                    <p>Une dynamique portée par les talents, les experts et nos partenaires.</p>
+                </div>
+
+                <div class="numbers-grid">
+                    <article class="number-item about-reveal" style="--delay: 0ms;">
+                        <strong data-about-counter="500" data-suffix="+">500+</strong>
+                        <span>Candidatures traitées</span>
+                    </article>
+                    <article class="number-item about-reveal" style="--delay: 80ms;">
+                        <strong data-about-counter="120" data-suffix="+">120+</strong>
+                        <span>Stages réalisés</span>
+                    </article>
+                    <article class="number-item about-reveal" style="--delay: 160ms;">
+                        <strong data-about-counter="95" data-suffix="%">95%</strong>
+                        <span>Taux de satisfaction</span>
+                    </article>
+                    <article class="number-item about-reveal" style="--delay: 240ms;">
+                        <strong data-about-counter="20" data-suffix="+">20+</strong>
+                        <span>Partenaires</span>
+                    </article>
+                    <article class="number-item about-reveal" style="--delay: 320ms;">
+                        <strong data-about-counter="15" data-suffix="+">15+</strong>
+                        <span>Encadreurs experts</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-cta-section" aria-labelledby="about-cta-title">
+            <div class="about-container">
+                <div class="about-cta about-reveal">
+                    <div class="about-cta-content">
+                        <span class="about-badge about-badge-dark">Rejoignez l'aventure</span>
+                        <h2 id="about-cta-title">Construisons ensemble les talents numériques de demain</h2>
+                        <p>
+                            Rejoignez DTA Alliance et bénéficiez d'un environnement moderne
+                            pour développer vos compétences professionnelles.
+                        </p>
+                        <div class="about-actions">
+                            <a class="about-button cta-white" th:href="@{/candidat/demande}">
+                                Déposer une candidature
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            <a class="about-button cta-outline" th:href="@{/contact}">
+                                Nous contacter
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="about-cta-visual" aria-hidden="true">
+                        <div class="cta-image-shell">
+                            <img th:src="@{/images/stage-hero.png}" alt="">
+                        </div>
+                        <span class="cta-tech-chip chip-code"><i class="fa-solid fa-code"></i></span>
+                        <span class="cta-tech-chip chip-cloud"><i class="fa-solid fa-cloud"></i></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script th:src="@{/js/a-propos.js(v=1)}" defer></script>
 </body>
 </html>

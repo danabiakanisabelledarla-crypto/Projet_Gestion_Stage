@@ -134,22 +134,41 @@
                     <td><span class="matricule-tag" th:text="${s.matricule}">STG-001</span></td>
                     <td th:text="${stagesParStagiaire[s.id] != null && stagesParStagiaire[s.id].service != null ? stagesParStagiaire[s.id].service.nom : '—'}">—</td>
                     <td th:text="${stagesParStagiaire[s.id] != null && stagesParStagiaire[s.id].encadreur != null ? stagesParStagiaire[s.id].encadreur.utilisateur.prenom + ' ' + stagesParStagiaire[s.id].encadreur.utilisateur.nom : 'Non affecté'}">—</td>
-                    <td th:text="${stagesParStagiaire[s.id] != null ? #temporals.format(stagesParStagiaire[s.id].dateDebut, 'dd/MM/yyyy') + ' → ' + #temporals.format(stagesParStagiaire[s.id].dateFin, 'dd/MM/yyyy') : '—'}">—</td>
+                    <td>
+                        <div class="stage-period">
+                            <span th:text="${datesParStagiaire[s.id].debut != null ? #temporals.format(datesParStagiaire[s.id].debut, 'dd/MM/yyyy') : '—'}">—</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                            <span th:text="${datesParStagiaire[s.id].fin != null ? #temporals.format(datesParStagiaire[s.id].fin, 'dd/MM/yyyy') : 'À définir'}">À définir</span>
+                        </div>
+                    </td>
                     <td>
                         <span th:class="'badge-statut ' + ${s.statut.name()}" th:text="${s.statut.name() == 'actif' ? 'Actif' : (s.statut.name() == 'termine' ? 'Terminé' : 'Abandonné')}">Statut</span>
                     </td>
                     <td>
-                        <div class="action-btns">
-                            <button class="action-btn" th:onclick="'ouvrirDetailsStagiaire(' + ${s.id} + ')'" title="Voir détails"><i class="fa-solid fa-eye"></i></button>
-                            <button class="action-btn" th:onclick="'ouvrirEditionStagiaire(' + ${s.id} + ')'" title="Affecter à un encadreur"><i class="fa-solid fa-user-plus"></i></button>
-                            <form th:action="@{/admin/stagiaires/{id}/acces(id=${s.id})}" method="post" style="display:inline">
+                        <div class="student-actions-menu">
+                            <button class="action-btn student-menu-trigger" type="button"
+                                    th:onclick="'toggleStudentMenu(event, ' + ${s.id} + ')'"
+                                    aria-label="Ouvrir les actions">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="student-menu-popover" th:id="'studentMenu-' + ${s.id}">
+                            <form th:action="@{/admin/stagiaires/{id}/acces(id=${s.id})}" method="post">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                <input type="hidden" name="actif" th:value="${s.utilisateur.statut.name() != 'actif'}">
-                                <button class="action-btn" type="submit"
-                                        th:title="${s.utilisateur.statut.name() == 'actif' ? 'Bloquer le compte' : 'Débloquer le compte'}">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                <input type="hidden" name="actif" value="false">
+                                <button type="submit" class="student-menu-item danger"
+                                        th:disabled="${s.utilisateur.statut.name() != 'actif'}">
+                                    <i class="fa-solid fa-user-lock"></i> Bloquer
                                 </button>
                             </form>
+                            <form th:action="@{/admin/stagiaires/{id}/acces(id=${s.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="actif" value="true">
+                                <button type="submit" class="student-menu-item"
+                                        th:disabled="${s.utilisateur.statut.name() == 'actif'}">
+                                    <i class="fa-solid fa-user-check"></i> Débloquer
+                                </button>
+                            </form>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -245,6 +264,18 @@
     const stagiairesData = /*[[${stagiairesJson}]]*/ [];
 </script>
 <script>
+    function toggleStudentMenu(event, id) {
+        event.stopPropagation();
+        const target = document.getElementById('studentMenu-' + id);
+        document.querySelectorAll('.student-menu-popover.open').forEach(menu => {
+            if (menu !== target) menu.classList.remove('open');
+        });
+        target.classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.student-menu-popover.open').forEach(menu => menu.classList.remove('open'));
+    });
+
     function ouvrirDetailsStagiaire(id) {
         const s = stagiairesData.find(x => x.id === id);
         if (!s) return;

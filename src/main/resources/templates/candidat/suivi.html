@@ -12,83 +12,260 @@
 <div th:replace="~{fragments/navbar-public :: navbar('suivi')}"></div>
 
 <div class="conteneur-suivi">
+    <section class="suivi-hero" aria-labelledby="suivi-title">
+        <span class="suivi-dot dot-one" aria-hidden="true"></span>
+        <span class="suivi-dot dot-two" aria-hidden="true"></span>
+        <span class="suivi-dot dot-three" aria-hidden="true"></span>
 
-    <!-- Formulaire : visible seulement si pas de résultat -->
-    <div th:if="${demande == null}" class="carte-suivi">
-        <h1>Suivre ma demande</h1>
-        <p class="sous-titre">
-            Entrez l'email utilise lors de votre candidature
-            pour consulter l'etat de votre demande.
-        </p>
+        <div class="suivi-hero-content">
+            <span class="suivi-badge"><i aria-hidden="true"></i> Suivi de candidature</span>
+            <h1 id="suivi-title">Suivre ma <span>demande</span></h1>
+            <p>
+                Consultez en temps réel l'état d'avancement de votre candidature en utilisant
+                l'adresse email renseignée lors du dépôt de votre dossier.
+            </p>
 
-        <div th:if="${erreur}" class="message-erreur" th:text="${erreur}"></div>
-
-        <form th:action="@{/candidat/suivi}" method="post">
-            <div class="groupe-champ">
-                <label>Votre email</label>
-                <input type="email" name="email"
-                       placeholder="votre.email@exemple.com"
-                       required autofocus>
+            <div class="suivi-stats" aria-label="Statistiques du traitement des candidatures">
+                <div><strong>2 400+</strong><span>Candidatures traitées</span></div>
+                <div><strong>98%</strong><span>Taux de satisfaction</span></div>
+                <div><strong>&lt; 5j</strong><span>Délai de traitement</span></div>
             </div>
-            <button type="submit" class="bouton-chercher">
-                Rechercher ma demande
-            </button>
-        </form>
-    </div>
+        </div>
+    </section>
 
-    <!-- Résultat : visible seulement si demande trouvée -->
-    <div th:if="${demande != null}" class="resultat-demande">
+    <section class="suivi-main" aria-label="Recherche et suivi de candidature">
+        <div class="suivi-layout">
+            <div class="suivi-primary-column">
+                <article class="suivi-card search-card">
+                    <div class="card-title-row">
+                        <span class="card-title-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                        <h2>Rechercher une candidature</h2>
+                    </div>
+                    <p class="search-description">
+                        Entrez l'adresse email utilisée lors de votre candidature pour accéder
+                        au suivi détaillé de votre dossier.
+                    </p>
 
-        <div class="resultat-entete">
-            <h2>Etat de votre demande</h2>
-            <span th:class="'statut-badge statut-' + ${demande.statut.name()}"
-                  th:text="${demande.statut}">-</span>
-        </div>
+                    <div th:if="${erreur}" class="message-erreur" role="alert">
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                        <span th:text="${erreur}">Aucune demande trouvée pour cet email.</span>
+                    </div>
 
-        <div class="ligne-info">
-            <span class="libelle">Nom complet</span>
-            <span class="valeur"
-                  th:text="${demande.prenom + ' ' + demande.nom}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Ecole</span>
-            <span class="valeur" th:text="${demande.ecole}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Filiere</span>
-            <span class="valeur" th:text="${demande.filiere}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Niveau</span>
-            <span class="valeur" th:text="${demande.niveau}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Duree souhaitee</span>
-            <span class="valeur" th:text="${demande.dureeSouhaitee}">-</span>
-        </div>
-        <div class="ligne-info">
-            <span class="libelle">Date de depot</span>
-            <span class="valeur"
-                  th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy HH:mm')}">-</span>
-        </div>
+                    <form id="suivi-search-form" th:action="@{/candidat/suivi}" method="post">
+                        <div class="groupe-champ">
+                            <label for="suivi-email">Adresse email</label>
+                            <div class="email-input-wrap">
+                                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                                <input id="suivi-email"
+                                       type="email"
+                                       name="email"
+                                       placeholder="votre.email@exemple.com"
+                                       autocomplete="email"
+                                       required>
+                            </div>
+                        </div>
+                        <button id="suivi-submit" type="submit" class="bouton-chercher" disabled>
+                            <span class="button-default">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                Rechercher ma demande
+                            </span>
+                            <span class="button-loading" aria-hidden="true">
+                                <i class="fa-solid fa-spinner" aria-hidden="true"></i>
+                                Recherche en cours…
+                            </span>
+                        </button>
+                    </form>
+                </article>
 
-        <div th:if="${demande.commentaire != null
-                     and !demande.commentaire.isEmpty()
-                     and !demande.commentaire.startsWith('Email candidat')}"
-             class="ligne-info">
-            <span class="libelle">Commentaire</span>
-            <span class="valeur" th:text="${demande.commentaire}">-</span>
-        </div>
+                <article th:if="${demande != null}"
+                         class="suivi-card resultat-demande"
+                         th:with="statut=${demande.statut.name()}">
+                    <header class="resultat-entete">
+                        <div class="candidate-identity">
+                            <span class="candidate-avatar"
+                                  th:text="${#strings.substring(demande.prenom, 0, 1)}">J</span>
+                            <div>
+                                <h2 th:text="${demande.prenom + ' ' + demande.nom}">Jean Dupont</h2>
+                                <p th:text="${demande.email != null ? demande.email : 'Email associé au dossier'}">
+                                    jean.dupont@gmail.com
+                                </p>
+                            </div>
+                        </div>
+                        <div class="candidate-reference">
+                            <span>Référence</span>
+                            <strong th:text="|DTA-2026-${#numbers.formatInteger(demande.id, 5)}|">DTA-2026-00125</strong>
+                            <small th:text="|Soumis le ${#temporals.format(demande.dateDemande, 'dd MMMM yyyy')}|">
+                                Soumis le 24 juillet 2026
+                            </small>
+                        </div>
+                    </header>
 
-        <div class="resultat-actions">
-            <a th:href="@{/candidat/suivi}" class="btn-nouvelle-recherche">
-                ← Nouvelle recherche
-            </a>
-            <a th:href="@{/candidat/demande}" class="btn-nouvelle-demande">
-                Deposer une autre demande
-            </a>
+                    <div class="status-row">
+                        <span th:class="'status-pill status-' + ${statut}">
+                            <i aria-hidden="true"></i>
+                            <span th:if="${statut == 'en_attente'}">Validation en cours</span>
+                            <span th:if="${statut == 'acceptee'}">Candidature acceptée</span>
+                            <span th:if="${statut == 'refusee'}">Candidature non retenue</span>
+                        </span>
+                        <small th:if="${statut == 'en_attente'}">Étape 3 / 5</small>
+                        <small th:if="${statut == 'acceptee'}">Étape 4 / 5</small>
+                        <small th:if="${statut == 'refusee'}">Traitement terminé</small>
+                    </div>
+
+                    <div class="timeline-wrap">
+                        <div class="suivi-timeline" th:classappend="${statut == 'refusee'} ? ' timeline-rejected'">
+                            <div class="timeline-step is-done">
+                                <span class="timeline-line"></span>
+                                <span class="timeline-node"><i class="fa-solid fa-check"></i></span>
+                                <strong>Candidature déposée</strong>
+                                <small th:text="${#temporals.format(demande.dateDemande, 'dd MMM yyyy')}">24 juil. 2026</small>
+                            </div>
+                            <div class="timeline-step is-done">
+                                <span class="timeline-line"></span>
+                                <span class="timeline-node"><i class="fa-solid fa-check"></i></span>
+                                <strong>Dossier en analyse</strong>
+                                <small>Prise en charge</small>
+                            </div>
+                            <div class="timeline-step"
+                                 th:classappend="${statut == 'en_attente'} ? ' is-active' : (${statut == 'acceptee'} ? ' is-done' : ' is-rejected')">
+                                <span class="timeline-line"></span>
+                                <span class="timeline-node">
+                                    <i th:if="${statut == 'acceptee'}" class="fa-solid fa-check"></i>
+                                    <i th:if="${statut == 'refusee'}" class="fa-solid fa-xmark"></i>
+                                    <i th:if="${statut == 'en_attente'}" class="active-dot"></i>
+                                </span>
+                                <strong>Validation</strong>
+                                <small th:if="${statut == 'en_attente'}">En cours…</small>
+                                <small th:if="${statut == 'acceptee'}">Validée</small>
+                                <small th:if="${statut == 'refusee'}">Non retenue</small>
+                            </div>
+                            <div class="timeline-step"
+                                 th:classappend="${statut == 'acceptee'} ? ' is-active' : ' is-pending'">
+                                <span class="timeline-line"></span>
+                                <span class="timeline-node">
+                                    <i th:if="${statut == 'acceptee'}" class="active-dot"></i>
+                                    <b th:unless="${statut == 'acceptee'}">4</b>
+                                </span>
+                                <strong>Affectation</strong>
+                                <small th:text="${statut == 'acceptee' ? 'En cours…' : 'En attente'}">En attente</small>
+                            </div>
+                            <div class="timeline-step is-pending">
+                                <span class="timeline-node"><b>5</b></span>
+                                <strong>Début du stage</strong>
+                                <small>En attente</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-progress" aria-hidden="true">
+                        <span th:classappend="${statut == 'acceptee'} ? ' progress-accepted' : (${statut == 'refusee'} ? ' progress-rejected' : '')"></span>
+                    </div>
+
+                    <div class="details-section">
+                        <h3>Détails de la candidature</h3>
+                        <div class="details-grid">
+                            <div class="detail-row">
+                                <span class="detail-icon">👤</span>
+                                <div><small>Nom complet</small><strong th:text="${demande.prenom + ' ' + demande.nom}">Jean Dupont</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">📧</span>
+                                <div><small>Adresse email</small><strong th:text="${demande.email != null ? demande.email : 'Non renseignée'}">Email</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">📅</span>
+                                <div><small>Date de soumission</small><strong th:text="${#temporals.format(demande.dateDemande, 'dd MMMM yyyy')}">24 juillet 2026</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">🎓</span>
+                                <div><small>Formation</small><strong th:text="${demande.niveau}">Master Informatique</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">📐</span>
+                                <div><small>Spécialité</small><strong th:text="${demande.filiere}">Génie Logiciel</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">🏫</span>
+                                <div><small>Établissement</small><strong th:text="${demande.ecole}">École</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">⏱️</span>
+                                <div><small>Durée souhaitée</small><strong th:text="${demande.dureeSouhaitee}">3 mois</strong></div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">🔖</span>
+                                <div>
+                                    <small>Référence dossier</small>
+                                    <strong class="detail-reference"
+                                            th:text="|DTA-2026-${#numbers.formatInteger(demande.id, 5)}|">DTA-2026-00125</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <aside class="suivi-sidebar" aria-label="Informations complémentaires">
+                <article class="sidebar-card">
+                    <div class="sidebar-heading">
+                        <span class="sidebar-icon icon-blue"><i class="fa-solid fa-headset"></i></span>
+                        <h2>Besoin d'assistance ?</h2>
+                    </div>
+                    <div class="contact-list">
+                        <p><i class="fa-solid fa-location-dot contact-red"></i><span>Yaoundé, Cameroun</span></p>
+                        <p><i class="fa-solid fa-phone contact-green"></i><span>+237 222 222 222</span></p>
+                        <p><i class="fa-solid fa-envelope contact-blue"></i><span>contact@dta-alliance.com</span></p>
+                    </div>
+                    <a class="sidebar-button" th:href="@{/contact}">Contacter l'assistance</a>
+                </article>
+
+                <article class="sidebar-card">
+                    <div class="sidebar-heading">
+                        <span class="sidebar-icon icon-amber"><i class="fa-regular fa-clock"></i></span>
+                        <h2>Délais moyens</h2>
+                    </div>
+                    <div class="delay-block delay-blue">
+                        <span>Validation du dossier</span>
+                        <strong>2 à 5 jours ouvrables</strong>
+                    </div>
+                    <div class="delay-block delay-purple">
+                        <span>Affectation</span>
+                        <strong>3 à 7 jours ouvrables</strong>
+                    </div>
+                </article>
+
+                <article class="sidebar-card">
+                    <div class="sidebar-heading">
+                        <span class="sidebar-icon icon-green"><i class="fa-regular fa-circle-check"></i></span>
+                        <h2>Conseils</h2>
+                    </div>
+                    <ul class="advice-list">
+                        <li><i class="fa-solid fa-check"></i><span>Vérifiez régulièrement votre email</span></li>
+                        <li><i class="fa-solid fa-check"></i><span>Assurez-vous que vos documents sont complets</span></li>
+                        <li><i class="fa-solid fa-check"></i><span>Contactez l'assistance en cas de besoin</span></li>
+                    </ul>
+                </article>
+
+                <article class="sidebar-card statistics-card">
+                    <h2>Statistiques 2026</h2>
+                    <div class="sidebar-stat">
+                        <p><span>Candidatures reçues</span><strong>2 416</strong></p>
+                        <div><i style="width: 92%"></i></div>
+                    </div>
+                    <div class="sidebar-stat">
+                        <p><span>Dossiers validés</span><strong>1 890</strong></p>
+                        <div><i style="width: 78%"></i></div>
+                    </div>
+                    <div class="sidebar-stat">
+                        <p><span>Stages attribués</span><strong>1 540</strong></p>
+                        <div><i style="width: 64%"></i></div>
+                    </div>
+                </article>
+            </aside>
         </div>
-    </div>
+    </section>
+
+    <script th:src="@{/js/suivi.js(v=1)}" defer></script>
 
 </div>
 

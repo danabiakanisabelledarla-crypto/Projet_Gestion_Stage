@@ -1,5 +1,6 @@
 package com.gestionstages.gestion_stages.controllers;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -8,17 +9,23 @@ import com.gestionstages.gestion_stages.repositories.*;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,6 +49,8 @@ public class EncadreurController {
     private final JournalBordRepository journalBordRepository;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final NotificationRepository notificationRepository;
+    private final DocumentRepository documentRepository;
 
     public EncadreurController(EncadreurRepository encadreurRepository,
                            StageRepository stageRepository,
@@ -56,7 +65,9 @@ public class EncadreurController {
                            EvenementPersonnelRepository evenementPersonnelRepository,
                            JournalBordRepository journalBordRepository,
                            ConversationRepository conversationRepository,
-                           MessageRepository messageRepository) {
+                           MessageRepository messageRepository,
+                           NotificationRepository notificationRepository,
+                           DocumentRepository documentRepository) {
             this.encadreurRepository = encadreurRepository;
             this.stageRepository = stageRepository;
             this.tacheRepository = tacheRepository;
@@ -71,6 +82,8 @@ public class EncadreurController {
             this.journalBordRepository = journalBordRepository;
             this.conversationRepository = conversationRepository;
             this.messageRepository = messageRepository;
+            this.notificationRepository = notificationRepository;
+            this.documentRepository = documentRepository;
 }
 
     private Encadreur getEncadreur(CustomUserDetails userDetails) {
@@ -87,9 +100,10 @@ public class EncadreurController {
     private void ajouterIdentite(Model model, CustomUserDetails userDetails, String activePage) {
         Utilisateur utilisateur = userDetails.getUtilisateur();
         List<Stage> stages = getStages(userDetails);
-        long notifications = livrablesDesStages(stages).stream()
-                .filter(livrable -> livrable.getStatut() == Livrable.StatutLivrable.depose)
-                .count();
+        List<Notification> notifications = notificationRepository
+                .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(utilisateur.getEmail());
+        long notificationsNonLues = notificationRepository
+                .countByDestinataireEmailAndStatut(utilisateur.getEmail(), "envoyee");
         long messages = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(utilisateur.getId()).stream()
                 .mapToLong(conversation -> conversationRepository.countNonLuByConversation(conversation.getId(), utilisateur.getId()))
                 .sum();
@@ -98,7 +112,8 @@ public class EncadreurController {
         model.addAttribute("initiales",
                 utilisateur.getPrenom().substring(0, 1).toUpperCase()
                         + utilisateur.getNom().substring(0, 1).toUpperCase());
-        model.addAttribute("notificationsCount", notifications);
+        model.addAttribute("notifications", notifications);
+        model.addAttribute("notificationsCount", notificationsNonLues);
         model.addAttribute("messagesCount", messages);
     }
 
@@ -145,6 +160,21 @@ public class EncadreurController {
         if (livrable == null) return null;
         if (livrable.getStage() != null) return livrable.getStage();
         return livrable.getTache() != null ? livrable.getTache().getStage() : null;
+    }
+
+    private void synchroniserStatutObjectif(Objectif objectif) {
+        int progression = objectif.getProgression() == null ? 0
+                : Math.max(0, Math.min(100, objectif.getProgression()));
+        Objectif.StatutObjectif statut = progression >= 100
+                ? Objectif.StatutObjectif.atteint
+                : progression > 0 ? Objectif.StatutObjectif.en_cours
+                : Objectif.StatutObjectif.non_commence;
+        if (objectif.getProgression() == null || objectif.getProgression() != progression
+                || objectif.getStatut() != statut) {
+            objectif.setProgression(progression);
+            objectif.setStatut(statut);
+            objectifRepository.save(objectif);
+        }
     }
 
     @GetMapping("/mes-stagiaires")
@@ -247,6 +277,7 @@ public class EncadreurController {
         List<Evaluation> evaluations = evaluationsDesStages(stages);
         List<EvenementPersonnel> evenements = stages.stream()
                 .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
+                .filter(evenement -> !evenement.getDate().isBefore(LocalDate.now()))
                 .sorted(Comparator.comparing(EvenementPersonnel::getDate))
                 .toList();
 
@@ -343,11 +374,13 @@ public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails use
             .sorted(Comparator.comparing(Evaluation::getDateEvaluation).reversed())
             .toList();
     Map<Integer, BigDecimal> moyennes = new HashMap<>();
+    Map<Integer, List<NoteEvaluation>> notesEvaluations = new HashMap<>();
     Map<Integer, String> criteresPrincipaux = new HashMap<>();
     Map<String, BigDecimal> moyennesCriteres = new LinkedHashMap<>();
     Map<String, Integer> nombresNotesCriteres = new HashMap<>();
     evaluations.forEach(evaluation -> {
         List<NoteEvaluation> notes = noteRepository.findByEvaluationId(evaluation.getId());
+        notesEvaluations.put(evaluation.getId(), notes);
         BigDecimal moyenne = notes.isEmpty() ? BigDecimal.ZERO : notes.stream()
                 .map(NoteEvaluation::getNote)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -389,6 +422,7 @@ public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails use
     model.addAttribute("criteres", critereRepository.findAll());
     model.addAttribute("evaluations", evaluations);
     model.addAttribute("moyennesEvaluations", moyennes);
+    model.addAttribute("notesEvaluations", notesEvaluations);
     model.addAttribute("criteresPrincipaux", criteresPrincipaux);
     model.addAttribute("moyennesCriteres", moyennesCriteres);
     model.addAttribute("evaluationsTotales", evaluations.size());
@@ -412,6 +446,57 @@ public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails use
     if (succes != null) model.addAttribute("succes", succes);
 
     return "encadreur/evaluations";
+}
+
+@GetMapping("/evaluations/{id}/pdf")
+public ResponseEntity<byte[]> telechargerEvaluation(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                     @PathVariable Integer id) {
+    Evaluation evaluation = evaluationRepository.findById(id)
+            .filter(item -> stageAppartient(userDetails, item.getStage()))
+            .orElseThrow();
+    Stage stage = evaluation.getStage();
+    List<NoteEvaluation> notes = noteRepository.findByEvaluationId(id);
+    BigDecimal moyenne = notes.isEmpty() ? BigDecimal.ZERO : notes.stream()
+            .map(NoteEvaluation::getNote)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .divide(BigDecimal.valueOf(notes.size()), 2, java.math.RoundingMode.HALF_UP);
+    List<Document> documents = documentRepository.findAll().stream()
+            .filter(document -> document.getStage() != null && document.getStage().getId().equals(stage.getId()))
+            .toList();
+
+    List<String> lignes = new ArrayList<>();
+    lignes.add("FICHE D'EVALUATION DE STAGE");
+    lignes.add("");
+    lignes.add("Stagiaire : " + stage.getStagiaire().getUtilisateur().getPrenom() + " "
+            + stage.getStagiaire().getUtilisateur().getNom());
+    lignes.add("Matricule : " + stage.getStagiaire().getMatricule());
+    lignes.add("Periode : " + stage.getDateDebut() + " au " + stage.getDateFin());
+    lignes.add("Projet : " + (stage.getProjet() == null ? "Non renseigne" : stage.getProjet().getTitre()));
+    lignes.add("Type : " + (evaluation.getTypeEvaluation() == Evaluation.TypeEvaluation.finale
+            ? "Evaluation finale" : "Evaluation continue"));
+    lignes.add("Date : " + evaluation.getDateEvaluation());
+    lignes.add("");
+    lignes.add("FICHE COMPLETE DE NOTATION");
+    for (NoteEvaluation note : notes) {
+        lignes.add("- " + note.getCritere().getLibelle() + " : " + note.getNote() + "/20"
+                + (note.getCommentaire() == null || note.getCommentaire().isBlank()
+                ? "" : " - " + note.getCommentaire()));
+    }
+    lignes.add("");
+    lignes.add("Moyenne finale : " + moyenne + "/20");
+    lignes.add("Appreciation : " + (evaluation.getAppreciation() == null
+            ? "Aucune appreciation" : evaluation.getAppreciation()));
+    lignes.add("");
+    lignes.add("DOCUMENTS UTILISES");
+    if (documents.isEmpty()) lignes.add("- Aucun document associe");
+    documents.forEach(document -> lignes.add("- " + document.getNomFichier()));
+
+    byte[] contenu = genererPdfSimple(lignes);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDisposition(ContentDisposition.attachment()
+            .filename("evaluation-" + stage.getStagiaire().getMatricule() + ".pdf").build());
+    return ResponseEntity.ok().headers(headers).body(contenu);
 }
 
 @PostMapping("/evaluations/creer")
@@ -456,6 +541,7 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
     ajouterIdentite(model, userDetails, "objectifs");
     List<Stage> mesStages = getStages(userDetails);
     List<Objectif> objectifs = objectifsDesStages(mesStages);
+    objectifs.forEach(this::synchroniserStatutObjectif);
 
     model.addAttribute("mesStages", mesStages);
     model.addAttribute("objectifs", objectifs);
@@ -479,12 +565,12 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
                              @RequestParam(required = false) String description,
                              @RequestParam(defaultValue = "1") Integer ordre,
                              @RequestParam(defaultValue = "moyenne") Objectif.Priorite priorite,
-                             @RequestParam(required = false) String dateLimite,
-                             @RequestParam(defaultValue = "0") Integer progression) {
+                             @RequestParam(required = false) String dateLimite) {
     stageRepository.findById(stageId).filter(stage -> stageAppartient(userDetails, stage)).ifPresent(stage -> {
         Objectif objectif = new Objectif(stage, libelle, description, ordre);
         objectif.setPriorite(priorite);
-        objectif.setProgression(Math.max(0, Math.min(100, progression)));
+        objectif.setProgression(0);
+        objectif.setStatut(Objectif.StatutObjectif.non_commence);
         if (dateLimite != null && !dateLimite.isBlank()) {
             objectif.setDateLimite(LocalDate.parse(dateLimite));
         }
@@ -492,20 +578,6 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
     });
 
     return "redirect:/encadreur/objectifs?succes=true";
-}
-
-@PostMapping("/objectifs/statut")
-public String modifierStatutObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                     @RequestParam Integer id,
-                                     @RequestParam Objectif.StatutObjectif statut) {
-    objectifRepository.findById(id)
-            .filter(objectif -> stageAppartient(userDetails, objectif.getStage()))
-            .ifPresent(objectif -> {
-                objectif.setStatut(statut);
-                if (statut == Objectif.StatutObjectif.atteint) objectif.setProgression(100);
-                objectifRepository.save(objectif);
-            });
-    return "redirect:/encadreur/objectifs";
 }
 
 @GetMapping("/livrables")
@@ -580,6 +652,19 @@ public String commenterLivrable(@AuthenticationPrincipal CustomUserDetails userD
             .ifPresent(livrable -> {
                 livrable.setCommentaireEncadreur(commentaire.trim());
                 livrableRepository.save(livrable);
+                Stage stage = stageDuLivrable(livrable);
+                if (stage != null && stage.getStagiaire() != null
+                        && stage.getStagiaire().getUtilisateur() != null) {
+                    Notification notification = new Notification(
+                            "Commentaire sur un livrable",
+                            "Votre encadreur a commenté le document « " + livrable.getTitre() + " ».",
+                            "STAGIAIRE",
+                            "haute",
+                            userDetails.getUtilisateur().getPrenom() + " "
+                                    + userDetails.getUtilisateur().getNom());
+                    notification.setDestinataireEmail(stage.getStagiaire().getUtilisateur().getEmail());
+                    notificationRepository.save(notification);
+                }
             });
     return "redirect:/encadreur/livrables?succes=commentaire";
 }
@@ -670,6 +755,8 @@ public String planning(@AuthenticationPrincipal CustomUserDetails userDetails, M
             && !o.getDateLimite().isBefore(aujourdHui) && !o.getDateLimite().isAfter(finSemaine)).count());
     model.addAttribute("activitesMois", evenements.stream().filter(e -> e.getDate().getMonth() == aujourdHui.getMonth()
             && e.getDate().getYear() == aujourdHui.getYear()).count());
+    model.addAttribute("moisCourant", aujourdHui.format(
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRENCH)));
     return "encadreur/planning";
 }
 
@@ -716,6 +803,54 @@ public String messagerie(@AuthenticationPrincipal CustomUserDetails userDetails,
     model.addAttribute("messagesParConversation", messagesParConversation);
     model.addAttribute("nonLusParConversation", nonLusParConversation);
     return "encadreur/messagerie";
+}
+
+@GetMapping("/notifications")
+@ResponseBody
+public List<Map<String, Object>> notifications(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    return notificationRepository
+            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail())
+            .stream()
+            .map(notification -> {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("objet", notification.getObjet());
+                item.put("message", notification.getMessage());
+                item.put("date", notification.getDateEnvoi());
+                item.put("statut", notification.getStatut());
+                return item;
+            })
+            .toList();
+}
+
+private byte[] genererPdfSimple(List<String> lignes) {
+    StringBuilder stream = new StringBuilder("BT\n/F1 11 Tf\n50 790 Td\n");
+    for (String ligne : lignes) {
+        String texte = java.text.Normalizer.normalize(ligne, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)");
+        stream.append("(").append(texte).append(") Tj\n0 -18 Td\n");
+    }
+    stream.append("ET");
+    byte[] streamBytes = stream.toString().getBytes(StandardCharsets.ISO_8859_1);
+    List<String> objets = List.of(
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+            "<< /Length " + streamBytes.length + " >>\nstream\n" + stream + "\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+    );
+    StringBuilder pdf = new StringBuilder("%PDF-1.4\n");
+    List<Integer> offsets = new ArrayList<>();
+    for (int index = 0; index < objets.size(); index++) {
+        offsets.add(pdf.toString().getBytes(StandardCharsets.ISO_8859_1).length);
+        pdf.append(index + 1).append(" 0 obj\n").append(objets.get(index)).append("\nendobj\n");
+    }
+    int xref = pdf.toString().getBytes(StandardCharsets.ISO_8859_1).length;
+    pdf.append("xref\n0 ").append(objets.size() + 1).append("\n0000000000 65535 f \n");
+    offsets.forEach(offset -> pdf.append(String.format("%010d 00000 n \n", offset)));
+    pdf.append("trailer\n<< /Size ").append(objets.size() + 1)
+            .append(" /Root 1 0 R >>\nstartxref\n").append(xref).append("\n%%EOF");
+    return pdf.toString().getBytes(StandardCharsets.ISO_8859_1);
 }
 
 }

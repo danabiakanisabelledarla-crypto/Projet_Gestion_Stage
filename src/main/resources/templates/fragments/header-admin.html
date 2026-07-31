@@ -2,6 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="header" class="admin-header">
+    <label class="admin-global-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="adminGlobalSearch" placeholder="Rechercher dans cette page..." oninput="filterAdminPage(this.value)">
+    </label>
     <div class="header-droite">
         <div class="header-icon-btn" onclick="toggleNotifDropdown(event)">
             <i class="fa-regular fa-bell"></i>
@@ -58,6 +62,12 @@
             var dd = document.getElementById('notifDropdown');
             if (dd) dd.classList.remove('open');
         });
+        window.filterAdminPage = function(value) {
+            var query = (value || '').trim().toLowerCase();
+            document.querySelectorAll('main table tbody tr, main .backup-card, main .stat-card').forEach(function(element) {
+                element.hidden = query.length > 0 && !element.textContent.toLowerCase().includes(query);
+            });
+        };
     </script>
 </div>
 </body>

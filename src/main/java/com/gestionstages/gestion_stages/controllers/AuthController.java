@@ -15,9 +15,13 @@ public class AuthController {
 
     @GetMapping("/redirection")
     public String redirigerSelonRole(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        String role = userDetails.getUtilisateur().getRole().getEspaceEffectif();
+        String libelleRole = userDetails.getUtilisateur().getRole().getLibelle();
+        String espace = switch (libelleRole) {
+            case "ADMINISTRATEUR", "RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE" -> libelleRole;
+            default -> userDetails.getUtilisateur().getRole().getEspaceEffectif();
+        };
 
-        switch (role) {
+        switch (espace) {
             case "ADMINISTRATEUR":
                 return "redirect:/admin/dashboard";
             case "RESPONSABLE_STAGE":

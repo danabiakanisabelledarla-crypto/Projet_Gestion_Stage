@@ -60,3 +60,9 @@
 .rap-page-btn { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: white; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
 .rap-page-btn:hover { border-color: #2563EB; color: #2563EB; }
 .rap-page-btn.actif { background: #2563EB; color: white; border-color: #2563EB; }
+.reports-page .backup-card { display:block; padding:20px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; box-shadow:0 5px 18px rgba(15,23,42,.06); }
+.reports-page .backup-action-btn { display:inline-grid; place-items:center; text-decoration:none; }
+.report-preview-modal { position:fixed; inset:0; z-index:3000; display:none; place-items:center; padding:20px; background:rgba(15,23,42,.55); }
+.report-preview-modal.open { display:grid; }
+.report-preview-panel { width:min(1000px,95vw); height:min(820px,90vh); padding:16px; border-radius:10px; background:#fff; }
+.report-preview-panel iframe { width:100%; height:calc(100% - 48px); border:1px solid #e2e8f0; border-radius:8px; }

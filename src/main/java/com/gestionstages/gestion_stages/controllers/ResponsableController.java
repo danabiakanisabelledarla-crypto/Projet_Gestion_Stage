@@ -11,8 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -304,39 +310,98 @@ public void ajouterDonneesCommunes(Model model) {
         return "responsable/demandes";
     }
 
-    @GetMapping("/demandes/accepter/{id}")
+    @PostMapping("/demandes/{id}/accepter")
     public String accepterDemande(@PathVariable Integer id,
+                                  @RequestParam String emailConnexion,
+                                  @RequestParam String motDePasseTemporaire,
                                   RedirectAttributes redirectAttributes) {
-        demandeStageRepository.findById(id).ifPresent(demande -> {
+        Optional<DemandeStage> demandeOpt = demandeStageRepository.findById(id);
+        if (demandeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "La demande sélectionnée est introuvable.");
+            return "redirect:/responsable/demandes";
+        }
+
+        DemandeStage demande = demandeOpt.get();
+        String emailCompte = emailConnexion == null ? "" : emailConnexion.trim().toLowerCase();
+        String motDePasse = motDePasseTemporaire == null ? "" : motDePasseTemporaire.trim();
+
+        if (!emailCompte.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            redirectAttributes.addFlashAttribute("erreur", "L'adresse e-mail de connexion n'est pas valide.");
+            return "redirect:/responsable/demandes";
+        }
+        if (motDePasse.length() < 8) {
+            redirectAttributes.addFlashAttribute("erreur", "Le mot de passe temporaire doit contenir au moins 8 caractères.");
+            return "redirect:/responsable/demandes";
+        }
+        if (stagiaireRepository.findByDemandeStageId(id).isPresent()) {
+            redirectAttributes.addFlashAttribute("erreur", "Un compte stagiaire existe déjà pour cette demande.");
+            return "redirect:/responsable/demandes";
+        }
+        if (utilisateurRepository.existsByEmail(emailCompte)) {
+            redirectAttributes.addFlashAttribute("erreur", "Cette adresse e-mail est déjà utilisée par un autre compte.");
+            return "redirect:/responsable/demandes";
+        }
+
+        try {
+            Role roleStagiaire = roleRepository.findByLibelle("STAGIAIRE")
+                    .orElseThrow(() -> new IllegalStateException("Le rôle STAGIAIRE est introuvable."));
+            Utilisateur utilisateur = new Utilisateur(
+                    roleStagiaire,
+                    demande.getNom(),
+                    demande.getPrenom(),
+                    emailCompte,
+                    passwordEncoder.encode(motDePasse));
+            utilisateurRepository.save(utilisateur);
+
+            String matricule = prochainMatriculeStagiaire();
+            Stagiaire stagiaire = new Stagiaire(utilisateur, demande, matricule, LocalDate.now());
+            stagiaireRepository.save(stagiaire);
+
             demande.setStatut(DemandeStage.StatutDemande.acceptee);
             demandeStageRepository.save(demande);
-            boolean envoye = emailService.envoyerDecisionDemande(
-                    emailDemande(demande),
+
+            String destinataire = emailDemande(demande);
+            if (destinataire == null || destinataire.isBlank()) destinataire = emailCompte;
+            boolean envoye = emailService.envoyerConfirmationAdmission(
+                    destinataire,
                     demande.getPrenom() + " " + demande.getNom(),
-                    true,
-                    null
-            );
-            ajouterRetourEmail(redirectAttributes, envoye, emailDemande(demande),
-                    "La demande a été acceptée.");
-        });
+                    emailCompte,
+                    motDePasse);
+            ajouterRetourEmail(redirectAttributes, envoye, destinataire,
+                    "La demande a été acceptée et le compte stagiaire créé.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "La création du compte a échoué : " + exception.getMessage());
+        }
         return "redirect:/responsable/demandes";
     }
 
-    @GetMapping("/demandes/refuser/{id}")
+    @PostMapping("/demandes/{id}/refuser")
     public String refuserDemande(@PathVariable Integer id,
+                                 @RequestParam String motifRefus,
                                  RedirectAttributes redirectAttributes) {
-        demandeStageRepository.findById(id).ifPresent(demande -> {
-            demande.setStatut(DemandeStage.StatutDemande.refusee);
-            demandeStageRepository.save(demande);
-            boolean envoye = emailService.envoyerDecisionDemande(
-                    emailDemande(demande),
-                    demande.getPrenom() + " " + demande.getNom(),
-                    false,
-                    demande.getMotifRefus()
-            );
-            ajouterRetourEmail(redirectAttributes, envoye, emailDemande(demande),
-                    "La demande a été refusée.");
-        });
+        String motif = motifRefus == null ? "" : motifRefus.trim();
+        if (motif.length() < 10) {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "Le motif du refus doit contenir au moins 10 caractères.");
+            return "redirect:/responsable/demandes";
+        }
+        Optional<DemandeStage> demandeOpt = demandeStageRepository.findById(id);
+        if (demandeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "La demande sélectionnée est introuvable.");
+            return "redirect:/responsable/demandes";
+        }
+        DemandeStage demande = demandeOpt.get();
+        demande.setMotifRefus(motif);
+        demande.setStatut(DemandeStage.StatutDemande.refusee);
+        demandeStageRepository.save(demande);
+        String destinataire = emailDemande(demande);
+        boolean envoye = emailService.envoyerRefusDemande(
+                destinataire,
+                demande.getPrenom() + " " + demande.getNom(),
+                motif);
+        ajouterRetourEmail(redirectAttributes, envoye, destinataire,
+                "La demande a été refusée.");
         return "redirect:/responsable/demandes";
     }
 
@@ -783,6 +848,42 @@ public String afficherDossiers(Model model) {
     return "responsable/dossiers";
 }
 
+@PostMapping("/dossiers/importer")
+public String importerDocumentExterne(@RequestParam Integer stageId,
+                                      @RequestParam String typeDocument,
+                                      @RequestParam MultipartFile fichier,
+                                      RedirectAttributes redirectAttributes) {
+    Optional<Stage> stageOpt = stageRepository.findById(stageId);
+    if (stageOpt.isEmpty()) {
+        redirectAttributes.addFlashAttribute("erreur", "Le dossier sélectionné est introuvable.");
+        return "redirect:/responsable/dossiers";
+    }
+    if (fichier == null || fichier.isEmpty()) {
+        redirectAttributes.addFlashAttribute("erreur", "Sélectionnez un fichier à importer.");
+        return "redirect:/responsable/dossiers";
+    }
+    try {
+        Path dossier = Paths.get("uploads", "documents").toAbsolutePath().normalize();
+        Files.createDirectories(dossier);
+        String original = Paths.get(fichier.getOriginalFilename() == null
+                ? "document" : fichier.getOriginalFilename()).getFileName().toString();
+        Path cible = dossier.resolve(UUID.randomUUID() + "_" + original).normalize();
+        if (!cible.startsWith(dossier)) throw new IllegalArgumentException("Chemin de fichier invalide.");
+        Files.copy(fichier.getInputStream(), cible, StandardCopyOption.REPLACE_EXISTING);
+
+        Document document = new Document(original, typeDocument.trim(), cible.toString());
+        document.setStage(stageOpt.get());
+        document.setTailleOctets(fichier.getSize());
+        document.setStatut("disponible");
+        documentRepository.save(document);
+        redirectAttributes.addFlashAttribute("succes", "Le document externe a été importé.");
+    } catch (Exception exception) {
+        redirectAttributes.addFlashAttribute("erreur",
+                "L'import du document a échoué : " + exception.getMessage());
+    }
+    return "redirect:/responsable/dossiers";
+}
+
 @GetMapping("/dossiers/documents/{id}")
 public String consulterDocumentDossier(@PathVariable Integer id,
                                        Model model,
@@ -967,6 +1068,15 @@ private String emailDemande(DemandeStage demande) {
         return email.contains("@") ? email : null;
     }
     return null;
+}
+
+private String prochainMatriculeStagiaire() {
+    long sequence = stagiaireRepository.count() + 1;
+    String matricule;
+    do {
+        matricule = "STG-" + LocalDate.now().getYear() + "-" + String.format("%03d", sequence++);
+    } while (stagiaireRepository.findByMatricule(matricule).isPresent());
+    return matricule;
 }
 
 private void ajouterRetourEmail(RedirectAttributes redirectAttributes,

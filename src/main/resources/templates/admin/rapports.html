@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/admin-rapports.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body class="reports-page">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
@@ -104,7 +104,6 @@
                     <option>Attestations</option>
                     <option>Fiches de note</option>
                 </select>
-                <button class="backup-card-btn"><i class="fa-solid fa-download"></i> Tout exporter</button>
             </div>
         </div>
         <table class="backup-table">
@@ -120,29 +119,34 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="d : ${documentsExportes}">
+<tr th:each="d : ${documentsExportes}">
                     <td>
                         <div class="backup-doc-cell">
                             <i class="fa-solid fa-file-pdf" style="color:#EF4444;font-size:20px;"></i>
-                            <span class="backup-doc-name" th:text="${d.nom}">rapport.pdf</span>
+                            <span class="backup-doc-name" th:text="${d.nomFichier}">rapport.pdf</span>
                         </div>
                     </td>
-                    <td th:text="${d.stagiaire}">Jean Dupont</td>
-                    <td><span class="backup-type-badge" th:classappend="${d.typeCls}" th:text="${d.typeLabel}">Rapport</span></td>
-                    <td class="backup-date-cell" th:text="${d.dateExport}">17/07/2026</td>
-                    <td th:text="${d.taille}">2.5 Mo</td>
-                    <td><span class="backup-format-badge" th:classappend="${d.formatCls}"><i class="fa-solid fa-file-pdf"></i> PDF</span></td>
-                    <td class="backup-actions-cell">
-                        <button class="backup-action-btn" title="Télécharger"><i class="fa-solid fa-download"></i></button>
-                        <button class="backup-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                        <button class="backup-action-btn danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    <td th:text="${d.stage != null ? d.stage.stagiaire.utilisateur.prenom + ' ' + d.stage.stagiaire.utilisateur.nom : (d.demandeStage != null ? d.demandeStage.prenom + ' ' + d.demandeStage.nom : 'Administration')}">Propriétaire</td>
+                    <td><span class="backup-type-badge" th:text="${#strings.replace(d.typeDocument,'_',' ')}">Rapport</span></td>
+                    <td class="backup-date-cell" th:text="${#temporals.format(d.dateDepot,'dd/MM/yyyy')}">Date</td>
+                    <td th:text="${d.tailleOctets != null ? #numbers.formatDecimal(d.tailleOctets / 1048576.0,1,1) + ' Mo' : '—'}">Taille</td>
+                    <td><span class="backup-format-badge pdf"><i class="fa-solid fa-file"></i> Fichier</span></td>
+<td class="backup-actions-cell">
+<a class="backup-action-btn" th:href="@{/documents/{id}(id=${d.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+<button class="backup-action-btn" type="button" th:onclick="'openReportPreview(' + ${d.id} + ', \'' + ${#strings.escapeJavaScript(d.nomFichier)} + '\')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                            <form th:action="@{/admin/documents/supprimer/{id}(id=${d.id})}" method="post" style="display:inline" onsubmit="return confirm('Supprimer ce document ?')"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="retour" value="rapports"><button class="backup-action-btn danger" type="submit" title="Supprimer"><i class="fa-solid fa-trash"></i></button></form>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(documentsExportes)}">
                     <td colspan="7" class="backup-empty">Aucun document exporté pour le moment. Utilisez les boutons ci-dessus pour générer un rapport.</td>
                 </tr>
             </tbody>
-        </table>
+</table>
+<div class="report-preview-modal" id="reportPreview"><div class="report-preview-panel"><div class="backup-card-header"><strong id="reportPreviewTitle">Aperçu</strong><button type="button" class="backup-action-btn" onclick="closeReportPreview()"><i class="fa-solid fa-xmark"></i></button></div><iframe id="reportPreviewFrame" title="Aperçu du document"></iframe></div></div>
+<script>
+function openReportPreview(id,name){document.getElementById('reportPreviewTitle').textContent=name;document.getElementById('reportPreviewFrame').src='/documents/'+id+'/preview';document.getElementById('reportPreview').classList.add('open')}
+function closeReportPreview(){document.getElementById('reportPreview').classList.remove('open');document.getElementById('reportPreviewFrame').src='about:blank'}
+</script>
         <div class="backup-pagination">
             <span class="backup-pagination-info">1 à 5 sur <span th:text="${totalDocuments}">0</span> documents</span>
             <div class="backup-pagination-btns">
