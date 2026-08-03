@@ -29,16 +29,16 @@
     </section>
 
     <section class="intern-grid two">
-        <article class="intern-card"><div class="intern-card-header"><div><h2 class="intern-card-title">Vue d’ensemble du journal</h2><p class="intern-card-subtitle">Résumé de votre activité sur les 30 derniers jours</p></div><select class="intern-select" style="width:auto"><option>30 derniers jours</option><option>Cette semaine</option></select></div><div class="intern-grid two" style="margin:0;align-items:center"><div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + (${nombreEntrees > 0 ? 100 : 0})"></div><div class="intern-donut-label"><strong th:text="${nombreEntrees > 0 ? '100%' : '0%'}">79%</strong><span>Entrées validées</span></div></div><div class="intern-chart-box"><span class="intern-chart-bar" style="height:25%"></span><span class="intern-chart-bar" style="height:38%"></span><span class="intern-chart-bar" style="height:31%"></span><span class="intern-chart-bar" style="height:50%"></span><span class="intern-chart-bar" style="height:58%"></span><span class="intern-chart-bar" style="height:70%"></span><span class="intern-chart-bar" style="height:82%"></span></div></div></article>
+        <article class="intern-card"><div class="intern-card-header"><div><h2 class="intern-card-title">Vue d’ensemble du journal</h2><p class="intern-card-subtitle">Résumé de votre activité enregistrée</p></div><select class="intern-select" id="journalOverviewPeriod" style="width:auto"><option value="mois" th:selected="${periodeJournal == 'mois'}">Ce mois</option><option value="semaine" th:selected="${periodeJournal == 'semaine'}">Cette semaine</option></select></div><div class="intern-grid two" style="margin:0;align-items:center"><div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + (${nombreEntrees > 0 ? 100 : 0})"></div><div class="intern-donut-label"><strong th:text="${journaux.size()}">0</strong><span>Entrées sur la période</span></div></div><div class="intern-chart-box"><span class="intern-chart-bar" th:each="journal, stat : ${journaux}" th:if="${stat.index < 7}" th:style="'height:' + ${35 + (stat.index * 8)} + '%'"></span><span class="intern-chart-bar" th:if="${#lists.isEmpty(journaux)}" style="height:5%"></span></div></div></article>
         <aside class="intern-grid" style="margin:0">
             <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Mon activité</h2></div><div class="intern-data-list"><div class="intern-data-row"><span>Entrées enregistrées</span><strong th:text="${nombreEntrees}">28</strong></div><div class="intern-data-row"><span>Temps déclaré</span><strong th:text="${nombreEntrees * 7 + ' heures'}">184 heures</strong></div><div class="intern-data-row"><span>Tâches disponibles</span><strong th:text="${taches.size()}">12</strong></div><div class="intern-data-row"><span>Livrables associés</span><strong th:text="${livrables.size()}">4</strong></div></div></article>
-            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Derniers commentaires</h2></div><div class="intern-feed"><div class="intern-feed-item"><span class="intern-avatar">PB</span><div><strong>Paul Bernard</strong><span>Excellent travail sur le dashboard.</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-avatar">PB</span><div><strong>Paul Bernard</strong><span>Pense à compléter la documentation.</span><small>Hier</small></div></div></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Derniers commentaires</h2></div><div class="intern-feed"><div class="intern-feed-item" th:each="livrable : ${commentairesEncadreur}"><span class="intern-avatar">EN</span><div><strong>Encadreur</strong><span th:text="${livrable.commentaireEncadreur}">Commentaire</span><small th:text="${livrable.titre}">Livrable</small></div></div><div class="intern-empty" th:if="${#lists.isEmpty(commentairesEncadreur)}">Aucun commentaire récent.</div></div></article>
         </aside>
     </section>
 
     <section class="intern-grid two">
         <article class="intern-card">
-            <div class="intern-card-header"><div><h2 class="intern-card-title">Mes entrées du journal</h2><p class="intern-card-subtitle">Chronologie de vos activités</p></div><div style="display:flex;gap:8px"><select class="intern-select" style="width:auto"><option>Cette semaine</option><option>Ce mois</option></select><button class="intern-button" data-open-journal><i class="fa-solid fa-plus"></i> Nouvelle entrée</button></div></div>
+            <div class="intern-card-header"><div><h2 class="intern-card-title">Mes entrées du journal</h2><p class="intern-card-subtitle">Chronologie de vos activités</p></div><select class="intern-select" id="journalPeriod" style="width:auto"><option value="semaine" th:selected="${periodeJournal == 'semaine'}">Cette semaine</option><option value="mois" th:selected="${periodeJournal == 'mois'}">Ce mois</option></select></div>
             <div class="intern-timeline" th:if="${journaux != null and !journaux.isEmpty()}">
                 <article class="intern-timeline-item" th:each="journal : ${journaux}">
                     <span class="intern-timeline-marker"></span>
@@ -53,13 +53,13 @@
                     </div>
                 </article>
             </div>
-            <div class="intern-empty" th:if="${journaux == null or journaux.isEmpty()}">Aucune entrée dans le journal. Utilisez « Nouvelle entrée » pour commencer.</div>
+            <div class="intern-empty" th:if="${journaux == null or journaux.isEmpty()}">Aucune entrée dans le journal pour cette période.</div>
         </article>
 
         <aside class="intern-grid" style="margin:0">
-            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Calendrier d’activité</h2></div><div class="intern-calendar-head"><span>Juillet 2026</span><i class="fa-regular fa-calendar"></i></div><div class="intern-calendar-grid"><span class="day-name">L</span><span class="day-name">M</span><span class="day-name">M</span><span class="day-name">J</span><span class="day-name">V</span><span class="day-name">S</span><span class="day-name">D</span><span></span><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span class="event-day">15</span><span>16</span><span>17</span><span class="event-day">18</span><span class="event-day">19</span><span class="event-day">20</span><span class="active-day">21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span></div></article>
-            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2></div><div class="intern-feed"><div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-plus"></i></span><div><strong>Nouvelle entrée créée</strong><span>Développement API Statistiques</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Entrée validée</strong><span>Dashboard stagiaire</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-regular fa-comment"></i></span><div><strong>Nouveau commentaire</strong><span>Paul Bernard</span><small>Hier</small></div></div></div></article>
-            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Progression du stage</h2><strong>68%</strong></div><div class="intern-progress"><span style="width:68%;background:#2563eb"></span></div><div class="intern-data-list" style="margin-top:10px"><div class="intern-data-row"><span>Objectifs atteints</span><strong>7 / 10</strong></div><div class="intern-data-row"><span>Tâches terminées</span><strong>18 / 25</strong></div><div class="intern-data-row"><span>Livrables déposés</span><strong>9 / 12</strong></div></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Calendrier d’activité</h2></div><div class="intern-calendar-head"><span id="journalCalendarTitle">Mois courant</span><i class="fa-regular fa-calendar"></i></div><div id="journalActivityDates" hidden><span th:each="journal : ${journauxRecents}" th:attr="data-journal-date=${journal.dateActivite}"></span></div><div class="intern-calendar-grid" id="journalCalendar"><span class="day-name">L</span><span class="day-name">M</span><span class="day-name">M</span><span class="day-name">J</span><span class="day-name">V</span><span class="day-name">S</span><span class="day-name">D</span></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2></div><div class="intern-feed"><div class="intern-feed-item" th:each="journal : ${journauxRecents}"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-plus"></i></span><div><strong>Entrée enregistrée</strong><span th:text="${#strings.abbreviate(journal.travauxRealises, 55)}">Activité</span><small th:text="${#temporals.format(journal.dateActivite, 'dd/MM/yyyy')}">Date</small></div></div><div class="intern-empty" th:if="${#lists.isEmpty(journauxRecents)}">Aucune activité récente.</div></div></article>
+            <article class="intern-card"><div class="intern-card-header"><h2 class="intern-card-title">Progression du stage</h2><strong th:text="${progressionStage + '%'}">0%</strong></div><div class="intern-progress"><span th:style="'width:' + ${progressionStage} + '%;background:#2563eb'"></span></div><div class="intern-data-list" style="margin-top:10px"><div class="intern-data-row"><span>Objectifs atteints</span><strong th:text="${objectifsAtteints + ' / ' + objectifsTotal}">0 / 0</strong></div><div class="intern-data-row"><span>Tâches terminées</span><strong th:text="${tachesTerminees + ' / ' + taches.size()}">0 / 0</strong></div><div class="intern-data-row"><span>Livrables déposés</span><strong th:text="${livrables.size()}">0</strong></div></div></article>
         </aside>
     </section>
 </main>
@@ -86,12 +86,45 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('journalModal');
     const date = document.getElementById('dateActivite');
-    const open = () => { modal.classList.add('open'); date.valueAsDate = new Date(); document.body.style.overflow = 'hidden'; };
-    const close = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
+    const open = () => { if (!modal) return; modal.classList.add('open'); if (date) date.valueAsDate = new Date(); document.body.style.overflow = 'hidden'; };
+    const close = () => { if (!modal) return; modal.classList.remove('open'); document.body.style.overflow = ''; };
     document.querySelectorAll('[data-open-journal]').forEach(button => button.addEventListener('click', open));
     document.querySelectorAll('[data-close-journal]').forEach(button => button.addEventListener('click', close));
-    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal?.addEventListener('click', event => { if (event.target === modal) close(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+
+    document.querySelectorAll('#journalPeriod, #journalOverviewPeriod').forEach(select => {
+        select.addEventListener('change', () => {
+            window.location.href = `/stagiaire/journal?periode=${encodeURIComponent(select.value)}`;
+        });
+    });
+
+    const calendar = document.getElementById('journalCalendar');
+    const calendarTitle = document.getElementById('journalCalendarTitle');
+    if (calendar && calendarTitle) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        calendarTitle.textContent = now.toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+        const activeDates = new Set(
+            [...document.querySelectorAll('[data-journal-date]')]
+                .map(item => item.dataset.journalDate)
+        );
+        const firstDay = new Date(year, month, 1);
+        const mondayIndex = (firstDay.getDay() + 6) % 7;
+        for (let index = 0; index < mondayIndex; index += 1) {
+            calendar.appendChild(document.createElement('span'));
+        }
+        const numberOfDays = new Date(year, month + 1, 0).getDate();
+        for (let day = 1; day <= numberOfDays; day += 1) {
+            const cell = document.createElement('span');
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            cell.textContent = day;
+            if (activeDates.has(dateKey)) cell.classList.add('event-day');
+            if (day === now.getDate()) cell.classList.add('active-day');
+            calendar.appendChild(cell);
+        }
+    }
 });
 </script>
 </body>

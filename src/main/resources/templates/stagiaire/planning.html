@@ -244,20 +244,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.querySelector('[data-event-modal]');
     const dateInput = document.getElementById('eventDate');
     const openModal = selectedDate => {
-        if (selectedDate) dateInput.value = selectedDate;
+        if (!modal) return;
+        if (selectedDate && dateInput) dateInput.value = selectedDate;
         if (!dateInput.value) dateInput.value = formatDateKey(new Date());
         modal.classList.add('open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
     };
     const closeModal = () => {
+        if (!modal) return;
         modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
     };
     document.querySelectorAll('[data-open-event]').forEach(button => button.addEventListener('click', () => openModal()));
     document.querySelectorAll('[data-close-event]').forEach(button => button.addEventListener('click', closeModal));
-    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    if (modal) {
+        modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    }
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
 
     const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -266,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthCalendar = document.getElementById('monthCalendar');
     const agenda = document.getElementById('calendarAgenda');
     const title = document.getElementById('calendarTitle');
+    if (!grid || !monthCalendar || !agenda || !title) return;
     let cursor = new Date();
     cursor.setHours(12, 0, 0, 0);
     let activeView = 'month';
@@ -412,17 +417,17 @@ document.addEventListener('DOMContentLoaded', () => {
         else renderAgenda();
     }
 
-    document.getElementById('calendarPrevious').addEventListener('click', () => {
+    document.getElementById('calendarPrevious')?.addEventListener('click', () => {
         if (activeView === 'month') cursor.setMonth(cursor.getMonth() - 1);
         else cursor.setDate(cursor.getDate() - (activeView === 'week' ? 7 : 1));
         renderCalendar();
     });
-    document.getElementById('calendarNext').addEventListener('click', () => {
+    document.getElementById('calendarNext')?.addEventListener('click', () => {
         if (activeView === 'month') cursor.setMonth(cursor.getMonth() + 1);
         else cursor.setDate(cursor.getDate() + (activeView === 'week' ? 7 : 1));
         renderCalendar();
     });
-    document.getElementById('calendarToday').addEventListener('click', () => {
+    document.getElementById('calendarToday')?.addEventListener('click', () => {
         cursor = new Date();
         cursor.setHours(12, 0, 0, 0);
         renderCalendar();
@@ -444,9 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateNextCard(event, titleId, dateId) {
         if (!event) return;
-        document.getElementById(titleId).textContent = event.title;
+        const titleElement = document.getElementById(titleId);
+        const dateElement = document.getElementById(dateId);
+        if (!titleElement || !dateElement) return;
+        titleElement.textContent = event.title;
         const date = parseDate(event.date);
-        document.getElementById(dateId).textContent = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + (event.time ? ' · ' + event.time : '');
+        dateElement.textContent = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + (event.time ? ' · ' + event.time : '');
     }
 
     if (stageEndDate) {

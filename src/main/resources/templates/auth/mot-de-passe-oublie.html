@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mot de passe oublié - DTA Alliance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+<main class="recovery-page">
+    <section class="recovery-card">
+        <a class="recovery-brand" th:href="@{/}"><img th:src="@{/images/logo.png}" alt="DTA Alliance"><span><strong>DTA Alliance</strong><small>Gestion des stages</small></span></a>
+        <div class="recovery-icon"><i class="fa-solid fa-key"></i></div>
+        <h1>Récupérer votre compte</h1>
+        <p>Indiquez l'adresse email associée à votre compte. Un lien sécurisé et temporaire vous sera envoyé.</p>
+        <div class="message-info" th:if="${message}" th:text="${message}"></div>
+        <form th:action="@{/mot-de-passe-oublie}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>Adresse email</label>
+            <div class="champ-groupe"><i class="fa-solid fa-envelope champ-icone"></i><input class="champ-input" type="email" name="email" placeholder="votre@email.com" required autofocus></div>
+            <button class="btn-connexion" type="submit">Envoyer le lien <i class="fa-solid fa-arrow-right"></i></button>
+        </form>
+        <a class="recovery-back" th:href="@{/login}"><i class="fa-solid fa-arrow-left"></i> Retour à la connexion</a>
+    </section>
+</main>
+</body>
+</html>

@@ -278,6 +278,8 @@ public class AdminController {
             m.put("nomComplet", d.getPrenom() + " " + d.getNom());
             m.put("initiale", d.getPrenom().substring(0,1).toUpperCase() + d.getNom().substring(0,1).toUpperCase());
             m.put("email", extraireEmailCandidat(d));
+            m.put("utilisateurId", utilisateurRepository.findByEmail(extraireEmailCandidat(d))
+                    .map(Utilisateur::getId).orElse(null));
             m.put("ecole", d.getEcole());
             m.put("filiere", d.getFiliere());
             m.put("niveau", d.getNiveau());
@@ -443,8 +445,8 @@ public class AdminController {
         }
         byte[] contenu = csv.toString().getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"demandes-stage.csv\"")
-                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"demandes-stage.xls\"")
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel;charset=UTF-8"))
                 .contentLength(contenu.length)
                 .body(contenu);
     }

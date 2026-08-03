@@ -13,7 +13,7 @@ public class EvenementPersonnel {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "stage_id", nullable = false)
+    @JoinColumn(name = "stage_id")
     private Stage stage;
 
     @Column(nullable = false, length = 100)

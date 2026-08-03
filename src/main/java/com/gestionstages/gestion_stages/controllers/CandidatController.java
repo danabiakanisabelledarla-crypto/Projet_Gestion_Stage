@@ -39,7 +39,9 @@ public class CandidatController {
     //}
 
     @GetMapping("/demande")
-    public String afficherFormulaire() {
+    public String afficherFormulaire(@RequestParam(required = false) Boolean succes,
+                                     Model model) {
+        model.addAttribute("succes", Boolean.TRUE.equals(succes));
         return "candidat/demande";
     }
 
@@ -52,9 +54,17 @@ public String soumettreFormulaire(
         @RequestParam String filiere,
         @RequestParam String niveau,
         @RequestParam String dureeSouhaitee,
+        @RequestParam(required = false) String telephone,
+        @RequestParam(required = false) String dateNaissance,
+        @RequestParam(required = false) String ville,
+        @RequestParam(required = false) String genre,
+        @RequestParam(required = false) String anneeAcademique,
+        @RequestParam(required = false) String domaineInteret,
+        @RequestParam(required = false) String motivation,
         @RequestParam(required = false) MultipartFile cni,
         @RequestParam(required = false) MultipartFile lettreStage,
         @RequestParam(required = false) MultipartFile cv,
+        @RequestParam(required = false) MultipartFile releveNotes,
         RedirectAttributes redirectAttributes) {
 
     DemandeStage demande = new DemandeStage(nom, prenom, ecole,
@@ -69,14 +79,13 @@ public String soumettreFormulaire(
         sauvegarderDocument(cni, "CNI", demande);
         sauvegarderDocument(lettreStage, "LETTRE_STAGE", demande);
         sauvegarderDocument(cv, "CV", demande);
+        sauvegarderDocument(releveNotes, "RELEVE_NOTES", demande);
 
     } catch (IOException e) {
         System.err.println("Erreur upload : " + e.getMessage());
     }
 
-    redirectAttributes.addFlashAttribute("messageSucces",
-            "Demande envoyée avec succès !");
-    return "redirect:/";
+    return "redirect:/candidat/demande?succes=true";
 }
 
     private void sauvegarderDocument(MultipartFile fichier, String typeDocument,

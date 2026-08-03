@@ -370,11 +370,11 @@
             <div class="sous-carte" style="border:2px solid #2563EB;background:white;">
                 <div class="sous-carte-titre"><i class="fa-solid fa-bolt"></i> Actions rapides</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <button style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-pen"></i> Modifier le profil</button>
-                    <button style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-shield"></i> Gérer les permissions</button>
-                    <button style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-users"></i> Voir les stagiaires</button>
+                    <button onclick="fermerModal();openEdit(${u.id})" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-pen"></i> Modifier le profil</button>
+                    <button onclick="window.location.href='/admin/roles-permissions?utilisateurId=${u.id}'" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-shield"></i> Gérer les permissions</button>
+                    <button onclick="window.location.href='/admin/stagiaires?encadreurId=${u.id}'" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-users"></i> Voir les stagiaires</button>
                 </div>
-                <button style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <button onclick="desactiverDepuisDetails(${u.id})" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;">
                     <i class="fa-solid fa-user-slash"></i> Désactiver le compte
                 </button>
             </div>
@@ -422,6 +422,23 @@
         document.getElementById('edit-nom').value = u.nom || '';
         document.getElementById('edit-role').value = u.role || '';
         openModal('modal-edit');
+    }
+
+    function desactiverDepuisDetails(id) {
+        if (!confirm('Désactiver ce compte utilisateur ?')) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/admin/utilisateurs/desactiver/' + id;
+        const csrf = document.querySelector('input[name="_csrf"]');
+        if (csrf) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = csrf.name;
+            input.value = csrf.value;
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 <!-- MODAL DÉTAILS UTILISATEUR -->

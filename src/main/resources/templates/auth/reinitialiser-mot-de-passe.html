@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Nouveau mot de passe - DTA Alliance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+<main class="recovery-page">
+    <section class="recovery-card">
+        <a class="recovery-brand" th:href="@{/}"><img th:src="@{/images/logo.png}" alt="DTA Alliance"><span><strong>DTA Alliance</strong><small>Gestion des stages</small></span></a>
+        <div class="recovery-icon"><i class="fa-solid fa-lock"></i></div>
+        <h1>Créer un nouveau mot de passe</h1>
+        <p>Utilisez au moins 8 caractères et choisissez un mot de passe différent de vos anciens identifiants.</p>
+        <div class="message-erreur" th:if="${erreur}" th:text="${erreur}"></div>
+        <form th:if="${token}" th:action="@{/reinitialiser-mot-de-passe}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="token" th:value="${token}">
+            <label>Nouveau mot de passe</label>
+            <div class="champ-groupe"><i class="fa-solid fa-lock champ-icone"></i><input class="champ-input" type="password" name="motDePasse" minlength="8" required></div>
+            <label>Confirmer le mot de passe</label>
+            <div class="champ-groupe"><i class="fa-solid fa-shield-halved champ-icone"></i><input class="champ-input" type="password" name="confirmation" minlength="8" required></div>
+            <button class="btn-connexion" type="submit">Mettre à jour le mot de passe <i class="fa-solid fa-check"></i></button>
+        </form>
+        <a class="recovery-back" th:href="@{/mot-de-passe-oublie}"><i class="fa-solid fa-arrow-left"></i> Demander un nouveau lien</a>
+    </section>
+</main>
+</body>
+</html>

@@ -323,43 +323,53 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.querySelector('[data-report-modal]');
     const openModal = () => {
+        if (!modal) return;
         modal.classList.add('open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
     };
     const closeModal = () => {
+        if (!modal) return;
         modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
     };
     document.querySelectorAll('[data-open-report]').forEach(button => button.addEventListener('click', openModal));
     document.querySelectorAll('[data-close-report]').forEach(button => button.addEventListener('click', closeModal));
-    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    if (modal) {
+        modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    }
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
 
     const fileInput = document.getElementById('reportFile');
     const dropZone = document.getElementById('reportDropZone');
     const fileName = document.getElementById('reportFileName');
     const showFile = file => {
+        if (!fileName) return;
         fileName.textContent = file ? file.name : '';
         if (file && file.type !== 'application/pdf') {
             fileName.textContent = 'Veuillez sélectionner un fichier PDF.';
             fileInput.value = '';
         }
     };
-    fileInput.addEventListener('change', () => showFile(fileInput.files[0]));
-    ['dragenter', 'dragover'].forEach(name => dropZone.addEventListener(name, event => {
-        event.preventDefault();
-        dropZone.classList.add('dragging');
-    }));
-    ['dragleave', 'drop'].forEach(name => dropZone.addEventListener(name, event => {
-        event.preventDefault();
-        dropZone.classList.remove('dragging');
-    }));
+    if (fileInput) {
+        fileInput.addEventListener('change', () => showFile(fileInput.files[0]));
+    }
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(name => dropZone.addEventListener(name, event => {
+            event.preventDefault();
+            dropZone.classList.add('dragging');
+        }));
+        ['dragleave', 'drop'].forEach(name => dropZone.addEventListener(name, event => {
+            event.preventDefault();
+            dropZone.classList.remove('dragging');
+        }));
+    }
 
     const techInput = document.getElementById('projectTech');
     const techPreview = document.getElementById('technologyPreview');
     const renderTechnologies = () => {
+        if (!techInput || !techPreview) return;
         techPreview.innerHTML = '';
         techInput.value.split(',').map(value => value.trim()).filter(Boolean).forEach(value => {
             const badge = document.createElement('span');
@@ -368,8 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
             techPreview.appendChild(badge);
         });
     };
-    techInput.addEventListener('input', renderTechnologies);
-    renderTechnologies();
+    if (techInput && techPreview) {
+        techInput.addEventListener('input', renderTechnologies);
+        renderTechnologies();
+    }
 });
 </script>
 </body>

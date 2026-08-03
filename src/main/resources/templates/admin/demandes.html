@@ -124,11 +124,11 @@
         </div>
         <div class="sort-select">
             <i class="fa-solid fa-arrow-up-short-wide"></i>
-            <select>
-                <option>Plus récent</option>
-                <option>Plus ancien</option>
-                <option>Nom</option>
-                <option>Statut</option>
+            <select id="requestSort">
+                <option value="recent">Plus récent</option>
+                <option value="ancien">Plus ancien</option>
+                <option value="nom">Nom</option>
+                <option value="statut">Statut</option>
             </select>
         </div>
     </div>
@@ -148,7 +148,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="demande : ${demandes}" th:classappend="${demande.statut.name() == 'en_attente' ? 'ligne-attente' : ''}">
+                <tr th:each="demande : ${demandes}" th:classappend="${demande.statut.name() == 'en_attente' ? 'ligne-attente' : ''}" th:data-status="${demande.statut.name()}" th:data-date="${demande.dateDemande}" th:data-name="${#strings.toLowerCase(demande.prenom+' '+demande.nom)}">
                     <td>
                         <div class="candidat-cell">
                             <div class="candidat-avatar" th:text="${demande.prenom.substring(0,1).toUpperCase() + demande.nom.substring(0,1).toUpperCase()}">S</div>
@@ -389,7 +389,11 @@ function ouvrirDetails(id) {
                     Cette demande a déjà été ${d.statutCls === 'acceptee' ? 'acceptée' : 'refusée'}.
                 </div>`}
             <div class="actions-admin-secondaires">
-                <a class="btn-action-secondaire" href="mailto:${d.email}"><i class="fa-solid fa-envelope"></i> Envoyer un message</a>
+                <button class="btn-action-secondaire" type="button" onclick="afficherChoixMessage(${d.id})"><i class="fa-solid fa-envelope"></i> Envoyer un message</button>
+                <div class="request-message-options" id="messageOptions-${d.id}" hidden>
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(d.email)}" target="_blank" rel="noopener"><i class="fa-brands fa-google"></i> Ouvrir Gmail</a>
+                    ${d.utilisateurId ? `<a href="/admin/messages?destinataireId=${d.utilisateurId}"><i class="fa-regular fa-comments"></i> Message interne</a>` : '<span><i class="fa-solid fa-circle-info"></i> Aucun compte plateforme</span>'}
+                </div>
                 <button class="btn-action-secondaire" onclick="telechargerDossier(${d.id})"><i class="fa-solid fa-folder"></i> Télécharger le dossier</button>
             </div>
         </div>
@@ -460,12 +464,27 @@ function filtrerDemandes(filtre) {
     document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
     document.querySelectorAll('.backup-table tbody tr').forEach(row => {
         if (filtre === 'toutes') { row.style.display = ''; return; }
-        const badge = row.querySelector('.backup-type-badge');
-        if (!badge) return;
-        const cls = Array.from(badge.classList).find(c => c !== 'backup-type-badge');
-        row.style.display = (cls === filtre) ? '' : 'none';
+        if (row.querySelector('td[colspan]')) return;
+        row.style.display = row.dataset.status === filtre ? '' : 'none';
     });
 }
+
+function afficherChoixMessage(id) {
+    const options = document.getElementById('messageOptions-' + id);
+    if (options) options.hidden = !options.hidden;
+}
+
+document.getElementById('requestSort').addEventListener('change', function() {
+    const tbody = document.querySelector('.backup-table tbody');
+    const rows = [...tbody.querySelectorAll('tr')].filter(row => !row.querySelector('td[colspan]'));
+    rows.sort((a, b) => {
+        if (this.value === 'ancien') return a.dataset.date.localeCompare(b.dataset.date);
+        if (this.value === 'nom') return a.dataset.name.localeCompare(b.dataset.name, 'fr');
+        if (this.value === 'statut') return a.dataset.status.localeCompare(b.dataset.status, 'fr');
+        return b.dataset.date.localeCompare(a.dataset.date);
+    });
+    rows.forEach(row => tbody.appendChild(row));
+});
 
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {

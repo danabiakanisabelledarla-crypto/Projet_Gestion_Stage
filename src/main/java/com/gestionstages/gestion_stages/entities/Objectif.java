@@ -2,6 +2,7 @@ package com.gestionstages.gestion_stages.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "objectifs")
@@ -37,12 +38,23 @@ public class Objectif {
     @Column(nullable = false)
     private Integer progression = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private OrigineObjectif origine = OrigineObjectif.encadreur;
+
+    @Column(name = "date_creation")
+    private LocalDateTime dateCreation = LocalDateTime.now();
+
     public enum Priorite {
         basse, moyenne, haute
     }
 
     public enum StatutObjectif {
         non_commence, en_cours, atteint
+    }
+
+    public enum OrigineObjectif {
+        stagiaire, encadreur
     }
 
     // Constructeurs
@@ -127,5 +139,21 @@ public class Objectif {
 
     public void setProgression(Integer progression) {
         this.progression = progression;
+    }
+
+    public OrigineObjectif getOrigine() {
+        return origine;
+    }
+
+    public void setOrigine(OrigineObjectif origine) {
+        this.origine = origine;
+    }
+
+    public LocalDateTime getDateCreation() {
+        return dateCreation;
+    }
+
+    public void setDateCreation(LocalDateTime dateCreation) {
+        this.dateCreation = dateCreation;
     }
 }

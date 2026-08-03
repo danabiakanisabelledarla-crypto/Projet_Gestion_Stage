@@ -13,11 +13,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 @Controller
 @RequestMapping("/responsable")
@@ -58,6 +63,8 @@ public class ResponsableController {
     private final ObjectifRepository objectifRepository;
     private final LivrableRepository livrableRepository;
     private final EvenementPersonnelRepository evenementPersonnelRepository;
+    private final ConversationRepository conversationRepository;
+    private final MessageRepository messageRepository;
     
     private final EmailService emailService;
 
@@ -97,7 +104,7 @@ private static List<String> libellesMois(List<YearMonth> mois) {
 }
 
 @ModelAttribute
-public void ajouterDonneesCommunes(Model model) {
+public void ajouterDonneesCommunes(Model model, Authentication authentication) {
     LocalDate aujourdHui = LocalDate.now();
     model.addAttribute("dateCourante", aujourdHui);
     model.addAttribute("moisCourant", aujourdHui.getMonth().getDisplayName(TextStyle.FULL, LOCALE_FR));
@@ -105,7 +112,16 @@ public void ajouterDonneesCommunes(Model model) {
             aujourdHui.getMonth().getDisplayName(TextStyle.FULL, LOCALE_FR) + " " + aujourdHui.getYear());
     model.addAttribute("notificationsCount",
             notificationRepository.countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
-    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
+    long messagesCount = 0;
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails details) {
+        Integer userId = details.getUtilisateur().getId();
+        messagesCount = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId)
+                .stream()
+                .mapToLong(conversation -> conversationRepository
+                        .countNonLuByConversation(conversation.getId(), userId))
+                .sum();
+    }
+    model.addAttribute("messagesCount", messagesCount);
 }
 
     public ResponsableController(DemandeStageRepository demandeStageRepository,
@@ -126,7 +142,9 @@ public void ajouterDonneesCommunes(Model model) {
                               EvenementPersonnelRepository evenementPersonnelRepository,
                               EmailService emailService,
                               NotificationRepository notificationRepository,
-                              JavaMailSender mailSender) {
+                              JavaMailSender mailSender,
+                              ConversationRepository conversationRepository,
+                              MessageRepository messageRepository) {
     this.demandeStageRepository = demandeStageRepository;
     this.stagiaireRepository = stagiaireRepository;
     this.stageRepository = stageRepository;
@@ -146,6 +164,8 @@ public void ajouterDonneesCommunes(Model model) {
     this.evenementPersonnelRepository = evenementPersonnelRepository;
     this.mailSender = mailSender;
     this.emailService = emailService;
+    this.conversationRepository = conversationRepository;
+    this.messageRepository = messageRepository;
 }
 
         @GetMapping("/dashboard")
@@ -459,38 +479,40 @@ public String admettreStagiaire(@PathVariable Integer id,
     DemandeStage demande = demandeOpt.get();
 
     try {
-        // 1. Générer un email unique pour le stagiaire
-        String emailBase = demande.getPrenom().toLowerCase()
-                + "." + demande.getNom().toLowerCase()
-                + "@stagiaire.com";
-        String emailFinal = emailBase;
-        int compteur = 1;
-        while (utilisateurRepository.existsByEmail(emailFinal)) {
-            emailFinal = demande.getPrenom().toLowerCase()
+        Optional<Stagiaire> stagiaireExistant = stagiaireRepository.findByDemandeStageId(id);
+        Stagiaire stagiaire;
+        String emailFinal;
+        String motDePasse = null;
+        boolean compteCreePendantAdmission = stagiaireExistant.isEmpty();
+
+        if (stagiaireExistant.isPresent()) {
+            stagiaire = stagiaireExistant.get();
+            emailFinal = stagiaire.getUtilisateur().getEmail();
+        } else {
+            String emailBase = demande.getPrenom().toLowerCase()
                     + "." + demande.getNom().toLowerCase()
-                    + compteur + "@stagiaire.com";
-            compteur++;
+                    + "@stagiaire.com";
+            emailFinal = emailBase;
+            int compteur = 1;
+            while (utilisateurRepository.existsByEmail(emailFinal)) {
+                emailFinal = demande.getPrenom().toLowerCase()
+                        + "." + demande.getNom().toLowerCase()
+                        + compteur + "@stagiaire.com";
+                compteur++;
+            }
+
+            motDePasse = "stag" + LocalDate.now().getYear();
+            Role roleStagiaire = roleRepository.findByLibelle("STAGIAIRE").orElseThrow();
+            Utilisateur utilisateur = new Utilisateur(roleStagiaire,
+                    demande.getNom(), demande.getPrenom(),
+                    emailFinal, passwordEncoder.encode(motDePasse));
+            utilisateurRepository.save(utilisateur);
+
+            stagiaire = new Stagiaire(utilisateur, demande,
+                    prochainMatriculeStagiaire(), LocalDate.now());
+            stagiaireRepository.save(stagiaire);
         }
-
-        // 2. Mot de passe en clair (pour l'email) et haché (pour la BDD)
-        String motDePasse = "stag" + LocalDate.now().getYear();
-        Role roleStagiaire = roleRepository.findByLibelle("STAGIAIRE").orElseThrow();
-
-        // 3. Créer le compte utilisateur du stagiaire
-        Utilisateur utilisateur = new Utilisateur(roleStagiaire,
-                demande.getNom(), demande.getPrenom(),
-                emailFinal, passwordEncoder.encode(motDePasse));
-        utilisateurRepository.save(utilisateur);
-
-        // 4. Générer le matricule
-        long nombreStagiaires = stagiaireRepository.count() + 1;
-        String matricule = "STG-" + LocalDate.now().getYear()
-                + "-" + String.format("%03d", nombreStagiaires);
-
-        // 5. Créer la fiche stagiaire
-        Stagiaire stagiaire = new Stagiaire(utilisateur, demande,
-                matricule, LocalDate.now());
-        stagiaireRepository.save(stagiaire);
+        String matricule = stagiaire.getMatricule();
 
         // 6. Créer le stage avec affectation
         Encadreur encadreur = encadreurRepository.findById(encadreurId).orElseThrow();
@@ -518,12 +540,14 @@ public String admettreStagiaire(@PathVariable Integer id,
                 ? demande.getCommentaire().replace("Email candidat : ", "")
                 : emailFinal;
 
-        emailService.envoyerConfirmationAdmission(
-                emailCandidat,
-                demande.getPrenom() + " " + demande.getNom(),
-                emailFinal,
-                motDePasse
-        );
+        if (compteCreePendantAdmission) {
+            emailService.envoyerConfirmationAdmission(
+                    emailCandidat,
+                    demande.getPrenom() + " " + demande.getNom(),
+                    emailFinal,
+                    motDePasse
+            );
+        }
 
         model.addAttribute("succes", true);
         model.addAttribute("demande", demande);
@@ -665,10 +689,6 @@ public String afficherNotifications(Model model) {
             .average()
             .orElse(0);
         
-        // Notifications / Messages (depuis BDD)
-        long notificationsCount = notificationRepository.countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue");
-        long messagesCount = notificationRepository.countByDestinataireType("RESPONSABLE");
-        
         // Filtres dynamiques : Service
         List<String> servicesList = stages.stream()
             .filter(s -> s.getService() != null)
@@ -724,8 +744,6 @@ public String afficherNotifications(Model model) {
         model.addAttribute("stagiairesMoisLabelsJson", toJson(libellesMois(sixMois)));
         model.addAttribute("admissionsMoisJson", toJson(sixMois.stream().map(m -> stagiaires.stream()
                 .filter(s -> s.getDateAdmission() != null && YearMonth.from(s.getDateAdmission()).equals(m)).count()).toList()));
-        model.addAttribute("notificationsCount", notificationsCount);
-        model.addAttribute("messagesCount", messagesCount);
         model.addAttribute("servicesList", servicesList);
         model.addAttribute("encadreursList", encadreursList);
         model.addAttribute("encadreurs", encadreurRepository.findAll());
@@ -782,6 +800,65 @@ public String afficherNotifications(Model model) {
         return "responsable/stagiaires";
 
     }
+
+@GetMapping("/stagiaires/export")
+public ResponseEntity<byte[]> exporterStagiairesExcel() {
+    Map<Integer, Stage> stagesParStagiaire = stageRepository.findAll().stream()
+            .filter(stage -> stage.getStagiaire() != null)
+            .collect(Collectors.toMap(
+                    stage -> stage.getStagiaire().getId(),
+                    stage -> stage,
+                    (premier, second) -> premier));
+    StringBuilder xml = new StringBuilder();
+    xml.append("<?xml version=\"1.0\"?>")
+            .append("<?mso-application progid=\"Excel.Sheet\"?>")
+            .append("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" ")
+            .append("xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">")
+            .append("<Worksheet ss:Name=\"Stagiaires\"><Table>");
+    ajouterLigneExcel(xml, List.of(
+            "Stagiaire", "Matricule", "Service", "Encadreur",
+            "Début", "Fin", "Progression", "Statut"));
+    for (Stagiaire stagiaire : stagiaireRepository.findAll()) {
+        Stage stage = stagesParStagiaire.get(stagiaire.getId());
+        ajouterLigneExcel(xml, List.of(
+                stagiaire.getUtilisateur().getPrenom() + " " + stagiaire.getUtilisateur().getNom(),
+                stagiaire.getMatricule(),
+                stage != null && stage.getService() != null ? stage.getService().getNom() : "Non affecté",
+                stage != null && stage.getEncadreur() != null
+                        ? stage.getEncadreur().getUtilisateur().getPrenom() + " "
+                            + stage.getEncadreur().getUtilisateur().getNom()
+                        : "Non affecté",
+                stage != null && stage.getDateDebut() != null ? stage.getDateDebut().toString() : "",
+                stage != null && stage.getDateFin() != null ? stage.getDateFin().toString() : "",
+                (stagiaire.getProgression() == null ? 0 : stagiaire.getProgression()) + "%",
+                stage != null ? stage.getStatut().name() : stagiaire.getStatut().name()));
+    }
+    xml.append("</Table></Worksheet></Workbook>");
+    byte[] contenu = xml.toString().getBytes(StandardCharsets.UTF_8);
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"stagiaires-" + LocalDate.now() + ".xls\"")
+            .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+            .contentLength(contenu.length)
+            .body(contenu);
+}
+
+private void ajouterLigneExcel(StringBuilder xml, List<String> valeurs) {
+    xml.append("<Row>");
+    valeurs.forEach(valeur -> xml.append("<Cell><Data ss:Type=\"String\">")
+            .append(echapperXml(valeur))
+            .append("</Data></Cell>"));
+    xml.append("</Row>");
+}
+
+private String echapperXml(String valeur) {
+    return valeur == null ? "" : valeur
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&apos;");
+}
 
 @PostMapping("/stagiaires/affecter/{stageId}")
 public String affecterStagiaire(@PathVariable Integer stageId,
@@ -938,8 +1015,7 @@ public String commenterDocumentDossier(@PathVariable Integer id,
 @GetMapping("/planning")
 public String afficherPlanning(Model model) {
     List<Stage> stages = stageRepository.findAll();
-    List<EvenementPersonnel> evenements = stages.stream()
-            .flatMap(stage -> evenementPersonnelRepository.findByStageId(stage.getId()).stream())
+    List<EvenementPersonnel> evenements = evenementPersonnelRepository.findAll().stream()
             .sorted(Comparator.comparing(EvenementPersonnel::getDate))
             .toList();
     LocalDate aujourdHui = LocalDate.now();
@@ -983,7 +1059,8 @@ public String afficherPlanning(Model model) {
 }
 
 @PostMapping("/planning/evenements/ajouter")
-public String ajouterEvenementPlanning(@RequestParam Integer stageId,
+public String ajouterEvenementPlanning(@RequestParam(defaultValue = "certains") String audience,
+                                       @RequestParam(required = false) List<Integer> stageIds,
                                        @RequestParam String titre,
                                        @RequestParam String type,
                                        @RequestParam String date,
@@ -992,16 +1069,148 @@ public String ajouterEvenementPlanning(@RequestParam Integer stageId,
                                        @RequestParam(required = false) String description,
                                        @RequestParam(defaultValue = "1_jour") String rappel,
                                        RedirectAttributes redirectAttributes) {
-    stageRepository.findById(stageId).ifPresent(stage -> {
-        EvenementPersonnel evenement = new EvenementPersonnel(stage, titre.trim(), LocalDate.parse(date), type);
-        if (heure != null && !heure.isBlank()) evenement.setHeure(java.time.LocalTime.parse(heure));
-        evenement.setLieu(lieu);
-        evenement.setDescription(description);
-        evenement.setRappel(rappel);
-        evenementPersonnelRepository.save(evenement);
-    });
+    List<Stage> stagesSelectionnes = switch (audience) {
+        case "tous" -> stageRepository.findAll();
+        case "aucun" -> List.of();
+        default -> stageIds == null ? List.of() : stageIds.stream()
+                .map(stageRepository::findById)
+                .flatMap(Optional::stream)
+                .distinct()
+                .toList();
+    };
+    Stage stageReference = stagesSelectionnes.stream().findFirst().orElse(null);
+    EvenementPersonnel evenement =
+            new EvenementPersonnel(stageReference, titre.trim(), LocalDate.parse(date), type);
+    if (heure != null && !heure.isBlank()) evenement.setHeure(java.time.LocalTime.parse(heure));
+    evenement.setLieu(lieu);
+    evenement.setDescription(description);
+    evenement.setRappel(rappel);
+    evenementPersonnelRepository.save(evenement);
+
+    if (!"aucun".equals(audience)) {
+        List<Utilisateur> destinataires = new ArrayList<>();
+        stagesSelectionnes.forEach(stage -> {
+            if (stage.getStagiaire() != null && stage.getStagiaire().getUtilisateur() != null) {
+                destinataires.add(stage.getStagiaire().getUtilisateur());
+            }
+            if (stage.getEncadreur() != null && stage.getEncadreur().getUtilisateur() != null) {
+                destinataires.add(stage.getEncadreur().getUtilisateur());
+            }
+        });
+        if ("tous".equals(audience)) {
+            destinataires.addAll(utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR"));
+        }
+        destinataires.stream()
+                .filter(utilisateur -> utilisateur.getEmail() != null)
+                .collect(Collectors.toMap(Utilisateur::getEmail, utilisateur -> utilisateur, (a, b) -> a))
+                .values()
+                .forEach(utilisateur -> {
+                    Notification notification = new Notification(
+                            "Nouvelle activité planifiée",
+                            titre.trim() + " le " + LocalDate.parse(date)
+                                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            utilisateur.getRole().getLibelle(),
+                            "normale",
+                            "Responsable des stages");
+                    notification.setDestinataireEmail(utilisateur.getEmail());
+                    notification.setStatut("non_lue");
+                    notificationRepository.save(notification);
+                });
+    }
     redirectAttributes.addFlashAttribute("succes", "L'événement a été ajouté au planning.");
     return "redirect:/responsable/planning";
+}
+
+@GetMapping("/messages")
+public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               @RequestParam(required = false) Integer convId,
+                               Model model) {
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    Integer userId = currentUser.getId();
+    List<Conversation> conversations =
+            conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
+    Conversation activeConversation = convId == null
+            ? conversations.stream().findFirst().orElse(null)
+            : conversationRepository.findById(convId)
+                    .filter(conversation -> conversation.getParticipants().stream()
+                            .anyMatch(participant -> participant.getId().equals(userId)))
+                    .orElse(null);
+    List<Message> messages = activeConversation == null
+            ? new ArrayList<>()
+            : messageRepository.findByConversationIdOrderByDateEnvoiAsc(activeConversation.getId());
+    messages.stream()
+            .filter(message -> !message.getExpediteur().getId().equals(userId)
+                    && !Boolean.TRUE.equals(message.getLu()))
+            .forEach(message -> message.setLu(true));
+    messageRepository.saveAll(messages);
+
+    model.addAttribute("activePage", "messages");
+    model.addAttribute("user", currentUser);
+    model.addAttribute("conversations", conversations);
+    model.addAttribute("activeConversation", activeConversation);
+    model.addAttribute("messages", messages);
+    model.addAttribute("contacts", utilisateurRepository.findAll().stream()
+            .filter(utilisateur -> !utilisateur.getId().equals(userId))
+            .toList());
+    return "responsable/messages";
+}
+
+@PostMapping("/messages/nouveau")
+public String nouvelleConversation(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                   @RequestParam Integer destinataireId,
+                                   @RequestParam String message) {
+    Utilisateur currentUser = userDetails.getUtilisateur();
+    Utilisateur destinataire = utilisateurRepository.findById(destinataireId).orElse(null);
+    if (destinataire == null || message == null || message.isBlank()) {
+        return "redirect:/responsable/messages";
+    }
+    Conversation conversation = conversationRepository
+            .findByParticipantIdOrderByDernierMessageDesc(currentUser.getId())
+            .stream()
+            .filter(existing -> existing.getParticipants().stream()
+                    .anyMatch(participant -> participant.getId().equals(destinataireId)))
+            .findFirst()
+            .orElseGet(() -> {
+                Conversation nouvelle = new Conversation();
+                nouvelle.setSujet("Discussion avec " + destinataire.getPrenom() + " " + destinataire.getNom());
+                nouvelle.setDateCreation(java.time.LocalDateTime.now());
+                nouvelle.getParticipants().add(currentUser);
+                nouvelle.getParticipants().add(destinataire);
+                return nouvelle;
+            });
+    conversation.setDernierMessage(java.time.LocalDateTime.now());
+    conversation = conversationRepository.save(conversation);
+    enregistrerMessage(conversation, currentUser, message);
+    return "redirect:/responsable/messages?convId=" + conversation.getId();
+}
+
+@PostMapping("/messages/envoyer")
+public String envoyerMessage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             @RequestParam Integer convId,
+                             @RequestParam String contenu) {
+    Conversation conversation = conversationRepository.findById(convId)
+            .filter(existing -> existing.getParticipants().stream()
+                    .anyMatch(participant -> participant.getId()
+                            .equals(userDetails.getUtilisateur().getId())))
+            .orElse(null);
+    if (conversation != null && contenu != null && !contenu.isBlank()) {
+        conversation.setDernierMessage(java.time.LocalDateTime.now());
+        conversationRepository.save(conversation);
+        enregistrerMessage(conversation, userDetails.getUtilisateur(), contenu);
+    }
+    return "redirect:/responsable/messages?convId=" + convId;
+}
+
+private void enregistrerMessage(Conversation conversation,
+                                Utilisateur expediteur,
+                                String contenu) {
+    Message message = new Message();
+    message.setConversation(conversation);
+    message.setExpediteur(expediteur);
+    message.setContenu(contenu.trim());
+    message.setDateEnvoi(java.time.LocalDateTime.now());
+    message.setLu(false);
+    messageRepository.save(message);
 }
 
 @GetMapping("/profil")

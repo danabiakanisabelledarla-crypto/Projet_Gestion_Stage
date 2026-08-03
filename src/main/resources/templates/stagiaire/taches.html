@@ -38,8 +38,6 @@
     <section class="intern-filters">
         <label class="intern-field"><i class="fa-solid fa-magnifying-glass"></i><input class="intern-input" id="taskSearch" type="search" placeholder="Rechercher une tâche"></label>
         <select class="intern-select" id="priorityFilter"><option value="">Toutes les priorités</option><option value="haute">Haute</option><option value="moyenne">Moyenne</option><option value="faible">Faible</option></select>
-        <select class="intern-select" id="deadlineFilter"><option value="">Toutes les échéances</option><option value="late">En retard</option><option value="soon">Cette semaine</option></select>
-        <select class="intern-select"><option>Tous les objectifs</option><option>Dashboard</option><option>Module Livrables</option></select>
         <select class="intern-select" id="statusFilter"><option value="">Tous les statuts</option><option value="a_faire">À faire</option><option value="en_cours">En cours</option><option value="en_revue">En revue</option><option value="terminee">Terminées</option><option value="en_retard">En retard</option></select>
         <button class="intern-button" type="button" data-open-view><i class="fa-solid fa-plus"></i> Nouvelle vue</button>
     </section>
@@ -152,8 +150,11 @@
             </div>
         </article>
         <article class="intern-card">
-            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#" class="intern-link">Voir tout →</a></div>
-            <div class="intern-feed"><div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Tâche terminée</strong><span>Correction bugs Dashboard</span><small>Aujourd’hui</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-regular fa-comment"></i></span><div><strong>Commentaire ajouté</strong><span>Module Livrables</span><small>Hier</small></div></div><div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-regular fa-eye"></i></span><div><strong>Validation reçue</strong><span>Rapport intermédiaire validé</span><small>Hier</small></div></div></div>
+            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#taskBoard" class="intern-link">Voir tout →</a></div>
+            <div class="intern-feed">
+                <div class="intern-feed-item" th:each="tache, stat : ${taches}" th:if="${stat.index < 5}"><span class="intern-feed-icon" th:classappend="${tache.statut.name() == 'terminee'} ? ' tone-green' : ' tone-blue'"><i class="fa-solid" th:classappend="${tache.statut.name() == 'terminee'} ? ' fa-check' : ' fa-list-check'"></i></span><div><strong th:text="${tache.statut.name() == 'terminee'} ? 'Tâche terminée' : 'Tâche mise à jour'">Tâche</strong><span th:text="${tache.titre}">Titre</span><small th:text="${tache.dateLimite != null ? 'Échéance : ' + #temporals.format(tache.dateLimite, 'dd/MM/yyyy') : 'Sans échéance'}">Échéance</small></div></div>
+                <div class="intern-empty" th:if="${#lists.isEmpty(taches)}">Aucune activité récente.</div>
+            </div>
         </article>
     </section>
 </main>
@@ -193,6 +194,40 @@
         </div>
     </form>
 </div>
+
+<div class="intern-modal" id="taskEditModal" role="dialog" aria-modal="true" aria-labelledby="taskEditTitle">
+    <form class="intern-modal-panel" th:action="@{/stagiaire/taches/modifier}" method="post">
+        <div class="intern-card-header">
+            <div>
+                <h2 class="intern-card-title" id="taskEditTitle">Modifier la tâche</h2>
+                <p class="intern-card-subtitle">Mettez à jour les informations de cette carte.</p>
+            </div>
+            <button type="button" class="intern-icon-button intern-icon-only" data-close-task-edit>
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="id" id="taskEditId">
+        <div class="intern-form-grid">
+            <div class="intern-form-group full">
+                <label for="taskEditName">Titre</label>
+                <input class="intern-input" id="taskEditName" name="titre" required maxlength="180">
+            </div>
+            <div class="intern-form-group full">
+                <label for="taskEditDescription">Description</label>
+                <textarea class="intern-textarea" id="taskEditDescription" name="description"></textarea>
+            </div>
+            <div class="intern-form-group full">
+                <label for="taskEditDeadline">Échéance</label>
+                <input class="intern-input" id="taskEditDeadline" name="dateLimite" type="date">
+            </div>
+        </div>
+        <div class="intern-modal-actions">
+            <button type="button" class="intern-button secondary" data-close-task-edit>Annuler</button>
+            <button type="submit" class="intern-button">Enregistrer</button>
+        </div>
+    </form>
+</div>
 <script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -210,6 +245,70 @@ document.addEventListener('DOMContentLoaded', () => {
         en_revue: 'En revue',
         terminee: 'Terminée'
     };
+
+    const editModal = document.getElementById('taskEditModal');
+    const closeTaskEdit = () => {
+        editModal?.classList.remove('open');
+        document.body.style.overflow = '';
+    };
+
+    tasks.forEach(task => {
+        const menu = document.createElement('div');
+        menu.className = 'intern-task-menu';
+        menu.innerHTML = `
+            <button type="button" class="intern-icon-button intern-icon-only" data-task-menu
+                    title="Actions" aria-label="Actions de la tâche">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <div class="intern-task-menu-panel">
+                <button type="button" data-edit-task><i class="fa-regular fa-pen-to-square"></i> Modifier</button>
+                <button type="button" data-delete-task><i class="fa-regular fa-trash-can"></i> Supprimer</button>
+            </div>`;
+        task.prepend(menu);
+
+        menu.querySelector('[data-task-menu]').addEventListener('click', event => {
+            event.stopPropagation();
+            document.querySelectorAll('.intern-task-menu.open').forEach(openMenu => {
+                if (openMenu !== menu) openMenu.classList.remove('open');
+            });
+            menu.classList.toggle('open');
+        });
+
+        menu.querySelector('[data-edit-task]').addEventListener('click', () => {
+            document.getElementById('taskEditId').value = task.dataset.id;
+            document.getElementById('taskEditName').value = task.querySelector('h3')?.textContent.trim() || '';
+            document.getElementById('taskEditDescription').value = task.querySelector('p')?.textContent.trim() || '';
+            document.getElementById('taskEditDeadline').value =
+                task.dataset.deadline && task.dataset.deadline !== 'null' ? task.dataset.deadline : '';
+            editModal?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            menu.classList.remove('open');
+        });
+
+        menu.querySelector('[data-delete-task]').addEventListener('click', () => {
+            if (!confirm('Supprimer définitivement cette tâche ?')) return;
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/stagiaire/taches/supprimer';
+            form.innerHTML = `
+                <input type="hidden" name="${csrfParameter}" value="${csrfToken}">
+                <input type="hidden" name="id" value="${task.dataset.id}">`;
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+
+    document.querySelectorAll('[data-close-task-edit]')
+        .forEach(button => button.addEventListener('click', closeTaskEdit));
+    editModal?.addEventListener('click', event => {
+        if (event.target === editModal) closeTaskEdit();
+    });
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.intern-task-menu')) {
+            document.querySelectorAll('.intern-task-menu.open')
+                .forEach(menu => menu.classList.remove('open'));
+        }
+    });
 
     document.querySelectorAll('.intern-kanban-column[data-column]').forEach(column => {
         const targetStatus = column.dataset.column;
@@ -303,15 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCustomCounts();
 
     const applyFilters = () => {
-        const query = search.value.trim().toLowerCase();
+        const query = search?.value.trim().toLowerCase() || '';
         tasks.forEach(task => {
             const matchesText = !query || task.dataset.title.includes(query);
-            const matchesStatus = !status.value || task.dataset.status === status.value;
+            const matchesStatus = !status?.value || task.dataset.status === status.value;
             task.style.display = matchesText && matchesStatus ? '' : 'none';
         });
     };
-    search.addEventListener('input', applyFilters);
-    status.addEventListener('change', applyFilters);
+    search?.addEventListener('input', applyFilters);
+    status?.addEventListener('change', applyFilters);
     const resetTaskFilters = document.getElementById('resetTaskFilters');
     if (resetTaskFilters) {
         resetTaskFilters.addEventListener('click', () => {
@@ -371,19 +470,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modal = document.getElementById('viewModal');
     const openModal = () => {
+        if (!modal) return;
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
-        document.getElementById('viewName').focus();
+        document.getElementById('viewName')?.focus();
     };
     const closeModal = () => {
+        if (!modal) return;
         modal.classList.remove('open');
         document.body.style.overflow = '';
     };
     document.querySelectorAll('[data-open-view]').forEach(button => button.addEventListener('click', openModal));
     document.querySelectorAll('[data-close-view]').forEach(button => button.addEventListener('click', closeModal));
-    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    modal?.addEventListener('click', event => { if (event.target === modal) closeModal(); });
 
-    document.getElementById('newViewForm').addEventListener('submit', event => {
+    document.getElementById('newViewForm')?.addEventListener('submit', event => {
         event.preventDefault();
         const name = document.getElementById('viewName').value.trim();
         if (!name) return;
@@ -395,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal();
     });
 
-    board.addEventListener('click', event => {
+    board?.addEventListener('click', event => {
         const button = event.target.closest('[data-delete-view]');
         if (!button) return;
         const viewId = button.dataset.deleteView;
@@ -410,7 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
         column.remove();
     });
 
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeTaskEdit();
+        }
+    });
 });
 </script>
 </body>

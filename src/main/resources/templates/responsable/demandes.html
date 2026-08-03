@@ -51,15 +51,6 @@
                         <option value="acceptee">Acceptée</option>
                         <option value="refusee">Refusée</option>
                     </select>
-                    <select id="requestField" class="rp-select">
-                        <option value="">Toutes les filières</option>
-                        <option th:each="d:${demandes}" th:value="${d.filiere}" th:text="${d.filiere}"></option>
-                    </select>
-                    <select id="requestSchool" class="rp-select">
-                        <option value="">Tous les établissements</option>
-                        <option th:each="d:${demandes}" th:value="${d.ecole}" th:text="${d.ecole}"></option>
-                    </select>
-                    <input id="requestDate" class="rp-input" type="date">
                 </div>
 
                 <div class="rp-table-wrap">
@@ -205,9 +196,6 @@
     const rows = [...document.querySelectorAll('.request-row')];
     const search = document.getElementById('requestSearch');
     const status = document.getElementById('requestStatus');
-    const field = document.getElementById('requestField');
-    const school = document.getElementById('requestSchool');
-    const date = document.getElementById('requestDate');
     const requestModal = document.getElementById('requestModal');
     const acceptModal = document.getElementById('acceptModal');
     const rejectModal = document.getElementById('rejectModal');
@@ -236,14 +224,11 @@
         rows.forEach(row => {
             row.hidden = !(
                 (!search.value || row.dataset.search.includes(search.value.toLowerCase())) &&
-                (!status.value || row.dataset.status === status.value) &&
-                (!field.value || row.dataset.field === field.value) &&
-                (!school.value || row.dataset.school === school.value) &&
-                (!date.value || row.dataset.date === date.value)
+                (!status.value || row.dataset.status === status.value)
             );
         });
     };
-    [search, status, field, school, date].filter(Boolean).forEach(control => {
+    [search, status].filter(Boolean).forEach(control => {
         control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', filterRows);
     });
 

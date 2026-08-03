@@ -3,7 +3,8 @@
 <body>
 <header th:fragment="header" class="intern-header">
     <a th:href="@{/stagiaire/dashboard}" class="intern-brand" aria-label="DTA Alliance">
-        <span class="intern-brand-mark">DTA</span>
+        <img class="intern-brand-logo" th:src="@{/images/logo.png}" src="/images/logo.png"
+             alt="Logo DTA Alliance">
         <span>
             <strong>DTA Alliance</strong>
             <small>Gestion des stages</small>
@@ -13,29 +14,45 @@
     <div class="intern-header-actions">
         <label class="intern-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" placeholder="Rechercher..." aria-label="Rechercher">
+            <input type="search" placeholder="Rechercher..." aria-label="Rechercher dans la page">
             <kbd>Ctrl K</kbd>
         </label>
 
         <a th:href="@{/stagiaire/messages}" class="intern-icon-button" title="Messages" aria-label="Messages">
             <i class="fa-regular fa-envelope"></i>
-            <span class="intern-badge">2</span>
+            <span class="intern-badge" th:text="${messagesCount ?: 0}">0</span>
         </a>
 
         <button type="button" class="intern-icon-button" title="Notifications" aria-label="Notifications"
                 data-notification-trigger>
             <i class="fa-regular fa-bell"></i>
-            <span class="intern-badge">3</span>
+            <span class="intern-badge" th:text="${notificationsCount ?: 0}">0</span>
         </button>
 
         <div class="intern-notifications" data-notification-panel>
             <div class="intern-popover-title">
                 <strong>Notifications</strong>
-                <span>3 nouvelles</span>
+                <span th:text="|${notificationsCount ?: 0} nouvelle(s)|">0 nouvelle</span>
             </div>
-            <a href="#"><i class="fa-solid fa-list-check"></i><span>Une nouvelle tâche vous a été attribuée.<small>Il y a 10 min</small></span></a>
-            <a href="#"><i class="fa-regular fa-comment"></i><span>Nouveau commentaire sur votre rapport.<small>Il y a 45 min</small></span></a>
-            <a href="#"><i class="fa-solid fa-circle-check"></i><span>Votre livrable a été validé.<small>Il y a 2 h</small></span></a>
+            <div class="intern-empty-notification" th:if="${#lists.isEmpty(notificationsStagiaire)}">
+                <i class="fa-regular fa-bell-slash"></i>
+                <span>Aucune notification pour le moment.</span>
+            </div>
+            <a th:each="notification : ${notificationsStagiaire}"
+               th:href="@{/stagiaire/dashboard}">
+                <i class="fa-regular fa-bell"></i>
+                <span>
+                    <strong th:text="${notification.objet}">Notification</strong>
+                    <span th:text="${notification.message}">Message</span>
+                    <small th:text="${#temporals.format(notification.dateEnvoi, 'dd/MM/yyyy HH:mm')}">Date</small>
+                </span>
+            </a>
+            <form th:if="${(notificationsCount ?: 0) > 0}"
+                  th:action="@{/stagiaire/notifications/lire}" method="post"
+                  class="intern-notification-read-form">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit">Tout marquer comme lu</button>
+            </form>
         </div>
 
         <button type="button" class="intern-profile" data-profile-trigger>
@@ -52,7 +69,7 @@
             <a th:href="@{/stagiaire/messages}"><i class="fa-regular fa-envelope"></i> Mes messages</a>
             <form th:action="@{/logout}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <button type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion</button>
+                <button type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i> Deconnexion</button>
             </form>
         </div>
     </div>
@@ -80,11 +97,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', event => {
         if (!event.target.closest('.intern-notifications, .intern-profile-menu')) {
-            document.querySelectorAll('.intern-popover-open').forEach(panel => panel.classList.remove('intern-popover-open'));
+            document.querySelectorAll('.intern-popover-open')
+                .forEach(panel => panel.classList.remove('intern-popover-open'));
         }
     });
 
     const search = document.querySelector('.intern-search input');
+    const normalize = value => (value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+    if (search) {
+        search.addEventListener('input', () => {
+            const query = normalize(search.value);
+            document.querySelectorAll(
+                '[data-search-item], tbody tr, .intern-card, .kanban-card, .journal-entry'
+            ).forEach(candidate => {
+                if (candidate.closest('.intern-header')) return;
+                candidate.classList.toggle(
+                    'intern-search-hidden',
+                    Boolean(query) && !normalize(candidate.textContent).includes(query)
+                );
+            });
+        });
+    }
+
     document.addEventListener('keydown', event => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && search) {
             event.preventDefault();

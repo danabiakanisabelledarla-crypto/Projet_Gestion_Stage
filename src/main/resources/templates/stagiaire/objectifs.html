@@ -37,15 +37,15 @@
 
     <section class="intern-grid two">
         <article class="intern-card">
-            <div class="intern-card-header"><div><h2 class="intern-card-title">Progression globale du stage</h2><p class="intern-card-subtitle">Évolution de la progression</p></div><select class="intern-select" style="width:auto"><option>7 derniers jours</option><option>30 derniers jours</option></select></div>
+            <div class="intern-card-header"><div><h2 class="intern-card-title">Progression globale du stage</h2><p class="intern-card-subtitle">Évolution de la progression</p></div><select class="intern-select" id="objectivePeriod" style="width:auto"><option value="7" th:selected="${periodeObjectifs == 7}">7 derniers jours</option><option value="30" th:selected="${periodeObjectifs == 30}">30 derniers jours</option></select></div>
             <div class="intern-grid two" style="margin:0;align-items:center">
-                <div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + ${progressionMoyenne}"></div><div class="intern-donut-label"><strong th:text="${progressionMoyenne + '%'}">68%</strong><span>Progression globale</span></div></div>
+                <div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + ${progressionPeriode}"></div><div class="intern-donut-label"><strong th:text="${progressionPeriode + '%'}">68%</strong><span>Progression sur la période</span></div></div>
                 <div class="intern-chart-box"><span class="intern-chart-bar" style="height:25%"></span><span class="intern-chart-bar" style="height:33%"></span><span class="intern-chart-bar" style="height:41%"></span><span class="intern-chart-bar" style="height:48%"></span><span class="intern-chart-bar" style="height:55%"></span><span class="intern-chart-bar" style="height:61%"></span><span class="intern-chart-bar" th:style="'height:' + ${progressionMoyenne} + '%'"></span></div>
             </div>
         </article>
         <aside class="intern-grid" style="margin:0">
             <article class="intern-card">
-                <div class="intern-card-header"><h2 class="intern-card-title">Répartition des objectifs</h2><a href="#objectiveList" class="intern-link">Voir le détail →</a></div>
+                <div class="intern-card-header"><h2 class="intern-card-title">Analyse des objectifs</h2><a href="#objectiveList" class="intern-link">Voir le détail →</a></div>
                 <div class="intern-data-list"><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#16a34a"></span> Terminés</span><strong th:text="${objectifsAtteints}">7</strong></div><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#f59e0b"></span> En cours</span><strong th:text="${objectifsEnCours}">3</strong></div><div class="intern-data-row"><span><span class="intern-dot" style="display:inline-block;color:#8b5cf6"></span> À venir</span><strong th:text="${objectifsNonCommences}">2</strong></div></div>
             </article>
             <article class="intern-card">
@@ -62,12 +62,12 @@
         <article class="intern-card" id="objectiveList">
             <div class="intern-card-header">
                 <div><h2 class="intern-card-title">Liste des objectifs</h2><p class="intern-card-subtitle">Créez vos objectifs et mettez à jour leur état d’avancement</p></div>
-                <div style="display:flex;gap:8px"><select id="objectiveStatus" class="intern-select" style="width:auto"><option value="">Tous les statuts</option><option value="non_commence">À venir</option><option value="en_cours">En cours</option><option value="atteint">Terminés</option></select><select class="intern-select" style="width:auto"><option>Trier par priorité</option><option>Échéance</option><option>Progression</option></select></div>
+                <div style="display:flex;gap:8px"><select id="objectiveStatus" class="intern-select" style="width:auto"><option value="">Tous les statuts</option><option value="non_commence">À venir</option><option value="en_cours">En cours</option><option value="atteint">Terminés</option></select><select id="objectiveSort" class="intern-select" style="width:auto"><option value="priority">Trier par priorité</option><option value="deadline">Échéance</option><option value="progress">Progression</option></select></div>
             </div>
 
-            <article class="intern-objective" th:each="objectif, stat : ${objectifs}" th:attr="data-objective-status=${objectif.statut.name()}">
+            <article class="intern-objective" th:each="objectif, stat : ${objectifs}" th:attr="data-objective-status=${objectif.statut.name()},data-objective-priority=${objectif.priorite.name()},data-objective-progress=${objectif.progression},data-objective-deadline=${objectif.dateLimite}">
                 <span class="intern-objective-icon" th:classappend="${stat.index % 4 == 0} ? ' tone-blue' : (${stat.index % 4 == 1} ? ' tone-green' : (${stat.index % 4 == 2} ? ' tone-purple' : ' tone-orange'))"><i class="fa-solid" th:classappend="${stat.index % 3 == 0} ? ' fa-display' : (${stat.index % 3 == 1} ? ' fa-database' : ' fa-file-lines')"></i></span>
-                <div><h3 th:text="${objectif.libelle}">Développer Dashboard Stagiaire</h3><p th:text="${objectif.description != null ? objectif.description : 'Objectif défini dans le cadre du suivi de votre stage.'}">Description</p><div style="margin-top:8px"><form th:action="@{/stagiaire/objectifs/priorite}" method="post" class="intern-priority-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="id" th:value="${objectif.id}"><button type="submit" class="intern-priority-toggle" th:classappend="${objectif.priorite.name() == 'haute'} ? ' is-priority' : ''" th:attr="aria-label=${objectif.priorite.name() == 'haute'} ? 'Retirer la priorité' : 'Marquer comme prioritaire',title=${objectif.priorite.name() == 'haute'} ? 'Retirer la priorité' : 'Marquer comme prioritaire'"><i th:class="${objectif.priorite.name() == 'haute'} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i><span th:text="${objectif.priorite.name() == 'haute'} ? 'Prioritaire' : 'Non prioritaire'">Prioritaire</span></button></form></div></div>
+                <div><h3 th:text="${objectif.libelle}">Développer Dashboard Stagiaire</h3><p th:text="${objectif.description != null ? objectif.description : 'Objectif défini dans le cadre du suivi de votre stage.'}">Description</p><div style="margin-top:8px;display:flex;gap:6px;align-items:center"><span class="intern-status" th:classappend="${objectif.origine != null and objectif.origine.name() == 'stagiaire'} ? ' status-blue' : ' status-purple'" th:text="${objectif.origine != null and objectif.origine.name() == 'stagiaire'} ? 'Créé par vous' : 'Attribué par encadreur'">Origine</span><form th:action="@{/stagiaire/objectifs/priorite}" method="post" class="intern-priority-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="id" th:value="${objectif.id}"><button type="submit" class="intern-priority-toggle" th:classappend="${objectif.priorite.name() == 'haute'} ? ' is-priority' : ''" th:attr="aria-label=${objectif.priorite.name() == 'haute'} ? 'Retirer la priorité' : 'Marquer comme prioritaire',title=${objectif.priorite.name() == 'haute'} ? 'Retirer la priorité' : 'Marquer comme prioritaire'"><i th:class="${objectif.priorite.name() == 'haute'} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i><span th:text="${objectif.priorite.name() == 'haute'} ? 'Prioritaire' : 'Non prioritaire'">Prioritaire</span></button></form></div></div>
                 <div class="intern-objective-progress"><div class="intern-progress-label"><span>Progression</span><strong th:text="${objectif.progression + '%'}">75%</strong></div><div class="intern-progress"><span th:style="'width:' + ${objectif.progression} + '%;background:' + (${stat.index % 3 == 0} ? '#2563eb' : (${stat.index % 3 == 1} ? '#16a34a' : '#8b5cf6'))"></span></div><div class="intern-progress-label" style="margin-top:7px"><span th:text="${objectif.dateLimite != null ? 'Échéance : ' + #temporals.format(objectif.dateLimite, 'dd/MM/yyyy') : 'Sans échéance'}">Échéance</span></div></div>
                 <div class="intern-objective-actions">
                     <form th:action="@{/stagiaire/objectifs/statut}" method="post" class="intern-status-form">
@@ -88,12 +88,10 @@
         </article>
 
         <aside class="intern-card">
-            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#" class="intern-link">Voir tout</a></div>
+            <div class="intern-card-header"><h2 class="intern-card-title">Activité récente</h2><a href="#objectiveList" class="intern-link">Voir tout</a></div>
             <div class="intern-feed">
-                <div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-check"></i></span><div><strong>Objectif terminé</strong><span>Authentification sécurisée</span><small>Aujourd’hui 10:25</small></div></div>
-                <div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-link"></i></span><div><strong>Nouvelle tâche liée</strong><span>Créer API statistiques</span><small>Aujourd’hui 09:40</small></div></div>
-                <div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-solid fa-pen"></i></span><div><strong>Objectif modifié</strong><span>Rapport intermédiaire</span><small>Hier 16:30</small></div></div>
-                <div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-solid fa-plus"></i></span><div><strong>Objectif créé</strong><span>Rapport final</span><small>Hier 14:15</small></div></div>
+                <div class="intern-feed-item" th:each="objectif : ${activitesObjectifs}"><span class="intern-feed-icon" th:classappend="${objectif.statut.name() == 'atteint'} ? ' tone-green' : ' tone-blue'"><i class="fa-solid" th:classappend="${objectif.statut.name() == 'atteint'} ? ' fa-check' : ' fa-bullseye'"></i></span><div><strong th:text="${objectif.statut.name() == 'atteint'} ? 'Objectif terminé' : 'Objectif suivi'">Objectif</strong><span th:text="${objectif.libelle}">Libellé</span><small th:text="${objectif.dateCreation != null ? #temporals.format(objectif.dateCreation, 'dd/MM/yyyy HH:mm') : 'Objectif existant'}">Date</small></div></div>
+                <div class="intern-empty" th:if="${#lists.isEmpty(activitesObjectifs)}">Aucune activité récente.</div>
             </div>
         </aside>
     </section>
@@ -146,25 +144,53 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const filter = document.getElementById('objectiveStatus');
-    filter.addEventListener('change', () => {
-        document.querySelectorAll('[data-objective-status]').forEach(card => {
-            card.style.display = !filter.value || card.dataset.objectiveStatus === filter.value ? '' : 'none';
+    if (filter) {
+        filter.addEventListener('change', () => {
+            document.querySelectorAll('[data-objective-status]').forEach(card => {
+                card.style.display = !filter.value || card.dataset.objectiveStatus === filter.value ? '' : 'none';
+            });
         });
+    }
+
+    const period = document.getElementById('objectivePeriod');
+    period?.addEventListener('change', () => {
+        window.location.href = `/stagiaire/objectifs?periode=${encodeURIComponent(period.value)}`;
+    });
+
+    const sort = document.getElementById('objectiveSort');
+    const list = document.getElementById('objectiveList');
+    sort?.addEventListener('change', () => {
+        const cards = [...document.querySelectorAll('[data-objective-status]')];
+        const priorities = {haute: 0, moyenne: 1, basse: 2};
+        cards.sort((a, b) => {
+            if (sort.value === 'progress') {
+                return Number(b.dataset.objectiveProgress) - Number(a.dataset.objectiveProgress);
+            }
+            if (sort.value === 'deadline') {
+                return (a.dataset.objectiveDeadline || '9999-12-31')
+                    .localeCompare(b.dataset.objectiveDeadline || '9999-12-31');
+            }
+            return (priorities[a.dataset.objectivePriority] ?? 9)
+                - (priorities[b.dataset.objectivePriority] ?? 9);
+        });
+        cards.forEach(card => list.appendChild(card));
     });
 
     const modal = document.getElementById('objectiveModal');
     const openModal = () => {
+        if (!modal) return;
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
-        document.getElementById('objectifLibelle').focus();
+        document.getElementById('objectifLibelle')?.focus();
     };
     const closeModal = () => {
+        if (!modal) return;
         modal.classList.remove('open');
         document.body.style.overflow = '';
     };
     document.querySelectorAll('[data-open-objective]').forEach(button => button.addEventListener('click', openModal));
     document.querySelectorAll('[data-close-objective]').forEach(button => button.addEventListener('click', closeModal));
-    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    modal?.addEventListener('click', event => { if (event.target === modal) closeModal(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
 });
 </script>

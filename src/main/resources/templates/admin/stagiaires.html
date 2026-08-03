@@ -95,10 +95,10 @@
         </div>
         <div class="filter-right">
             <i class="fa-solid fa-arrow-down-wide-short"></i>
-            <select>
-                <option>Plus récent</option>
-                <option>Plus ancien</option>
-                <option>Nom</option>
+            <select id="studentSort">
+                <option value="recent">Plus récent</option>
+                <option value="ancien">Plus ancien</option>
+                <option value="nom">Nom</option>
             </select>
         </div>
     </div>
@@ -119,7 +119,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="s : ${stagiaires}" th:data-id="${s.id}">
+                <tr th:each="s : ${stagiaires}" th:data-id="${s.id}" th:data-name="${#strings.toLowerCase(s.utilisateur.prenom+' '+s.utilisateur.nom)}">
                     <td>
                         <div class="stagiaire-avatar" th:text="${s.utilisateur.prenom.substring(0,1).toUpperCase() + s.utilisateur.nom.substring(0,1).toUpperCase()}">JD</div>
                     </td>
@@ -274,6 +274,16 @@
     }
     document.addEventListener('click', () => {
         document.querySelectorAll('.student-menu-popover.open').forEach(menu => menu.classList.remove('open'));
+    });
+    document.getElementById('studentSort').addEventListener('change', function() {
+        const tbody = document.querySelector('.table-stagiaires tbody');
+        const rows = [...tbody.querySelectorAll('tr')].filter(row => !row.querySelector('td[colspan]'));
+        rows.sort((a, b) => {
+            if (this.value === 'ancien') return Number(a.dataset.id) - Number(b.dataset.id);
+            if (this.value === 'nom') return a.dataset.name.localeCompare(b.dataset.name, 'fr');
+            return Number(b.dataset.id) - Number(a.dataset.id);
+        });
+        rows.forEach(row => tbody.appendChild(row));
     });
 
     function ouvrirDetailsStagiaire(id) {

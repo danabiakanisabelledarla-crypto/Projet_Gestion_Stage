@@ -16,7 +16,7 @@
         <div class="left-dots"></div>
 
         <div class="left-brand">
-            <div class="brand-mark">DTA</div>
+            <div class="brand-mark"><img th:src="@{/images/logo.png}" alt="DTA Alliance"></div>
             <div class="brand-text">
                 <strong>DTA Alliance</strong>
                 <span>Digital Transformation Alliance</span>
@@ -48,6 +48,7 @@
                 <i class="fa-solid fa-circle-check"></i>
                 Vous avez été déconnecté avec succès.
             </div>
+            <div th:if="${motDePasseModifie}" class="message-info" th:text="${motDePasseModifie}"></div>
 
             <form th:action="@{/login}" method="post" class="login-form">
                 <div class="champ-groupe">
@@ -70,7 +71,7 @@
                         <input type="checkbox" name="remember-me">
                         Se souvenir de moi
                     </label>
-                    <a th:href="@{/contact}" class="lien-oubli">Mot de passe oublié ?</a>
+                    <a th:href="@{/mot-de-passe-oublie}" class="lien-oubli">Mot de passe oublié ?</a>
                 </div>
 
                 <button type="submit" class="btn-connexion">

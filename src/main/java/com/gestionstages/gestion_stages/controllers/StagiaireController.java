@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ private final PasswordEncoder passwordEncoder;
 private final ConversationRepository conversationRepository;
 private final MessageRepository messageRepository;
 private final ProjetRepository projetRepository;
+private final NotificationRepository notificationRepository;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
@@ -62,7 +64,8 @@ public StagiaireController(StageRepository stageRepository,
                            PasswordEncoder passwordEncoder,
                            ConversationRepository conversationRepository,
                            MessageRepository messageRepository,
-                           ProjetRepository projetRepository) {
+                           ProjetRepository projetRepository,
+                           NotificationRepository notificationRepository) {
 
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
@@ -78,6 +81,7 @@ public StagiaireController(StageRepository stageRepository,
     this.conversationRepository = conversationRepository;
     this.messageRepository = messageRepository;
     this.projetRepository = projetRepository;
+    this.notificationRepository = notificationRepository;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -136,6 +140,21 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
 
         List<JournalBord> journaux = journalBordRepository
                 .findByStageIdOrderByDateActiviteDesc(stage.getId());
+        List<Evaluation> evaluations = evaluationRepository.findByStageId(stage.getId()).stream()
+                .sorted(Comparator.comparing(Evaluation::getDateEvaluation).reversed())
+                .toList();
+        List<EvenementPlanning> evenementsDashboard = new ArrayList<>();
+        taches.stream().filter(tache -> tache.getDateLimite() != null).forEach(tache ->
+                evenementsDashboard.add(new EvenementPlanning(
+                        tache.getDateLimite(), tache.getTitre(), "tache")));
+        objectifs.stream().filter(objectif -> objectif.getDateLimite() != null).forEach(objectif ->
+                evenementsDashboard.add(new EvenementPlanning(
+                        objectif.getDateLimite(), objectif.getLibelle(), "objectif")));
+        evaluations.forEach(evaluation -> evenementsDashboard.add(new EvenementPlanning(
+                evaluation.getDateEvaluation(),
+                "Evaluation " + evaluation.getTypeEvaluation().name().replace("_", ""),
+                "evaluation")));
+        evenementsDashboard.sort(Comparator.comparing(EvenementPlanning::getDate));
 
         model.addAttribute("nombreTaches", totalTaches);
         model.addAttribute("taches", taches);
@@ -151,6 +170,10 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("progression", progression);
         model.addAttribute("nombreJours", journaux.size());
         model.addAttribute("journaux", journaux);
+        model.addAttribute("journauxRecents", journaux.stream().limit(3).toList());
+        model.addAttribute("evaluationsRecentes", evaluations.stream().limit(3).toList());
+        model.addAttribute("nombreEvaluations", evaluations.size());
+        model.addAttribute("evenementsDashboard", evenementsDashboard);
         model.addAttribute("joursRestants", Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
 
     } else {
@@ -169,6 +192,10 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("progression", 0);
         model.addAttribute("nombreJours", 0);
         model.addAttribute("journaux", new ArrayList<>());
+        model.addAttribute("journauxRecents", new ArrayList<>());
+        model.addAttribute("evaluationsRecentes", new ArrayList<>());
+        model.addAttribute("nombreEvaluations", 0);
+        model.addAttribute("evenementsDashboard", new ArrayList<>());
         model.addAttribute("joursRestants", 0);
     }
 
@@ -178,6 +205,7 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
     @GetMapping("/journal")
     public String afficherJournal(@AuthenticationPrincipal CustomUserDetails userDetails,
                                    Model model,
+                                   @RequestParam(defaultValue = "semaine") String periode,
                                    @RequestParam(required = false) String succes) {
         Optional<Stage> stageOpt = getStage(userDetails);
         model.addAttribute("activePage", "journal");
@@ -202,14 +230,47 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
             model.addAttribute("livrables", livrables);
             List<JournalBord> journaux = journalBordRepository
                     .findByStageIdOrderByDateActiviteDesc(stage.getId());
-            model.addAttribute("journaux", journaux);
+            LocalDate debutPeriode = "mois".equals(periode)
+                    ? LocalDate.now().withDayOfMonth(1)
+                    : LocalDate.now().minusDays(LocalDate.now().getDayOfWeek().getValue() - 1L);
+            List<JournalBord> journauxFiltres = journaux.stream()
+                    .filter(journal -> !journal.getDateActivite().isBefore(debutPeriode))
+                    .toList();
+            List<Objectif> objectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+            long objectifsAtteints = objectifs.stream()
+                    .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint)
+                    .count();
+            long tachesTerminees = taches.stream()
+                    .filter(tache -> tache.getStatut() == Tache.StatutTache.terminee)
+                    .count();
+            int progressionStage = taches.isEmpty() ? 0
+                    : (int) (tachesTerminees * 100 / taches.size());
+            model.addAttribute("journaux", journauxFiltres);
+            model.addAttribute("journauxRecents", journaux.stream().limit(5).toList());
             model.addAttribute("nombreEntrees", journaux.size());
+            model.addAttribute("periodeJournal", "mois".equals(periode) ? "mois" : "semaine");
+            model.addAttribute("commentairesEncadreur", livrables.stream()
+                    .filter(livrable -> livrable.getCommentaireEncadreur() != null
+                            && !livrable.getCommentaireEncadreur().isBlank())
+                    .limit(4)
+                    .toList());
+            model.addAttribute("objectifsTotal", objectifs.size());
+            model.addAttribute("objectifsAtteints", objectifsAtteints);
+            model.addAttribute("tachesTerminees", tachesTerminees);
+            model.addAttribute("progressionStage", progressionStage);
         } else {
             model.addAttribute("journaux", new ArrayList<>());
+            model.addAttribute("journauxRecents", new ArrayList<>());
             model.addAttribute("nombreEntrees", 0);
             model.addAttribute("stage", null);
             model.addAttribute("taches", new ArrayList<>());
             model.addAttribute("livrables", new ArrayList<>());
+            model.addAttribute("commentairesEncadreur", new ArrayList<>());
+            model.addAttribute("objectifsTotal", 0);
+            model.addAttribute("objectifsAtteints", 0);
+            model.addAttribute("tachesTerminees", 0);
+            model.addAttribute("progressionStage", 0);
+            model.addAttribute("periodeJournal", "semaine");
         }
 
         if (succes != null) model.addAttribute("succes", succes);
@@ -355,14 +416,59 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
     long attente = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.depose).count();
     long refuses = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.rejete).count();
     long corrections = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.correction_demandee).count();
+    int nombreAttendus = stageOpt.map(stage -> Math.max(
+            tacheRepository.findByStageId(stage.getId()).size(), livrables.size())).orElse(0);
     model.addAttribute("livrables", livrables);
     model.addAttribute("nombreLivrables", livrables.size());
     model.addAttribute("livrablesValides", valides);
     model.addAttribute("livrablesAttente", attente);
     model.addAttribute("livrablesRefuses", refuses);
     model.addAttribute("livrablesCorrections", corrections);
-    model.addAttribute("progressionDocumentaire", Math.min(100, livrables.size() * 100 / 12));
+    model.addAttribute("nombreLivrablesDemandes", nombreAttendus);
+    model.addAttribute("livrablesACorriger", livrables.stream()
+            .filter(livrable -> livrable.getStatut() == Livrable.StatutLivrable.rejete
+                    || livrable.getStatut() == Livrable.StatutLivrable.correction_demandee)
+            .toList());
+    model.addAttribute("commentairesLivrables", livrables.stream()
+            .filter(livrable -> livrable.getCommentaireEncadreur() != null
+                    && !livrable.getCommentaireEncadreur().isBlank())
+            .toList());
+    model.addAttribute("progressionDocumentaire", nombreAttendus == 0
+            ? 0 : Math.min(100, livrables.size() * 100 / nombreAttendus));
     return "stagiaire/livrables";
+}
+
+@PostMapping("/livrables/{id}/envoyer")
+public String envoyerLivrable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @PathVariable Integer id) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    livrableRepository.findById(id)
+            .filter(livrable -> stageOpt.isPresent()
+                    && ((livrable.getStage() != null
+                            && livrable.getStage().getId().equals(stageOpt.get().getId()))
+                        || (livrable.getTache() != null
+                            && livrable.getTache().getStage().getId().equals(stageOpt.get().getId()))))
+            .ifPresent(livrable -> {
+                livrable.setStatut(Livrable.StatutLivrable.depose);
+                livrableRepository.save(livrable);
+                Stage stage = stageOpt.get();
+                if (stage.getEncadreur() != null && stage.getEncadreur().getUtilisateur() != null) {
+                    Notification notification = new Notification(
+                            "Nouveau livrable",
+                            userDetails.getUtilisateur().getPrenom() + " "
+                                    + userDetails.getUtilisateur().getNom()
+                                    + " a envoyé le document « " + livrable.getTitre() + " ».",
+                            "ENCADREUR",
+                            "normale",
+                            userDetails.getUtilisateur().getPrenom() + " "
+                                    + userDetails.getUtilisateur().getNom());
+                    notification.setDestinataireEmail(
+                            stage.getEncadreur().getUtilisateur().getEmail());
+                    notification.setStatut("non_lue");
+                    notificationRepository.save(notification);
+                }
+            });
+    return "redirect:/stagiaire/livrables?succes=Livrable envoye a votre encadreur.";
 }
 
 @GetMapping("/rapport")
@@ -476,7 +582,9 @@ public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails
 
 
 @GetMapping("/objectifs")
-public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                         @RequestParam(defaultValue = "7") int periode,
+                                         Model model) {
     model.addAttribute("activePage", "objectifs");
     Optional<Stage> stageOpt = getStage(userDetails);
     Stage stage = stageOpt.orElse(null);
@@ -510,6 +618,24 @@ public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDeta
 
     double progressionMoyenne = objectifs.stream().mapToInt(Objectif::getProgression).average().orElse(0);
     model.addAttribute("progressionMoyenne", (int) Math.round(progressionMoyenne));
+    int periodeValide = periode == 30 ? 30 : 7;
+    LocalDateTime limitePeriode = LocalDateTime.now().minusDays(periodeValide);
+    List<Objectif> objectifsPeriode = objectifs.stream()
+            .filter(objectif -> objectif.getDateCreation() == null
+                    || !objectif.getDateCreation().isBefore(limitePeriode))
+            .toList();
+    int progressionPeriode = (int) Math.round(objectifsPeriode.stream()
+            .mapToInt(Objectif::getProgression)
+            .average()
+            .orElse(0));
+    model.addAttribute("periodeObjectifs", periodeValide);
+    model.addAttribute("progressionPeriode", progressionPeriode);
+    model.addAttribute("activitesObjectifs", objectifs.stream()
+            .sorted(Comparator.comparing(
+                    Objectif::getDateCreation,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .limit(5)
+            .toList());
 
     LocalDate aujourdHui = LocalDate.now();
     List<Objectif> echeancesProches = objectifs.stream()
@@ -552,6 +678,8 @@ public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetai
         obj.setOrdre(prochainOrdre);
         obj.setProgression(0);
         obj.setStatut(Objectif.StatutObjectif.non_commence);
+        obj.setOrigine(Objectif.OrigineObjectif.stagiaire);
+        obj.setDateCreation(LocalDateTime.now());
         objectifRepository.save(obj);
     }
     return "redirect:/stagiaire/objectifs";
@@ -712,13 +840,22 @@ public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDe
     model.addAttribute("conversations", conversations);
     Conversation active = null;
     if (convId != null) {
-        active = conversationRepository.findById(convId).orElse(null);
+        active = conversationRepository.findById(convId)
+                .filter(conversation -> conversation.getParticipants().stream()
+                        .anyMatch(participant -> participant.getId().equals(userId)))
+                .orElse(null);
     } else if (!conversations.isEmpty()) {
         active = conversations.get(0);
     }
     model.addAttribute("activeConversation", active);
     if (active != null) {
-        model.addAttribute("messages", messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId()));
+        List<Message> messages = messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId());
+        messages.stream()
+                .filter(message -> !message.getExpediteur().getId().equals(userId)
+                        && !Boolean.TRUE.equals(message.getLu()))
+                .forEach(message -> message.setLu(true));
+        messageRepository.saveAll(messages);
+        model.addAttribute("messages", messages);
     } else {
         model.addAttribute("messages", new ArrayList<>());
     }
@@ -773,7 +910,11 @@ public String nouvelleConversation(@AuthenticationPrincipal CustomUserDetails us
 public String envoyerMessage(@AuthenticationPrincipal CustomUserDetails userDetails,
                              @RequestParam Integer convId,
                              @RequestParam String contenu) {
-    Conversation conv = conversationRepository.findById(convId).orElse(null);
+    Conversation conv = conversationRepository.findById(convId)
+            .filter(conversation -> conversation.getParticipants().stream()
+                    .anyMatch(participant -> participant.getId()
+                            .equals(userDetails.getUtilisateur().getId())))
+            .orElse(null);
     if (conv == null) return "redirect:/stagiaire/messages";
     Message msg = new Message();
     msg.setConversation(conv);
@@ -785,6 +926,16 @@ public String envoyerMessage(@AuthenticationPrincipal CustomUserDetails userDeta
     conversationRepository.save(conv);
     messageRepository.save(msg);
     return "redirect:/stagiaire/messages?convId=" + convId;
+}
+
+@PostMapping("/notifications/lire")
+public String marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    List<Notification> notifications = notificationRepository
+            .findByDestinataireEmailAndStatutNot(
+                    userDetails.getUtilisateur().getEmail(), "lue");
+    notifications.forEach(notification -> notification.setStatut("lue"));
+    notificationRepository.saveAll(notifications);
+    return "redirect:/stagiaire/dashboard";
 }
 @PostMapping("/profil/modifier")
 public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -855,5 +1006,39 @@ public String ajouterTache(@AuthenticationPrincipal CustomUserDetails userDetail
        }
    });
    return "redirect:/stagiaire/taches?succes=Tache cree avec succes.";
+}
+
+@PostMapping("/taches/modifier")
+public String modifierTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                            @RequestParam Integer id,
+                            @RequestParam String titre,
+                            @RequestParam(required = false) String description,
+                            @RequestParam(required = false) String dateLimite) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    tacheRepository.findById(id)
+            .filter(tache -> stageOpt.isPresent()
+                    && tache.getStage().getId().equals(stageOpt.get().getId()))
+            .ifPresent(tache -> {
+                if (titre != null && !titre.isBlank()) {
+                    tache.setTitre(titre.trim());
+                    tache.setDescription(description);
+                    if (dateLimite != null && !dateLimite.isBlank()) {
+                        tache.setDateLimite(LocalDate.parse(dateLimite));
+                    }
+                    tacheRepository.save(tache);
+                }
+            });
+    return "redirect:/stagiaire/taches?succes=Tache modifiee avec succes.";
+}
+
+@PostMapping("/taches/supprimer")
+public String supprimerTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             @RequestParam Integer id) {
+    Optional<Stage> stageOpt = getStage(userDetails);
+    tacheRepository.findById(id)
+            .filter(tache -> stageOpt.isPresent()
+                    && tache.getStage().getId().equals(stageOpt.get().getId()))
+            .ifPresent(tacheRepository::delete);
+    return "redirect:/stagiaire/taches?succes=Tache supprimee avec succes.";
 }
 }

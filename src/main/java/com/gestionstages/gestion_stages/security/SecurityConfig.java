@@ -24,7 +24,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**",
-                        "/login", "/candidat/**", "/", "/a-propos", "/contact",
+                        "/login", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe/**",
+                        "/candidat/**", "/", "/a-propos", "/contact",
                         "/faq", "/mentions-legales", "/confidentialite", "/error").permitAll()
                 .requestMatchers("/profil/**", "/documents/**").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMINISTRATEUR")
@@ -87,6 +88,9 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
+            )
+            .rememberMe(remember -> remember
+                .tokenValiditySeconds(14 * 24 * 60 * 60)
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)

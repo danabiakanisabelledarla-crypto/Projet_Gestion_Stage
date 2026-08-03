@@ -10,6 +10,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     List<Notification> findTop8ByDestinataireEmailOrderByDateEnvoiDesc(String destinataireEmail);
 
     long countByDestinataireEmailAndStatut(String destinataireEmail, String statut);
+
+    long countByDestinataireEmailAndStatutNot(String destinataireEmail, String statut);
+
+    List<Notification> findByDestinataireEmailAndStatutNot(String destinataireEmail, String statut);
     
     long countByDestinataireTypeAndStatut(String destinataireType, String statut);
     

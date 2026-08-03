@@ -14,7 +14,7 @@
         <kbd>Ctrl K</kbd>
     </label>
     <div class="responsable-tools">
-        <a th:href="@{/responsable/notifications}" class="header-icon-btn" title="Messages" aria-label="Messages">
+        <a th:href="@{/responsable/messages}" class="header-icon-btn" title="Messages" aria-label="Messages">
             <i data-lucide="message-square"></i>
             <span class="notif-dot" th:text="${messagesCount ?: 0}">0</span>
         </a>
@@ -32,6 +32,34 @@
     </div>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"
             onload="window.lucide && window.lucide.createIcons()"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const search = document.querySelector('.responsable-search input');
+        const normalize = value => (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+        search?.addEventListener('input', () => {
+            const query = normalize(search.value);
+            document.querySelectorAll(
+                'tbody tr, [data-search-item], .rp-card, .rp-timeline-item, .conversation-item-link'
+            ).forEach(item => {
+                if (item.closest('.responsable-topbar')) return;
+                item.classList.toggle(
+                    'responsable-search-hidden',
+                    Boolean(query) && !normalize(item.textContent).includes(query)
+                );
+            });
+        });
+        document.addEventListener('keydown', event => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && search) {
+                event.preventDefault();
+                search.focus();
+            }
+        });
+    });
+    </script>
 </header>
 </body>
 </html>

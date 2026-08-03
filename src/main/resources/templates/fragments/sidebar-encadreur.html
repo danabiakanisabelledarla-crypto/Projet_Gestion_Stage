@@ -9,7 +9,7 @@
     <div class="workspace-sidebar-overlay"></div>
     <aside class="barre-laterale portal-sidebar workspace-sidebar encadreur-sidebar">
         <a class="workspace-sidebar-brand" th:href="@{/encadreur/dashboard}">
-            <div class="workspace-sidebar-logo">D</div>
+            <div class="workspace-sidebar-logo"><img th:src="@{/images/logo.png}" alt="DTA Alliance"></div>
             <div><strong>DTA Stages</strong><span>Gestion des stages</span></div>
         </a>
 
@@ -91,6 +91,7 @@
             sidebar.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
         });
     </script>
+    <script th:src="@{/js/workspace-language.js}"></script>
 </th:block>
 </body>
 </html>

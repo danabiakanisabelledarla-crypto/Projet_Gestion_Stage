@@ -42,7 +42,8 @@ class RolePagesRenderingTests {
                 "/a-propos",
                 "/candidat/suivi",
                 "/candidat/demande",
-                "/contact"
+                "/contact",
+                "/mot-de-passe-oublie"
         }) {
             mockMvc.perform(get(route))
                     .andExpect(status().isOk());

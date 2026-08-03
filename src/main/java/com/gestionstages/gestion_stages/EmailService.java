@@ -233,6 +233,36 @@ public class EmailService {
         }
     }
 
+    public boolean envoyerLienReinitialisation(String destinataire,
+                                                String nomComplet,
+                                                String lien) {
+        if (!destinataireValide(destinataire)) return false;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("innotechlab26@gmail.com");
+            helper.setTo(destinataire);
+            helper.setSubject("Réinitialisation de votre mot de passe DTA Alliance");
+            String contenu = "<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:20px'>"
+                    + "<div style='background:#071b4d;color:white;padding:24px;border-radius:12px 12px 0 0'>"
+                    + "<h1 style='font-size:20px;margin:0'>DTA Alliance</h1></div>"
+                    + "<div style='padding:30px;border:1px solid #dbe4f0;border-top:0;background:white'>"
+                    + "<p>Bonjour <strong>" + echapperHtml(nomComplet) + "</strong>,</p>"
+                    + "<p style='color:#475569;line-height:1.65'>Une demande de réinitialisation a été effectuée pour votre compte. Ce lien est personnel, utilisable une seule fois et expire dans 30 minutes.</p>"
+                    + "<p style='margin:28px 0;text-align:center'><a href='" + echapperHtml(lien) + "' "
+                    + "style='display:inline-block;padding:13px 24px;color:white;background:#2563eb;border-radius:9px;text-decoration:none;font-weight:bold'>"
+                    + "Réinitialiser mon mot de passe</a></p>"
+                    + "<p style='color:#64748b;font-size:13px'>Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.</p>"
+                    + "</div></div>";
+            helper.setText(contenu, true);
+            mailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            System.err.println(">>> Erreur envoi email de réinitialisation : " + e.getMessage());
+            return false;
+        }
+    }
+
     private String echapperHtml(String valeur) {
         if (valeur == null) return "";
         return valeur.replace("&", "&amp;")

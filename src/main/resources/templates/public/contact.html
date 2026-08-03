@@ -2,75 +2,195 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Contact — DTA Alliance</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contact - DTA Alliance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/accueil.css}">
-    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <link rel="stylesheet" th:href="@{/css/accueil.css(v=3)}">
+    <link rel="stylesheet" th:href="@{/css/contact-premium.css(v=1)}">
 </head>
-<body>
-
+<body class="contact-page">
 <div th:replace="~{fragments/navbar-public :: navbar('contact')}"></div>
 
-<section class="page-hero">
-    <h1>Contactez-nous</h1>
-    <p>Une question sur votre candidature ou notre programme de stages ? Nous sommes à votre écoute.</p>
-</section>
-
-<div class="page-content">
-    <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
-
-    <div class="grid-2">
-        <div class="content-card contact-form">
-            <h2>Envoyer un message</h2>
-            <form th:action="@{/contact}" method="post">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <div class="groupe-champ">
-                    <label for="nom">Nom complet</label>
-                    <input type="text" id="nom" name="nom" required placeholder="Votre nom">
-                </div>
-                <div class="groupe-champ">
-                    <label for="email">Adresse email</label>
-                    <input type="email" id="email" name="email" required placeholder="votre@email.com">
-                </div>
-                <div class="groupe-champ">
-                    <label for="sujet">Sujet</label>
-                    <select id="sujet" name="sujet" required>
-                        <option value="">Choisir un sujet</option>
-                        <option value="candidature">Question sur une candidature</option>
-                        <option value="stage">Informations sur les stages</option>
-                        <option value="technique">Problème technique</option>
-                        <option value="autre">Autre</option>
-                    </select>
-                </div>
-                <div class="groupe-champ">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" rows="5" required placeholder="Votre message..."></textarea>
-                </div>
-                <button type="submit" class="btn-primary">Envoyer le message</button>
-            </form>
-        </div>
-
-        <div>
-            <div class="content-card">
-                <h2>Nos coordonnées</h2>
-                <div class="info-box" style="margin-bottom:16px;">
-                    <h3><i class="fa-solid fa-location-dot"></i> Adresse</h3>
-                    <p>Yaoundé, Cameroun<br>Quartier des affaires</p>
-                </div>
-                <div class="info-box" style="margin-bottom:16px;">
-                    <h3><i class="fa-solid fa-phone"></i> Téléphone</h3>
-                    <p>+237 222 222 222<br>Lun – Ven, 8h – 17h</p>
-                </div>
-                <div class="info-box">
-                    <h3><i class="fa-solid fa-envelope"></i> Email</h3>
-                    <p>contact@dta-alliance.com<br>stages@dta-alliance.com</p>
-                </div>
+<main>
+    <section class="contact-hero">
+        <div class="contact-hero-copy">
+            <span class="contact-badge">Contact DTA Alliance</span>
+            <h1>Contactez-<span>nous</span></h1>
+            <p>Une question concernant votre candidature, votre stage ou le fonctionnement de notre plateforme ?</p>
+            <p>Notre équipe est disponible pour vous accompagner et répondre à vos préoccupations dans les meilleurs délais.</p>
+            <div class="contact-stats">
+                <div><strong>&lt; 24h</strong><span>Délai de réponse</span></div>
+                <div><strong>95%</strong><span>Satisfaction</span></div>
+                <div><strong>5 jrs/7</strong><span>Disponibilité</span></div>
             </div>
         </div>
-    </div>
-</div>
+        <div class="chat-card" aria-label="Aperçu d'une conversation avec l'assistance">
+            <div class="chat-glow"></div>
+            <div class="chat-header">
+                <span class="chat-agent-icon"><i class="fa-solid fa-headset"></i></span>
+                <div class="chat-agent"><b>Assistance DTA</b><small>Service des candidatures</small></div>
+                <span class="online-badge"><i></i>En ligne</span>
+            </div>
+            <div class="chat-body">
+                <p class="chat-bubble user">Bonjour, j'ai une question sur mon dossier de stage.</p>
+                <p class="chat-bubble support">Bonjour ! Bienvenue chez DTA Alliance. Comment puis-je vous aider ?</p>
+                <p class="chat-bubble user">Je n'ai pas encore reçu de confirmation de candidature.</p>
+                <p class="chat-bubble support">Je vérifie cela immédiatement. Votre dossier est en cours de traitement <i class="fa-solid fa-check"></i></p>
+            </div>
+            <div class="chat-input"><span>Écrivez votre message...</span><b><i class="fa-solid fa-paper-plane"></i></b></div>
+            <div class="quick-response"><i class="fa-regular fa-clock"></i><span><b>Réponse rapide</b><small>En moins de 24h</small></span></div>
+        </div>
+    </section>
+
+    <section class="contact-main">
+        <article class="contact-form-card">
+            <div id="contactSuccess" class="contact-success" th:if="${succes}">
+                <div class="contact-success-icon"><i class="fa-solid fa-check"></i></div>
+                <h2>Message envoyé !</h2>
+                <p>Nous avons bien reçu votre message et vous répondrons dans les meilleurs délais.</p>
+                <a class="contact-button secondary" th:href="@{/contact}">Envoyer un autre message</a>
+            </div>
+            <div th:unless="${succes}">
+                <header class="contact-form-header">
+                    <h2>Envoyer un message</h2>
+                    <p>Complétez le formulaire ci-dessous et nous reviendrons vers vous rapidement.</p>
+                </header>
+                <form id="contactForm" th:action="@{/contact}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div class="contact-fields">
+                        <label class="contact-field">
+                            <span>Nom complet *</span>
+                            <span class="contact-input"><i class="fa-regular fa-user"></i><input name="nom" type="text" placeholder="Votre nom" autocomplete="name" required></span>
+                        </label>
+                        <label class="contact-field">
+                            <span>Adresse email *</span>
+                            <span class="contact-input"><i class="fa-regular fa-envelope"></i><input name="email" type="email" placeholder="votre@email.com" autocomplete="email" required></span>
+                        </label>
+                        <label class="contact-field full">
+                            <span>Sujet *</span>
+                            <span class="contact-input"><i class="fa-regular fa-message"></i><select name="sujet" required><option value="">Sélectionner un sujet</option><option>Informations générales</option><option>Candidature</option><option>Suivi de dossier</option><option>Stage</option><option>Assistance technique</option><option>Partenariat</option><option>Autre</option></select></span>
+                        </label>
+                        <label class="contact-field full">
+                            <span>Message *</span>
+                            <textarea name="message" rows="6" placeholder="Votre message..." required></textarea>
+                        </label>
+                    </div>
+                    <button id="contactSubmit" class="contact-button primary full" type="submit"><i class="fa-solid fa-paper-plane"></i><span>Envoyer le message</span></button>
+                </form>
+            </div>
+        </article>
+
+        <aside class="contact-sidebar">
+            <section class="contact-side-card">
+                <h2>Nos coordonnées</h2>
+                <div class="contact-row"><i class="fa-solid fa-location-dot"></i><div><b>Adresse</b><span>Yaoundé, Cameroun</span><small>Quartier des affaires</small></div></div>
+                <div class="contact-row"><i class="fa-solid fa-phone"></i><div><b>Téléphone</b><span class="mono">+237 222 222 222</span><small class="mono">Lun - Ven | 08h00 - 17h00</small></div></div>
+                <div class="contact-row"><i class="fa-regular fa-envelope"></i><div><b>Email</b><span class="mono">contact@dta-alliance.com</span><small class="mono">stages@dta-alliance.com</small></div></div>
+            </section>
+            <section class="contact-side-card">
+                <div class="availability-head"><h2>Disponibilité</h2><span class="online-badge"><i></i>En ligne</span></div>
+                <p>Notre équipe répond généralement dans un délai inférieur à 24 heures ouvrables.</p>
+                <div class="availability-stats"><div><strong>&lt; 24h</strong><span>Temps de réponse</span></div><div><strong>95%</strong><span>Satisfaction</span></div></div>
+            </section>
+            <section class="contact-side-card">
+                <h2>Pourquoi nous contacter ?</h2>
+                <ul class="contact-reasons">
+                    <li><i class="fa-solid fa-check"></i>Informations sur les candidatures</li>
+                    <li><i class="fa-solid fa-check"></i>Suivi des demandes</li>
+                    <li><i class="fa-solid fa-check"></i>Questions liées aux stages</li>
+                    <li><i class="fa-solid fa-check"></i>Assistance technique</li>
+                    <li><i class="fa-solid fa-check"></i>Partenariats institutionnels</li>
+                    <li><i class="fa-solid fa-check"></i>Collaboration académique</li>
+                </ul>
+            </section>
+        </aside>
+    </section>
+
+    <section class="faq-section">
+        <div class="section-heading">
+            <span class="contact-badge">FAQ</span>
+            <h2>Questions fréquentes</h2>
+            <p>Les réponses aux questions les plus courantes.</p>
+        </div>
+        <div class="faq-list">
+            <article class="faq-item reveal"><button type="button" aria-expanded="false"><span>Comment déposer une candidature ?</span><i class="fa-solid fa-chevron-down"></i></button><div class="faq-answer"><p>Rendez-vous sur la page « Candidature » et remplissez le formulaire en ligne. Joignez les documents requis (CV, relevé de notes, pièce d'identité) et soumettez votre dossier. Vous recevrez un email de confirmation dans les 24 heures.</p></div></article>
+            <article class="faq-item reveal"><button type="button" aria-expanded="false"><span>Comment suivre ma demande ?</span><i class="fa-solid fa-chevron-down"></i></button><div class="faq-answer"><p>Accédez à la page « Suivi » de la plateforme DTA Alliance. Vous pouvez consulter l'état de votre dossier avec l'adresse email utilisée lors de la candidature.</p></div></article>
+            <article class="faq-item reveal"><button type="button" aria-expanded="false"><span>Quels documents dois-je fournir ?</span><i class="fa-solid fa-chevron-down"></i></button><div class="faq-answer"><p>Les documents obligatoires sont un CV à jour, le relevé de notes de la dernière année académique et une pièce d'identité valide. Une lettre de recommandation peut être ajoutée en option.</p></div></article>
+            <article class="faq-item reveal"><button type="button" aria-expanded="false"><span>Quels sont les délais de traitement ?</span><i class="fa-solid fa-chevron-down"></i></button><div class="faq-answer"><p>Votre dossier est traité sous 3 à 5 jours ouvrables après soumission. Vous recevrez une notification par email à chaque étape clé du processus.</p></div></article>
+            <article class="faq-item reveal"><button type="button" aria-expanded="false"><span>Comment obtenir une assistance ?</span><i class="fa-solid fa-chevron-down"></i></button><div class="faq-answer"><p>Vous pouvez nous contacter via le formulaire ci-dessus, par email à contact@dta-alliance.com ou par téléphone au +237 222 222 222, du lundi au vendredi de 08h00 à 17h00.</p></div></article>
+        </div>
+    </section>
+
+    <section class="support-section">
+        <div class="section-heading">
+            <span class="contact-badge">Processus</span>
+            <h2>Notre processus d'assistance</h2>
+        </div>
+        <div class="support-timeline">
+            <div class="support-line"></div>
+            <article class="support-step reveal"><div class="support-icon blue"><i class="fa-regular fa-message"></i><b>1</b></div><h3>Prise de contact</h3><p>Nous recevons votre demande.</p></article>
+            <article class="support-step reveal"><div class="support-icon indigo"><i class="fa-solid fa-magnifying-glass"></i><b>2</b></div><h3>Analyse</h3><p>Notre équipe examine votre requête.</p></article>
+            <article class="support-step reveal"><div class="support-icon violet"><i class="fa-solid fa-bolt"></i><b>3</b></div><h3>Réponse</h3><p>Nous apportons une solution adaptée.</p></article>
+            <article class="support-step reveal"><div class="support-icon green"><i class="fa-solid fa-shield-halved"></i><b>4</b></div><h3>Suivi</h3><p>Nous restons disponibles si nécessaire.</p></article>
+        </div>
+    </section>
+
+    <section class="contact-cta-section">
+        <div class="contact-cta">
+            <div class="cta-glow one"></div><div class="cta-glow two"></div>
+            <div class="cta-copy">
+                <span>Accompagnement personnalisé</span>
+                <h2>Besoin d'un accompagnement personnalisé ?</h2>
+                <p>Notre équipe est prête à répondre à toutes vos questions concernant les candidatures, les stages et l'utilisation de la plateforme DTA Alliance.</p>
+                <div><a class="cta-button light" href="#contactForm"><i class="fa-solid fa-paper-plane"></i>Envoyer un message</a><a class="cta-button ghost" th:href="@{/candidat/demande}">Déposer une candidature<i class="fa-solid fa-chevron-right"></i></a></div>
+            </div>
+            <div class="cta-dashboard">
+                <div class="window-dots"><i></i><i></i><i></i></div>
+                <div class="dashboard-row"><i class="fa-solid fa-chart-column blue"></i><span>Candidatures actives</span><b>12</b></div>
+                <div class="dashboard-row"><i class="fa-solid fa-graduation-cap green"></i><span>Stages en cours</span><b>8</b></div>
+                <div class="dashboard-row"><i class="fa-regular fa-handshake violet"></i><span>Partenaires actifs</span><b>20+</b></div>
+                <div class="dashboard-status"><i class="fa-solid fa-gear"></i><span>Assistance disponible</span><b></b></div>
+            </div>
+        </div>
+    </section>
+</main>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
+<script>
+(() => {
+    const form = document.getElementById('contactForm');
+    if (form) {
+        form.addEventListener('submit', () => {
+            const button = document.getElementById('contactSubmit');
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours...</span>';
+        });
+    }
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const button = item.querySelector('button');
+        const answer = item.querySelector('.faq-answer');
+        button.addEventListener('click', () => {
+            const open = item.classList.toggle('is-open');
+            button.setAttribute('aria-expanded', String(open));
+            answer.style.maxHeight = open ? answer.scrollHeight + 'px' : '0px';
+        });
+    });
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {threshold: .12});
+    document.querySelectorAll('.reveal').forEach((element, index) => {
+        element.style.transitionDelay = (index % 5) * 70 + 'ms';
+        observer.observe(element);
+    });
+})();
+</script>
 </body>
 </html>
