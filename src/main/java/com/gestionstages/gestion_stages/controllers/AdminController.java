@@ -46,6 +46,7 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final com.gestionstages.gestion_stages.services.PermissionService permissionService;
+    private final com.gestionstages.gestion_stages.services.MessagingService messagingService;
 
     public AdminController(DemandeStageRepository demandeStageRepository,
                             StageRepository stageRepository,
@@ -64,7 +65,8 @@ public class AdminController {
                             LivrableRepository livrableRepository,
                             PasswordEncoder passwordEncoder,
                             EmailService emailService,
-                            com.gestionstages.gestion_stages.services.PermissionService permissionService) {
+                            com.gestionstages.gestion_stages.services.PermissionService permissionService,
+                            com.gestionstages.gestion_stages.services.MessagingService messagingService) {
         this.demandeStageRepository = demandeStageRepository;
         this.stageRepository = stageRepository;
         this.tacheRepository = tacheRepository;
@@ -83,6 +85,7 @@ public class AdminController {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.permissionService = permissionService;
+        this.messagingService = messagingService;
     }
 
     @GetMapping("/dashboard")
@@ -767,26 +770,8 @@ public class AdminController {
         model.addAttribute("initiales", "A");
         model.addAttribute("notificationsCount", 0);
         model.addAttribute("recentNotifications", new ArrayList<>());
-        Utilisateur currentUser = userDetails.getUtilisateur();
-        model.addAttribute("user", currentUser);
-        Integer userId = currentUser.getId();
-        List<Conversation> conversations = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
-        model.addAttribute("conversations", conversations);
-        Conversation active = null;
-        if (convId != null) {
-            active = conversationRepository.findById(convId).orElse(null);
-        } else if (!conversations.isEmpty()) {
-            active = conversations.get(0);
-        }
-        model.addAttribute("activeConversation", active);
-        if (active != null) {
-            model.addAttribute("messages", messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId()));
-        } else {
-            model.addAttribute("messages", new ArrayList<>());
-        }
-        List<Utilisateur> contacts = utilisateurRepository.findAll();
-        contacts.remove(currentUser);
-        model.addAttribute("contacts", contacts);
+        messagingService.preparerModele(
+                model, userDetails.getUtilisateur(), convId, "/admin/messages", "Administrateur");
         return "admin/messages";
     }
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Changer le mot de passe - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<main class="contenu-principal responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main">
+                <div class="rp-heading-icon"><i class="fa-solid fa-key"></i></div>
+                <div>
+                    <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Profil &gt; Mot de passe</div>
+                    <h1>Changer le mot de passe</h1>
+                    <p>Renforcez la sécurité de votre compte Responsable.</p>
+                </div>
+            </div>
+            <a class="rp-secondary" th:href="@{/responsable/profil}">
+                <i class="fa-solid fa-arrow-left"></i> Retour au profil
+            </a>
+        </header>
+
+        <section class="rp-password-layout">
+            <article class="rp-card">
+                <div class="rp-card-head">
+                    <div><h2>Nouveau mot de passe</h2><p>Les trois champs sont obligatoires.</p></div>
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
+                <form th:action="@{/responsable/profil/mot-de-passe}" method="post">
+                    <div class="rp-form-grid">
+                        <div class="rp-field full">
+                            <label for="ancienMotDePasse">Mot de passe actuel</label>
+                            <input class="rp-input" id="ancienMotDePasse" type="password" name="ancienMotDePasse" autocomplete="current-password" required>
+                        </div>
+                        <div class="rp-field">
+                            <label for="nouveauMotDePasse">Nouveau mot de passe</label>
+                            <input class="rp-input" id="nouveauMotDePasse" type="password" name="nouveauMotDePasse" minlength="8" autocomplete="new-password" required>
+                        </div>
+                        <div class="rp-field">
+                            <label for="confirmation">Confirmer le mot de passe</label>
+                            <input class="rp-input" id="confirmation" type="password" name="confirmation" minlength="8" autocomplete="new-password" required>
+                        </div>
+                    </div>
+                    <div class="rp-password-hint">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Utilisez au moins 8 caractères et évitez un mot de passe déjà utilisé ailleurs.
+                    </div>
+                    <div class="rp-modal-actions">
+                        <a class="rp-secondary" th:href="@{/responsable/profil}">Annuler</a>
+                        <button class="rp-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,65 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <body>
-<header th:fragment="header" class="responsable-topbar">
-    <button class="responsable-menu-toggle" type="button" aria-label="Afficher le menu"
-            aria-expanded="false"
-            onclick="const sidebar=document.querySelector('.portal-sidebar');const open=sidebar.classList.toggle('mobile-open');this.setAttribute('aria-expanded',open)">
-        <i data-lucide="menu"></i>
-    </button>
-    <label class="responsable-search">
-        <i data-lucide="search"></i>
-        <input type="search" placeholder="Rechercher dans l'espace responsable" aria-label="Rechercher">
-        <kbd>Ctrl K</kbd>
-    </label>
-    <div class="responsable-tools">
-        <a th:href="@{/responsable/messages}" class="header-icon-btn" title="Messages" aria-label="Messages">
-            <i data-lucide="message-square"></i>
-            <span class="notif-dot" th:text="${messagesCount ?: 0}">0</span>
-        </a>
-        <a th:href="@{/responsable/notifications}" class="header-icon-btn" title="Notifications" aria-label="Notifications">
-            <i data-lucide="bell"></i>
-            <span class="notif-dot" th:text="${notificationsCount ?: 0}">0</span>
-        </a>
-        <a th:href="@{/responsable/profil}" class="header-user" th:classappend="${activePage == 'profil'} ? ' actif'">
-            <div class="avatar responsable-avatar"><span>RC</span></div>
-            <div class="info">
-                <div class="name" sec:authentication="name">Responsable</div>
-                <div class="role">Responsable des stages</div>
-            </div>
-        </a>
-    </div>
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"
-            onload="window.lucide && window.lucide.createIcons()"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const search = document.querySelector('.responsable-search input');
-        const normalize = value => (value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim();
-        search?.addEventListener('input', () => {
-            const query = normalize(search.value);
-            document.querySelectorAll(
-                'tbody tr, [data-search-item], .rp-card, .rp-timeline-item, .conversation-item-link'
-            ).forEach(item => {
-                if (item.closest('.responsable-topbar')) return;
-                item.classList.toggle(
-                    'responsable-search-hidden',
-                    Boolean(query) && !normalize(item.textContent).includes(query)
-                );
-            });
-        });
-        document.addEventListener('keydown', event => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && search) {
-                event.preventDefault();
-                search.focus();
-            }
-        });
-    });
-    </script>
-</header>
+<th:block th:fragment="header" th:replace="~{fragments/workspace-header :: header}"></th:block>
 </body>
 </html>

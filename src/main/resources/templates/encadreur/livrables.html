@@ -12,12 +12,7 @@
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
 
 <div class="coach-main">
-    <header class="coach-topbar">
-        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="globalDeliverySearch" type="search" placeholder="Rechercher un livrable..."></label>
-        <button class="coach-icon-btn" title="Livrables à traiter"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">0</em></button>
-        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}" title="Messages"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">0</em></a>
-        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
-    </header>
+    <div th:replace="~{fragments/header-encadreur :: header}"></div>
 
     <main class="coach-page">
         <section class="coach-heading">

@@ -51,6 +51,7 @@ public class EncadreurController {
     private final MessageRepository messageRepository;
     private final NotificationRepository notificationRepository;
     private final DocumentRepository documentRepository;
+    private final com.gestionstages.gestion_stages.services.MessagingService messagingService;
 
     public EncadreurController(EncadreurRepository encadreurRepository,
                            StageRepository stageRepository,
@@ -67,7 +68,8 @@ public class EncadreurController {
                            ConversationRepository conversationRepository,
                            MessageRepository messageRepository,
                            NotificationRepository notificationRepository,
-                           DocumentRepository documentRepository) {
+                           DocumentRepository documentRepository,
+                           com.gestionstages.gestion_stages.services.MessagingService messagingService) {
             this.encadreurRepository = encadreurRepository;
             this.stageRepository = stageRepository;
             this.tacheRepository = tacheRepository;
@@ -84,6 +86,7 @@ public class EncadreurController {
             this.messageRepository = messageRepository;
             this.notificationRepository = notificationRepository;
             this.documentRepository = documentRepository;
+            this.messagingService = messagingService;
 }
 
     private Encadreur getEncadreur(CustomUserDetails userDetails) {
@@ -785,23 +788,12 @@ public String ajouterEvenement(@AuthenticationPrincipal CustomUserDetails userDe
 }
 
 @GetMapping("/messagerie")
-public String messagerie(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+public String messagerie(@AuthenticationPrincipal CustomUserDetails userDetails,
+                         @RequestParam(required = false) Integer convId,
+                         Model model) {
     ajouterIdentite(model, userDetails, "messagerie");
-    Utilisateur utilisateur = userDetails.getUtilisateur();
-    List<Conversation> conversations = conversationRepository
-            .findByParticipantIdOrderByDernierMessageDesc(utilisateur.getId());
-    Map<Integer, List<Message>> messagesParConversation = new HashMap<>();
-    Map<Integer, Long> nonLusParConversation = new HashMap<>();
-    conversations.forEach(conversation -> {
-        messagesParConversation.put(conversation.getId(),
-                messageRepository.findByConversationIdOrderByDateEnvoiAsc(conversation.getId()));
-        nonLusParConversation.put(conversation.getId(),
-                conversationRepository.countNonLuByConversation(conversation.getId(), utilisateur.getId()));
-    });
-    model.addAttribute("utilisateurConnecte", utilisateur);
-    model.addAttribute("conversations", conversations);
-    model.addAttribute("messagesParConversation", messagesParConversation);
-    model.addAttribute("nonLusParConversation", nonLusParConversation);
+    messagingService.preparerModele(
+            model, userDetails.getUtilisateur(), convId, "/encadreur/messagerie", "Encadreur");
     return "encadreur/messagerie";
 }
 

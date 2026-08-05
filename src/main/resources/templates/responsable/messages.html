@@ -4,152 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Messages - Responsable</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
-    <link rel="stylesheet" th:href="@{/css/stagiaire-messages.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/messaging-unified.css}">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 <main class="contenu-principal responsable-main">
     <div th:replace="~{fragments/header-responsable :: header}"></div>
     <div class="rp-page">
-        <header class="rp-heading">
-            <div class="rp-heading-main">
-                <div class="rp-heading-icon"><i class="fa-solid fa-comments"></i></div>
-                <div>
-                    <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Messages</div>
-                    <h1>Messages</h1>
-                    <p>Communiquez avec les administrateurs, encadreurs et stagiaires.</p>
-                </div>
-            </div>
-            <button type="button" class="rp-primary" id="openContactModal">
-                <i class="fa-solid fa-plus"></i> Nouvelle conversation
-            </button>
-        </header>
-
-        <div class="messages-layout">
-            <section class="conversations-list">
-                <div class="conversations-search">
-                    <div class="search-input">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input id="conversationSearch" type="search" placeholder="Rechercher une conversation">
-                    </div>
-                </div>
-                <div class="conversations-items">
-                    <a class="conversation-item-link" th:each="conversation : ${conversations}"
-                       th:href="@{/responsable/messages(convId=${conversation.id})}"
-                       th:data-search="${#strings.toLowerCase(conversation.sujet ?: '')}">
-                        <div class="conversation-item"
-                             th:classappend="${activeConversation != null and conversation.id == activeConversation.id} ? ' active'">
-                            <div class="conv-avatar"><i class="fa-regular fa-comments"></i></div>
-                            <div class="conv-info">
-                                <div class="conv-nom" th:text="${conversation.sujet ?: 'Sans sujet'}">Sujet</div>
-                                <div class="conv-fonction">
-                                    <span th:each="participant : ${conversation.participants}"
-                                          th:if="${participant.id != user.id}"
-                                          th:text="|${participant.prenom} ${participant.nom} |">Contact</span>
-                                </div>
-                                <div class="conv-dernier-msg"
-                                     th:text="${conversation.dernierMessage != null ? #temporals.format(conversation.dernierMessage, 'dd/MM HH:mm') : 'Aucun message'}">
-                                    Date
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                    <div class="rp-empty" th:if="${#lists.isEmpty(conversations)}">
-                        Aucune conversation.
-                    </div>
-                </div>
-            </section>
-
-            <section class="discussion-panel" th:if="${activeConversation != null}">
-                <div class="discussion-header">
-                    <div class="discussion-user">
-                        <div class="discussion-avatar"><i class="fa-regular fa-comment-dots"></i></div>
-                        <div>
-                            <div class="discussion-nom" th:text="${activeConversation.sujet}">Conversation</div>
-                            <div class="discussion-statut">
-                                <span th:each="participant : ${activeConversation.participants}"
-                                      th:if="${participant.id != user.id}"
-                                      th:text="|${participant.prenom} ${participant.nom} |">Contact</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="discussion-messages" id="discussionMessages">
-                    <div class="message" th:each="message : ${messages}"
-                         th:classappend="${message.expediteur.id == user.id} ? ' envoye'">
-                        <div class="msg-avatar" th:if="${message.expediteur.id != user.id}"
-                             th:text="${#strings.substring(message.expediteur.prenom,0,1) + #strings.substring(message.expediteur.nom,0,1)}">AB</div>
-                        <div class="msg-bulle" th:classappend="${message.expediteur.id == user.id} ? ' envoye'">
-                            <p th:text="${message.contenu}">Message</p>
-                            <span class="msg-heure" th:text="${#temporals.format(message.dateEnvoi, 'dd/MM HH:mm')}">Date</span>
-                        </div>
-                    </div>
-                    <div class="rp-empty" th:if="${#lists.isEmpty(messages)}">Envoyez le premier message.</div>
-                </div>
-                <form class="discussion-input" th:action="@{/responsable/messages/envoyer}" method="post">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <input type="hidden" name="convId" th:value="${activeConversation.id}">
-                    <input class="input-message" name="contenu" required placeholder="Écrire un message...">
-                    <button class="send-btn" type="submit" aria-label="Envoyer"><i class="fa-solid fa-paper-plane"></i></button>
-                </form>
-            </section>
-            <section class="discussion-panel rp-empty" th:if="${activeConversation == null}">
-                Sélectionnez une conversation ou créez-en une nouvelle.
-            </section>
-        </div>
+        <div th:replace="~{fragments/messaging :: messenger}"></div>
     </div>
 </main>
-
-<div class="rp-modal" id="contactModal">
-    <form class="rp-modal-panel" th:action="@{/responsable/messages/nouveau}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="rp-modal-head">
-            <div><h2>Nouvelle conversation</h2><p>Choisissez un utilisateur et saisissez votre message.</p></div>
-            <button type="button" class="rp-icon-btn" data-close-contact><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="rp-form-grid">
-            <div class="rp-field full">
-                <label>Destinataire</label>
-                <select class="rp-select" name="destinataireId" required>
-                    <option value="">Sélectionner</option>
-                    <option th:each="contact : ${contacts}" th:value="${contact.id}"
-                            th:text="|${contact.prenom} ${contact.nom} - ${contact.role.libelle}|">Contact</option>
-                </select>
-            </div>
-            <div class="rp-field full">
-                <label>Message</label>
-                <textarea class="rp-input" name="message" rows="5" required></textarea>
-            </div>
-        </div>
-        <div class="rp-modal-actions">
-            <button type="button" class="rp-secondary" data-close-contact>Annuler</button>
-            <button type="submit" class="rp-primary"><i class="fa-solid fa-paper-plane"></i> Envoyer</button>
-        </div>
-    </form>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('contactModal');
-    document.getElementById('openContactModal')?.addEventListener('click', () => modal?.classList.add('open'));
-    document.querySelectorAll('[data-close-contact]').forEach(button =>
-        button.addEventListener('click', () => modal?.classList.remove('open')));
-    modal?.addEventListener('click', event => {
-        if (event.target === modal) modal.classList.remove('open');
-    });
-    const search = document.getElementById('conversationSearch');
-    search?.addEventListener('input', () => {
-        const query = search.value.toLowerCase().trim();
-        document.querySelectorAll('.conversation-item-link').forEach(item => {
-            item.hidden = Boolean(query) && !(item.dataset.search || '').includes(query);
-        });
-    });
-    const messages = document.getElementById('discussionMessages');
-    if (messages) messages.scrollTop = messages.scrollHeight;
-});
-</script>
+<script th:src="@{/js/messaging-unified.js}"></script>
 </body>
 </html>

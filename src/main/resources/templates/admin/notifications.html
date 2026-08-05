@@ -11,7 +11,7 @@
 <body class="portal-body">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
-    <div th:replace="~{fragments/admin-header :: header('Rechercher une notification...')}"></div>
+    <div th:replace="~{fragments/header-admin :: header}"></div>
     <div th:if="${succes}" class="alert-portal success" th:text="${succes}"></div>
 
     <section class="backup-heading">

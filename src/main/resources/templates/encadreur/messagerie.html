@@ -2,78 +2,22 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Messagerie - Encadreur</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Messages - Encadreur</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
+    <link rel="stylesheet" th:href="@{/css/messaging-unified.css}">
 </head>
 <body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
 <div class="coach-main">
-    <header class="coach-topbar">
-        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="conversationSearch" type="search" placeholder="Rechercher une conversation..."></label>
-        <button class="coach-icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">0</em></button>
-        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}" title="Messages"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">0</em></a>
-        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
-    </header>
+    <div th:replace="~{fragments/header-encadreur :: header}"></div>
     <main class="coach-page">
-        <section class="coach-heading">
-            <div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-comments"></i></span><div><div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Messagerie</div><h1>Messagerie</h1><p>Consultez les échanges liés au suivi de vos stagiaires.</p></div></div>
-        </section>
-
-        <section class="coach-kpis">
-            <article class="coach-kpi"><span class="coach-kpi-icon"><i class="fa-solid fa-comments"></i></span><strong th:text="${#lists.size(conversations)}">0</strong><span>Conversations</span><small>Discussions accessibles</small></article>
-            <article class="coach-kpi"><span class="coach-kpi-icon orange"><i class="fa-solid fa-envelope"></i></span><strong th:text="${messagesCount}">0</strong><span>Messages non lus</span><small>À consulter</small></article>
-            <article class="coach-kpi"><span class="coach-kpi-icon green"><i class="fa-solid fa-user-group"></i></span><strong th:text="${conversations.![participants.size()].isEmpty() ? 0 : conversations.![participants.size()].size()}">0</strong><span>Échanges actifs</span><small>Réseau de suivi</small></article>
-        </section>
-
-        <section class="coach-grid-70">
-            <article class="coach-card">
-                <div class="coach-card-head"><div><h2>Conversations</h2><p>Sélectionnez un échange pour afficher son contenu</p></div></div>
-                <div class="coach-timeline" id="conversationList">
-                    <button class="coach-timeline-item conversation-item" type="button" th:each="conversation : ${conversations}"
-                            th:attr="data-search=${#strings.toLowerCase(conversation.sujet != null ? conversation.sujet : 'Conversation')},data-id=${conversation.id}"
-                            style="width:100%;border:0;background:transparent;text-align:left;cursor:pointer">
-                        <span class="coach-timeline-icon"><i class="fa-regular fa-comments"></i></span>
-                        <span class="coach-timeline-content"><strong th:text="${conversation.sujet != null && !conversation.sujet.isBlank() ? conversation.sujet : 'Conversation de suivi'}">Conversation</strong><span th:text="${conversation.participants.size() + ' participant(s)'}">Participants</span><small class="coach-mono" th:text="${conversation.dernierMessage != null ? #temporals.format(conversation.dernierMessage, 'dd/MM/yyyy HH:mm') : #temporals.format(conversation.dateCreation, 'dd/MM/yyyy HH:mm')}">Date</small></span>
-                        <span class="coach-badge orange" th:if="${nonLusParConversation[conversation.id] > 0}" th:text="${nonLusParConversation[conversation.id]}">0</span>
-                    </button>
-                    <div class="coach-empty" th:if="${#lists.isEmpty(conversations)}"><i class="fa-regular fa-message"></i><br><br>Aucune conversation disponible pour le moment.</div>
-                </div>
-            </article>
-
-            <article class="coach-card">
-                <div class="coach-card-head"><div><h2 id="conversationTitle">Aperçu de la discussion</h2><p>Messages de la conversation sélectionnée</p></div></div>
-                <div th:each="conversation : ${conversations}" class="conversation-panel" th:id="${'conversation-' + conversation.id}" hidden>
-                    <div class="coach-timeline">
-                        <div class="coach-timeline-item" th:each="message : ${messagesParConversation[conversation.id]}">
-                            <span class="coach-timeline-icon"><i class="fa-regular fa-user"></i></span>
-                            <div class="coach-timeline-content"><strong th:text="${message.expediteur.prenom + ' ' + message.expediteur.nom}">Expéditeur</strong><span th:text="${message.contenu}">Message</span><small class="coach-mono" th:text="${#temporals.format(message.dateEnvoi, 'dd/MM/yyyy HH:mm')}">Date</small></div>
-                        </div>
-                        <div class="coach-empty" th:if="${#lists.isEmpty(messagesParConversation[conversation.id])}">Cette conversation ne contient aucun message.</div>
-                    </div>
-                </div>
-                <div class="coach-empty" id="conversationPlaceholder"><i class="fa-regular fa-comments"></i><br><br>Sélectionnez une conversation à gauche.</div>
-            </article>
-        </section>
+        <div th:replace="~{fragments/messaging :: messenger}"></div>
     </main>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const items = [...document.querySelectorAll('.conversation-item')];
-    const panels = [...document.querySelectorAll('.conversation-panel')];
-    const placeholder = document.getElementById('conversationPlaceholder');
-    document.getElementById('conversationSearch').addEventListener('input', event => {
-        const query = event.target.value.toLowerCase();
-        items.forEach(item => item.style.display = !query || item.dataset.search.includes(query) ? '' : 'none');
-    });
-    items.forEach(item => item.addEventListener('click', () => {
-        panels.forEach(panel => panel.hidden = panel.id !== 'conversation-' + item.dataset.id);
-        placeholder.hidden = true;
-        document.getElementById('conversationTitle').textContent = item.querySelector('strong').textContent;
-    }));
-});
-</script>
-<script th:src="@{/js/encadreur-topbar.js}"></script></body>
+<script th:src="@{/js/messaging-unified.js}"></script>
+<script th:src="@{/js/encadreur-topbar.js}"></script>
+</body>
 </html>

@@ -6,6 +6,8 @@ import com.gestionstages.gestion_stages.entities.Utilisateur;
 import com.gestionstages.gestion_stages.repositories.PasswordResetTokenRepository;
 import com.gestionstages.gestion_stages.repositories.UtilisateurRepository;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
+import com.gestionstages.gestion_stages.services.ActivityLogService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -27,15 +29,18 @@ public class AuthController {
     private final PasswordResetTokenRepository resetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final ActivityLogService activityLogService;
 
     public AuthController(UtilisateurRepository utilisateurRepository,
                           PasswordResetTokenRepository resetTokenRepository,
                           PasswordEncoder passwordEncoder,
-                          EmailService emailService) {
+                          EmailService emailService,
+                          ActivityLogService activityLogService) {
         this.utilisateurRepository = utilisateurRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.activityLogService = activityLogService;
     }
 
     @GetMapping("/login")
@@ -109,7 +114,18 @@ public class AuthController {
     }
 
     @GetMapping("/redirection")
-    public String redirigerSelonRole(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public String redirigerSelonRole(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                     HttpServletRequest request) {
+        if (request.getSession().getAttribute("connexionJournalisee") == null) {
+            String userAgent = request.getHeader("User-Agent");
+            String appareil = userAgent == null || userAgent.isBlank()
+                    ? "Navigateur non identifie"
+                    : userAgent.substring(0, Math.min(userAgent.length(), 180));
+            activityLogService.log("Connexion",
+                    "Adresse IP: " + request.getRemoteAddr() + " | Appareil: " + appareil,
+                    userDetails.getUtilisateur().getEmail());
+            request.getSession().setAttribute("connexionJournalisee", Boolean.TRUE);
+        }
         String libelleRole = userDetails.getUtilisateur().getRole().getLibelle();
         String espace = switch (libelleRole) {
             case "ADMINISTRATEUR", "RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE" -> libelleRole;

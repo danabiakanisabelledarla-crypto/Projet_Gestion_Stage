@@ -32,6 +32,9 @@ public class Stagiaire {
     @Column(name = "progression")
     private Integer progression = 0;
 
+    @Column(length = 150)
+    private String specialite;
+
     public enum StatutStagiaire {
         actif, termine, abandonne
     }
@@ -100,5 +103,13 @@ public class Stagiaire {
 
     public void setProgression(Integer progression) {
         this.progression = progression;
+    }
+
+    public String getSpecialite() {
+        return specialite;
+    }
+
+    public void setSpecialite(String specialite) {
+        this.specialite = specialite;
     }
 }

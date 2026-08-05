@@ -9,6 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -17,6 +19,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 
     @Bean
@@ -71,6 +78,8 @@ public class SecurityConfig {
                     .access(espaceEtUnePermission("RESPONSABLE_STAGE", "CONSULTER_PLANNING", "GERER_PLANNING"))
                 .requestMatchers("/responsable/notifications/**")
                     .access(espaceEtUnePermission("RESPONSABLE_STAGE", "ENVOYER_NOTIFICATIONS", "GERER_NOTIFICATIONS"))
+                .requestMatchers("/responsable/messages/**")
+                    .access(espaceEtPermission("RESPONSABLE_STAGE", null))
                 .requestMatchers("/responsable/**").denyAll()
 
                 .requestMatchers("/stagiaire/**")
@@ -94,6 +103,8 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(-1)
+                .sessionRegistry(sessionRegistry())
             )
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 

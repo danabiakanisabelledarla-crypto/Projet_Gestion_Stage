@@ -39,7 +39,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
+import com.gestionstages.gestion_stages.services.ActivityLogService;
+import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/responsable")
 public class ResponsableController {
@@ -65,6 +69,11 @@ public class ResponsableController {
     private final EvenementPersonnelRepository evenementPersonnelRepository;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final ResponsablePreferenceRepository responsablePreferenceRepository;
+    private final ActivityLogRepository activityLogRepository;
+    private final ActivityLogService activityLogService;
+    private final SessionRegistry sessionRegistry;
+    private final com.gestionstages.gestion_stages.services.MessagingService messagingService;
     
     private final EmailService emailService;
 
@@ -144,7 +153,12 @@ public void ajouterDonneesCommunes(Model model, Authentication authentication) {
                               NotificationRepository notificationRepository,
                               JavaMailSender mailSender,
                               ConversationRepository conversationRepository,
-                              MessageRepository messageRepository) {
+                              MessageRepository messageRepository,
+                              ResponsablePreferenceRepository responsablePreferenceRepository,
+                              ActivityLogRepository activityLogRepository,
+                              ActivityLogService activityLogService,
+                              SessionRegistry sessionRegistry,
+                              com.gestionstages.gestion_stages.services.MessagingService messagingService) {
     this.demandeStageRepository = demandeStageRepository;
     this.stagiaireRepository = stagiaireRepository;
     this.stageRepository = stageRepository;
@@ -166,6 +180,11 @@ public void ajouterDonneesCommunes(Model model, Authentication authentication) {
     this.emailService = emailService;
     this.conversationRepository = conversationRepository;
     this.messageRepository = messageRepository;
+    this.responsablePreferenceRepository = responsablePreferenceRepository;
+    this.activityLogRepository = activityLogRepository;
+    this.activityLogService = activityLogService;
+    this.sessionRegistry = sessionRegistry;
+    this.messagingService = messagingService;
 }
 
         @GetMapping("/dashboard")
@@ -860,18 +879,18 @@ private String echapperXml(String valeur) {
             .replace("'", "&apos;");
 }
 
-@PostMapping("/stagiaires/affecter/{stageId}")
-public String affecterStagiaire(@PathVariable Integer stageId,
+@PostMapping("/stagiaires/affecter/{stagiaireId}")
+public String affecterStagiaire(@PathVariable Integer stagiaireId,
                                 @RequestParam Integer encadreurId,
                                 @RequestParam Integer serviceId,
                                 @RequestParam(required = false) Integer projetId,
                                 @RequestParam String dateDebut,
                                 @RequestParam String dateFin,
                                 RedirectAttributes redirectAttributes) {
-    Optional<Stage> stageOpt = stageRepository.findById(stageId);
+    Optional<Stagiaire> stagiaireOpt = stagiaireRepository.findById(stagiaireId);
     Optional<Encadreur> encadreurOpt = encadreurRepository.findById(encadreurId);
     Optional<ServiceEntreprise> serviceOpt = serviceRepository.findById(serviceId);
-    if (stageOpt.isEmpty() || encadreurOpt.isEmpty() || serviceOpt.isEmpty()) {
+    if (stagiaireOpt.isEmpty() || encadreurOpt.isEmpty() || serviceOpt.isEmpty()) {
         redirectAttributes.addFlashAttribute("erreur", "Affectation impossible : informations incomplètes.");
         return "redirect:/responsable/stagiaires";
     }
@@ -881,7 +900,14 @@ public String affecterStagiaire(@PathVariable Integer stageId,
         redirectAttributes.addFlashAttribute("erreur", "La date de fin doit être postérieure à la date de début.");
         return "redirect:/responsable/stagiaires";
     }
-    Stage stage = stageOpt.get();
+    Stage stage = stageRepository.findByStagiaireId(stagiaireId).orElseGet(() -> {
+        Stage nouveauStage = new Stage();
+        nouveauStage.setStagiaire(stagiaireOpt.get());
+        nouveauStage.setNumeroStage("STAGE-" + LocalDate.now().getYear() + "-"
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT));
+        nouveauStage.setStatut(Stage.StatutStage.en_cours);
+        return nouveauStage;
+    });
     stage.setEncadreur(encadreurOpt.get());
     stage.setService(serviceOpt.get());
     stage.setDateDebut(debut);
@@ -1125,33 +1151,9 @@ public String ajouterEvenementPlanning(@RequestParam(defaultValue = "certains") 
 public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
                                @RequestParam(required = false) Integer convId,
                                Model model) {
-    Utilisateur currentUser = userDetails.getUtilisateur();
-    Integer userId = currentUser.getId();
-    List<Conversation> conversations =
-            conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
-    Conversation activeConversation = convId == null
-            ? conversations.stream().findFirst().orElse(null)
-            : conversationRepository.findById(convId)
-                    .filter(conversation -> conversation.getParticipants().stream()
-                            .anyMatch(participant -> participant.getId().equals(userId)))
-                    .orElse(null);
-    List<Message> messages = activeConversation == null
-            ? new ArrayList<>()
-            : messageRepository.findByConversationIdOrderByDateEnvoiAsc(activeConversation.getId());
-    messages.stream()
-            .filter(message -> !message.getExpediteur().getId().equals(userId)
-                    && !Boolean.TRUE.equals(message.getLu()))
-            .forEach(message -> message.setLu(true));
-    messageRepository.saveAll(messages);
-
     model.addAttribute("activePage", "messages");
-    model.addAttribute("user", currentUser);
-    model.addAttribute("conversations", conversations);
-    model.addAttribute("activeConversation", activeConversation);
-    model.addAttribute("messages", messages);
-    model.addAttribute("contacts", utilisateurRepository.findAll().stream()
-            .filter(utilisateur -> !utilisateur.getId().equals(userId))
-            .toList());
+    messagingService.preparerModele(
+            model, userDetails.getUtilisateur(), convId, "/responsable/messages", "Responsable");
     return "responsable/messages";
 }
 
@@ -1217,8 +1219,20 @@ private void enregistrerMessage(Conversation conversation,
 public String afficherProfil(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     Utilisateur responsable = userDetails.getUtilisateur();
     List<Stage> stages = stageRepository.findAll();
+    ResponsablePreference preferences = responsablePreferenceRepository
+            .findByUtilisateurId(responsable.getId())
+            .orElseGet(() -> responsablePreferenceRepository.save(new ResponsablePreference(responsable)));
+    List<ActivityLog> historiqueConnexions = activityLogRepository
+            .findTop20ByUtilisateurNomOrderByDateActiviteDesc(responsable.getEmail())
+            .stream()
+            .filter(log -> "Connexion".equalsIgnoreCase(log.getAction()))
+            .limit(10)
+            .toList();
     model.addAttribute("activePage", "profil");
     model.addAttribute("responsable", responsable);
+    model.addAttribute("preferences", preferences);
+    model.addAttribute("historiqueConnexions", historiqueConnexions);
+    model.addAttribute("sessionsActives", sessionsActives(responsable.getId()));
     model.addAttribute("stagiairesSuivis", stagiaireRepository.count());
     model.addAttribute("stagesGeres", stages.size());
     model.addAttribute("stagesClotures", stages.stream()
@@ -1236,14 +1250,14 @@ public String afficherProfil(@AuthenticationPrincipal CustomUserDetails userDeta
     model.addAttribute("rapportsValides", rapportsValides);
     model.addAttribute("reunionsOrganisees", reunionsOrganisees);
     model.addAttribute("tauxSuivi", tauxSuivi);
-    model.addAttribute("activitesProfil",
-            notificationRepository.findAllByOrderByDateEnvoiDesc().stream().limit(4).toList());
+    model.addAttribute("activitesProfil", activityLogRepository
+            .findTop20ByUtilisateurNomOrderByDateActiviteDesc(responsable.getEmail())
+            .stream().limit(6).toList());
     model.addAttribute("anciennete", responsable.getDateCreation() == null ? 1 : Math.max(1,
             java.time.temporal.ChronoUnit.YEARS.between(
                     responsable.getDateCreation().toLocalDate(), LocalDate.now()) + 1));
     model.addAttribute("notificationsCount", notificationRepository
             .countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
-    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
     return "responsable/profil";
 }
 
@@ -1262,8 +1276,117 @@ public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDeta
     responsable.setTelephone(telephone);
     responsable.setAdresse(adresse);
     utilisateurRepository.save(responsable);
+    activityLogService.log("Profil modifie",
+            "Mise a jour des informations personnelles du compte responsable.",
+            responsable.getEmail());
     redirectAttributes.addFlashAttribute("succes", "Votre profil a été mis à jour.");
     return "redirect:/responsable/profil";
+}
+
+@GetMapping("/profil/mot-de-passe")
+public String afficherMotDePasseResponsable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                            Model model) {
+    model.addAttribute("activePage", "profil");
+    model.addAttribute("responsable", userDetails.getUtilisateur());
+    return "responsable/mot-de-passe";
+}
+
+@PostMapping("/profil/mot-de-passe")
+public String changerMotDePasseResponsable(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                           @RequestParam String ancienMotDePasse,
+                                           @RequestParam String nouveauMotDePasse,
+                                           @RequestParam String confirmation,
+                                           Model model,
+                                           RedirectAttributes redirectAttributes) {
+    Utilisateur responsable = utilisateurRepository.findById(userDetails.getUtilisateur().getId())
+            .orElseThrow();
+    if (!passwordEncoder.matches(ancienMotDePasse, responsable.getMotDePasse())) {
+        model.addAttribute("activePage", "profil");
+        model.addAttribute("responsable", responsable);
+        model.addAttribute("erreur", "L'ancien mot de passe est incorrect.");
+        return "responsable/mot-de-passe";
+    }
+    if (!nouveauMotDePasse.equals(confirmation)) {
+        model.addAttribute("activePage", "profil");
+        model.addAttribute("responsable", responsable);
+        model.addAttribute("erreur", "Les nouveaux mots de passe ne correspondent pas.");
+        return "responsable/mot-de-passe";
+    }
+    if (nouveauMotDePasse.length() < 8) {
+        model.addAttribute("activePage", "profil");
+        model.addAttribute("responsable", responsable);
+        model.addAttribute("erreur", "Le nouveau mot de passe doit contenir au moins 8 caracteres.");
+        return "responsable/mot-de-passe";
+    }
+    responsable.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+    utilisateurRepository.save(responsable);
+    activityLogService.log("Mot de passe modifie",
+            "Le mot de passe du compte responsable a ete change.",
+            responsable.getEmail());
+    redirectAttributes.addFlashAttribute("succes", "Votre mot de passe a ete modifie.");
+    return "redirect:/responsable/profil";
+}
+
+@PostMapping("/profil/preferences")
+public String enregistrerPreferences(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                     @RequestParam(defaultValue = "false") boolean notificationsEmail,
+                                     @RequestParam(defaultValue = "false") boolean notificationsSysteme,
+                                     @RequestParam(defaultValue = "false") boolean modeSombre,
+                                     @RequestParam(defaultValue = "false") boolean alertesSoutenance,
+                                     @RequestParam(defaultValue = "false") boolean alertesRapport,
+                                     RedirectAttributes redirectAttributes) {
+    Utilisateur responsable = userDetails.getUtilisateur();
+    ResponsablePreference preferences = responsablePreferenceRepository
+            .findByUtilisateurId(responsable.getId())
+            .orElseGet(() -> new ResponsablePreference(responsable));
+    preferences.setNotificationsEmail(notificationsEmail);
+    preferences.setNotificationsSysteme(notificationsSysteme);
+    preferences.setModeSombre(modeSombre);
+    preferences.setAlertesSoutenance(alertesSoutenance);
+    preferences.setAlertesRapport(alertesRapport);
+    responsablePreferenceRepository.save(preferences);
+    activityLogService.log("Preferences modifiees",
+            "Mise a jour des notifications, alertes et du theme.",
+            responsable.getEmail());
+    redirectAttributes.addFlashAttribute("succes", "Vos preferences ont ete enregistrees.");
+    return "redirect:/responsable/profil";
+}
+
+@PostMapping("/profil/sessions/deconnecter")
+public String deconnecterAutresSessions(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                        HttpSession session,
+                                        RedirectAttributes redirectAttributes) {
+    int sessionsFermees = 0;
+    for (Object principal : sessionRegistry.getAllPrincipals()) {
+        if (!(principal instanceof CustomUserDetails details)
+                || !details.getUtilisateur().getId().equals(userDetails.getUtilisateur().getId())) {
+            continue;
+        }
+        for (SessionInformation information : sessionRegistry.getAllSessions(principal, false)) {
+            if (!information.getSessionId().equals(session.getId())) {
+                information.expireNow();
+                sessionsFermees++;
+            }
+        }
+    }
+    activityLogService.log("Sessions deconnectees",
+            sessionsFermees + " autre(s) session(s) ont ete fermees.",
+            userDetails.getUtilisateur().getEmail());
+    redirectAttributes.addFlashAttribute("succes",
+            sessionsFermees == 0
+                    ? "Aucune autre session active n'a ete trouvee."
+                    : sessionsFermees + " autre(s) session(s) ont ete deconnectees.");
+    return "redirect:/responsable/profil";
+}
+
+private long sessionsActives(Integer utilisateurId) {
+    return sessionRegistry.getAllPrincipals().stream()
+            .filter(CustomUserDetails.class::isInstance)
+            .map(CustomUserDetails.class::cast)
+            .filter(details -> details.getUtilisateur().getId().equals(utilisateurId))
+            .flatMap(details -> sessionRegistry.getAllSessions(details, false).stream())
+            .filter(information -> !information.isExpired())
+            .count();
 }
 
 private String emailDemande(DemandeStage demande) {

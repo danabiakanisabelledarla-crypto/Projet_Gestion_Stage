@@ -2,180 +2,360 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon profil - Stagiaire</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/taches-journal.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-pages.css}">
     <link rel="stylesheet" th:href="@{/css/stagiaire-profil.css}">
-
-    <style>
-    .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    @media (max-width:500px){ .form-row-2col { grid-template-columns: 1fr; } }
-    </style>
 </head>
-<body>
-
+<body class="intern-profile-body profile-loading">
 <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
 
-<div class="contenu-principal">
-    <div class="en-tete-page">
-        <h1>Mon profil</h1>
-        <span class="utilisateur-connecte" th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</span>
-    </div>
+<div class="contenu-principal intern-profile-shell">
+    <div th:replace="~{fragments/header-stagiaire :: header}"></div>
 
-    <!-- EN HAUT -->
-    <div class="profil-entete">
-        <img th:if="${utilisateur.photo != null}" th:src="@{'/uploads/' + ${utilisateur.photo}}"
-             class="profil-entete-avatar" alt="Photo de profil">
-        <div th:if="${utilisateur.photo == null}" class="profil-entete-avatar"
-             th:text="${utilisateur.prenom.substring(0,1) + utilisateur.nom.substring(0,1)}">S</div>
-
-        <div class="profil-entete-identite">
-            <h2 th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Nom Prenom</h2>
-            <div class="profil-entete-matricule" th:if="${stagiaire != null}"
-                 th:text="'Matricule : ' + ${stagiaire.matricule}">Matricule</div>
-        </div>
-
-        <div class="profil-entete-tags" th:if="${stagiaire != null and stagiaire.demandeStage != null}">
-            <div class="profil-tag"><strong>Ecole : </strong><span th:text="${stagiaire.demandeStage.ecole}">-</span></div>
-            <div class="profil-tag"><strong>Filiere : </strong><span th:text="${stagiaire.demandeStage.filiere}">-</span></div>
-            <div class="profil-tag"><strong>Niveau : </strong><span th:text="${stagiaire.demandeStage.niveau}">-</span></div>
+    <div class="profile-skeleton" aria-hidden="true">
+        <div class="skeleton-line wide"></div>
+        <div class="skeleton-card hero"></div>
+        <div class="skeleton-grid">
+            <div class="skeleton-card"></div><div class="skeleton-card"></div>
+            <div class="skeleton-card"></div><div class="skeleton-card"></div>
         </div>
     </div>
 
-    <!-- CENTRE + DROITE -->
-    <div class="profil-colonnes">
-
-        <!-- INFOS PERSONNELLES -->
-        <div class="bloc-module">
-            <h2>Informations personnelles</h2>
-            <div class="info-ligne">
-                <strong>Telephone</strong>
-                <span th:text="${utilisateur.telephone != null ? utilisateur.telephone : 'Non renseigne'}">-</span>
-            </div>
-            <div class="info-ligne">
-                <strong>Email</strong>
-                <span th:text="${utilisateur.email}">-</span>
-            </div>
-            <div class="info-ligne">
-                <strong>Adresse</strong>
-                <span th:text="${utilisateur.adresse != null ? utilisateur.adresse : 'Non renseignee'}">-</span>
-            </div>
+    <main class="profile-page" data-profile-page>
+        <div class="profile-flash success" th:if="${param.succes}">
+            <i data-lucide="circle-check"></i>
+            <span th:text="${param.succes[0]}">Profil mis à jour.</span>
+        </div>
+        <div class="profile-flash error" th:if="${param.erreur}">
+            <i data-lucide="circle-alert"></i>
+            <span th:text="${param.erreur[0]}">Une erreur est survenue.</span>
         </div>
 
-        <!-- INFOS DU STAGE -->
-        <div class="bloc-module">
-            <h2>Informations du stage</h2>
-            <div th:if="${stage != null}">
-                <div class="info-ligne">
-                    <strong>Service</strong>
-                    <span th:text="${stage.service.nom}">-</span>
+        <section class="profile-page-heading">
+            <div>
+                <nav class="profile-breadcrumb" aria-label="Fil d’Ariane">
+                    <a th:href="@{/stagiaire/dashboard}">Accueil</a>
+                    <i data-lucide="chevron-right"></i>
+                    <span>Stagiaire</span>
+                    <i data-lucide="chevron-right"></i>
+                    <strong>Mon Profil</strong>
+                </nav>
+                <h1>Mon Profil</h1>
+                <p>Consultez, mettez à jour vos informations personnelles et suivez votre parcours de stage.</p>
+            </div>
+            <div class="profile-heading-actions">
+                <a class="profile-icon-button" th:href="@{/stagiaire/dashboard}" title="Notifications">
+                    <i data-lucide="bell"></i>
+                </a>
+                <button class="profile-button secondary" type="button" data-download-profile>
+                    <i data-lucide="download"></i>
+                    Télécharger le profil
+                </button>
+                <button class="profile-button primary" type="button" data-edit-profile>
+                    <i data-lucide="pencil-line"></i>
+                    Modifier le profil
+                </button>
+            </div>
+        </section>
+
+        <section class="profile-card profile-hero">
+            <div class="profile-hero-person">
+                <div class="profile-avatar-wrap">
+                    <img th:if="${utilisateur.photo != null}" class="profile-avatar"
+                         th:src="@{'/uploads/' + ${utilisateur.photo}}" alt="Photo de profil">
+                    <span th:if="${utilisateur.photo == null}" class="profile-avatar profile-avatar-fallback"
+                          th:text="${utilisateur.prenom.substring(0,1) + utilisateur.nom.substring(0,1)}">AA</span>
+                    <span class="profile-online-dot" title="Compte actif"></span>
                 </div>
-                <div class="info-ligne">
-                    <strong>Encadreur</strong>
-                    <span th:text="${stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom}">-</span>
-                </div>
-                <div class="info-ligne">
-                    <strong>Date de debut</strong>
-                    <span th:text="${#temporals.format(stage.dateDebut, 'dd/MM/yyyy')}">-</span>
-                </div>
-                <div class="info-ligne">
-                    <strong>Date de fin</strong>
-                    <span th:text="${#temporals.format(stage.dateFin, 'dd/MM/yyyy')}">-</span>
-                </div>
-                <div class="info-ligne">
-                    <strong>Statut</strong>
-                    <span class="badge-admis" th:text="${stage.statut}">-</span>
+                <div class="profile-identity">
+                    <div class="profile-name-row">
+                        <h2 th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Alex Alexandra</h2>
+                        <span class="profile-role-badge"><i data-lucide="graduation-cap"></i> Stagiaire</span>
+                    </div>
+                    <div class="profile-contact-row">
+                        <span><i data-lucide="mail"></i><b th:text="${utilisateur.email}">email@dta.com</b></span>
+                        <span><i data-lucide="phone"></i><b th:text="${utilisateur.telephone ?: 'Non renseigné'}">Téléphone</b></span>
+                    </div>
+                    <dl class="profile-stage-facts">
+                        <div>
+                            <dt>Service</dt>
+                            <dd th:text="${stage != null ? stage.service.nom : 'Non affecté'}">Développement Logiciel</dd>
+                        </div>
+                        <div>
+                            <dt>Encadreur</dt>
+                            <dd th:text="${stage != null ? stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom : 'Non affecté'}">M. Bernard</dd>
+                        </div>
+                        <div>
+                            <dt>Entreprise</dt>
+                            <dd>DTA Alliance</dd>
+                        </div>
+                        <div>
+                            <dt>Période</dt>
+                            <dd th:if="${stage != null}">
+                                <span th:text="${#temporals.format(stage.dateDebut,'dd MMM yyyy')}">01 Juin 2026</span>
+                                <i data-lucide="arrow-right"></i>
+                                <span th:text="${#temporals.format(stage.dateFin,'dd MMM yyyy')}">31 Août 2026</span>
+                            </dd>
+                            <dd th:if="${stage == null}">Non définie</dd>
+                        </div>
+                        <div>
+                            <dt>Statut</dt>
+                            <dd>
+                                <span class="profile-status"
+                                      th:classappend="${stage != null ? stage.statut.name() : 'pending'}">
+                                    <i></i>
+                                    <span th:text="${stage == null ? 'En attente de stage' :
+                                        (stage.statut.name() == 'en_cours' ? 'Stage en cours' :
+                                        (stage.statut.name() == 'termine' ? 'Stage terminé' : 'Stage suspendu'))}">
+                                        Stage en cours
+                                    </span>
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
-            <div th:if="${stage == null}" style="color:#777;">
-                Aucun stage actif pour le moment.
+
+            <div class="profile-hero-progress">
+                <div class="profile-progress-ring" th:style="'--progress:' + ${progressionProfil}">
+                    <svg viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="ring-track" cx="60" cy="60" r="50"></circle>
+                        <circle class="ring-value" cx="60" cy="60" r="50"></circle>
+                    </svg>
+                    <span><strong class="animated-number" th:data-value="${progressionProfil}">0</strong><em>%</em><small>Progression</small></span>
+                </div>
+                <div class="profile-quick-stats">
+                    <div><span>Objectifs atteints</span><strong th:text="${objectifsAtteints + ' / ' + #lists.size(objectifs)}">8 / 10</strong></div>
+                    <div><span>Livrables validés</span><strong th:text="${livrablesValides}">6</strong></div>
+                    <div><span>Évaluations</span><strong th:text="${evaluationsCount}">4</strong></div>
+                </div>
             </div>
+        </section>
+
+        <section class="profile-kpis" aria-label="Indicateurs du stage">
+            <article class="profile-kpi">
+                <span class="profile-kpi-icon blue"><i data-lucide="target"></i></span>
+                <div><small>Objectifs réalisés</small><strong th:text="${objectifsAtteints + ' / ' + #lists.size(objectifs)}">8 / 10</strong><p>Jalons du parcours atteints</p></div>
+                <svg class="profile-sparkline" viewBox="0 0 100 32"><path d="M2 27 C18 25 20 18 34 20 S53 10 66 14 S84 5 98 7"></path></svg>
+            </article>
+            <article class="profile-kpi">
+                <span class="profile-kpi-icon violet"><i data-lucide="circle-check-big"></i></span>
+                <div><small>Tâches terminées</small><strong class="animated-number" th:data-value="${tachesTerminees}">0</strong><p>Travaux finalisés à ce jour</p></div>
+                <svg class="profile-sparkline violet" viewBox="0 0 100 32"><path d="M2 25 C17 28 25 18 37 20 S51 13 63 15 S79 8 98 5"></path></svg>
+            </article>
+            <article class="profile-kpi">
+                <span class="profile-kpi-icon emerald"><i data-lucide="package-check"></i></span>
+                <div><small>Livrables validés</small><strong class="animated-number" th:data-value="${livrablesValides}">0</strong><p>Documents approuvés</p></div>
+                <svg class="profile-sparkline emerald" viewBox="0 0 100 32"><path d="M2 28 C20 28 20 22 34 22 S48 15 63 17 S80 9 98 10"></path></svg>
+            </article>
+            <article class="profile-kpi">
+                <span class="profile-kpi-icon amber"><i data-lucide="chart-no-axes-combined"></i></span>
+                <div><small>Progression globale</small><strong><span class="animated-number" th:data-value="${progressionProfil}">0</span>%</strong><p>Avancement du stage</p></div>
+                <svg class="profile-sparkline amber" viewBox="0 0 100 32"><path d="M2 28 C13 21 24 25 34 16 S51 19 63 11 S80 13 98 3"></path></svg>
+            </article>
+        </section>
+
+        <div class="profile-main-grid">
+            <div class="profile-left-column">
+                <section class="profile-card" id="personalInformation">
+                    <header class="profile-card-heading">
+                        <div><span class="profile-section-icon"><i data-lucide="user-round"></i></span><div><h2>Informations personnelles</h2><p>Coordonnées et informations académiques du stagiaire.</p></div></div>
+                        <span class="profile-edit-state"><i data-lucide="shield-check"></i> Données sécurisées</span>
+                    </header>
+                    <form class="profile-form" th:action="@{/stagiaire/profil/modifier}" method="post" data-profile-form>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="profile-form-grid">
+                            <label><span>Nom</span><input name="nom" th:value="${utilisateur.nom}" required></label>
+                            <label><span>Prénom</span><input name="prenom" th:value="${utilisateur.prenom}" required></label>
+                            <label><span>Email</span><input type="email" name="email" th:value="${utilisateur.email}" required></label>
+                            <label><span>Téléphone</span><input type="tel" name="telephone" th:value="${utilisateur.telephone}" placeholder="+237 6XX XXX XXX"></label>
+                            <label><span>Date de naissance</span><input type="date" name="dateNaissance" th:value="${utilisateur.dateNaissance}"></label>
+                            <label><span>Ville</span><input name="ville" th:value="${utilisateur.ville}" placeholder="Votre ville"></label>
+                            <label class="span-2"><span>Adresse</span><input name="adresse" th:value="${utilisateur.adresse}" placeholder="Votre adresse complète"></label>
+                            <label><span>Établissement</span><input name="ecole" th:value="${stagiaire != null && stagiaire.demandeStage != null ? stagiaire.demandeStage.ecole : ''}"></label>
+                            <label><span>Formation</span><input name="formation" th:value="${stagiaire != null && stagiaire.demandeStage != null ? stagiaire.demandeStage.filiere : ''}"></label>
+                            <label><span>Niveau</span><input name="niveau" th:value="${stagiaire != null && stagiaire.demandeStage != null ? stagiaire.demandeStage.niveau : ''}"></label>
+                            <label><span>Spécialité</span><input name="specialite" th:value="${stagiaire != null ? stagiaire.specialite : ''}" placeholder="Votre spécialité"></label>
+                        </div>
+                        <footer class="profile-form-actions">
+                            <button class="profile-button secondary" type="reset"><i data-lucide="rotate-ccw"></i> Annuler</button>
+                            <button class="profile-button primary" type="submit"><i data-lucide="save"></i> Enregistrer</button>
+                        </footer>
+                    </form>
+                </section>
+
+                <section class="profile-card">
+                    <header class="profile-card-heading">
+                        <div><span class="profile-section-icon violet"><i data-lucide="briefcase-business"></i></span><div><h2>Informations de stage</h2><p>Affectation et périmètre de la mission professionnelle.</p></div></div>
+                    </header>
+                    <dl class="profile-detail-grid">
+                        <div><dt>Entreprise</dt><dd>DTA Alliance</dd></div>
+                        <div><dt>Service</dt><dd th:text="${stage != null ? stage.service.nom : 'Non affecté'}">Service</dd></div>
+                        <div><dt>Encadreur</dt><dd th:text="${stage != null ? stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom : 'Non affecté'}">Encadreur</dd></div>
+                        <div><dt>Sujet du stage</dt><dd th:text="${stage != null && stage.projet != null ? stage.projet.titre : 'Non défini'}">Sujet</dd></div>
+                        <div><dt>Date de début</dt><dd th:text="${stage != null ? #temporals.format(stage.dateDebut,'dd MMMM yyyy') : 'Non définie'}">Date</dd></div>
+                        <div><dt>Date de fin</dt><dd th:text="${stage != null ? #temporals.format(stage.dateFin,'dd MMMM yyyy') : 'Non définie'}">Date</dd></div>
+                        <div><dt>Statut</dt><dd th:text="${stage != null ? stage.statut : 'En attente'}">Statut</dd></div>
+                        <div><dt>Durée</dt><dd th:text="${stage != null ? stage.duree : 'Non définie'}">Durée</dd></div>
+                        <div class="span-2"><dt>Objectifs du stage</dt><dd th:text="${stage != null && stage.projet != null && stage.projet.description != null ? stage.projet.description : 'Les objectifs détaillés seront renseignés avec le projet de stage.'}">Description</dd></div>
+                    </dl>
+                </section>
+
+                <section class="profile-card">
+                    <header class="profile-card-heading">
+                        <div><span class="profile-section-icon emerald"><i data-lucide="sparkles"></i></span><div><h2>Compétences</h2><p>Technologies et aptitudes développées pendant le stage.</p></div></div>
+                    </header>
+                    <div class="profile-skill-list">
+                        <span th:each="competence,stat : ${competencesProfil}"
+                              th:classappend="${stat.index % 4 == 1 ? 'violet' : (stat.index % 4 == 2 ? 'emerald' : (stat.index % 4 == 3 ? 'amber' : ''))}">
+                            <i data-lucide="badge-check"></i>
+                            <b th:text="${competence}">Java</b>
+                        </span>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="profile-right-column">
+                <section class="profile-card profile-photo-card">
+                    <header><h2>Photo de profil</h2><span>JPG ou PNG · 5 Mo max.</span></header>
+                    <div class="profile-photo-preview">
+                        <img th:if="${utilisateur.photo != null}" th:src="@{'/uploads/' + ${utilisateur.photo}}" alt="Photo de profil" data-photo-preview>
+                        <span th:if="${utilisateur.photo == null}" th:text="${utilisateur.prenom.substring(0,1) + utilisateur.nom.substring(0,1)}" data-photo-fallback>AA</span>
+                        <div class="profile-photo-loading"><i data-lucide="loader-circle"></i></div>
+                    </div>
+                    <form th:action="@{/stagiaire/profil/photo}" method="post" enctype="multipart/form-data" data-photo-form>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input id="profilePhotoInput" type="file" name="photo" accept="image/png,image/jpeg,image/webp" hidden>
+                        <button class="profile-button secondary full" type="button" data-select-photo>
+                            <i data-lucide="camera"></i> Changer la photo
+                        </button>
+                        <button class="profile-button primary full profile-photo-submit" type="submit" hidden>
+                            <i data-lucide="upload"></i> Enregistrer la photo
+                        </button>
+                    </form>
+                </section>
+
+                <section class="profile-card">
+                    <header class="profile-side-heading"><h2>Informations rapides</h2><i data-lucide="info"></i></header>
+                    <dl class="profile-quick-info">
+                        <div><dt><i data-lucide="badge"></i> Matricule</dt><dd th:text="${stagiaire != null ? stagiaire.matricule : 'Non attribué'}">MAT-001</dd></div>
+                        <div><dt><i data-lucide="calendar-days"></i> Promotion</dt><dd th:text="${stagiaire != null ? #temporals.format(stagiaire.dateAdmission,'yyyy') : 'Non définie'}">2026</dd></div>
+                        <div><dt><i data-lucide="building-2"></i> Entreprise</dt><dd>DTA Alliance</dd></div>
+                        <div><dt><i data-lucide="user-round-check"></i> Encadreur</dt><dd th:text="${stage != null ? stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom : 'Non affecté'}">Encadreur</dd></div>
+                        <div><dt><i data-lucide="network"></i> Service</dt><dd th:text="${stage != null ? stage.service.nom : 'Non affecté'}">Service</dd></div>
+                        <div><dt><i data-lucide="map-pin"></i> Lieu</dt><dd th:text="${utilisateur.ville ?: 'DTA Alliance'}">DTA Alliance</dd></div>
+                    </dl>
+                </section>
+
+                <section class="profile-card">
+                    <header class="profile-side-heading"><h2>Progression</h2><span th:text="${progressionProfil + '%'}">84%</span></header>
+                    <div class="profile-side-ring" th:style="'--progress:' + ${progressionProfil}">
+                        <strong><span class="animated-number" th:data-value="${progressionProfil}">0</span>%</strong>
+                        <small>Progression globale</small>
+                    </div>
+                    <div class="profile-progress-list">
+                        <div th:style="'--value:' + ${objectifProgression}"><span><b>Objectifs</b><em th:text="${objectifProgression + '%'}">80%</em></span><i><u></u></i></div>
+                        <div th:style="'--value:' + ${livrableProgression}"><span><b>Livrables</b><em th:text="${livrableProgression + '%'}">75%</em></span><i><u></u></i></div>
+                        <div th:style="'--value:' + ${journalProgression}"><span><b>Journal</b><em th:text="${journalProgression + '%'}">70%</em></span><i><u></u></i></div>
+                        <div th:style="'--value:' + ${rapportProgression}"><span><b>Rapport final</b><em th:text="${rapportProgression + '%'}">0%</em></span><i><u></u></i></div>
+                        <div th:style="'--value:' + ${presenceProgression}"><span><b>Présence</b><em th:text="${presenceProgression + '%'}">100%</em></span><i><u></u></i></div>
+                    </div>
+                </section>
+
+                <section class="profile-card">
+                    <header class="profile-side-heading"><h2>Activité récente</h2><i data-lucide="activity"></i></header>
+                    <div class="profile-activity-timeline">
+                        <article th:each="activite : ${activitesProfil}" th:classappend="${activite.couleur}">
+                            <span><i th:attr="data-lucide=${activite.icone}"></i></span>
+                            <div><strong th:text="${activite.titre}">Activité</strong><p th:text="${activite.description}">Description</p><time th:data-date="${activite.date}">Récemment</time></div>
+                        </article>
+                        <p class="profile-empty-copy" th:if="${#lists.isEmpty(activitesProfil)}">Les prochaines activités apparaîtront ici.</p>
+                    </div>
+                </section>
+            </aside>
         </div>
 
-    </div>
+        <div class="profile-bottom-grid">
+            <section class="profile-card profile-documents-card">
+                <header class="profile-card-heading">
+                    <div><span class="profile-section-icon amber"><i data-lucide="folder-open"></i></span><div><h2>Documents</h2><p>Pièces administratives et livrables associés à votre parcours.</p></div></div>
+                    <a class="profile-button secondary compact" th:href="@{/stagiaire/rapport}">Voir les rapports</a>
+                </header>
+                <div class="profile-table-wrap">
+                    <table class="profile-documents-table">
+                        <thead><tr><th>Nom</th><th>Type</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:each="document : ${documentsProfil}">
+                            <td><span class="profile-file-icon"><i data-lucide="file-text"></i></span><strong th:text="${document.nomFichier}">CV.pdf</strong></td>
+                            <td th:text="${document.typeDocument}">CV</td>
+                            <td th:text="${#temporals.format(document.dateDepot,'dd/MM/yyyy')}">01/06/2026</td>
+                            <td><span class="profile-document-status" th:text="${document.statut ?: 'Disponible'}">Disponible</span></td>
+                            <td>
+                                <a th:href="@{/documents/{id}/preview(id=${document.id})}" target="_blank" title="Prévisualiser"><i data-lucide="eye"></i></a>
+                                <a th:href="@{/documents/{id}(id=${document.id})}" title="Télécharger"><i data-lucide="download"></i></a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(documentsProfil)}"><td colspan="5" class="profile-table-empty">Aucun document associé au profil.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-    <!-- EN BAS -->
-    <div class="profil-boutons">
-        <button type="button" class="btn-modifier" onclick="ouvrirModal('modalModifier')">
-            <i class="fa-solid fa-pen"></i> Modifier certaines informations
-        </button>
-        <button type="button" class="btn-mdp" onclick="ouvrirModal('modalMdp')">
-            <i class="fa-solid fa-key"></i> Changer le mot de passe
-        </button>
-        <button type="button" class="btn-telecharger" onclick="window.print()">
-            <i class="fa-solid fa-download"></i> Telecharger la fiche stagiaire
-        </button>
-    </div>
+            <section class="profile-card">
+                <header class="profile-side-heading"><h2>Préférences</h2><i data-lucide="sliders-horizontal"></i></header>
+                <div class="profile-preferences" data-profile-preferences>
+                    <label><span><i data-lucide="mail-check"></i><b>Notifications Email</b></span><input type="checkbox" data-preference="email" checked><i></i></label>
+                    <label><span><i data-lucide="bell-ring"></i><b>Notifications Système</b></span><input type="checkbox" data-preference="system" checked><i></i></label>
+                    <label><span><i data-lucide="alarm-clock"></i><b>Rappel des tâches</b></span><input type="checkbox" data-preference="tasks" checked><i></i></label>
+                    <label><span><i data-lucide="moon"></i><b>Mode sombre</b></span><input type="checkbox" data-preference="dark"><i></i></label>
+                    <div class="profile-language-preference"><span><i data-lucide="languages"></i><b>Langue</b></span><select data-profile-language><option value="fr">Français</option><option value="en">English</option></select></div>
+                </div>
+            </section>
+        </div>
+
+        <section class="profile-card profile-security-card">
+            <div class="profile-security-intro">
+                <span class="profile-security-icon"><i data-lucide="shield-check"></i></span>
+                <div><h2>Sécurité</h2><p>Contrôlez les accès et protégez les informations de votre compte stagiaire.</p></div>
+            </div>
+            <dl class="profile-security-facts">
+                <div><dt>Dernière connexion</dt><dd>Session actuelle</dd></div>
+                <div><dt>Appareil</dt><dd data-device>Détection...</dd></div>
+                <div><dt>Navigateur</dt><dd data-browser>Détection...</dd></div>
+                <div><dt>Mot de passe</dt><dd>Protégé</dd></div>
+                <div><dt>Double authentification</dt><dd><span class="profile-security-badge">Non configurée</span></dd></div>
+            </dl>
+            <div class="profile-security-actions">
+                <button class="profile-button secondary" type="button" data-open-password><i data-lucide="key-round"></i> Changer le mot de passe</button>
+                <button class="profile-button primary" type="button" data-security-info><i data-lucide="settings-2"></i> Configurer la sécurité</button>
+            </div>
+        </section>
+    </main>
 </div>
-<!-- MODAL MODIFIER INFOS -->
-<div class="modal-overlay" id="modalModifier" onclick="if(event.target===this)fermerModal('modalModifier')">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2>Modifier mes informations</h2>
-            <button class="modal-close" onclick="fermerModal('modalModifier')">&times;</button>
-        </div>
-        <form th:action="@{/stagiaire/profil/modifier}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="form-row-2col">
-                <div class="groupe-champ">
-                    <label>Prénom</label>
-                    <input type="text" name="prenom" th:value="${utilisateur.prenom}" required>
-                </div>
-                <div class="groupe-champ">
-                    <label>Nom</label>
-                    <input type="text" name="nom" th:value="${utilisateur.nom}" required>
-                </div>
-            </div>
-            <div class="groupe-champ">
-                <label>Email</label>
-                <input type="email" name="email" th:value="${utilisateur.email}" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Téléphone</label>
-                <input type="tel" name="telephone" th:value="${utilisateur.telephone}">
-            </div>
-            <div class="groupe-champ">
-                <label>Adresse</label>
-                <input type="text" name="adresse" th:value="${utilisateur.adresse}">
-            </div>
-            <button type="submit" class="bouton-principal">Enregistrer les modifications</button>
-        </form>
-    </div>
-</div>
 
-<!-- MODAL CHANGER MOT DE PASSE -->
-<div class="modal-overlay" id="modalMdp" onclick="if(event.target===this)fermerModal('modalMdp')">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2>Changer le mot de passe</h2>
-            <button class="modal-close" onclick="fermerModal('modalMdp')">&times;</button>
-        </div>
-        <p style="margin-bottom:20px;color:#64748B;"><i class="fa-solid fa-arrow-left"></i> <a href="#" onclick="fermerModal('modalMdp');return false;" style="color:#2563EB;">Retour au profil</a></p>
+<div class="profile-modal" id="passwordModal" hidden>
+    <div class="profile-modal-panel" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+        <header><div><span>Sécurité du compte</span><h2 id="passwordModalTitle">Changer le mot de passe</h2></div><button type="button" data-close-password aria-label="Fermer"><i data-lucide="x"></i></button></header>
         <form th:action="@{/stagiaire/profil/mot-de-passe}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="groupe-champ">
-                <label>Ancien mot de passe</label>
-                <input type="password" name="ancienMotDePasse" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Nouveau mot de passe</label>
-                <input type="password" name="nouveauMotDePasse" required>
-            </div>
-            <div class="groupe-champ">
-                <label>Confirmer le nouveau mot de passe</label>
-                <input type="password" name="confirmerMotDePasse" required>
-            </div>
-            <button type="submit" class="bouton-principal">Modifier le mot de passe</button>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label><span>Ancien mot de passe</span><input type="password" name="ancienMotDePasse" autocomplete="current-password" required></label>
+            <label><span>Nouveau mot de passe</span><input type="password" name="nouveauMotDePasse" minlength="8" autocomplete="new-password" required></label>
+            <label><span>Confirmer le nouveau mot de passe</span><input type="password" name="confirmerMotDePasse" minlength="8" autocomplete="new-password" required></label>
+            <footer><button class="profile-button secondary" type="button" data-close-password>Annuler</button><button class="profile-button primary" type="submit">Mettre à jour</button></footer>
         </form>
     </div>
 </div>
 
-<script>
-function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
-function fermerModal(id) { document.getElementById(id).classList.remove('open'); }
-</script>
+<div class="profile-toast" data-profile-toast role="status" aria-live="polite"></div>
 
+<script async src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"
+        onload="window.lucide?.createIcons()"></script>
+<script th:src="@{/js/stagiaire-profile.js}"></script>
 </body>
 </html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="messenger" class="unified-messaging"
+         th:data-message-base="${messageBase}">
+    <header class="um-heading">
+        <div>
+            <span class="um-eyebrow" th:text="${workspaceTitle}">Espace</span>
+            <h1>Messages</h1>
+            <p>Échangez des messages et des documents avec vos contacts.</p>
+        </div>
+        <button class="um-primary" type="button" data-open-contacts>
+            <i class="fa-solid fa-pen-to-square"></i>
+            Nouvelle conversation
+        </button>
+    </header>
+
+    <div class="um-alert error" th:if="${erreurMessage}" th:text="${erreurMessage}"></div>
+
+    <div class="um-shell">
+        <aside class="um-conversations">
+            <div class="um-search-row">
+                <label class="search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="conversationSearch" type="search" placeholder="Rechercher par nom ou email">
+                </label>
+                <div class="um-filter-wrap">
+                    <button class="filter-icon-btn" id="conversationFilterButton" type="button"
+                            aria-label="Filtrer les conversations" aria-expanded="false">
+                        <i class="fa-solid fa-sliders"></i>
+                    </button>
+                    <div class="um-filter-menu" id="conversationFilterMenu" hidden>
+                        <strong>Afficher les contacts</strong>
+                        <button type="button" data-role-filter="ALL" class="active">Tous</button>
+                        <button type="button" data-role-filter="ADMINISTRATEUR">Administrateurs</button>
+                        <button type="button" data-role-filter="RESPONSABLE_STAGE">Responsables</button>
+                        <button type="button" data-role-filter="ENCADREUR">Encadreurs</button>
+                        <button type="button" data-role-filter="STAGIAIRE">Stagiaires</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="um-conversation-list" id="conversationList">
+                <a class="um-conversation"
+                   th:each="conversation:${conversations}"
+                   th:with="others=${conversation.participants.?[id != #vars.user.id]}, other=${!#lists.isEmpty(others) ? others[0] : user}"
+                   th:classappend="${activeConversation != null && activeConversation.id == conversation.id ? ' active' : ''}"
+                   th:href="${messageBase+'?convId='+conversation.id}"
+                   th:data-conversation-id="${conversation.id}"
+                   th:data-search="${#strings.toLowerCase(other.prenom+' '+other.nom+' '+other.email+' '+(conversation.sujet ?: ''))}"
+                   th:data-role="${other.role.espaceEffectif}">
+                    <span class="um-avatar"
+                          th:classappend="${presenceParUtilisateur[other.id] == true ? ' online' : ' offline'}"
+                          th:text="${#strings.substring(other.prenom,0,1)+#strings.substring(other.nom,0,1)}">DU</span>
+                    <span class="um-conversation-copy">
+                        <strong class="um-conversation-name" th:text="${other.prenom+' '+other.nom}">Contact</strong>
+                        <small class="um-conversation-role"
+                               th:text="${#strings.capitalize(#strings.toLowerCase(other.role.espaceEffectif))}">Rôle</small>
+                        <small class="um-conversation-preview"
+                               th:text="${dernierMessageParConversation[conversation.id] != null ?
+                                   (!#strings.isEmpty(dernierMessageParConversation[conversation.id].contenu) ?
+                                   dernierMessageParConversation[conversation.id].contenu :
+                                   dernierMessageParConversation[conversation.id].nomFichier) :
+                                   'Nouvelle conversation'}">Dernier message</small>
+                    </span>
+                    <em class="um-conversation-time"
+                        th:text="${conversation.dernierMessage != null ?
+                            #temporals.format(conversation.dernierMessage,'HH:mm') : ''}">00:00</em>
+                    <span class="um-unread" th:if="${nonLusParConversation[conversation.id] > 0}"
+                          th:text="${nonLusParConversation[conversation.id]}">1</span>
+                </a>
+            </div>
+        </aside>
+
+        <section class="um-discussion" th:if="${activeConversation != null}"
+                 th:data-conversation-id="${activeConversation.id}"
+                 th:with="activeOthers=${activeConversation.participants.?[id != #vars.user.id]}, activeOther=${!#lists.isEmpty(activeOthers) ? activeOthers[0] : user}">
+            <header class="um-discussion-header">
+                <span class="um-avatar large"
+                      th:text="${#strings.substring(activeOther.prenom,0,1)+#strings.substring(activeOther.nom,0,1)}">DU</span>
+                <div>
+                    <strong th:text="${activeOther.prenom+' '+activeOther.nom}">Contact</strong>
+                    <span th:text="${activeOther.email+' · '+#strings.capitalize(#strings.toLowerCase(activeOther.role.espaceEffectif))}">email</span>
+                    <small class="um-contact-status"
+                           th:classappend="${presenceParUtilisateur[activeOther.id] == true ? ' online' : ' offline'}"
+                           data-contact-status>
+                        <i></i>
+                        <span th:text="${presenceParUtilisateur[activeOther.id] == true ? 'En ligne' : 'Hors ligne'}">Hors ligne</span>
+                    </small>
+                </div>
+            </header>
+
+            <div class="um-messages" id="discussionMessages"
+                 th:data-last-message-id="${#lists.isEmpty(messages) ? 0 : messages[#lists.size(messages)-1].id}">
+                <article class="um-message" th:each="message:${messages}"
+                         th:data-message-id="${message.id}"
+                         th:classappend="${message.expediteur.id == user.id ? ' sent' : ' received'}">
+                    <span class="um-avatar small" th:if="${message.expediteur.id != user.id}"
+                          th:text="${#strings.substring(message.expediteur.prenom,0,1)+#strings.substring(message.expediteur.nom,0,1)}">DU</span>
+                    <div class="um-bubble">
+                        <p th:if="${message.contenu != null && !message.contenu.isBlank()}"
+                           th:text="${message.contenu}">Message</p>
+                        <a class="um-image-message" th:if="${message.typePieceJointe == 'image'}"
+                           th:href="@{'/messagerie/fichiers/'+${message.id}+'/apercu'}" target="_blank">
+                            <img th:src="@{'/messagerie/fichiers/'+${message.id}+'/apercu'}"
+                                 th:alt="${message.nomFichier}">
+                        </a>
+                        <a class="um-file-message" th:if="${message.typePieceJointe == 'fichier'}"
+                           th:href="@{'/messagerie/fichiers/'+${message.id}}">
+                            <i class="fa-regular fa-file-lines"></i>
+                            <span>
+                                <strong th:text="${message.nomFichier}">Document</strong>
+                                <small class="file-size" th:data-size="${message.tailleFichier}">Fichier</small>
+                            </span>
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                        <time>
+                            <span th:text="${#temporals.format(message.dateEnvoi,'HH:mm')}">00:00</span>
+                            <i class="fa-solid fa-check-double um-seen"
+                               th:if="${message.expediteur.id == user.id}"
+                               th:classappend="${message.lu ? ' read' : ''}"
+                               th:title="${message.lu ? 'Vu' : 'Envoyé'}"></i>
+                        </time>
+                    </div>
+                </article>
+                <div class="um-empty" th:if="${#lists.isEmpty(messages)}">
+                    <i class="fa-regular fa-message"></i>
+                    <strong>Aucun message</strong>
+                    <span>Envoyez le premier message de cette conversation.</span>
+                </div>
+            </div>
+
+            <form class="um-composer" th:action="@{/messagerie/envoyer}" method="post"
+                  enctype="multipart/form-data" id="messageForm">
+                <input type="hidden" name="convId" th:value="${activeConversation.id}">
+                <div class="um-selected-files" id="selectedFiles" hidden></div>
+                <div class="um-composer-row">
+                    <div class="um-input-actions">
+                        <button type="button" data-file-trigger="attachmentInput" title="Joindre un fichier">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+                        <button type="button" data-file-trigger="imageInput" title="Envoyer des images">
+                            <i class="fa-regular fa-image"></i>
+                        </button>
+                        <button type="button" id="emojiButton" title="Ajouter un emoji" aria-expanded="false">
+                            <i class="fa-regular fa-face-smile"></i>
+                        </button>
+                    </div>
+                    <input id="attachmentInput" name="fichiers" type="file" multiple hidden>
+                    <input id="imageInput" name="fichiers" type="file" accept="image/*" multiple hidden>
+                    <textarea id="messageContent" name="contenu" rows="1"
+                              placeholder="Écrire un message..." aria-label="Message"></textarea>
+                    <button class="um-send" type="submit" title="Envoyer">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="um-emoji-picker" id="emojiPicker" hidden>
+                    <button type="button">😀</button><button type="button">😂</button><button type="button">😍</button>
+                    <button type="button">😊</button><button type="button">👍</button><button type="button">👏</button>
+                    <button type="button">🙏</button><button type="button">🎉</button><button type="button">❤️</button>
+                    <button type="button">🔥</button><button type="button">✅</button><button type="button">📌</button>
+                    <button type="button">💡</button><button type="button">📄</button><button type="button">🚀</button>
+                    <button type="button">👋</button><button type="button">🤝</button><button type="button">💬</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="um-discussion empty" th:if="${activeConversation == null}">
+            <div class="um-empty">
+                <i class="fa-regular fa-comments"></i>
+                <strong>Votre messagerie</strong>
+                <span>Sélectionnez une conversation ou démarrez-en une nouvelle.</span>
+                <button class="um-primary" type="button" data-open-contacts>Nouvelle conversation</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="um-modal" id="contactModal" hidden>
+        <div class="um-modal-panel" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+            <header>
+                <div><span>Nouveau message</span><h2 id="contactModalTitle">Choisir un contact</h2></div>
+                <button type="button" data-close-contacts aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            <form th:action="@{/messagerie/nouveau}" method="post" id="newConversationForm">
+                <label class="search-input modal-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="contactSearch" type="search" placeholder="Rechercher par nom ou email">
+                </label>
+                <input type="hidden" name="destinataireId" id="selectedContactId">
+                <div class="um-contact-list">
+                    <button class="um-contact" type="button" th:each="contact:${contacts}"
+                            th:data-id="${contact.id}"
+                            th:data-search="${#strings.toLowerCase(contact.prenom+' '+contact.nom+' '+contact.email)}">
+                        <span class="um-avatar"
+                              th:text="${#strings.substring(contact.prenom,0,1)+#strings.substring(contact.nom,0,1)}">DU</span>
+                        <span><strong th:text="${contact.prenom+' '+contact.nom}">Contact</strong><small th:text="${contact.email}">email</small></span>
+                        <em th:text="${#strings.capitalize(#strings.toLowerCase(contact.role.espaceEffectif))}">Rôle</em>
+                        <i class="fa-solid fa-circle-check"></i>
+                    </button>
+                    <div class="um-empty" th:if="${#lists.isEmpty(contacts)}">Aucun contact disponible.</div>
+                </div>
+                <label class="um-new-message">
+                    <span>Premier message</span>
+                    <textarea name="message" rows="3" minlength="1" required
+                              placeholder="Écrivez votre message..."></textarea>
+                </label>
+                <footer>
+                    <button class="um-secondary" type="button" data-close-contacts>Annuler</button>
+                    <button class="um-primary" type="submit" id="startConversationButton" disabled>
+                        <i class="fa-solid fa-paper-plane"></i> Envoyer
+                    </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

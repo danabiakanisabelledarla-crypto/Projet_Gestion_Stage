@@ -70,11 +70,33 @@ class RolePagesRenderingTests {
                 "/admin/services",
                 "/admin/documents",
                 "/admin/rapports",
-                "/admin/journal"
+                "/admin/journal",
+                "/admin/notifications",
+                "/admin/messages"
         }) {
             int status = mockMvc.perform(get(route).session(session))
                     .andReturn().getResponse().getStatus();
             assertEquals(200, status, "Route Admin en échec : " + route);
+        }
+    }
+
+    @Test
+    void responsablePagesRenderAfterLogin() throws Exception {
+        MockHttpSession session = login("responsable@gestion-stages.com", "resp1234");
+        for (String route : new String[]{
+                "/responsable/dashboard",
+                "/responsable/demandes",
+                "/responsable/stagiaires",
+                "/responsable/dossiers",
+                "/responsable/cloture",
+                "/responsable/planning",
+                "/responsable/profil",
+                "/responsable/profil/mot-de-passe",
+                "/responsable/messages"
+        }) {
+            int status = mockMvc.perform(get(route).session(session))
+                    .andReturn().getResponse().getStatus();
+            assertEquals(200, status, "Route Responsable en echec : " + route);
         }
     }
 
@@ -96,6 +118,26 @@ class RolePagesRenderingTests {
             int status = mockMvc.perform(get(route).session(session))
                     .andReturn().getResponse().getStatus();
             assertEquals(200, status, "Route Encadreur en échec : " + route);
+        }
+    }
+
+    @Test
+    void stagiairePagesRenderAfterLogin() throws Exception {
+        MockHttpSession session = login("stagiaire@gestion-stages.com", "stag1234");
+        for (String route : new String[]{
+                "/stagiaire/dashboard",
+                "/stagiaire/objectifs",
+                "/stagiaire/taches",
+                "/stagiaire/livrables",
+                "/stagiaire/planning",
+                "/stagiaire/journal",
+                "/stagiaire/rapport",
+                "/stagiaire/profil",
+                "/stagiaire/messages"
+        }) {
+            int status = mockMvc.perform(get(route).session(session))
+                    .andReturn().getResponse().getStatus();
+            assertEquals(200, status, "Route Stagiaire en échec : " + route);
         }
     }
 

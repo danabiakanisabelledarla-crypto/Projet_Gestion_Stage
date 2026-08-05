@@ -11,12 +11,7 @@
 <body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
 <div class="coach-main">
-    <header class="coach-topbar">
-        <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Rechercher un événement..."></label>
-        <button class="coach-icon-btn"><i class="fa-regular fa-bell"></i><em th:text="${notificationsCount}">3</em></button>
-        <a class="coach-icon-btn" th:href="@{/encadreur/messagerie}"><i class="fa-regular fa-envelope"></i><em th:text="${messagesCount}">2</em></a>
-        <div class="coach-user"><span class="coach-avatar" th:text="${initiales}">EN</span><div><strong th:text="${nomComplet}">Encadreur</strong><small>Encadreur</small></div></div>
-    </header>
+    <div th:replace="~{fragments/header-encadreur :: header}"></div>
     <main class="coach-page">
         <section class="coach-heading">
             <div class="coach-heading-main"><span class="coach-heading-icon"><i class="fa-solid fa-calendar-days"></i></span><div>

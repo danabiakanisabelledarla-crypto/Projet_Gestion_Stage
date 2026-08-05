@@ -1053,6 +1053,49 @@ body > .barre-laterale.responsable-sidebar {
     .rp-document-preview iframe { min-height: 360px; }
 }
 .responsable-search-hidden { display: none !important; }
+.rp-password-layout {
+    width: min(760px, 100%);
+    margin: 0 auto;
+}
+.rp-password-hint {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.rp-dark-mode { background: #0f172a; color: #e2e8f0; }
+.rp-dark-mode .responsable-main,
+.rp-dark-mode .rp-page { background: #0f172a; }
+.rp-dark-mode .rp-card,
+.rp-dark-mode .rp-kpi,
+.rp-dark-mode .responsable-topbar {
+    border-color: #334155;
+    background: #172033;
+    color: #e2e8f0;
+}
+.rp-dark-mode .rp-card h2,
+.rp-dark-mode .rp-card h3,
+.rp-dark-mode .rp-heading h1,
+.rp-dark-mode .rp-kpi-value,
+.rp-dark-mode .rp-data-row strong { color: #f8fafc; }
+.rp-dark-mode .rp-card p,
+.rp-dark-mode .rp-heading p,
+.rp-dark-mode .rp-data-row span,
+.rp-dark-mode .rp-kpi-label,
+.rp-dark-mode .rp-timeline-item span { color: #94a3b8; }
+.rp-dark-mode .rp-input,
+.rp-dark-mode .rp-select {
+    border-color: #475569;
+    background: #0f172a;
+    color: #f8fafc;
+}
 .rp-interns-wide { grid-template-columns: minmax(0, 1fr) 340px; }
 .rp-interns-wide > .rp-card:first-child { min-width: 0; }
 .rp-folder-dropdown { position: relative; }

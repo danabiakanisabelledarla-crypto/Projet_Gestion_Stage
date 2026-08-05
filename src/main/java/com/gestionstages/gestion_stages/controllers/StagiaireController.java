@@ -12,18 +12,24 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.gestionstages.gestion_stages.repositories.EvaluationRepository;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.gestionstages.gestion_stages.repositories.UtilisateurRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,6 +54,7 @@ private final ConversationRepository conversationRepository;
 private final MessageRepository messageRepository;
 private final ProjetRepository projetRepository;
 private final NotificationRepository notificationRepository;
+private final com.gestionstages.gestion_stages.services.MessagingService messagingService;
 
 private static final String DOSSIER_UPLOAD = "uploads/";
 
@@ -65,7 +72,8 @@ public StagiaireController(StageRepository stageRepository,
                            ConversationRepository conversationRepository,
                            MessageRepository messageRepository,
                            ProjetRepository projetRepository,
-                           NotificationRepository notificationRepository) {
+                           NotificationRepository notificationRepository,
+                           com.gestionstages.gestion_stages.services.MessagingService messagingService) {
 
     this.stageRepository = stageRepository;
     this.tacheRepository = tacheRepository;
@@ -82,6 +90,7 @@ public StagiaireController(StageRepository stageRepository,
     this.messageRepository = messageRepository;
     this.projetRepository = projetRepository;
     this.notificationRepository = notificationRepository;
+    this.messagingService = messagingService;
 }
 
     private Optional<Stage> getStage(CustomUserDetails userDetails) {
@@ -571,12 +580,136 @@ public String enregistrerProjet(@AuthenticationPrincipal CustomUserDetails userD
 
 @GetMapping("/profil")
 public String afficherProfilStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    Utilisateur utilisateur = userDetails.getUtilisateur();
+    Stagiaire stagiaire = stagiaireRepository.findByUtilisateurId(utilisateur.getId()).orElse(null);
+    Stage stage = getStage(userDetails).orElse(null);
+
     model.addAttribute("activePage", "profil");
-    model.addAttribute("utilisateur", userDetails.getUtilisateur());
-    stagiaireRepository.findByUtilisateurId(userDetails.getUtilisateur().getId())
-            .ifPresent(s -> model.addAttribute("stagiaire", s));
-    model.addAttribute("stage", getStage(userDetails).orElse(null));
+    model.addAttribute("utilisateur", utilisateur);
+    model.addAttribute("stagiaire", stagiaire);
+    model.addAttribute("stage", stage);
+
+    List<Objectif> objectifs = stage == null
+            ? List.of()
+            : objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+    List<Tache> taches = stage == null ? List.of() : tacheRepository.findByStageId(stage.getId());
+    List<Livrable> livrables = stage == null ? List.of() : livrableRepository.findByStageId(stage.getId());
+    List<Evaluation> evaluations = stage == null ? List.of() : evaluationRepository.findByStageId(stage.getId());
+    List<JournalBord> journaux = stage == null
+            ? List.of()
+            : journalBordRepository.findByStageIdOrderByDateActiviteDesc(stage.getId());
+
+    long objectifsAtteints = objectifs.stream()
+            .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint)
+            .count();
+    long tachesTerminees = taches.stream()
+            .filter(tache -> tache.getStatut() == Tache.StatutTache.terminee)
+            .count();
+    long livrablesValides = livrables.stream()
+            .filter(livrable -> livrable.getStatut() == Livrable.StatutLivrable.valide)
+            .count();
+    int progression = stagiaire != null && stagiaire.getProgression() != null
+            ? stagiaire.getProgression()
+            : (taches.isEmpty() ? 0 : (int) Math.round(tachesTerminees * 100.0 / taches.size()));
+
+    List<Document> documents = new ArrayList<>();
+    if (stagiaire != null && stagiaire.getDemandeStage() != null) {
+        documents.addAll(documentRepository.findByDemandeStageId(stagiaire.getDemandeStage().getId()));
+    }
+    if (stage != null) {
+        documentRepository.findByStageId(stage.getId()).stream()
+                .filter(document -> documents.stream().noneMatch(existing -> existing.getId().equals(document.getId())))
+                .forEach(documents::add);
+    }
+    documents.sort(Comparator.comparing(Document::getDateDepot).reversed());
+
+    boolean rapportFinalDepose = documents.stream()
+            .anyMatch(document -> document.getTypeDocument() != null
+                    && document.getTypeDocument().toLowerCase().contains("final"));
+    int objectifProgression = objectifs.isEmpty()
+            ? 0
+            : (int) Math.round(objectifsAtteints * 100.0 / objectifs.size());
+    int livrableProgression = livrables.isEmpty()
+            ? 0
+            : (int) Math.round(livrablesValides * 100.0 / livrables.size());
+    int journalProgression = Math.min(100, journaux.size() * 10);
+
+    List<String> competences = new ArrayList<>();
+    if (stage != null && stage.getProjet() != null
+            && stage.getProjet().getTechnologies() != null
+            && !stage.getProjet().getTechnologies().isBlank()) {
+        for (String technologie : stage.getProjet().getTechnologies().split("[,;]")) {
+            if (!technologie.isBlank()) competences.add(technologie.trim());
+        }
+    }
+    for (String competence : List.of("Communication", "Travail d'équipe", "Résolution de problèmes")) {
+        if (competences.stream().noneMatch(item -> item.equalsIgnoreCase(competence))) {
+            competences.add(competence);
+        }
+    }
+
+    List<Map<String, Object>> activites = new ArrayList<>();
+    documents.stream().limit(2).forEach(document -> activites.add(activiteProfil(
+            document.getTypeDocument() + " envoyé", document.getNomFichier(),
+            document.getDateDepot(), "file-up", "blue")));
+    objectifs.stream()
+            .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint)
+            .sorted(Comparator.comparing(Objectif::getDateCreation,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .limit(2)
+            .forEach(objectif -> activites.add(activiteProfil(
+                    "Objectif terminé", objectif.getLibelle(),
+                    objectif.getDateCreation(), "target", "green")));
+    taches.stream()
+            .sorted(Comparator.comparing(Tache::getDateCreation,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .limit(2)
+            .forEach(tache -> activites.add(activiteProfil(
+                    "Tâche attribuée", tache.getTitre(),
+                    tache.getDateCreation(), "list-checks", "violet")));
+    livrables.stream()
+            .sorted(Comparator.comparing(Livrable::getDateDepot,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .limit(2)
+            .forEach(livrable -> activites.add(activiteProfil(
+                    livrable.getStatut() == Livrable.StatutLivrable.valide
+                            ? "Livrable validé" : "Livrable déposé",
+                    livrable.getTitre(), livrable.getDateDepot(), "package-check", "amber")));
+    activites.sort((a, b) -> {
+        LocalDateTime dateA = (LocalDateTime) a.get("date");
+        LocalDateTime dateB = (LocalDateTime) b.get("date");
+        return Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder()).compare(dateA, dateB);
+    });
+
+    model.addAttribute("objectifs", objectifs);
+    model.addAttribute("objectifsAtteints", objectifsAtteints);
+    model.addAttribute("tachesTerminees", tachesTerminees);
+    model.addAttribute("livrablesValides", livrablesValides);
+    model.addAttribute("evaluationsCount", evaluations.size());
+    model.addAttribute("progressionProfil", Math.max(0, Math.min(100, progression)));
+    model.addAttribute("objectifProgression", objectifProgression);
+    model.addAttribute("livrableProgression", livrableProgression);
+    model.addAttribute("journalProgression", journalProgression);
+    model.addAttribute("rapportProgression", rapportFinalDepose ? 100 : 0);
+    model.addAttribute("presenceProgression", stage != null && stage.getStatut() == Stage.StatutStage.en_cours ? 100 : 0);
+    model.addAttribute("documentsProfil", documents);
+    model.addAttribute("competencesProfil", competences);
+    model.addAttribute("activitesProfil", activites.stream().limit(5).toList());
     return "stagiaire/profil";
+}
+
+private Map<String, Object> activiteProfil(String titre,
+                                           String description,
+                                           LocalDateTime date,
+                                           String icone,
+                                           String couleur) {
+    Map<String, Object> activite = new LinkedHashMap<>();
+    activite.put("titre", titre);
+    activite.put("description", description);
+    activite.put("date", date);
+    activite.put("icone", icone);
+    activite.put("couleur", couleur);
+    return activite;
 }
 
 
@@ -833,36 +966,8 @@ public String afficherMessages(@AuthenticationPrincipal CustomUserDetails userDe
     model.addAttribute("nomComplet", userDetails.getUtilisateur().getPrenom() + " " + userDetails.getUtilisateur().getNom());
     model.addAttribute("initiales", userDetails.getUtilisateur().getPrenom().substring(0,1).toUpperCase()
             + userDetails.getUtilisateur().getNom().substring(0,1).toUpperCase());
-    Utilisateur currentUser = userDetails.getUtilisateur();
-    model.addAttribute("user", currentUser);
-    Integer userId = currentUser.getId();
-    List<Conversation> conversations = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(userId);
-    model.addAttribute("conversations", conversations);
-    Conversation active = null;
-    if (convId != null) {
-        active = conversationRepository.findById(convId)
-                .filter(conversation -> conversation.getParticipants().stream()
-                        .anyMatch(participant -> participant.getId().equals(userId)))
-                .orElse(null);
-    } else if (!conversations.isEmpty()) {
-        active = conversations.get(0);
-    }
-    model.addAttribute("activeConversation", active);
-    if (active != null) {
-        List<Message> messages = messageRepository.findByConversationIdOrderByDateEnvoiAsc(active.getId());
-        messages.stream()
-                .filter(message -> !message.getExpediteur().getId().equals(userId)
-                        && !Boolean.TRUE.equals(message.getLu()))
-                .forEach(message -> message.setLu(true));
-        messageRepository.saveAll(messages);
-        model.addAttribute("messages", messages);
-    } else {
-        model.addAttribute("messages", new ArrayList<>());
-    }
-    // Contacts disponibles (tous les utilisateurs sauf le stagiaire)
-    List<Utilisateur> contacts = utilisateurRepository.findAll();
-    contacts.remove(currentUser);
-    model.addAttribute("contacts", contacts);
+    messagingService.preparerModele(
+            model, userDetails.getUtilisateur(), convId, "/stagiaire/messages", "Stagiaire");
     return "stagiaire/messages";
 }
 
@@ -939,19 +1044,75 @@ public String marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetail
 }
 @PostMapping("/profil/modifier")
 public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
-                              @RequestParam String prenom,
-                              @RequestParam String nom,
-                              @RequestParam String email,
-                              @RequestParam(required = false) String telephone,
-                              @RequestParam(required = false) String adresse) {
+                             @RequestParam String prenom,
+                             @RequestParam String nom,
+                             @RequestParam String email,
+                             @RequestParam(required = false) String telephone,
+                             @RequestParam(required = false) String adresse,
+                             @RequestParam(required = false) String ville,
+                             @RequestParam(required = false)
+                             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateNaissance,
+                             @RequestParam(required = false) String ecole,
+                             @RequestParam(required = false) String formation,
+                             @RequestParam(required = false) String niveau,
+                             @RequestParam(required = false) String specialite) {
     Utilisateur u = userDetails.getUtilisateur();
     u.setPrenom(prenom);
     u.setNom(nom);
     u.setEmail(email);
     u.setTelephone(telephone);
     u.setAdresse(adresse);
+    u.setVille(ville);
+    u.setDateNaissance(dateNaissance);
     utilisateurRepository.save(u);
+    stagiaireRepository.findByUtilisateurId(u.getId()).ifPresent(stagiaire -> {
+        stagiaire.setSpecialite(specialite);
+        if (stagiaire.getDemandeStage() != null) {
+            if (ecole != null && !ecole.isBlank()) stagiaire.getDemandeStage().setEcole(ecole.trim());
+            if (formation != null && !formation.isBlank()) stagiaire.getDemandeStage().setFiliere(formation.trim());
+            if (niveau != null && !niveau.isBlank()) stagiaire.getDemandeStage().setNiveau(niveau.trim());
+        }
+        stagiaireRepository.save(stagiaire);
+    });
     return "redirect:/stagiaire/profil?succes=Profil modifie avec succes.";
+}
+
+@PostMapping("/profil/photo")
+public String modifierPhoto(@AuthenticationPrincipal CustomUserDetails userDetails,
+                            @RequestParam("photo") MultipartFile photo) {
+    if (photo == null || photo.isEmpty()) {
+        return "redirect:/stagiaire/profil?erreur=Veuillez sélectionner une image.";
+    }
+    String type = photo.getContentType();
+    String extension = switch (type == null ? "" : type.toLowerCase(Locale.ROOT)) {
+        case "image/jpeg" -> ".jpg";
+        case "image/png" -> ".png";
+        case "image/webp" -> ".webp";
+        default -> null;
+    };
+    if (extension == null) {
+        return "redirect:/stagiaire/profil?erreur=Formats acceptés : JPG, PNG ou WebP.";
+    }
+    if (photo.getSize() > 5 * 1024 * 1024) {
+        return "redirect:/stagiaire/profil?erreur=La photo ne doit pas dépasser 5 Mo.";
+    }
+    try {
+        Path dossier = Paths.get(DOSSIER_UPLOAD, "profils").toAbsolutePath().normalize();
+        Files.createDirectories(dossier);
+        String nomFichier = "stagiaire_" + userDetails.getUtilisateur().getId()
+                + "_" + UUID.randomUUID() + extension;
+        Path destination = dossier.resolve(nomFichier).normalize();
+        if (!destination.startsWith(dossier)) {
+            return "redirect:/stagiaire/profil?erreur=Nom de fichier invalide.";
+        }
+        Files.copy(photo.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+        Utilisateur utilisateur = userDetails.getUtilisateur();
+        utilisateur.setPhoto("profils/" + nomFichier);
+        utilisateurRepository.save(utilisateur);
+        return "redirect:/stagiaire/profil?succes=Photo de profil mise à jour.";
+    } catch (IOException exception) {
+        return "redirect:/stagiaire/profil?erreur=Impossible d'enregistrer la photo.";
+    }
 }
 
 @PostMapping("/profil/mot-de-passe")
