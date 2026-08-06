@@ -152,6 +152,10 @@
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <div class="student-menu-popover" th:id="'studentMenu-' + ${s.id}">
+                            <button type="button" class="student-menu-item"
+                                    th:onclick="'ouvrirAffectationStagiaire(' + ${s.id} + ')'">
+                                <i class="fa-solid fa-user-plus"></i> Affecter
+                            </button>
                             <form th:action="@{/admin/stagiaires/{id}/acces(id=${s.id})}" method="post">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <input type="hidden" name="actif" value="false">
@@ -255,6 +259,50 @@
             <div class="stagiaire-form-actions">
                 <button type="button" class="btn-action-secondaire" onclick="fermerEditionStagiaire()">Annuler</button>
                 <button type="submit" class="stagiaire-save-button"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AFFECTATION -->
+<div class="modal-overlay" id="modalAffectationStagiaire"
+     onclick="if(event.target===this) fermerAffectationStagiaire()">
+    <div class="modal-box modal-box-large">
+        <div class="modal-details-header">
+            <div><h2>Affecter le stagiaire</h2><p>Définissez son encadreur, son service, son projet et sa période.</p></div>
+            <button type="button" class="modal-close-btn" onclick="fermerAffectationStagiaire()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="affectationStagiaireForm" method="post" class="stagiaire-edit-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="stagiaire-form-grid">
+                <label class="full">Stagiaire
+                    <input type="text" id="affectationIdentite" readonly>
+                </label>
+                <label>Encadreur
+                    <select name="encadreurId" id="affectationEncadreur" required>
+                        <option value="">Sélectionner</option>
+                        <option th:each="encadreur : ${encadreurs}" th:value="${encadreur.id}"
+                                th:text="${encadreur.utilisateur.prenom + ' ' + encadreur.utilisateur.nom}">Encadreur</option>
+                    </select>
+                </label>
+                <label>Service
+                    <select name="serviceId" id="affectationService" required>
+                        <option value="">Sélectionner</option>
+                        <option th:each="service : ${services}" th:value="${service.id}" th:text="${service.nom}">Service</option>
+                    </select>
+                </label>
+                <label class="full">Projet
+                    <select name="projetId">
+                        <option value="">Aucun projet</option>
+                        <option th:each="projet : ${projets}" th:value="${projet.id}" th:text="${projet.titre}">Projet</option>
+                    </select>
+                </label>
+                <label>Date de début<input type="date" name="dateDebut" id="affectationDebut" required></label>
+                <label>Date de fin<input type="date" name="dateFin" id="affectationFin" required></label>
+            </div>
+            <div class="stagiaire-form-actions">
+                <button type="button" class="btn-action-secondaire" onclick="fermerAffectationStagiaire()">Annuler</button>
+                <button type="submit" class="stagiaire-save-button"><i class="fa-solid fa-user-check"></i> Affecter</button>
             </div>
         </form>
     </div>
@@ -433,6 +481,25 @@
         document.getElementById('modalEditStagiaire').classList.remove('open');
     }
 
+    function ouvrirAffectationStagiaire(id) {
+        const stagiaire = stagiairesData.find(item => item.id === id);
+        if (!stagiaire) return;
+        document.querySelectorAll('.student-menu-popover.open')
+            .forEach(menu => menu.classList.remove('open'));
+        document.getElementById('affectationStagiaireForm').action =
+            `/admin/stagiaires/${id}/affecter`;
+        document.getElementById('affectationIdentite').value = stagiaire.nomComplet || '';
+        document.getElementById('affectationEncadreur').value = stagiaire.encadreurId || '';
+        document.getElementById('affectationService').value = stagiaire.serviceId || '';
+        document.getElementById('affectationDebut').value = stagiaire.dateDebutIso || '';
+        document.getElementById('affectationFin').value = stagiaire.dateFinIso || '';
+        document.getElementById('modalAffectationStagiaire').classList.add('open');
+    }
+
+    function fermerAffectationStagiaire() {
+        document.getElementById('modalAffectationStagiaire').classList.remove('open');
+    }
+
     function escapeHtml(value) {
         const element = document.createElement('div');
         element.textContent = value || '';
@@ -459,6 +526,7 @@
             fermerModalStagiaire();
             fermerRessourceStagiaire();
             fermerEditionStagiaire();
+            fermerAffectationStagiaire();
         }
     });
 </script>

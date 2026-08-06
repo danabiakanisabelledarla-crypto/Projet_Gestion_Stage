@@ -93,10 +93,37 @@ public StagiaireController(StageRepository stageRepository,
     this.messagingService = messagingService;
 }
 
-    private Optional<Stage> getStage(CustomUserDetails userDetails) {
+private Optional<Stage> getStage(CustomUserDetails userDetails) {
     Integer utilisateurId = userDetails.getUtilisateur().getId();
     return stagiaireRepository.findByUtilisateurId(utilisateurId)
             .flatMap(stagiaire -> stageRepository.findByStagiaireId(stagiaire.getId()));
+}
+
+private void recalculerProgression(Stage stage) {
+    List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+    List<Objectif> objectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+    List<Livrable> livrables = livrableRepository.findByStageId(stage.getId());
+
+    double progressionTaches = taches.isEmpty() ? 0 : taches.stream()
+            .mapToInt(tache -> tache.getStatut() == Tache.StatutTache.terminee ? 100
+                    : (tache.getStatut() == Tache.StatutTache.en_cours
+                    || tache.getStatut() == Tache.StatutTache.en_revue ? 50 : 0))
+            .average().orElse(0);
+    double progressionObjectifs = objectifs.stream()
+            .mapToInt(Objectif::getProgression)
+            .average().orElse(0);
+    double progressionLivrables = livrables.isEmpty() ? 0 : livrables.stream()
+            .mapToInt(livrable -> livrable.getStatut() == Livrable.StatutLivrable.valide ? 100
+                    : (livrable.getStatut() == Livrable.StatutLivrable.depose ? 50 : 0))
+            .average().orElse(0);
+    int progression = (int) Math.round(
+            progressionTaches * 0.5 + progressionObjectifs * 0.3 + progressionLivrables * 0.2);
+
+    Stagiaire stagiaire = stage.getStagiaire();
+    if (stagiaire != null) {
+        stagiaire.setProgression(Math.max(0, Math.min(100, progression)));
+        stagiaireRepository.save(stagiaire);
+    }
 }
  
 @GetMapping("/dashboard")
@@ -144,8 +171,22 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         int tachesTerminees = (int) taches.stream()
                 .filter(t -> t.getStatut() == Tache.StatutTache.terminee)
                 .count();
-        int progression = totalTaches > 0
+        int progressionTaches = totalTaches > 0
                 ? (tachesTerminees * 100 / totalTaches) : 0;
+        int progressionObjectifs = objectifs.isEmpty() ? 0
+                : (int) Math.round(objectifs.stream()
+                        .mapToInt(Objectif::getProgression)
+                        .average()
+                        .orElse(0));
+        long livrablesValides = livrables.stream()
+                .filter(livrable -> livrable.getStatut() == Livrable.StatutLivrable.valide)
+                .count();
+        int progressionLivrables = livrables.isEmpty() ? 0
+                : (int) (livrablesValides * 100 / livrables.size());
+        int progression = (int) Math.round(
+                progressionTaches * 0.5
+                        + progressionObjectifs * 0.3
+                        + progressionLivrables * 0.2);
 
         List<JournalBord> journaux = journalBordRepository
                 .findByStageIdOrderByDateActiviteDesc(stage.getId());
@@ -163,6 +204,13 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                 evaluation.getDateEvaluation(),
                 "Evaluation " + evaluation.getTypeEvaluation().name().replace("_", ""),
                 "evaluation")));
+        evenementPersonnelRepository.findByStageId(stage.getId()).forEach(evenement ->
+                evenementsDashboard.add(new EvenementPlanning(
+                        evenement.getDate(),
+                        evenement.getMotif(),
+                        evenement.getTypeCouleur(),
+                        evenement.getHeure(),
+                        evenement.getDescription())));
         evenementsDashboard.sort(Comparator.comparing(EvenementPlanning::getDate));
 
         model.addAttribute("nombreTaches", totalTaches);
@@ -177,13 +225,26 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("objectifs", objectifs);
         model.addAttribute("objectifsEnCours", objectifsEnCours);
         model.addAttribute("progression", progression);
+        model.addAttribute("progressionTaches", progressionTaches);
+        model.addAttribute("progressionObjectifs", progressionObjectifs);
+        model.addAttribute("progressionLivrables", progressionLivrables);
         model.addAttribute("nombreJours", journaux.size());
         model.addAttribute("journaux", journaux);
         model.addAttribute("journauxRecents", journaux.stream().limit(3).toList());
         model.addAttribute("evaluationsRecentes", evaluations.stream().limit(3).toList());
         model.addAttribute("nombreEvaluations", evaluations.size());
         model.addAttribute("evenementsDashboard", evenementsDashboard);
-        model.addAttribute("joursRestants", Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
+        long joursRestants = stage.getDateFin() == null
+                ? 0
+                : Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin()));
+        int progressionTemps = 0;
+        if (stage.getDateDebut() != null && stage.getDateFin() != null) {
+            long dureeTotale = Math.max(1, ChronoUnit.DAYS.between(stage.getDateDebut(), stage.getDateFin()));
+            long dureeEcoulee = ChronoUnit.DAYS.between(stage.getDateDebut(), LocalDate.now());
+            progressionTemps = (int) Math.max(0, Math.min(100, dureeEcoulee * 100 / dureeTotale));
+        }
+        model.addAttribute("joursRestants", joursRestants);
+        model.addAttribute("progressionTemps", progressionTemps);
 
     } else {
         model.addAttribute("stage", null);
@@ -199,6 +260,9 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("objectifs", new ArrayList<>());
         model.addAttribute("objectifsEnCours", 0);
         model.addAttribute("progression", 0);
+        model.addAttribute("progressionTaches", 0);
+        model.addAttribute("progressionObjectifs", 0);
+        model.addAttribute("progressionLivrables", 0);
         model.addAttribute("nombreJours", 0);
         model.addAttribute("journaux", new ArrayList<>());
         model.addAttribute("journauxRecents", new ArrayList<>());
@@ -206,6 +270,7 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("nombreEvaluations", 0);
         model.addAttribute("evenementsDashboard", new ArrayList<>());
         model.addAttribute("joursRestants", 0);
+        model.addAttribute("progressionTemps", 0);
     }
 
     return "stagiaire/dashboard";
@@ -264,9 +329,13 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                     .limit(4)
                     .toList());
             model.addAttribute("objectifsTotal", objectifs.size());
+            model.addAttribute("objectifsJournal", objectifs);
             model.addAttribute("objectifsAtteints", objectifsAtteints);
             model.addAttribute("tachesTerminees", tachesTerminees);
             model.addAttribute("progressionStage", progressionStage);
+            model.addAttribute("heuresDeclarees", journaux.stream()
+                    .mapToInt(JournalBord::getDureeHeures)
+                    .sum());
         } else {
             model.addAttribute("journaux", new ArrayList<>());
             model.addAttribute("journauxRecents", new ArrayList<>());
@@ -276,9 +345,11 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
             model.addAttribute("livrables", new ArrayList<>());
             model.addAttribute("commentairesEncadreur", new ArrayList<>());
             model.addAttribute("objectifsTotal", 0);
+            model.addAttribute("objectifsJournal", new ArrayList<>());
             model.addAttribute("objectifsAtteints", 0);
             model.addAttribute("tachesTerminees", 0);
             model.addAttribute("progressionStage", 0);
+            model.addAttribute("heuresDeclarees", 0);
             model.addAttribute("periodeJournal", "semaine");
         }
 
@@ -290,6 +361,7 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
     public String ajouterJournal(@AuthenticationPrincipal CustomUserDetails userDetails,
                                   @RequestParam String dateActivite,
                                   @RequestParam String travauxRealises,
+                                  @RequestParam(defaultValue = "7") Integer duree,
                                   @RequestParam(required = false) String difficultes,
                                   @RequestParam(required = false) String solutions) {
         getStage(userDetails).ifPresent(stage -> {
@@ -298,8 +370,9 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
 
             journal.setDifficultes(difficultes);
             journal.setObservations(solutions);
+            journal.setDureeHeures(duree);
             journalBordRepository.save(journal);
-            journal.setObservations(solutions);
+            recalculerProgression(stage);
         });
         return "redirect:/stagiaire/journal?succes=Journal enregistre avec succes.";
     }
@@ -330,6 +403,7 @@ public String afficherDashboard(@AuthenticationPrincipal CustomUserDetails userD
                 livrable.setStatut(Livrable.StatutLivrable.depose);
                 livrable.setDateDepot(java.time.LocalDateTime.now());
                 livrableRepository.save(livrable);
+                recalculerProgression(stage);
             }
         } catch (IOException e) {
             System.err.println("Erreur upload livrable : " + e.getMessage());
@@ -386,6 +460,7 @@ public String changerStatutTache(@AuthenticationPrincipal CustomUserDetails user
         Tache tache = tacheOpt.get();
         tache.setStatut(statut);
         tacheRepository.save(tache);
+        recalculerProgression(stageOpt.get());
     }
 
     return "redirect:/stagiaire/taches";
@@ -411,6 +486,14 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
         model.addAttribute("stage", stage);
         livrables.addAll(livrableRepository.findByStageId(stage.getId()));
         List<Tache> taches = tacheRepository.findByStageId(stage.getId());
+        LocalDate aujourdHui = LocalDate.now();
+        model.addAttribute("echeancesLivrables", taches.stream()
+                .filter(tache -> tache.getDateLimite() != null
+                        && !tache.getDateLimite().isBefore(aujourdHui)
+                        && tache.getStatut() != Tache.StatutTache.terminee)
+                .sorted(Comparator.comparing(Tache::getDateLimite))
+                .limit(3)
+                .toList());
         for (Tache t : taches) {
             for (Livrable livrable : livrableRepository.findByTacheId(t.getId())) {
                 if (livrables.stream().noneMatch(existing -> existing.getId().equals(livrable.getId()))) {
@@ -420,6 +503,7 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
         }
     } else {
         model.addAttribute("stage", null);
+        model.addAttribute("echeancesLivrables", List.of());
     }
     long valides = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.valide).count();
     long attente = livrables.stream().filter(l -> l.getStatut() == Livrable.StatutLivrable.depose).count();
@@ -461,6 +545,7 @@ public String envoyerLivrable(@AuthenticationPrincipal CustomUserDetails userDet
                 livrable.setStatut(Livrable.StatutLivrable.depose);
                 livrableRepository.save(livrable);
                 Stage stage = stageOpt.get();
+                recalculerProgression(stage);
                 if (stage.getEncadreur() != null && stage.getEncadreur().getUtilisateur() != null) {
                     Notification notification = new Notification(
                             "Nouveau livrable",
@@ -487,6 +572,13 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
     
     Optional<Stage> stageOpt = getStage(userDetails);
     model.addAttribute("stage", stageOpt.orElse(null));
+    model.addAttribute("rapports", List.of());
+    model.addAttribute("dernierRapport", null);
+    model.addAttribute("nombreVersions", 0);
+    model.addAttribute("joursRapportRestants", 0);
+    model.addAttribute("projet", null);
+    model.addAttribute("tailleRapports", 0L);
+    model.addAttribute("progressionRapport", 0);
 
     model.addAttribute("activePage", "rapport");
     String prenom = userDetails.getUtilisateur().getPrenom();
@@ -504,6 +596,14 @@ public String afficherRapport(@AuthenticationPrincipal CustomUserDetails userDet
         
         // Trier manuellement si la méthode existe
         model.addAttribute("rapports", rapports);
+        model.addAttribute("tailleRapports", rapports.stream()
+                .map(Document::getTailleOctets)
+                .filter(java.util.Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .sum());
+        model.addAttribute("progressionRapport",
+                Math.min(100, (rapports.isEmpty() ? 0 : 60)
+                        + (stage.getProjet() != null ? 40 : 0)));
         
         if (!rapports.isEmpty()) {
             model.addAttribute("dernierRapport", rapports.get(0));
@@ -543,6 +643,7 @@ public String deposerRapport(@AuthenticationPrincipal CustomUserDetails userDeta
         document.setTailleOctets(fichier.getSize());
         document.setStatut("en_attente");
         documentRepository.save(document);
+        recalculerProgression(stageOpt.get());
     } catch (IOException e) {
         System.err.println("Erreur upload rapport : " + e.getMessage());
         return "redirect:/stagiaire/rapport?succes=Erreur lors du depot du rapport.";
@@ -574,6 +675,7 @@ public String enregistrerProjet(@AuthenticationPrincipal CustomUserDetails userD
         projet = projetRepository.save(projet);
         stage.setProjet(projet);
         stageRepository.save(stage);
+        recalculerProgression(stage);
     });
     return "redirect:/stagiaire/rapport?succes=Informations du projet enregistrees.";
 }
@@ -814,6 +916,7 @@ public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetai
         obj.setOrigine(Objectif.OrigineObjectif.stagiaire);
         obj.setDateCreation(LocalDateTime.now());
         objectifRepository.save(obj);
+        recalculerProgression(stageOpt.get());
     }
     return "redirect:/stagiaire/objectifs";
 }
@@ -836,6 +939,7 @@ public String changerStatutObjectif(@AuthenticationPrincipal CustomUserDetails u
             obj.setProgression(10);
         }
         objectifRepository.save(obj);
+        recalculerProgression(stageOpt.get());
     }
    return "redirect:/stagiaire/objectifs";
 }
@@ -852,6 +956,7 @@ public String basculerPrioriteObjectif(@AuthenticationPrincipal CustomUserDetail
                        ? Objectif.Priorite.moyenne
                        : Objectif.Priorite.haute);
                objectifRepository.save(objectif);
+               recalculerProgression(stageOpt.get());
            });
    return "redirect:/stagiaire/objectifs";
 }
@@ -863,7 +968,10 @@ public String supprimerObjectif(@AuthenticationPrincipal CustomUserDetails userD
     objectifRepository.findById(id)
             .filter(objectif -> stageOpt.isPresent()
                     && objectif.getStage().getId().equals(stageOpt.get().getId()))
-            .ifPresent(objectifRepository::delete);
+            .ifPresent(objectif -> {
+                objectifRepository.delete(objectif);
+                recalculerProgression(stageOpt.get());
+            });
     return "redirect:/stagiaire/objectifs";
 }
 
@@ -919,6 +1027,18 @@ public String afficherPlanningStagiaire(@AuthenticationPrincipal CustomUserDetai
                     Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), stage.getDateFin())));
             model.addAttribute("nombreEvenementsPersonnels", evenementsPerso.size());
             model.addAttribute("nombreLivrablesPlanning", livrableRepository.findByStageId(stage.getId()).size());
+            model.addAttribute("activitesPlanning", evenementsPerso.stream()
+                    .sorted(Comparator.comparing(
+                            EvenementPersonnel::getDate,
+                            Comparator.reverseOrder())
+                            .thenComparing(
+                                    EvenementPersonnel::getHeure,
+                                    Comparator.nullsLast(Comparator.reverseOrder())))
+                    .limit(5)
+                    .toList());
+        }
+        if (stageOpt.isEmpty()) {
+            model.addAttribute("activitesPlanning", List.of());
         }
 
     evenements.sort(Comparator.comparing(EvenementPlanning::getDate));
@@ -1042,6 +1162,50 @@ public String marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetail
     notificationRepository.saveAll(notifications);
     return "redirect:/stagiaire/dashboard";
 }
+
+@GetMapping("/preferences")
+@ResponseBody
+public Map<String, Object> preferences(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    return stagiaireRepository.findByUtilisateurId(userDetails.getUtilisateur().getId())
+            .map(stagiaire -> Map.<String, Object>of(
+                    "email", stagiaire.getNotificationsEmail(),
+                    "system", stagiaire.getNotificationsSysteme(),
+                    "tasks", stagiaire.getRappelTaches(),
+                    "dark", stagiaire.getModeSombre(),
+                    "language", stagiaire.getLangue()))
+            .orElseGet(() -> Map.of(
+                    "email", true,
+                    "system", true,
+                    "tasks", true,
+                    "dark", false,
+                    "language", "fr"));
+}
+
+@PostMapping("/preferences")
+@ResponseBody
+public Map<String, Object> enregistrerPreferences(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody Map<String, Object> preferences) {
+    Stagiaire stagiaire = stagiaireRepository.findByUtilisateurId(userDetails.getUtilisateur().getId())
+            .orElseThrow();
+    if (preferences.containsKey("email")) {
+        stagiaire.setNotificationsEmail(Boolean.TRUE.equals(preferences.get("email")));
+    }
+    if (preferences.containsKey("system")) {
+        stagiaire.setNotificationsSysteme(Boolean.TRUE.equals(preferences.get("system")));
+    }
+    if (preferences.containsKey("tasks")) {
+        stagiaire.setRappelTaches(Boolean.TRUE.equals(preferences.get("tasks")));
+    }
+    if (preferences.containsKey("dark")) {
+        stagiaire.setModeSombre(Boolean.TRUE.equals(preferences.get("dark")));
+    }
+    if (preferences.containsKey("language")) {
+        stagiaire.setLangue(String.valueOf(preferences.get("language")));
+    }
+    stagiaireRepository.save(stagiaire);
+    return preferences(userDetails);
+}
 @PostMapping("/profil/modifier")
 public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
                              @RequestParam String prenom,
@@ -1143,6 +1307,7 @@ public String modifierMotDePasse(@AuthenticationPrincipal CustomUserDetails user
                 .ifPresent(tache -> {
                     tache.setStatut(statut);
                     tacheRepository.save(tache);
+                    recalculerProgression(stageOpt.get());
                 });
         return "redirect:/stagiaire/taches";
     }
@@ -1164,6 +1329,7 @@ public String ajouterTache(@AuthenticationPrincipal CustomUserDetails userDetail
        tache.setStage(stage);
        if (!tache.getTitre().isBlank()) {
            tacheRepository.save(tache);
+           recalculerProgression(stage);
        }
    });
    return "redirect:/stagiaire/taches?succes=Tache cree avec succes.";
@@ -1187,6 +1353,7 @@ public String modifierTache(@AuthenticationPrincipal CustomUserDetails userDetai
                         tache.setDateLimite(LocalDate.parse(dateLimite));
                     }
                     tacheRepository.save(tache);
+                    recalculerProgression(stageOpt.get());
                 }
             });
     return "redirect:/stagiaire/taches?succes=Tache modifiee avec succes.";
@@ -1199,7 +1366,10 @@ public String supprimerTache(@AuthenticationPrincipal CustomUserDetails userDeta
     tacheRepository.findById(id)
             .filter(tache -> stageOpt.isPresent()
                     && tache.getStage().getId().equals(stageOpt.get().getId()))
-            .ifPresent(tacheRepository::delete);
+            .ifPresent(tache -> {
+                tacheRepository.delete(tache);
+                recalculerProgression(stageOpt.get());
+            });
     return "redirect:/stagiaire/taches?succes=Tache supprimee avec succes.";
 }
 }

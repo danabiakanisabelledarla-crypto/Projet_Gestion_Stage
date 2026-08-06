@@ -263,6 +263,42 @@ public class EmailService {
         }
     }
 
+    public boolean envoyerStatutCompte(String destinataire,
+                                       String nomComplet,
+                                       boolean bloque) {
+        if (!destinataireValide(destinataire)) return false;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("innotechlab26@gmail.com");
+            helper.setTo(destinataire);
+            helper.setSubject(bloque
+                    ? "Blocage de votre compte DTA Alliance"
+                    : "Réactivation de votre compte DTA Alliance");
+            java.time.LocalDateTime maintenant = java.time.LocalDateTime.now();
+            String date = maintenant.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String heure = maintenant.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            String action = bloque
+                    ? "Votre compte a été bloqué le " + date + " à " + heure
+                            + ".<br>Vous n'avez plus accès à votre espace."
+                    : "Votre compte a été débloqué le " + date + " à " + heure
+                            + ".<br>Vous pouvez de nouveau accéder à votre espace.";
+            helper.setText("<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:20px'>"
+                    + "<div style='background:#071b4d;color:white;padding:24px;border-radius:12px 12px 0 0'>"
+                    + "<h1 style='font-size:20px;margin:0'>DTA Alliance</h1></div>"
+                    + "<div style='padding:30px;border:1px solid #dbe4f0;border-top:0;background:white'>"
+                    + "<p>Bonjour <strong>" + echapperHtml(nomComplet) + "</strong>,</p>"
+                    + "<p style='color:#475569;line-height:1.65'>" + action + "</p>"
+                    + "<p style='margin-top:28px;color:#64748b'>Administration DTA Alliance</p>"
+                    + "</div></div>", true);
+            mailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            System.err.println(">>> Erreur envoi email de statut du compte : " + e.getMessage());
+            return false;
+        }
+    }
+
     private String echapperHtml(String valeur) {
         if (valeur == null) return "";
         return valeur.replace("&", "&amp;")

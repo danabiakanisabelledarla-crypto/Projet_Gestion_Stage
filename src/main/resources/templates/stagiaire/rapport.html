@@ -54,21 +54,21 @@
                 </article>
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-purple"><i class="fa-regular fa-file-lines"></i></span>
-                    <div class="intern-kpi-value">42 <small>/ 60</small></div>
-                    <div class="intern-kpi-label">Pages rédigées</div>
-                    <div class="intern-progress"><span style="width:70%;background:#8b5cf6"></span></div>
+                    <div class="intern-kpi-value" th:text="${tailleRapports > 0 ? #numbers.formatDecimal(tailleRapports / 1048576.0, 1, 1) + ' Mo' : '0 Mo'}">0 Mo</div>
+                    <div class="intern-kpi-label">Volume déposé</div>
+                    <div class="intern-progress"><span th:style="'width:' + ${progressionRapport} + '%;background:#8b5cf6'"></span></div>
                 </article>
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-green"><i class="fa-solid fa-paperclip"></i></span>
-                    <div class="intern-kpi-value">8</div>
-                    <div class="intern-kpi-label">Pièces jointes</div>
-                    <div class="intern-kpi-note">Documents associés</div>
+                    <div class="intern-kpi-value" th:text="${nombreVersions}">0</div>
+                    <div class="intern-kpi-label">Documents disponibles</div>
+                    <div class="intern-kpi-note">Versions réellement déposées</div>
                 </article>
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-orange"><i class="fa-regular fa-comments"></i></span>
-                    <div class="intern-kpi-value">12</div>
-                    <div class="intern-kpi-label">Remarques reçues</div>
-                    <div class="intern-kpi-note">Commentaires encadreur</div>
+                    <div class="intern-kpi-value" th:text="${dernierRapport != null and dernierRapport.descriptionModifications != null ? 1 : 0}">0</div>
+                    <div class="intern-kpi-label">Notes de version</div>
+                    <div class="intern-kpi-note">Descriptions enregistrées</div>
                 </article>
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-red"><i class="fa-regular fa-clock"></i></span>
@@ -78,9 +78,9 @@
                 </article>
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-chart-line"></i></span>
-                    <div class="intern-kpi-value">72%</div>
+                    <div class="intern-kpi-value" th:text="${progressionRapport + '%'}">0%</div>
                     <div class="intern-kpi-label">Progression rapport</div>
-                    <div class="intern-progress"><span style="width:72%;background:#2563eb"></span></div>
+                    <div class="intern-progress"><span th:style="'width:' + ${progressionRapport} + '%;background:#2563eb'"></span></div>
                 </article>
             </section>
 
@@ -95,7 +95,7 @@
                     </div>
                     <div class="report-info-grid">
                         <div class="module-info-row"><span>Nom du stagiaire</span><strong th:text="${nomComplet}">Sophie Leroy</strong></div>
-                        <div class="module-info-row"><span>Sujet</span><strong th:text="${projet != null and projet.titre != null ? projet.titre : 'Plateforme de Gestion des Stages'}">Plateforme de Gestion des Stages</strong></div>
+                                <div class="module-info-row"><span>Sujet</span><strong th:text="${projet != null and projet.titre != null ? projet.titre : 'Non renseigné'}">Non renseigné</strong></div>
                         <div class="module-info-row"><span>Encadreur</span><strong th:text="${stage.encadreur != null ? stage.encadreur.utilisateur.prenom + ' ' + stage.encadreur.utilisateur.nom : 'Non affecté'}">Paul Bernard</strong></div>
                         <div class="module-info-row"><span>Service</span><strong th:text="${stage.service != null ? stage.service.nom : 'Non renseigné'}">Développement logiciel</strong></div>
                         <div class="module-info-row"><span>Période</span><strong th:text="${#temporals.format(stage.dateDebut, 'dd/MM/yyyy') + ' → ' + #temporals.format(stage.dateFin, 'dd/MM/yyyy')}">24/06/2026 → 24/09/2026</strong></div>
@@ -144,7 +144,7 @@
                         <div class="module-paper">
                             <i class="fa-solid fa-file-pdf"></i>
                             <h3>RAPPORT DE STAGE</h3>
-                            <p th:text="${projet != null and projet.titre != null ? projet.titre : 'Plateforme de Gestion des Stages'}">Plateforme de Gestion des Stages</p>
+                                <p th:text="${projet != null and projet.titre != null ? projet.titre : 'Sujet non renseigné'}">Sujet non renseigné</p>
                             <p th:text="${nomComplet}">Sophie Leroy</p>
                         </div>
                     </div>
@@ -165,8 +165,8 @@
                             <p>Déposez votre premier rapport au format PDF.</p>
                         </div>
                         <div class="report-progress-block">
-                            <div class="intern-progress-label"><span>Rapport complété</span><strong>72%</strong></div>
-                            <div class="intern-progress"><span style="width:72%;background:#2563eb"></span></div>
+                            <div class="intern-progress-label"><span>Rapport complété</span><strong th:text="${progressionRapport + '%'}">0%</strong></div>
+                            <div class="intern-progress"><span th:style="'width:' + ${progressionRapport} + '%;background:#2563eb'"></span></div>
                         </div>
                     </div>
                 </div>
@@ -196,18 +196,7 @@
 
                 <article class="intern-card" id="remarques">
                     <div class="intern-card-header"><div><h2 class="intern-card-title">Remarques de l'encadreur</h2><p class="intern-card-subtitle">Conseils pour améliorer votre document</p></div></div>
-                    <div class="module-comment">
-                        <span class="intern-avatar">PB</span>
-                        <div class="module-comment-body"><div class="module-comment-head"><strong>Paul Bernard</strong><span>20/07/2026</span></div><p>Le contenu est pertinent. Ajoutez davantage d'informations sur l'architecture du système.</p></div>
-                    </div>
-                    <div class="module-comment">
-                        <span class="intern-avatar">PB</span>
-                        <div class="module-comment-body"><div class="module-comment-head"><strong>Paul Bernard</strong><span>15/07/2026</span></div><p>Très bonne progression. Complétez la partie consacrée à la sécurité.</p></div>
-                    </div>
-                    <div class="module-comment">
-                        <span class="intern-avatar">PB</span>
-                        <div class="module-comment-body"><div class="module-comment-head"><strong>Paul Bernard</strong><span>10/07/2026</span></div><p>Corrigez les captures d'écran manquantes avant le prochain dépôt.</p></div>
-                    </div>
+                        <div class="intern-empty">Aucune remarque enregistrée pour le rapport final.</div>
                 </article>
             </section>
 
@@ -221,7 +210,7 @@
                     <div class="intern-form-grid">
                         <div class="intern-form-group">
                             <label for="projectTitle">Nom du projet</label>
-                            <input class="intern-input" id="projectTitle" name="titre" required th:value="${projet != null ? projet.titre : 'Plateforme de Gestion des Stages'}">
+                            <input class="intern-input" id="projectTitle" name="titre" required th:value="${projet != null ? projet.titre : ''}">
                         </div>
                         <div class="intern-form-group">
                             <label for="projectType">Type</label>
@@ -248,7 +237,7 @@
                         </div>
                         <div class="intern-form-group full">
                             <label for="projectDescription">Description du projet</label>
-                            <textarea class="intern-textarea" id="projectDescription" name="description" th:text="${projet != null and projet.description != null ? projet.description : 'Plateforme permettant la gestion complète des stages, des stagiaires, des encadreurs, des objectifs, des tâches, des livrables et des évaluations.'}"></textarea>
+                            <textarea class="intern-textarea" id="projectDescription" name="description" th:text="${projet != null and projet.description != null ? projet.description : ''}"></textarea>
                         </div>
                     </div>
                     <div class="intern-modal-actions">
@@ -263,19 +252,15 @@
                 <article class="intern-card">
                     <div class="intern-card-header"><div><h2 class="intern-card-title">Documents associés</h2><p class="intern-card-subtitle">Ressources utiles pour votre soutenance</p></div></div>
                     <div class="report-documents">
-                        <div class="report-document"><span class="module-file-icon"><i class="fa-solid fa-file-pdf"></i></span><div><strong>Rapport final PDF</strong><small>Document principal</small></div><button type="button" class="module-action" data-open-report title="Déposer"><i class="fa-solid fa-upload"></i></button></div>
-                        <div class="report-document"><span class="module-file-icon tone-blue"><i class="fa-solid fa-file-lines"></i></span><div><strong>Cahier de spécifications</strong><small>Document fonctionnel</small></div><span class="module-status success">Disponible</span></div>
-                        <div class="report-document"><span class="module-file-icon tone-purple"><i class="fa-solid fa-book"></i></span><div><strong>Documentation technique</strong><small>Architecture et installation</small></div><span class="module-status warning">À joindre</span></div>
-                        <div class="report-document"><span class="module-file-icon tone-green"><i class="fa-solid fa-display"></i></span><div><strong>Présentation de soutenance</strong><small>Support de présentation</small></div><span class="module-status warning">À préparer</span></div>
+                        <div class="report-document" th:each="document : ${rapports}"><span class="module-file-icon"><i class="fa-solid fa-file-pdf"></i></span><div><strong th:text="${document.nomFichier}">Rapport</strong><small th:text="'Version ' + ${document.version}">Version</small></div><a class="module-action" th:href="@{/documents/{id}(id=${document.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a></div>
+                        <div class="intern-empty" th:if="${#lists.isEmpty(rapports)}">Aucun document associé déposé.</div>
                     </div>
                 </article>
                 <article class="intern-card">
                     <div class="intern-card-header"><div><h2 class="intern-card-title">Activité récente</h2><p class="intern-card-subtitle">Dernières actions sur votre rapport</p></div></div>
                     <div class="intern-feed">
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-regular fa-comment"></i></span><div><strong>Nouveau commentaire reçu</strong><span>Une remarque a été ajoutée par l'encadreur</span><small>Aujourd'hui</small></div></div>
-                        <div class="intern-feed-item" th:if="${dernierRapport != null}"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-upload"></i></span><div><strong th:text="'Version ' + ${dernierRapport.version} + ' déposée'">Version 4 déposée</strong><span th:text="${dernierRapport.nomFichier}">Rapport_Final_v4.pdf</span><small th:text="${#temporals.format(dernierRapport.dateDepot, 'dd/MM/yyyy à HH:mm')}">Hier</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><div><strong>Rapport validé partiellement</strong><span>Les premiers chapitres sont conformes</span><small>18/07/2026</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-solid fa-pen"></i></span><div><strong>Projet mis à jour</strong><span>Informations techniques enregistrées</span><small>15/07/2026</small></div></div>
+                        <div class="intern-feed-item" th:each="document : ${rapports}"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-upload"></i></span><div><strong th:text="'Version ' + ${document.version} + ' déposée'">Version déposée</strong><span th:text="${document.nomFichier}">Rapport</span><small th:text="${#temporals.format(document.dateDepot, 'dd/MM/yyyy à HH:mm')}">Date</small></div></div>
+                        <div class="intern-empty" th:if="${#lists.isEmpty(rapports)}">Aucune activité récente sur le rapport.</div>
                     </div>
                 </article>
             </section>

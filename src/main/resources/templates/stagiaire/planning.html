@@ -148,11 +148,15 @@
                 <article class="intern-card">
                     <div class="intern-card-header"><div><h2 class="intern-card-title">Activité récente</h2><p class="intern-card-subtitle">Dernières modifications du planning</p></div></div>
                     <div class="intern-feed">
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-blue"><i class="fa-solid fa-calendar-plus"></i></span><div><strong>Nouveau rendez-vous ajouté</strong><span>Point hebdomadaire avec l'encadreur</span><small>Aujourd'hui</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-green"><i class="fa-solid fa-file-circle-check"></i></span><div><strong>Rapport planifié</strong><span>Échéance ajoutée au calendrier</span><small>Hier</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-purple"><i class="fa-solid fa-clipboard-check"></i></span><div><strong>Évaluation programmée</strong><span>Bilan intermédiaire du stage</span><small>Il y a 2 jours</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-orange"><i class="fa-solid fa-pen"></i></span><div><strong>Événement modifié</strong><span>L'heure de la réunion a été mise à jour</span><small>Il y a 3 jours</small></div></div>
-                        <div class="intern-feed-item"><span class="intern-feed-icon tone-red"><i class="fa-regular fa-bell"></i></span><div><strong>Nouveau rappel créé</strong><span>Notification un jour avant l'échéance</span><small>Il y a 4 jours</small></div></div>
+                        <div class="intern-feed-item" th:each="evenement : ${activitesPlanning}">
+                            <span class="intern-feed-icon tone-blue"><i class="fa-solid fa-calendar-plus"></i></span>
+                            <div>
+                                <strong th:text="${evenement.motif}">Événement</strong>
+                                <span th:text="${evenement.description != null and !evenement.description.isBlank() ? evenement.description : 'Événement ajouté au planning'}">Description</span>
+                                <small th:text="${#temporals.format(evenement.date, 'dd/MM/yyyy') + (evenement.heure != null ? ' · ' + #temporals.format(evenement.heure, 'HH:mm') : '')}">Date</small>
+                            </div>
+                        </div>
+                        <div class="intern-empty" th:if="${#lists.isEmpty(activitesPlanning)}">Aucune modification enregistrée.</div>
                     </div>
                 </article>
             </section>
@@ -225,22 +229,27 @@
 </div>
 
 <script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
-<script th:inline="javascript">
-const planningEvents = [
-    /*[# th:each="ev : ${evenements}"]*/
-    {
-        date: /*[[${#temporals.format(ev.date, 'yyyy-MM-dd')}]]*/ '2026-07-27',
-        title: /*[[${ev.titre}]]*/ 'Événement',
-        type: /*[[${ev.type}]]*/ 'personnel',
-        time: /*[[${ev.heure != null ? #temporals.format(ev.heure, 'HH:mm') : ''}]]*/ '',
-        description: /*[[${ev.description != null ? ev.description : ''}]]*/ ''
-    },
-    /*[/]*/
-];
-const stageEndDate = /*[[${stage != null and stage.dateFin != null ? #temporals.format(stage.dateFin, 'yyyy-MM-dd') : ''}]]*/ '';
-</script>
+<div id="planningData" hidden
+     th:attr="data-stage-end=${stage != null and stage.dateFin != null ? #temporals.format(stage.dateFin, 'yyyy-MM-dd') : ''}">
+    <span th:each="ev : ${evenements}"
+          data-planning-event
+          th:attr="data-date=${#temporals.format(ev.date, 'yyyy-MM-dd')},
+                   data-title=${ev.titre},
+                   data-type=${ev.type},
+                   data-time=${ev.heure != null ? #temporals.format(ev.heure, 'HH:mm') : ''},
+                   data-description=${ev.description != null ? ev.description : ''}"></span>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const planningData = document.getElementById('planningData');
+    const planningEvents = [...document.querySelectorAll('[data-planning-event]')].map(item => ({
+        date: item.dataset.date || '',
+        title: item.dataset.title || 'Événement',
+        type: item.dataset.type || 'personnel',
+        time: item.dataset.time || '',
+        description: item.dataset.description || ''
+    }));
+    const stageEndDate = planningData?.dataset.stageEnd || '';
     const modal = document.querySelector('[data-event-modal]');
     const dateInput = document.getElementById('eventDate');
     const openModal = selectedDate => {
@@ -471,7 +480,10 @@ document.addEventListener('DOMContentLoaded', () => {
             countdown.textContent = days + ' j · ' + hours + ' h restantes';
         };
         refreshCountdown();
-        setInterval(refreshCountdown, 60000);
+        if (window.__stagiairePlanningCountdown) {
+            clearInterval(window.__stagiairePlanningCountdown);
+        }
+        window.__stagiairePlanningCountdown = setInterval(refreshCountdown, 60000);
     }
 
     renderCalendar();

@@ -156,7 +156,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="a : ${activites}">
+                        <tr class="journal-entry-row" th:each="a : ${activites}">
                             <td>
                                 <div class="journal-date-cell">
                                     <span class="jdate" th:text="${a.dateFormatted}">15/07/2026</span>
@@ -206,12 +206,10 @@
 
                 <!-- PAGINATION -->
                 <div class="backup-pagination">
-                    <button class="backup-page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="backup-page-btn actif">1</button>
-                    <button class="backup-page-btn" th:if="${totalEntries > 10}">2</button>
-                    <button class="backup-page-btn" th:if="${totalEntries > 20}">3</button>
-                    <span th:if="${totalEntries > 30}" class="backup-page-dots">...</span>
-                    <button class="backup-page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    <span id="journalPaginationInfo"></span>
+                    <button type="button" class="backup-page-btn" id="journalPrevious"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="journalPageNumbers"></span>
+                    <button type="button" class="backup-page-btn" id="journalNext"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
         </div>
@@ -287,4 +285,42 @@
         </div>
     </div>
 </main>
+<script>
+(() => {
+    const rows = [...document.querySelectorAll('.journal-entry-row')];
+    const pageSize = 10;
+    let page = 1;
+    const info = document.getElementById('journalPaginationInfo');
+    const numbers = document.getElementById('journalPageNumbers');
+    const previous = document.getElementById('journalPrevious');
+    const next = document.getElementById('journalNext');
+
+    function render() {
+        const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+        page = Math.min(page, pages);
+        const start = (page - 1) * pageSize;
+        rows.forEach((row, index) => row.hidden = index < start || index >= start + pageSize);
+        info.textContent = (rows.length ? start + 1 : 0) + ' à ' + Math.min(start + pageSize, rows.length)
+            + ' sur ' + rows.length;
+        numbers.replaceChildren();
+        const first = Math.max(1, Math.min(page - 2, pages - 4));
+        const last = Math.min(pages, first + 4);
+        for (let current = first; current <= last; current++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'backup-page-btn' + (current === page ? ' actif' : '');
+            button.textContent = current;
+            button.addEventListener('click', () => { page = current; render(); });
+            numbers.appendChild(button);
+        }
+        previous.disabled = page === 1;
+        next.disabled = page === pages;
+    }
+    previous.addEventListener('click', () => { if (page > 1) { page--; render(); } });
+    next.addEventListener('click', () => {
+        if (page < Math.max(1, Math.ceil(rows.length / pageSize))) { page++; render(); }
+    });
+    render();
+})();
+</script>
 </html>

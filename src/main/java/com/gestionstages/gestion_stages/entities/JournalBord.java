@@ -27,6 +27,9 @@ public class JournalBord {
     @Column(columnDefinition = "TEXT")
     private String observations;
 
+    @Column(name = "duree_heures")
+    private Integer dureeHeures = 7;
+
     // Constructeurs
     public JournalBord() {
     }
@@ -84,5 +87,13 @@ public class JournalBord {
 
     public void setObservations(String observations) {
         this.observations = observations;
+    }
+
+    public Integer getDureeHeures() {
+        return dureeHeures == null ? 7 : dureeHeures;
+    }
+
+    public void setDureeHeures(Integer dureeHeures) {
+        this.dureeHeures = dureeHeures == null ? 7 : Math.max(1, Math.min(24, dureeHeures));
     }
 }

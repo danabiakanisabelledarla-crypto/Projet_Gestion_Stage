@@ -25,6 +25,74 @@ body.intern-portal {
     font-family: Inter, Arial, sans-serif;
     font-size: 14px;
 }
+body.workspace-dark {
+    --intern-text:#e5edf8;
+    --intern-muted:#9aa9bd;
+    --intern-border:#29384c;
+    --intern-surface:#111c2e;
+    --intern-bg:#08111f;
+    --intern-shadow:0 12px 32px rgba(0,0,0,.24);
+    color:var(--intern-text);
+    background:var(--intern-bg);
+}
+.workspace-dark .intern-card,
+.workspace-dark .intern-kpi,
+.workspace-dark .intern-header,
+.workspace-dark .workspace-header,
+.workspace-dark .intern-modal-panel,
+.workspace-dark .intern-entry-body,
+.workspace-dark .intern-journal-entry,
+.workspace-dark .intern-task,
+.workspace-dark .intern-objective,
+.workspace-dark .intern-chart-box {
+    color:var(--intern-text);
+    background:var(--intern-surface);
+    border-color:var(--intern-border);
+}
+.workspace-dark .intern-card-header,
+.workspace-dark .intern-data-row,
+.workspace-dark .intern-feed-item,
+.workspace-dark .intern-table td,
+.workspace-dark .intern-table th {
+    border-color:var(--intern-border);
+}
+.workspace-dark .intern-input,
+.workspace-dark .intern-select,
+.workspace-dark .intern-textarea,
+.workspace-dark input,
+.workspace-dark select,
+.workspace-dark textarea {
+    color:#e5edf8;
+    background:#172337;
+    border-color:#334155;
+}
+.workspace-dark .intern-page-heading p,
+.workspace-dark .intern-card-subtitle,
+.workspace-dark .intern-kpi-note,
+.workspace-dark .intern-data-row span,
+.workspace-dark .intern-feed-item span,
+.workspace-dark .intern-feed-item small {
+    color:var(--intern-muted);
+}
+.workspace-dark .workspace-sidebar {
+    background:linear-gradient(180deg,#07101d,#0b1728);
+    border-color:#253247;
+}
+.stagiaire-syncing { cursor:progress; }
+.stagiaire-syncing::after {
+    content:"Synchronisation...";
+    position:fixed;
+    z-index:6000;
+    right:22px;
+    bottom:22px;
+    padding:10px 14px;
+    color:#fff;
+    background:#1d4ed8;
+    border-radius:8px;
+    box-shadow:0 12px 30px rgba(15,23,42,.24);
+    font-size:11px;
+    font-weight:700;
+}
 .intern-content-shell {
     width: calc(100% - 260px);
     min-width: 0;

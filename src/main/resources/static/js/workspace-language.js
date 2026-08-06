@@ -9,6 +9,7 @@
     const originalAttributes = new WeakMap();
     let currentLanguage = localStorage.getItem(storageKey) === 'en' ? 'en' : 'fr';
     let applying = false;
+    let initialized = false;
 
     const phrases = {
         'Gestion des stages': 'Internship management',
@@ -313,6 +314,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        if (initialized) {
+            attachButtons();
+            applyLanguage(document.body);
+            return;
+        }
+        initialized = true;
         attachButtons();
         applyLanguage(document.body);
 

@@ -64,13 +64,13 @@
             <div class="intern-kpi-value" th:text="${progression + '%'}">68%</div>
             <div class="intern-kpi-label">Progression globale</div>
             <div class="intern-progress"><span th:style="'width:' + ${progression} + '%;background:#2563eb'"></span></div>
-            <div class="intern-kpi-note" th:text="${tachesTerminees + ' tâches terminées'}">18 tâches terminées</div>
+            <div class="intern-kpi-note">Tâches, objectifs et livrables</div>
         </article>
         <article class="intern-kpi">
             <div class="intern-kpi-top"><span class="intern-kpi-icon tone-green"><i class="fa-regular fa-hourglass-half"></i></span></div>
             <div class="intern-kpi-value" th:text="${joursRestants + ' jours'}">32 jours</div>
             <div class="intern-kpi-label">Jours restants</div>
-            <div class="intern-progress"><span style="width:66%;background:#16a34a"></span></div>
+            <div class="intern-progress"><span th:style="'width:' + ${progressionTemps} + '%;background:#16a34a'"></span></div>
             <div class="intern-kpi-note" th:if="${stage != null}" th:text="'Fin prévue : ' + ${#temporals.format(stage.dateFin, 'dd/MM/yyyy')}">Fin prévue : 31/08/2026</div>
         </article>
     </section>
@@ -90,15 +90,14 @@
 
         <article class="intern-card hoverable">
             <div class="intern-card-header">
-                <div><h2 class="intern-card-title">Progression de mon stage</h2><p class="intern-card-subtitle">Évolution sur les sept derniers jours</p></div>
+                <div><h2 class="intern-card-title">Progression de mon stage</h2><p class="intern-card-subtitle">Répartition calculée depuis vos modules</p></div>
                 <strong th:text="${progression + '%'}">68%</strong>
             </div>
             <div class="intern-progress"><span th:style="'width:' + ${progression} + '%;background:#2563eb'"></span></div>
-            <div class="intern-chart-box" style="margin-top:18px">
-                <span class="intern-chart-bar" style="height:30%"></span><span class="intern-chart-bar" style="height:38%"></span>
-                <span class="intern-chart-bar" style="height:44%"></span><span class="intern-chart-bar" style="height:52%"></span>
-                <span class="intern-chart-bar" style="height:58%"></span><span class="intern-chart-bar" style="height:63%"></span>
-                <span class="intern-chart-bar" th:style="'height:' + ${progression} + '%'"></span>
+            <div class="intern-data-list" style="margin-top:18px">
+                <div class="intern-data-row"><span>Tâches (50 %)</span><strong th:text="${progressionTaches + '%'}">0%</strong></div>
+                <div class="intern-data-row"><span>Objectifs (30 %)</span><strong th:text="${progressionObjectifs + '%'}">0%</strong></div>
+                <div class="intern-data-row"><span>Livrables (20 %)</span><strong th:text="${progressionLivrables + '%'}">0%</strong></div>
             </div>
         </article>
 

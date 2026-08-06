@@ -777,6 +777,29 @@ body.coach-portal {
 .coach-quick-action i { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 7px; background: #dbeafe; color: var(--coach-blue); }
 
 .coach-pagination { display: flex; justify-content: space-between; align-items: center; padding-top: 13px; color: var(--coach-muted); font-size: 10px; }
+
+.coach-dark-mode body {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+.coach-dark-mode .coach-main,
+.coach-dark-mode .coach-page {
+    background: #0f172a;
+}
+.coach-dark-mode .coach-card,
+.coach-dark-mode .coach-kpi,
+.coach-dark-mode .coach-profile-hero,
+.coach-dark-mode .coach-modal-panel {
+    background: #172033;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+.coach-dark-mode .coach-card p,
+.coach-dark-mode .coach-card small,
+.coach-dark-mode .coach-data-row span,
+.coach-dark-mode .coach-heading p {
+    color: #94a3b8;
+}
 .coach-pages { display: flex; gap: 5px; }
 .coach-pages button { width: 28px; height: 28px; border: 1px solid var(--coach-border); border-radius: 6px; background: #fff; color: #475569; }
 .coach-pages button.active { border-color: var(--coach-blue); background: var(--coach-blue); color: #fff; }

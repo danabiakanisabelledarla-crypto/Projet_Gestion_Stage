@@ -11,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.authentication.DisabledException;
 
 @Configuration
 @EnableWebSecurity
@@ -90,7 +91,13 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/redirection", true)
-                .failureUrl("/login?error=true")
+                .failureHandler((request, response, exception) -> {
+                    if (exception instanceof DisabledException) {
+                        response.sendRedirect("/login?blocked=true");
+                    } else {
+                        response.sendRedirect("/login?error=true");
+                    }
+                })
                 .permitAll()
             )
             .logout(logout -> logout

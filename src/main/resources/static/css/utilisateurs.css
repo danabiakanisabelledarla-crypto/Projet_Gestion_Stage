@@ -229,3 +229,12 @@
 .actions-admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .btn-action-secondaire { padding: 10px 16px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Poppins', sans-serif; color: #475569; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
 .btn-action-secondaire:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+.user-action-menu { position: relative; display: inline-flex; }
+.user-action-popover { display: none; position: absolute; z-index: 50; right: 0; top: calc(100% + 6px); min-width: 150px; padding: 6px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 12px 28px rgba(15, 23, 42, .16); }
+.user-action-popover.open { display: block; }
+.user-action-popover form { margin: 0; }
+.user-action-item { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 0; border-radius: 7px; background: transparent; color: #334155; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.user-action-item:hover { background: #f1f5f9; }
+.user-action-item.danger { color: #b91c1c; }
+.user-action-item.danger:hover { background: #fef2f2; }
+.user-action-item:disabled { opacity: .45; cursor: not-allowed; }

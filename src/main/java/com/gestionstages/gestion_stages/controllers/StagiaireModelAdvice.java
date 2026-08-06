@@ -4,6 +4,7 @@ import com.gestionstages.gestion_stages.entities.Notification;
 import com.gestionstages.gestion_stages.entities.Utilisateur;
 import com.gestionstages.gestion_stages.repositories.ConversationRepository;
 import com.gestionstages.gestion_stages.repositories.NotificationRepository;
+import com.gestionstages.gestion_stages.repositories.StagiaireRepository;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -16,17 +17,20 @@ public class StagiaireModelAdvice {
 
     private final NotificationRepository notificationRepository;
     private final ConversationRepository conversationRepository;
+    private final StagiaireRepository stagiaireRepository;
 
     public StagiaireModelAdvice(NotificationRepository notificationRepository,
-                                ConversationRepository conversationRepository) {
+                                ConversationRepository conversationRepository,
+                                StagiaireRepository stagiaireRepository) {
         this.notificationRepository = notificationRepository;
         this.conversationRepository = conversationRepository;
+        this.stagiaireRepository = stagiaireRepository;
     }
 
     @ModelAttribute("notificationsStagiaire")
     public List<Notification> notifications(Authentication authentication) {
         Utilisateur utilisateur = authenticatedUser(authentication);
-        return utilisateur == null
+        return utilisateur == null || !notificationsSystemeActives(utilisateur)
                 ? List.of()
                 : notificationRepository.findTop8ByDestinataireEmailOrderByDateEnvoiDesc(
                         utilisateur.getEmail());
@@ -35,7 +39,7 @@ public class StagiaireModelAdvice {
     @ModelAttribute("notificationsCount")
     public long notificationsCount(Authentication authentication) {
         Utilisateur utilisateur = authenticatedUser(authentication);
-        return utilisateur == null ? 0
+        return utilisateur == null || !notificationsSystemeActives(utilisateur) ? 0
                 : notificationRepository.countByDestinataireEmailAndStatutNot(
                         utilisateur.getEmail(), "lue");
     }
@@ -71,6 +75,12 @@ public class StagiaireModelAdvice {
             return null;
         }
         return details.getUtilisateur();
+    }
+
+    private boolean notificationsSystemeActives(Utilisateur utilisateur) {
+        return stagiaireRepository.findByUtilisateurId(utilisateur.getId())
+                .map(stagiaire -> Boolean.TRUE.equals(stagiaire.getNotificationsSysteme()))
+                .orElse(true);
     }
 
     private String initiale(String valeur) {

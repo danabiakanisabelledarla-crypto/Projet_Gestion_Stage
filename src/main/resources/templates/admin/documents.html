@@ -178,25 +178,22 @@
 
                 <!-- PAGINATION -->
                 <div class="pagination-bar">
-                    <div class="pagination-info">
-                        Affichage de 1 à <span th:text="${totalDocs}">0</span> sur <span th:text="${totalDocs}">0</span> documents
+                    <div class="pagination-info" id="documentPaginationInfo">
+                        Affichage de 0 à 0 sur 0 documents
                     </div>
                     <div class="pagination-btns">
-                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="page-btn actif">1</button>
-                        <button class="page-btn" th:if="${totalDocs > 10}">2</button>
-                        <button class="page-btn" th:if="${totalDocs > 20}">3</button>
-                        <span th:if="${totalDocs > 30}" class="page-dots">...</span>
-                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button type="button" class="page-btn" id="documentPrevious"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div id="documentPageNumbers" class="page-number-group"></div>
+                        <button type="button" class="page-btn" id="documentNext"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             </article>
         </div>
 
-        <aside class="backup-side-column">
-            <div class="detail-panel" id="detailPanel">
+        <div class="document-detail-modal" id="documentDetailModal" aria-hidden="true">
+            <div class="detail-panel document-detail-dialog" id="detailPanel" role="dialog" aria-modal="true" aria-labelledby="documentDetailTitle">
                 <div class="detail-panel-header">
-                    <h2>Détails du document</h2>
+                    <h2 id="documentDetailTitle">Détails du document</h2>
                     <button class="detail-panel-close" onclick="closeDetailDoc()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div id="detailContentDoc">
@@ -206,7 +203,7 @@
                     </div>
                 </div>
             </div>
-        </aside>
+        </div>
     </section>
 </main>
 
@@ -275,11 +272,20 @@
 
     function renderDocumentOwners(groups = ownerGroups) {
         const body = document.getElementById('documentOwnersBody');
+        documentCurrentGroups = groups;
         if (!groups.length) {
             body.innerHTML = '<tr><td colspan="5" class="empty-state">Aucun document trouvé.</td></tr>';
+            updateDocumentPagination(0, 1);
             return;
         }
-        body.innerHTML = groups.map((group, index) => {
+
+        const totalGroups = groups.length;
+        const totalPages = Math.max(1, Math.ceil(totalGroups / documentPageSize));
+        documentCurrentPage = Math.min(documentCurrentPage, totalPages);
+        const start = (documentCurrentPage - 1) * documentPageSize;
+        const pagedGroups = groups.slice(start, start + documentPageSize);
+
+        body.innerHTML = pagedGroups.map((group, index) => {
             const statuses = [...new Set(group.docs.map(doc => doc.statut || 'disponible'))];
             const status = statuses.length === 1 ? statuses[0] : 'plusieurs statuts';
             const documents = group.docs.map(doc => {
@@ -294,6 +300,8 @@
                 <td><button type="button" class="action-btn" onclick="selectDoc(this, ${group.docs[0].id})" title="Voir détails"><i class="fa-regular fa-eye"></i></button></td>
             </tr>`;
         }).join('');
+
+        updateDocumentPagination(totalGroups, totalPages);
     }
 
     function toggleOwnerDocuments(index) {
@@ -369,25 +377,9 @@
                     <div class="history-step">
                         <div class="history-dot vert"></div>
                         <div class="history-content">
-                            <div class="history-version">v3 · Version finale</div>
-                            <div class="history-auteur">Par Stagiaire</div>
-                            <div class="history-date">15 juillet 2026</div>
-                        </div>
-                    </div>
-                    <div class="history-step">
-                        <div class="history-dot"></div>
-                        <div class="history-content">
-                            <div class="history-version">v2 · Correction</div>
-                            <div class="history-auteur">Par Encadreur</div>
-                            <div class="history-date">12 juillet 2026</div>
-                        </div>
-                    </div>
-                    <div class="history-step">
-                        <div class="history-dot"></div>
-                        <div class="history-content">
-                            <div class="history-version">v1 · Création</div>
-                            <div class="history-auteur">Par Stagiaire</div>
-                            <div class="history-date">10 juillet 2026</div>
+                            <div class="history-version">v${escapeHtml(d.version || '1.0')} · Version enregistrée</div>
+                            <div class="history-auteur">${escapeHtml(d.proprietaireNom || 'Administration')}</div>
+                            <div class="history-date">${escapeHtml(d.dateDepot || 'Date non renseignée')}</div>
                         </div>
                     </div>
                 </div>
@@ -398,21 +390,14 @@
                 <table class="downloads-table">
                     <thead><tr><th>Utilisateur</th><th>Date</th><th>Action</th></tr></thead>
                     <tbody>
-                        <tr><td>Admin</td><td>Aujourd'hui</td><td>Téléchargement</td></tr>
-                        <tr><td>Responsable</td><td>Hier</td><td>Consultation</td></tr>
+                        <tr><td colspan="3" class="empty-state">Aucune consultation enregistrée.</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="detail-section">
                 <div class="detail-section-title"><i class="fa-solid fa-comments"></i> Commentaires</div>
-                <div class="comment-item">
-                    <div class="comment-avatar">A</div>
-                    <div class="comment-content">
-                        <div class="comment-header"><span class="comment-auteur">Admin</span><span class="comment-date">15/07/2026</span></div>
-                        <div class="comment-texte">Document validé. Merci de procéder à l'archivage.</div>
-                    </div>
-                </div>
+                <div class="empty-state">Aucun commentaire enregistré.</div>
                 <form class="comment-input-area" action="/admin/documents/commenter" method="post">
                     <input type="hidden" name="${csrfName}" value="${csrfToken}">
                     <input type="hidden" name="documentId" value="${d.id}">
@@ -422,6 +407,9 @@
             </div>
 
         `;
+        const modal = document.getElementById('documentDetailModal');
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
     }
 
     function escapeHtml(value) {
@@ -431,12 +419,9 @@
     }
 
     function closeDetailDoc() {
-        document.getElementById('detailContentDoc').innerHTML = `
-            <div class="empty-state" style="padding:40px 10px;">
-                <i class="fa-solid fa-mouse-pointer" style="font-size:32px;display:block;margin-bottom:12px;"></i>
-                Cliquez sur un document pour voir ses détails
-            </div>
-        `;
+        const modal = document.getElementById('documentDetailModal');
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
         document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
     }
 
@@ -460,12 +445,69 @@
                 && (!status || (doc.statut || 'disponible') === status)
                 && (!q || `${group.owner} ${group.service} ${doc.nomFichier} ${doc.typeDocument}`.toLowerCase().includes(q)))
         })).filter(group => (!owner || group.owner === owner) && group.docs.length);
+        documentCurrentPage = 1;
         renderDocumentOwners(filtered);
     }
+
+    const documentPageSize = 6;
+    let documentCurrentPage = 1;
+    let documentCurrentGroups = ownerGroups;
+
+    function updateDocumentPagination(totalGroups, totalPages) {
+        const info = document.getElementById('documentPaginationInfo');
+        const pageNumbers = document.getElementById('documentPageNumbers');
+        const previous = document.getElementById('documentPrevious');
+        const next = document.getElementById('documentNext');
+        if (info) {
+            info.textContent = totalGroups === 0
+                ? 'Aucun document trouvé.'
+                : `Affichage de ${Math.min((documentCurrentPage - 1) * documentPageSize + 1, totalGroups)} à ${Math.min(documentCurrentPage * documentPageSize, totalGroups)} sur ${totalGroups} documents`;
+        }
+        if (pageNumbers) {
+            pageNumbers.replaceChildren();
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'page-btn' + (i === documentCurrentPage ? ' actif' : '');
+                button.textContent = i;
+                button.addEventListener('click', () => {
+                    documentCurrentPage = i;
+                    renderDocumentOwners(documentCurrentGroups);
+                });
+                pageNumbers.appendChild(button);
+            }
+        }
+        if (previous) previous.disabled = documentCurrentPage === 1;
+        if (next) next.disabled = documentCurrentPage === totalPages;
+    }
+
+    function goToDocumentPage(page) {
+        documentCurrentPage = page;
+        renderDocumentOwners(documentCurrentGroups);
+    }
+
+    document.getElementById('documentPrevious')?.addEventListener('click', () => {
+        if (documentCurrentPage > 1) {
+            documentCurrentPage -= 1;
+            renderDocumentOwners(documentCurrentGroups);
+        }
+    });
+
+    document.getElementById('documentNext')?.addEventListener('click', () => {
+        const totalGroups = documentCurrentGroups.length;
+        const totalPages = Math.max(1, Math.ceil(totalGroups / documentPageSize));
+        if (documentCurrentPage < totalPages) {
+            documentCurrentPage += 1;
+            renderDocumentOwners(documentCurrentGroups);
+        }
+    });
 
     let currentTab = 'toutes';
     initializeDocumentFilters();
     renderDocumentOwners();
+    document.getElementById('documentDetailModal')?.addEventListener('click', event => {
+        if (event.target.id === 'documentDetailModal') closeDetailDoc();
+    });
 
     function exporterDocuments() {
         const rows = [];

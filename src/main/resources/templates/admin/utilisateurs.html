@@ -211,7 +211,21 @@
                                     <div class="action-btns">
                                         <button class="backup-btn small" th:onclick="'event.stopPropagation(); selectUser(this, ' + ${u.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>
                                         <button class="backup-btn small" th:onclick="'event.stopPropagation(); openEdit(' + ${u.id} + ')'" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                                        <button class="backup-btn small" onclick="event.stopPropagation()" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                        <div class="user-action-menu">
+                                            <button class="backup-btn small" type="button"
+                                                    th:onclick="'event.stopPropagation(); toggleUserMenu(event, ' + ${u.id} + ')'"
+                                                    title="Plus d’actions" aria-label="Plus d’actions"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                            <div class="user-action-popover" th:id="'userMenu-' + ${u.id}">
+                                                <form th:action="@{/admin/utilisateurs/desactiver/{id}(id=${u.id})}" method="post">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                                    <button type="submit" class="user-action-item danger" onclick="event.stopPropagation()" th:disabled="${u.statut.name() != 'actif'}"><i class="fa-solid fa-user-lock"></i> Bloquer</button>
+                                                </form>
+                                                <form th:action="@{/admin/utilisateurs/reactiver/{id}(id=${u.id})}" method="post">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                                    <button type="submit" class="user-action-item" onclick="event.stopPropagation()" th:disabled="${u.statut.name() == 'actif'}"><i class="fa-solid fa-user-check"></i> Débloquer</button>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -224,19 +238,16 @@
 
                 <!-- PAGINATION -->
                 <div class="pagination-bar">
-                    <div class="pagination-info">
+                    <div class="pagination-info" id="userPaginationInfo">
                         Affichage de 1 à <span th:text="${totalUsers}">0</span> sur <span th:text="${totalUsers}">0</span> utilisateurs
                     </div>
                     <div class="pagination-btns">
-                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="page-btn actif">1</button>
-                        <button class="page-btn" th:if="${totalUsers > 10}">2</button>
-                        <button class="page-btn" th:if="${totalUsers > 20}">3</button>
-                        <span th:if="${totalUsers > 30}" class="page-dots">...</span>
-                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button class="page-btn" id="userPrevious"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div id="userPageNumbers" class="page-number-group"></div>
+                        <button class="page-btn" id="userNext"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     <div class="page-size">
-                        <select><option>10 par page</option><option>25 par page</option><option>50 par page</option></select>
+                        <select id="userPageSize"><option value="10">10 par page</option><option value="25">25 par page</option><option value="50">50 par page</option></select>
                     </div>
                 </div>
             </div>
@@ -402,17 +413,110 @@
         document.querySelector(`.tab[data-filtre="${filtre}"]`).classList.add('actif');
         document.querySelectorAll('.backup-table tbody tr').forEach(row => {
             if (row.querySelector('td[colspan]')) return;
-            if (filtre === 'toutes') { row.style.display = ''; return; }
-            if (filtre === 'inactif') {
-                row.style.display = row.dataset.statut === 'inactif' ? '' : 'none';
+            if (filtre === 'toutes') {
+                row.dataset.filtered = 'true';
+                row.style.display = '';
                 return;
             }
-            row.style.display = row.dataset.role === filtre ? '' : 'none';
+            const visible = filtre === 'inactif'
+                ? row.dataset.statut === 'inactif'
+                : row.dataset.role === filtre;
+            row.dataset.filtered = visible ? 'true' : 'false';
+            row.style.display = visible ? '' : 'none';
         });
+        currentUserPage = 1;
+        updateUserPagination();
     }
 
     function openModal(id) { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    const userPageSizeSelect = document.getElementById('userPageSize');
+    let currentUserPage = 1;
+    let usersPerPage = Number(userPageSizeSelect?.value || 10);
+
+    document.querySelectorAll('.backup-table tbody tr').forEach(row => {
+        if (!row.querySelector('td[colspan]')) {
+            row.dataset.filtered = 'true';
+        }
+    });
+
+    userPageSizeSelect?.addEventListener('change', () => {
+        usersPerPage = Number(userPageSizeSelect.value) || 10;
+        currentUserPage = 1;
+        updateUserPagination();
+    });
+
+    function updateUserPagination() {
+        const allRows = Array.from(document.querySelectorAll('.backup-table tbody tr'));
+        const dataRows = allRows.filter(row => !row.querySelector('td[colspan]'));
+        const filteredRows = dataRows.filter(row => row.dataset.filtered !== 'false');
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / usersPerPage));
+        currentUserPage = Math.min(currentUserPage, totalPages);
+        const start = (currentUserPage - 1) * usersPerPage;
+
+        dataRows.forEach(row => {
+            if (row.dataset.filtered === 'false') {
+                row.style.display = 'none';
+                return;
+            }
+            const visibleIndex = filteredRows.indexOf(row);
+            row.style.display = visibleIndex >= start && visibleIndex < start + usersPerPage ? '' : 'none';
+        });
+
+        const emptyRow = allRows.find(row => row.querySelector('td[colspan]'));
+        if (emptyRow) {
+            emptyRow.style.display = total === 0 ? '' : 'none';
+        }
+
+        const info = document.getElementById('userPaginationInfo');
+        if (info) {
+            info.textContent = total === 0
+                ? 'Aucun utilisateur trouvé.'
+                : `Affichage de ${total ? start + 1 : 0} à ${Math.min(start + usersPerPage, total)} sur ${total} utilisateurs`;
+        }
+
+        const pageNumbers = document.getElementById('userPageNumbers');
+        if (pageNumbers) {
+            pageNumbers.replaceChildren();
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'page-btn' + (i === currentUserPage ? ' actif' : '');
+                button.textContent = i;
+                button.addEventListener('click', () => goToUserPage(i));
+                pageNumbers.appendChild(button);
+            }
+        }
+
+        document.getElementById('userPrevious')?.toggleAttribute('disabled', currentUserPage === 1);
+        document.getElementById('userNext')?.toggleAttribute('disabled', currentUserPage === totalPages);
+    }
+
+    function goToUserPage(page) {
+        currentUserPage = page;
+        updateUserPagination();
+    }
+
+    document.getElementById('userPrevious')?.addEventListener('click', () => {
+        if (currentUserPage > 1) {
+            currentUserPage -= 1;
+            updateUserPagination();
+        }
+    });
+
+    document.getElementById('userNext')?.addEventListener('click', () => {
+        const totalRows = Array.from(document.querySelectorAll('.backup-table tbody tr'))
+            .filter(row => !row.querySelector('td[colspan]') && row.dataset.filtered !== 'false').length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / usersPerPage));
+        if (currentUserPage < totalPages) {
+            currentUserPage += 1;
+            updateUserPagination();
+        }
+    });
+
+    updateUserPagination();
 
     function openEdit(id) {
         const u = usersData.find(x => x.id === id);
@@ -433,13 +537,26 @@
         if (csrf) {
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = csrf.name;
+            input.name = csrf.name || '_csrf';
             input.value = csrf.value;
             form.appendChild(input);
         }
         document.body.appendChild(form);
         form.submit();
     }
+
+    function toggleUserMenu(event, id) {
+        event.stopPropagation();
+        const menu = document.getElementById('userMenu-' + id);
+        document.querySelectorAll('.user-action-popover.open').forEach(item => {
+            if (item !== menu) item.classList.remove('open');
+        });
+        menu?.classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.user-action-popover.open').forEach(item => item.classList.remove('open'));
+    });
 </script>
 <!-- MODAL DÉTAILS UTILISATEUR -->
 <div class="modal-overlay" id="modalDetails" onclick="if(event.target===this) fermerModal()">

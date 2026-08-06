@@ -58,7 +58,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="coach-pagination"><span id="evaluationCount" th:text="${evaluationsTotales + ' évaluation(s)'}">0 évaluation</span><div class="coach-pages"><button type="button">‹</button><button class="active" type="button">1</button><button type="button">›</button></div></div>
+                <div class="coach-pagination"><span id="evaluationCount" th:text="${evaluationsTotales + ' évaluation(s)'}">0 évaluation</span><div class="coach-pages"><button type="button" id="evaluationPrevious">‹</button><div id="evaluationPageNumbers" class="evaluation-page-numbers"></div><button type="button" id="evaluationNext">›</button></div></div>
             </article>
 
             <div style="display:grid;gap:18px;align-content:start">
@@ -151,8 +151,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const creation = document.getElementById('newEvaluationModal');
-    document.querySelectorAll('[data-open-evaluation]').forEach(button => button.addEventListener('click', () => creation.classList.add('open')));
-    document.querySelectorAll('[data-close-evaluation]').forEach(button => button.addEventListener('click', () => creation.classList.remove('open')));
+    document.querySelectorAll('[data-open-evaluation]').forEach(button =>
+        button.addEventListener('click', () => creation?.classList.add('open')));
+    document.querySelectorAll('[data-close-evaluation]').forEach(button =>
+        button.addEventListener('click', () => creation?.classList.remove('open')));
 
     const rows = [...document.querySelectorAll('.evaluation-row')];
     const search = document.getElementById('evaluationSearch');
@@ -162,21 +164,80 @@ document.addEventListener('DOMContentLoaded', () => {
     const period = document.getElementById('evaluationPeriod');
     const status = document.getElementById('evaluationStatus');
     const count = document.getElementById('evaluationCount');
+    const evaluationPrevious = document.getElementById('evaluationPrevious');
+    const evaluationNext = document.getElementById('evaluationNext');
+    const evaluationPageNumbers = document.getElementById('evaluationPageNumbers');
+    const evaluationPageSize = 10;
+    let evaluationCurrentPage = 1;
     const now = new Date();
     const filter = () => {
-        const query = (search.value || globalSearch.value).toLowerCase();
+        const query = (search?.value || globalSearch?.value || '').toLowerCase();
         let visible = 0;
         rows.forEach(row => {
             const date = new Date(row.dataset.date + 'T00:00:00');
-            const periodMatches = !period.value || (period.value === 'month' && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) || (period.value === 'year' && date.getFullYear() === now.getFullYear());
-            const show = (!query || row.dataset.search.includes(query)) && (!student.value || row.dataset.stage === student.value) && (!service.value || row.dataset.service === service.value) && (!status.value || row.dataset.status === status.value) && periodMatches;
+            const periodValue = period?.value || '';
+            const periodMatches = !periodValue || (periodValue === 'month' && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) || (periodValue === 'year' && date.getFullYear() === now.getFullYear());
+            const show = (!query || (row.dataset.search || '').includes(query))
+                && (!(student?.value) || row.dataset.stage === student.value)
+                && (!(service?.value) || row.dataset.service === service.value)
+                && (!(status?.value) || row.dataset.status === status.value)
+                && periodMatches;
             row.style.display = show ? '' : 'none';
             if (show) visible++;
         });
-        count.textContent = visible + ' évaluation(s) affichée(s)';
+        evaluationCurrentPage = 1;
+        updateEvaluationPagination();
     };
-    [search, globalSearch].forEach(input => input.addEventListener('input', filter));
-    [student, service, period, status].forEach(select => select.addEventListener('change', filter));
+    [search, globalSearch].filter(Boolean).forEach(input => input.addEventListener('input', filter));
+    [student, service, period, status].filter(Boolean).forEach(select => select.addEventListener('change', filter));
+
+    function updateEvaluationPagination() {
+        const visibleRows = rows.filter(row => row.style.display !== 'none');
+        const total = visibleRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / evaluationPageSize));
+        evaluationCurrentPage = Math.min(evaluationCurrentPage, totalPages);
+        const start = (evaluationCurrentPage - 1) * evaluationPageSize;
+        visibleRows.forEach((row, index) => {
+            row.style.display = index >= start && index < start + evaluationPageSize ? '' : 'none';
+        });
+        if (count) {
+            count.textContent = total === 0 ? 'Aucune évaluation affichée.' : total + ' évaluation(s) affichée(s)';
+        }
+        if (evaluationPageNumbers) {
+            evaluationPageNumbers.replaceChildren();
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'coach-btn' + (i === evaluationCurrentPage ? ' active' : '');
+                button.textContent = i;
+                button.addEventListener('click', () => {
+                    evaluationCurrentPage = i;
+                    updateEvaluationPagination();
+                });
+                evaluationPageNumbers.appendChild(button);
+            }
+        }
+        if (evaluationPrevious) evaluationPrevious.disabled = evaluationCurrentPage === 1;
+        if (evaluationNext) evaluationNext.disabled = evaluationCurrentPage >= totalPages;
+    }
+
+    evaluationPrevious?.addEventListener('click', () => {
+        if (evaluationCurrentPage > 1) {
+            evaluationCurrentPage -= 1;
+            updateEvaluationPagination();
+        }
+    });
+
+    evaluationNext?.addEventListener('click', () => {
+        const total = rows.filter(row => row.style.display !== 'none').length;
+        const totalPages = Math.max(1, Math.ceil(total / evaluationPageSize));
+        if (evaluationCurrentPage < totalPages) {
+            evaluationCurrentPage += 1;
+            updateEvaluationPagination();
+        }
+    });
+
+    updateEvaluationPagination();
 
     const detail = document.getElementById('evaluationDetailModal');
     const openDetail = row => {
@@ -207,14 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
             item.append(label, score);
             notesContainer.appendChild(item);
         });
-        detail.classList.add('open');
+        detail?.classList.add('open');
     };
     rows.forEach(row => {
-        row.querySelector('.evaluation-view').addEventListener('click', () => openDetail(row));
+        row.querySelector('.evaluation-view')?.addEventListener('click', () => openDetail(row));
     });
-    document.querySelectorAll('[data-close-detail]').forEach(button => button.addEventListener('click', () => detail.classList.remove('open')));
+    document.querySelectorAll('[data-close-detail]').forEach(button =>
+        button.addEventListener('click', () => detail?.classList.remove('open')));
 
-    document.getElementById('exportEvaluations').addEventListener('click', () => {
+    document.getElementById('exportEvaluations')?.addEventListener('click', () => {
         const lines = [];
         lines.push(['Stagiaire','Service','Note','Critère principal','Date','Statut']);
         rows.filter(row => row.style.display !== 'none').forEach(row => lines.push([...row.cells].slice(0, 6).map(cell => cell.innerText.replace(/\s+/g, ' ').trim())));

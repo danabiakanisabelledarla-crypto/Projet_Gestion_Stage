@@ -105,10 +105,6 @@
                     <h2>Liste des services</h2>
                     <p><span id="visibleServiceCount" th:text="${totalServices}">0</span> services affichés</p>
                 </div>
-                <div class="svc-view-switch" role="group" aria-label="Mode d'affichage">
-                    <button type="button" class="active" title="Vue tableau" onclick="changerVueServices('table', this)"><i class="fa-solid fa-list"></i></button>
-                    <button type="button" title="Vue compacte" onclick="changerVueServices('compact', this)"><i class="fa-solid fa-table-cells-large"></i></button>
-                </div>
             </header>
 
             <div class="svc-toolbar">
@@ -156,12 +152,6 @@
                                 th:text="${row.localisation}">Bâtiment A</option>
                     </select>
                 </label>
-                <button type="button" class="svc-filter-btn" onclick="appliquerFiltres()">
-                    <i class="fa-solid fa-filter"></i> Filtrer
-                </button>
-                <button type="button" class="svc-reset-btn" title="Réinitialiser les filtres" onclick="reinitialiserFiltres()">
-                    <i class="fa-solid fa-rotate-left"></i>
-                </button>
             </div>
 
             <div class="backup-table-wrap">
@@ -287,10 +277,14 @@
 
             <footer class="svc-pagination">
                 <span id="paginationInfo">Affichage des services disponibles</span>
-                <div>
-                    <button type="button" disabled title="Page précédente"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button type="button" class="active">1</button>
-                    <button type="button" disabled title="Page suivante"><i class="fa-solid fa-chevron-right"></i></button>
+                <div id="servicePaginationButtons">
+                    <button type="button" id="servicePreviousPage" title="Page précédente" onclick="changerPageServices(-1)">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span id="servicePageNumbers"></span>
+                    <button type="button" id="serviceNextPage" title="Page suivante" onclick="changerPageServices(1)">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </footer>
         </div>
@@ -387,6 +381,8 @@
 
 <script>
     let serviceSelectionne = null;
+    let pageServicesCourante = 1;
+    const servicesParPage = 10;
 
     function ouvrirModal(id) {
         const modal = document.getElementById(id);
@@ -447,12 +443,6 @@
         document.getElementById('serviceDetails').classList.remove('open');
     }
 
-    function changerVueServices(mode, bouton) {
-        document.querySelectorAll('.svc-view-switch button').forEach(item => item.classList.remove('active'));
-        bouton.classList.add('active');
-        document.getElementById('servicesTable').classList.toggle('compact-view', mode === 'compact');
-    }
-
     function echapperHtml(valeur) {
         const div = document.createElement('div');
         div.textContent = valeur;
@@ -471,26 +461,72 @@
         if (serviceSelectionne) ouvrirModificationDepuisLigne(serviceSelectionne);
     }
 
-    function appliquerFiltres() {
+    function servicesFiltres() {
         const recherche = (document.getElementById('svcSearch')?.value || '').trim().toLowerCase();
         const responsable = document.getElementById('filterResponsable')?.value || '';
         const statut = document.getElementById('filterStatut')?.value || '';
         const localisation = document.getElementById('filterLocalisation')?.value || '';
-        let visibles = 0;
-
-        document.querySelectorAll('.svc-service-row').forEach(ligne => {
+        return Array.from(document.querySelectorAll('.svc-service-row')).filter(ligne => {
             const texte = (ligne.dataset.nom + ' ' + ligne.dataset.description + ' ' + ligne.dataset.responsable).toLowerCase();
-            const afficher = (!recherche || texte.includes(recherche))
+            return (!recherche || texte.includes(recherche))
                 && (!responsable || ligne.dataset.responsable === responsable)
                 && (!statut || ligne.dataset.statut === statut)
                 && (!localisation || ligne.dataset.localisation === localisation);
-            ligne.hidden = !afficher;
-            if (afficher) visibles++;
         });
+    }
+
+    function appliquerFiltres(reinitialiserPage = true) {
+        if (reinitialiserPage) pageServicesCourante = 1;
+        const lignes = Array.from(document.querySelectorAll('.svc-service-row'));
+        const lignesFiltrees = servicesFiltres();
+        const totalPages = Math.max(1, Math.ceil(lignesFiltrees.length / servicesParPage));
+        pageServicesCourante = Math.min(pageServicesCourante, totalPages);
+        const debut = (pageServicesCourante - 1) * servicesParPage;
+        const fin = debut + servicesParPage;
+
+        lignes.forEach(ligne => ligne.hidden = true);
+        lignesFiltrees.slice(debut, fin).forEach(ligne => ligne.hidden = false);
+
         const compteur = document.getElementById('visibleServiceCount');
         const pagination = document.getElementById('paginationInfo');
-        if (compteur) compteur.textContent = visibles;
-        if (pagination) pagination.textContent = visibles + ' service' + (visibles > 1 ? 's' : '') + ' trouvé' + (visibles > 1 ? 's' : '');
+        if (compteur) compteur.textContent = lignesFiltrees.length;
+        if (pagination) {
+            const premier = lignesFiltrees.length === 0 ? 0 : debut + 1;
+            const dernier = Math.min(fin, lignesFiltrees.length);
+            pagination.textContent = premier + ' à ' + dernier + ' sur ' + lignesFiltrees.length + ' service'
+                + (lignesFiltrees.length > 1 ? 's' : '');
+        }
+        rendrePaginationServices(totalPages);
+    }
+
+    function rendrePaginationServices(totalPages) {
+        const conteneur = document.getElementById('servicePageNumbers');
+        const precedent = document.getElementById('servicePreviousPage');
+        const suivant = document.getElementById('serviceNextPage');
+        if (!conteneur || !precedent || !suivant) return;
+
+        conteneur.replaceChildren();
+        const fin = Math.min(totalPages, Math.max(5, pageServicesCourante + 2));
+        const debut = Math.max(1, fin - 4);
+        for (let page = debut; page <= fin; page++) {
+            const bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.textContent = page;
+            bouton.classList.toggle('active', page === pageServicesCourante);
+            bouton.addEventListener('click', () => {
+                pageServicesCourante = page;
+                appliquerFiltres(false);
+            });
+            conteneur.appendChild(bouton);
+        }
+        precedent.disabled = pageServicesCourante <= 1;
+        suivant.disabled = pageServicesCourante >= totalPages;
+    }
+
+    function changerPageServices(delta) {
+        const totalPages = Math.max(1, Math.ceil(servicesFiltres().length / servicesParPage));
+        pageServicesCourante = Math.max(1, Math.min(totalPages, pageServicesCourante + delta));
+        appliquerFiltres(false);
     }
 
     function reinitialiserFiltres() {
@@ -562,8 +598,7 @@
         }
     });
 
-    const premiereLigne = document.querySelector('.svc-service-row');
-    if (premiereLigne) selectionnerService(premiereLigne);
+    appliquerFiltres();
 </script>
 </body>
 </html>

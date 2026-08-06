@@ -79,32 +79,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const preferenceRoot = document.querySelector('[data-profile-preferences]');
     const preferenceKey = 'dta-stagiaire-profile-preferences';
-    let preferences = {};
-    try {
-        preferences = JSON.parse(localStorage.getItem(preferenceKey) || '{}');
-    } catch (error) {
-        preferences = {};
-    }
+    const csrfToken = document.querySelector('input[name="_csrf"]')?.value || '';
+    const preferences = {};
+    const savePreferences = async values => {
+        const response = await fetch('/stagiaire/preferences', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(values)
+        });
+        if (!response.ok) throw new Error('Préférences non enregistrées');
+        const saved = await response.json();
+        localStorage.setItem(preferenceKey, JSON.stringify(saved));
+        return saved;
+    };
     preferenceRoot?.querySelectorAll('[data-preference]').forEach(input => {
         const key = input.dataset.preference;
-        if (Object.prototype.hasOwnProperty.call(preferences, key)) input.checked = Boolean(preferences[key]);
-        input.addEventListener('change', () => {
+        preferences[key] = input.checked;
+        input.addEventListener('change', async () => {
             preferences[key] = input.checked;
-            localStorage.setItem(preferenceKey, JSON.stringify(preferences));
-            document.body.classList.toggle('profile-dark-preview', key === 'dark' && input.checked);
-            showToast('Préférence enregistrée.');
+            document.body.classList.toggle('workspace-dark',
+                key === 'dark' ? input.checked : Boolean(preferences.dark));
+            try {
+                await savePreferences({
+                    ...preferences,
+                    language: document.querySelector('[data-profile-language]')?.value || 'fr'
+                });
+                showToast('Préférence enregistrée et appliquée.');
+            } catch (error) {
+                input.checked = !input.checked;
+                preferences[key] = input.checked;
+                showToast('Impossible d’enregistrer cette préférence.');
+            }
         });
-        if (key === 'dark' && input.checked) document.body.classList.add('profile-dark-preview');
+        if (key === 'dark' && input.checked) document.body.classList.add('workspace-dark');
     });
 
     const languageSelect = document.querySelector('[data-profile-language]');
-    const language = localStorage.getItem('dta-workspace-language') || 'fr';
-    if (languageSelect) languageSelect.value = language;
-    languageSelect?.addEventListener('change', () => {
+    languageSelect?.addEventListener('change', async () => {
         const desired = languageSelect.value;
         const current = localStorage.getItem('dta-workspace-language') || 'fr';
-        if (desired !== current) document.querySelector('.workspace-language-button')?.click();
-        showToast(desired === 'en' ? 'Language updated.' : 'Langue mise à jour.');
+        try {
+            await savePreferences({...preferences, language: desired});
+            if (desired !== current) document.querySelector('.workspace-language-button')?.click();
+            showToast(desired === 'en' ? 'Language updated.' : 'Langue mise à jour.');
+        } catch (error) {
+            languageSelect.value = current;
+            showToast('Impossible d’enregistrer la langue.');
+        }
     });
 
     const passwordModal = document.getElementById('passwordModal');

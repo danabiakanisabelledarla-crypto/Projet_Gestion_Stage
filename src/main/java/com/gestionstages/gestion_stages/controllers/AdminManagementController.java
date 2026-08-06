@@ -1,11 +1,15 @@
 package com.gestionstages.gestion_stages.controllers;
 
+import com.gestionstages.gestion_stages.EmailService;
 import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 import com.gestionstages.gestion_stages.services.ActivityLogService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +25,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 @Controller
 @RequestMapping("/admin")
@@ -37,6 +42,8 @@ public class AdminManagementController {
     private final StageRepository stageRepository;
     private final PasswordEncoder passwordEncoder;
     private final ActivityLogService activityLogService;
+    private final EmailService emailService;
+    private final AdminPreferenceRepository adminPreferenceRepository;
 
     public AdminManagementController(UtilisateurRepository utilisateurRepository,
                                      RoleRepository roleRepository,
@@ -48,7 +55,9 @@ public class AdminManagementController {
                                      EncadreurRepository encadreurRepository,
                                      StageRepository stageRepository,
                                      PasswordEncoder passwordEncoder,
-                                     ActivityLogService activityLogService) {
+                                     ActivityLogService activityLogService,
+                                     EmailService emailService,
+                                     AdminPreferenceRepository adminPreferenceRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.roleRepository = roleRepository;
         this.serviceRepository = serviceRepository;
@@ -60,6 +69,8 @@ public class AdminManagementController {
         this.stageRepository = stageRepository;
         this.passwordEncoder = passwordEncoder;
         this.activityLogService = activityLogService;
+        this.emailService = emailService;
+        this.adminPreferenceRepository = adminPreferenceRepository;
     }
 
     private String adminName(CustomUserDetails user) {
@@ -166,15 +177,21 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
             u.setStatut(Utilisateur.StatutUtilisateur.inactif);
             utilisateurRepository.save(u);
             activityLogService.log("Compte desactive", u.getEmail(), adminName(user));
+            emailService.envoyerStatutCompte(
+                    u.getEmail(), u.getPrenom() + " " + u.getNom(), true);
         });
         return "redirect:/admin/utilisateurs?succes=Compte desactive.";
     }
 
     @PostMapping("/utilisateurs/reactiver/{id}")
-    public String reactiverUtilisateur(@PathVariable Integer id) {
+    public String reactiverUtilisateur(@PathVariable Integer id,
+                                       @AuthenticationPrincipal CustomUserDetails user) {
         utilisateurRepository.findById(id).ifPresent(u -> {
             u.setStatut(Utilisateur.StatutUtilisateur.actif);
             utilisateurRepository.save(u);
+            activityLogService.log("Compte reactive", u.getEmail(), adminName(user));
+            emailService.envoyerStatutCompte(
+                    u.getEmail(), u.getPrenom() + " " + u.getNom(), false);
         });
         return "redirect:/admin/utilisateurs?succes=Compte reactive.";
     }
@@ -626,8 +643,14 @@ public String documents(Model model, @RequestParam(required = false) String succ
 
     // ===== PARAMETRES =====
     @GetMapping({"/parametres", "/parametre"})
-    public String parametres(Model model, @RequestParam(required = false) String succes) {
+    public String parametres(Model model,
+                             @AuthenticationPrincipal CustomUserDetails user,
+                             @RequestParam(required = false) String succes) {
         model.addAttribute("activePage", "parametres");
+        AdminPreference preferences = adminPreferenceRepository
+                .findByUtilisateurId(user.getUtilisateur().getId())
+                .orElseGet(() -> adminPreferenceRepository.save(new AdminPreference(user.getUtilisateur())));
+        model.addAttribute("preferences", preferences);
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/parametres";
     }
@@ -686,8 +709,23 @@ public String documents(Model model, @RequestParam(required = false) String succ
     }
 
     @PostMapping({"/parametres", "/parametre"})
-    public String sauverParametres(RedirectAttributes ra) {
-        ra.addAttribute("succes", "Parametres enregistres.");
+    public String sauverParametres(@AuthenticationPrincipal CustomUserDetails user,
+                                   @RequestParam(defaultValue = "false") boolean preferenceEmail,
+                                   @RequestParam(defaultValue = "false") boolean preferenceSysteme,
+                                   @RequestParam(defaultValue = "false") boolean preferenceRappel,
+                                   @RequestParam(defaultValue = "false") boolean preferenceSombre,
+                                   @RequestParam(defaultValue = "fr") String preferenceLangue,
+                                   RedirectAttributes ra) {
+        AdminPreference preferences = adminPreferenceRepository
+                .findByUtilisateurId(user.getUtilisateur().getId())
+                .orElseGet(() -> new AdminPreference(user.getUtilisateur()));
+        preferences.setNotificationsEmail(preferenceEmail);
+        preferences.setNotificationsSysteme(preferenceSysteme);
+        preferences.setRappelTaches(preferenceRappel);
+        preferences.setModeSombre(preferenceSombre);
+        preferences.setLangue("en".equalsIgnoreCase(preferenceLangue) ? "en" : "fr");
+        adminPreferenceRepository.save(preferences);
+        ra.addAttribute("succes", "Préférences enregistrées.");
         return "redirect:/admin/parametres";
     }
 
@@ -707,6 +745,48 @@ public String documents(Model model, @RequestParam(required = false) String succ
                 .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
                 .toList());
         return "admin/rapports";
+    }
+
+    @GetMapping("/rapports/exporter")
+    public ResponseEntity<byte[]> exporterRapports() {
+        List<String> typesAdministratifs = List.of(
+                "rapport_hebdomadaire", "rapport_final", "fiche_note", "attestation");
+        List<Document> documents = documentRepository.findAll().stream()
+                .filter(document -> typesAdministratifs.contains(document.getTypeDocument()))
+                .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
+                .toList();
+
+        StringBuilder csv = new StringBuilder("\uFEFF");
+        csv.append("Document;Propriétaire;Type;Date de dépôt;Taille (octets);Statut\n");
+        for (Document document : documents) {
+            String proprietaire = "Administration";
+            if (document.getStage() != null && document.getStage().getStagiaire() != null) {
+                Utilisateur utilisateur = document.getStage().getStagiaire().getUtilisateur();
+                proprietaire = utilisateur.getPrenom() + " " + utilisateur.getNom();
+            } else if (document.getDemandeStage() != null) {
+                proprietaire = document.getDemandeStage().getPrenom() + " "
+                        + document.getDemandeStage().getNom();
+            }
+            csv.append(celluleCsv(document.getNomFichier())).append(';')
+                    .append(celluleCsv(proprietaire)).append(';')
+                    .append(celluleCsv(document.getTypeDocument())).append(';')
+                    .append(celluleCsv(document.getDateDepot() == null ? "" : document.getDateDepot().toString())).append(';')
+                    .append(document.getTailleOctets() == null ? 0 : document.getTailleOctets()).append(';')
+                    .append(celluleCsv(document.getStatut()))
+                    .append('\n');
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"rapports-administratifs-"
+                                + java.time.LocalDate.now() + ".xls\"")
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String celluleCsv(String valeur) {
+        String contenu = valeur == null ? "" : valeur.replace("\"", "\"\"");
+        return "\"" + contenu + "\"";
     }
 
     // ===== SAUVEGARDE =====

@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class DocumentController {
@@ -38,7 +40,7 @@ public class DocumentController {
         }
 
         return construireReponseFichier(
-                Paths.get(doc.getCheminFichier()),
+                resoudreCheminFichier(doc.getCheminFichier()),
                 doc.getNomFichier(),
                 "attachment"
         );
@@ -51,7 +53,7 @@ public class DocumentController {
             return ResponseEntity.notFound().build();
         }
         return construireReponseFichier(
-                Paths.get(doc.getCheminFichier()),
+                resoudreCheminFichier(doc.getCheminFichier()),
                 doc.getNomFichier(),
                 "inline"
         );
@@ -63,7 +65,7 @@ public class DocumentController {
         if (livrable == null) {
             return ResponseEntity.notFound().build();
         }
-        Path chemin = Paths.get(livrable.getFichier());
+        Path chemin = resoudreCheminFichier(livrable.getFichier());
         String nom = chemin.getFileName() != null ? chemin.getFileName().toString() : livrable.getTitre();
         return construireReponseFichier(chemin, nom, "attachment");
     }
@@ -74,7 +76,7 @@ public class DocumentController {
         if (livrable == null) {
             return ResponseEntity.notFound().build();
         }
-        Path chemin = Paths.get(livrable.getFichier());
+        Path chemin = resoudreCheminFichier(livrable.getFichier());
         String nom = chemin.getFileName() != null ? chemin.getFileName().toString() : livrable.getTitre();
         return construireReponseFichier(chemin, nom, "inline");
     }
@@ -97,5 +99,70 @@ public class DocumentController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         disposition + "; filename=\"" + nomFichier.replace("\"", "") + "\"")
                 .body(resource);
+    }
+
+    private Path resoudreCheminFichier(String cheminEnregistre) {
+        if (cheminEnregistre == null || cheminEnregistre.isBlank()) {
+            return Paths.get("");
+        }
+
+        String normalizedPath = cheminEnregistre.replace('\\', '/').trim();
+        Path chemin = Paths.get(normalizedPath).normalize();
+        if (chemin.isAbsolute() && Files.exists(chemin)) {
+            return chemin;
+        }
+
+        Path dossierCourant = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        List<Path> bases = new ArrayList<>();
+        bases.add(dossierCourant);
+        if (dossierCourant.getParent() != null) {
+            bases.add(dossierCourant.getParent());
+            bases.add(dossierCourant.getParent().resolve("gestion-stages"));
+        }
+        bases.add(dossierCourant.resolve("gestion-stages"));
+        bases.add(dossierCourant.resolve("target"));
+
+        Path candidate = chercherCheminDansBases(bases, chemin);
+        if (candidate != null) {
+            return candidate;
+        }
+
+        Path nomFichier = chemin.getFileName();
+        if (nomFichier != null) {
+            List<Path> fallbackBases = new ArrayList<>();
+            fallbackBases.add(dossierCourant);
+            fallbackBases.add(dossierCourant.resolve("uploads"));
+            fallbackBases.add(dossierCourant.resolve("uploads").resolve("documents"));
+            fallbackBases.add(dossierCourant.resolve("gestion-stages"));
+            fallbackBases.add(dossierCourant.resolve("gestion-stages").resolve("uploads"));
+            fallbackBases.add(dossierCourant.resolve("gestion-stages").resolve("uploads").resolve("documents"));
+            if (dossierCourant.getParent() != null) {
+                fallbackBases.add(dossierCourant.getParent().resolve("uploads"));
+                fallbackBases.add(dossierCourant.getParent().resolve("uploads").resolve("documents"));
+            }
+            for (Path base : fallbackBases) {
+                if (base == null) continue;
+                Path fallback = base.resolve(nomFichier).normalize();
+                if (Files.exists(fallback)) {
+                    return fallback;
+                }
+            }
+        }
+
+        return chemin;
+    }
+
+    private Path chercherCheminDansBases(List<Path> bases, Path chemin) {
+        for (Path base : bases) {
+            if (base == null) continue;
+            try {
+                Path candidate = base.resolve(chemin).normalize();
+                if (Files.exists(candidate)) {
+                    return candidate;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 }

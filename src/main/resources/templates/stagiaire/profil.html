@@ -50,9 +50,6 @@
                 <p>Consultez, mettez à jour vos informations personnelles et suivez votre parcours de stage.</p>
             </div>
             <div class="profile-heading-actions">
-                <a class="profile-icon-button" th:href="@{/stagiaire/dashboard}" title="Notifications">
-                    <i data-lucide="bell"></i>
-                </a>
                 <button class="profile-button secondary" type="button" data-download-profile>
                     <i data-lucide="download"></i>
                     Télécharger le profil
@@ -110,10 +107,7 @@
                                 <span class="profile-status"
                                       th:classappend="${stage != null ? stage.statut.name() : 'pending'}">
                                     <i></i>
-                                    <span th:text="${stage == null ? 'En attente de stage' :
-                                        (stage.statut.name() == 'en_cours' ? 'Stage en cours' :
-                                        (stage.statut.name() == 'termine' ? 'Stage terminé' : 'Stage suspendu'))}">
-                                        Stage en cours
+                                    <span>Stage accepté</span>
                                     </span>
                                 </span>
                             </dd>
@@ -310,11 +304,11 @@
             <section class="profile-card">
                 <header class="profile-side-heading"><h2>Préférences</h2><i data-lucide="sliders-horizontal"></i></header>
                 <div class="profile-preferences" data-profile-preferences>
-                    <label><span><i data-lucide="mail-check"></i><b>Notifications Email</b></span><input type="checkbox" data-preference="email" checked><i></i></label>
-                    <label><span><i data-lucide="bell-ring"></i><b>Notifications Système</b></span><input type="checkbox" data-preference="system" checked><i></i></label>
-                    <label><span><i data-lucide="alarm-clock"></i><b>Rappel des tâches</b></span><input type="checkbox" data-preference="tasks" checked><i></i></label>
-                    <label><span><i data-lucide="moon"></i><b>Mode sombre</b></span><input type="checkbox" data-preference="dark"><i></i></label>
-                    <div class="profile-language-preference"><span><i data-lucide="languages"></i><b>Langue</b></span><select data-profile-language><option value="fr">Français</option><option value="en">English</option></select></div>
+                    <label><span><i data-lucide="mail-check"></i><b>Notifications Email</b></span><input type="checkbox" data-preference="email" th:checked="${stagiaire == null or stagiaire.notificationsEmail}"><i></i></label>
+                    <label><span><i data-lucide="bell-ring"></i><b>Notifications Système</b></span><input type="checkbox" data-preference="system" th:checked="${stagiaire == null or stagiaire.notificationsSysteme}"><i></i></label>
+                    <label><span><i data-lucide="alarm-clock"></i><b>Rappel des tâches</b></span><input type="checkbox" data-preference="tasks" th:checked="${stagiaire == null or stagiaire.rappelTaches}"><i></i></label>
+                    <label><span><i data-lucide="moon"></i><b>Mode sombre</b></span><input type="checkbox" data-preference="dark" th:checked="${stagiaire != null and stagiaire.modeSombre}"><i></i></label>
+                    <div class="profile-language-preference"><span><i data-lucide="languages"></i><b>Langue</b></span><select data-profile-language><option value="fr" th:selected="${stagiaire == null or stagiaire.langue == 'fr'}">Français</option><option value="en" th:selected="${stagiaire != null and stagiaire.langue == 'en'}">English</option></select></div>
                 </div>
             </section>
         </div>

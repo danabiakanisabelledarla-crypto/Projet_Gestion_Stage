@@ -57,7 +57,7 @@
                 <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="id" th:value="${tache.id}">
-                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.requestSubmit()" aria-label="Changer le statut de la tâche">
                         <option value="a_faire" th:selected="${tache.statut.name() == 'a_faire'}">À faire</option>
                         <option value="en_cours">En cours</option>
                         <option value="en_revue">En revue</option>
@@ -76,14 +76,13 @@
                 <span class="intern-status status-orange">En progression</span>
                 <h3 th:text="${tache.titre}">Développer Dashboard Stagiaire</h3>
                 <p th:text="${tache.description != null ? tache.description : 'Travail en cours de réalisation.'}">Description</p>
-                <div class="intern-progress"><span style="width:68%;background:#f59e0b"></span></div>
                 <div class="intern-task-meta" style="margin-top:10px">
                     <span><i class="fa-regular fa-calendar"></i> Échéance : <span th:text="${#temporals.format(tache.dateLimite, 'dd/MM/yyyy')}">25/07/2026</span></span>
                 </div>
                 <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="id" th:value="${tache.id}">
-                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.requestSubmit()" aria-label="Changer le statut de la tâche">
                         <option value="a_faire">À faire</option>
                         <option value="en_cours" selected>En cours</option>
                         <option value="en_revue">En revue</option>
@@ -106,7 +105,7 @@
                 <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="id" th:value="${tache.id}">
-                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.requestSubmit()" aria-label="Changer le statut de la tâche">
                         <option value="a_faire">À faire</option>
                         <option value="en_cours">En cours</option>
                         <option value="en_revue" selected>En revue</option>
@@ -128,7 +127,7 @@
                 <form th:action="@{/stagiaire/taches/statut}" method="post" class="intern-task-status-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="id" th:value="${tache.id}">
-                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.submit()" aria-label="Changer le statut de la tâche">
+                    <select name="statut" class="intern-select intern-task-status" onchange="this.form.requestSubmit()" aria-label="Changer le statut de la tâche">
                         <option value="a_faire">À faire</option>
                         <option value="en_cours">En cours</option>
                         <option value="en_revue">En revue</option>
@@ -294,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="${csrfParameter}" value="${csrfToken}">
                 <input type="hidden" name="id" value="${task.dataset.id}">`;
             document.body.appendChild(form);
-            form.submit();
+            form.requestSubmit();
         });
     });
 
@@ -437,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body
         });
         if (!response.ok) throw new Error('Mise à jour impossible');
-        window.location.reload();
+        await window.stagiaireLiveRefresh?.(window.location.href, true);
     }
 
     function bindDropZone(column) {
@@ -462,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await persistTaskStatus(dragged, target);
             } catch (error) {
                 alert('Le statut de la tâche n’a pas pu être enregistré.');
-                window.location.reload();
+                await window.stagiaireLiveRefresh?.(window.location.href, false);
             }
         });
     }

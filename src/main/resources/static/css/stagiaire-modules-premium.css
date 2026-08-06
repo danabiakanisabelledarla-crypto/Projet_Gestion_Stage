@@ -8,6 +8,24 @@
 .module-stat-label { display:flex; align-items:center; gap:8px; color:#64748b; font-size:11px; }
 .module-stat-value { font-size:12px; font-weight:800; }
 .module-color-dot { width:9px; height:9px; flex:0 0 auto; border-radius:3px; background:var(--dot-color,#2563eb); }
+.workspace-dark .module-upload-zone,
+.workspace-dark .module-document-preview,
+.workspace-dark .calendar-day,
+.workspace-dark .calendar-agenda-day,
+.workspace-dark .report-document,
+.workspace-dark .module-info-row {
+    color:#dbe5f2;
+    background:#111c2e;
+    border-color:#29384c;
+}
+.workspace-dark .module-stat-item,
+.workspace-dark .report-version { border-color:#29384c; }
+.workspace-dark .module-stat-label,
+.workspace-dark .module-file-description { color:#9aa9bd; }
+.calendar-board,
+.calendar-shell { width:100%; min-width:0; overflow:visible; }
+.calendar-grid { min-width:720px; }
+.calendar-board-scroll { width:100%; overflow-x:auto; }
 
 .module-table-actions { display:flex; align-items:center; gap:6px; }
 .module-file-cell { display:flex; align-items:center; gap:10px; min-width:210px; }

@@ -544,10 +544,12 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
     ajouterIdentite(model, userDetails, "objectifs");
     List<Stage> mesStages = getStages(userDetails);
     List<Objectif> objectifs = objectifsDesStages(mesStages);
+    List<Tache> taches = tachesDesStages(mesStages);
     objectifs.forEach(this::synchroniserStatutObjectif);
 
     model.addAttribute("mesStages", mesStages);
     model.addAttribute("objectifs", objectifs);
+    model.addAttribute("tachesObjectifs", taches);
     model.addAttribute("objectifsTotaux", objectifs.size());
     model.addAttribute("objectifsAtteints", objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
     model.addAttribute("objectifsEnCours", objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
@@ -581,6 +583,27 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
     });
 
     return "redirect:/encadreur/objectifs?succes=true";
+}
+
+@PostMapping("/objectifs/taches/commenter")
+public String commenterTacheDepuisObjectifs(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                            @RequestParam Integer tacheId,
+                                            @RequestParam String commentaire) {
+    tacheRepository.findById(tacheId)
+            .filter(tache -> stageAppartient(userDetails, tache.getStage()))
+            .ifPresent(tache -> {
+                Utilisateur stagiaire = tache.getStage().getStagiaire().getUtilisateur();
+                Notification notification = new Notification(
+                        "Commentaire sur une tâche",
+                        "À propos de « " + tache.getTitre() + " » : " + commentaire.trim(),
+                        "STAGIAIRE",
+                        "normale",
+                        userDetails.getUtilisateur().getPrenom() + " "
+                                + userDetails.getUtilisateur().getNom());
+                notification.setDestinataireEmail(stagiaire.getEmail());
+                notificationRepository.save(notification);
+            });
+    return "redirect:/encadreur/objectifs?succes=commentaire";
 }
 
 @GetMapping("/livrables")
@@ -642,6 +665,19 @@ public String rejeterLivrable(@AuthenticationPrincipal CustomUserDetails userDet
             .ifPresent(livrable -> {
         livrable.setStatut(Livrable.StatutLivrable.correction_demandee);
         livrableRepository.save(livrable);
+        Stage stage = stageDuLivrable(livrable);
+        if (stage != null && stage.getStagiaire() != null
+                && stage.getStagiaire().getUtilisateur() != null) {
+            Notification notification = new Notification(
+                    "Correction demandée",
+                    "Le livrable « " + livrable.getTitre() + " » doit être corrigé.",
+                    "STAGIAIRE",
+                    "haute",
+                    userDetails.getUtilisateur().getPrenom() + " "
+                            + userDetails.getUtilisateur().getNom());
+            notification.setDestinataireEmail(stage.getStagiaire().getUtilisateur().getEmail());
+            notificationRepository.save(notification);
+        }
     });
     return "redirect:/encadreur/livrables?succes=correction";
 }

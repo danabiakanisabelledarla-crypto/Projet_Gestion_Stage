@@ -656,6 +656,39 @@ body {
     margin-left: 264px;
 }
 
+.admin-workspace-sidebar ~ .contenu-principal {
+    padding-top: 108px;
+}
+
+.admin-workspace-sidebar ~ .contenu-principal > .workspace-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 264px;
+    width: auto;
+    z-index: 1050;
+}
+
+.admin-dark-mode,
+.admin-dark-mode .contenu-principal {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+.admin-dark-mode .workspace-header,
+.admin-dark-mode .settings-card,
+.admin-dark-mode .backup-card {
+    background: #172033;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+.admin-dark-mode .settings-card p,
+.admin-dark-mode .settings-card small,
+.admin-dark-mode .settings-field > span {
+    color: #94a3b8;
+}
+
 @media (max-width: 1040px) {
     .portal-sidebar.barre-laterale.workspace-sidebar {
         transform: translateX(-105%);
@@ -701,6 +734,10 @@ body {
     .workspace-sidebar ~ .coach-main {
         width: 100%;
         margin-left: 0;
+    }
+
+    .admin-workspace-sidebar ~ .contenu-principal > .workspace-header {
+        left: 0;
     }
 }
 

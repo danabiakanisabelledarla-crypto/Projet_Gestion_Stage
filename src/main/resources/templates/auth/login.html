@@ -44,6 +44,10 @@
                 <i class="fa-solid fa-circle-exclamation"></i>
                 Email ou mot de passe incorrect. Vérifiez vos identifiants.
             </div>
+            <div th:if="${param.blocked}" class="message-erreur">
+                <i class="fa-solid fa-user-lock"></i>
+                Votre compte a été bloqué. Contactez l'administrateur.
+            </div>
             <div th:if="${param.logout}" class="message-info">
                 <i class="fa-solid fa-circle-check"></i>
                 Vous avez été déconnecté avec succès.

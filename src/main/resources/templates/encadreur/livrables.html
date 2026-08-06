@@ -52,30 +52,27 @@
 
                 <div class="coach-table-wrap">
                     <table class="coach-table" id="deliveriesTable">
-                        <thead><tr><th>Stagiaire</th><th>Type</th><th>Document</th><th>Date dépôt</th><th>Référence</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Propriétaire</th><th>Documents</th><th>Référence</th><th>Date dépôt</th><th>Actions</th></tr></thead>
                         <tbody>
                         <tr class="delivery-row" th:each="livrable : ${livrables}"
                             th:with="stage=${stagesLivrables[livrable.id]}, utilisateur=${stage != null ? stage.stagiaire.utilisateur : null}"
-                            th:attr="data-search=${#strings.toLowerCase((utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : '') + ' ' + livrable.titre + ' ' + livrable.fichier)},data-stage=${stage != null ? stage.id : ''},data-type=${#strings.toLowerCase(livrable.categorie != null ? livrable.categorie : 'autre')},data-status=${livrable.statut.name()},data-id=${livrable.id},data-title=${livrable.titre},data-comment=${livrable.commentaireEncadreur}">
+                            th:attr="data-search=${#strings.toLowerCase((utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : '') + ' ' + livrable.titre + ' ' + livrable.fichier)},data-stage=${stage != null ? stage.id : ''},data-type=${#strings.toLowerCase(livrable.categorie != null ? livrable.categorie : 'autre')},data-status=${livrable.statut.name()},data-id=${livrable.id},data-title=${livrable.titre},data-comment=${livrable.commentaireEncadreur},data-owner=${utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : 'Stagiaire non associé'},data-reference=${'LIV-' + #numbers.formatInteger(livrable.id, 4)},data-date=${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">
                             <td><div class="coach-person"><span class="coach-avatar" th:text="${utilisateur != null ? #strings.substring(utilisateur.prenom,0,1) + #strings.substring(utilisateur.nom,0,1) : '--'}">ST</span><div><strong th:text="${utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : 'Stagiaire non associé'}">Stagiaire</strong><small th:text="${stage != null && stage.service != null ? stage.service.nom : 'Service non renseigné'}">Service</small></div></div></td>
-                            <td><span class="coach-badge purple" th:text="${livrable.categorie != null ? livrable.categorie : 'Autre'}">Type</span></td>
-                            <td><div class="coach-file"><i class="fa-regular fa-file-pdf"></i><div><strong th:text="${livrable.titre}">Document</strong><small th:text="${livrable.fichier}">fichier.pdf</small></div></div></td>
-                            <td class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">29/07/2026</td>
+                            <td><button class="coach-btn secondary compact delivery-view" type="button"><i class="fa-regular fa-folder-open"></i> Documents</button></td>
                             <td class="coach-mono" th:text="${'LIV-' + #numbers.formatInteger(livrable.id, 4)}">LIV-0001</td>
-                            <td><span class="coach-badge" th:classappend="${livrable.statut.name() == 'valide'} ? ' green' : (${livrable.statut.name() == 'depose'} ? ' orange' : ' red')" th:text="${livrable.statut.name() == 'valide' ? 'Validé' : (livrable.statut.name() == 'depose' ? 'En attente' : (livrable.statut.name() == 'correction_demandee' ? 'À corriger' : 'Rejeté'))}">Statut</span></td>
+                            <td class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">29/07/2026</td>
                             <td><div class="coach-actions">
-                                <a class="coach-action" th:href="@{/documents/livrables/{id}/preview(id=${livrable.id})}" target="_blank" title="Consulter"><i class="fa-regular fa-eye"></i></a>
-                                <a class="coach-action" th:href="@{/documents/livrables/{id}(id=${livrable.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                                <button class="coach-action delivery-view" type="button" title="Voir détail"><i class="fa-regular fa-eye"></i></button>
                                 <button class="coach-action delivery-comment" type="button" title="Commenter"><i class="fa-regular fa-comment"></i></button>
                                 <a class="coach-action" th:if="${livrable.statut.name() != 'valide'}" th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}" title="Valider"><i class="fa-solid fa-check"></i></a>
                                 <a class="coach-action" th:if="${livrable.statut.name() != 'correction_demandee'}" th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}" title="Demander une correction"><i class="fa-solid fa-pen"></i></a>
                             </div></td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(livrables)}"><td colspan="7" class="coach-empty"><i class="fa-regular fa-folder-open"></i><br><br>Aucun livrable déposé pour le moment.</td></tr>
+                        <tr th:if="${#lists.isEmpty(livrables)}"><td colspan="5" class="coach-empty"><i class="fa-regular fa-folder-open"></i><br><br>Aucun livrable déposé pour le moment.</td></tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="coach-pagination"><span id="deliveryCount" th:text="${livrablesTotaux + ' livrable(s)'}">0 livrable</span><div class="coach-pages"><button type="button">‹</button><button class="active" type="button">1</button><button type="button">›</button></div></div>
+                <div class="coach-pagination"><span id="deliveryCount">0 livrable</span><div class="coach-pages"><button type="button" id="deliveryPrevious">‹</button><span id="deliveryPageNumbers"></span><button type="button" id="deliveryNext">›</button></div></div>
             </article>
 
             <div style="display:grid;gap:18px;align-content:start">
@@ -105,6 +102,25 @@
     </main>
 </div>
 
+<div class="coach-modal" id="deliveryDetailModal">
+    <article class="coach-modal-panel">
+        <div class="coach-card-head"><div><h2 id="deliveryDetailTitle">Détail du document</h2><p id="deliveryDetailOwner">Propriétaire</p></div><button class="coach-action" data-close-delivery-detail type="button"><i class="fa-solid fa-xmark"></i></button></div>
+        <iframe id="deliveryPreviewFrame" class="document-preview-frame" title="Aperçu du livrable" style="width:100%;min-height:420px;border:1px solid #e2e8f0;border-radius:12px"></iframe>
+        <div class="coach-data-list">
+            <div class="coach-data-row"><span>Référence</span><strong id="deliveryDetailReference">—</strong></div>
+            <div class="coach-data-row"><span>Date de dépôt</span><strong id="deliveryDetailDate">—</strong></div>
+            <div class="coach-data-row"><span>Statut</span><strong id="deliveryDetailStatus">—</strong></div>
+            <div class="coach-data-row"><span>Documents liés</span><strong>Document principal du livrable</strong></div>
+        </div>
+        <div class="coach-modal-actions">
+            <button class="coach-btn secondary" data-close-delivery-detail type="button">Fermer</button>
+            <a class="coach-btn secondary" id="deliveryOpenLarge" target="_blank"><i class="fa-solid fa-up-right-from-square"></i> Voir en grand</a>
+            <a class="coach-btn" id="deliveryDownload"><i class="fa-solid fa-download"></i> Télécharger</a>
+            <a class="coach-btn danger" id="deliveryCorrection"><i class="fa-solid fa-pen"></i> À corriger</a>
+        </div>
+    </article>
+</div>
+
 <div class="coach-modal" id="deliveryCommentModal">
     <form class="coach-modal-panel" th:action="@{/encadreur/livrables/commenter}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -124,33 +140,77 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = document.getElementById('deliveryType');
     const status = document.getElementById('deliveryStatus');
     const count = document.getElementById('deliveryCount');
-    const filter = () => {
-        const query = (search.value || globalSearch.value).toLowerCase();
-        let visible = 0;
-        rows.forEach(row => {
-            const show = (!query || row.dataset.search.includes(query))
-                && (!student.value || row.dataset.stage === student.value)
-                && (!type.value || row.dataset.type === type.value)
-                && (!status.value || row.dataset.status === status.value);
-            row.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-        count.textContent = visible + ' livrable(s) affiché(s)';
+    const pageSize = 10;
+    let page = 1;
+    let filteredRows = rows;
+    const render = () => {
+        const pages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+        page = Math.min(page, pages);
+        const start = (page - 1) * pageSize;
+        rows.forEach(row => row.hidden = true);
+        filteredRows.slice(start, start + pageSize).forEach(row => row.hidden = false);
+        if (count) count.textContent = (filteredRows.length ? start + 1 : 0) + ' à '
+            + Math.min(start + pageSize, filteredRows.length) + ' sur ' + filteredRows.length + ' livrable(s)';
+        const numbers = document.getElementById('deliveryPageNumbers');
+        numbers.replaceChildren();
+        for (let current = 1; current <= pages; current++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = current;
+            button.classList.toggle('active', current === page);
+            button.onclick = () => { page = current; render(); };
+            numbers.appendChild(button);
+        }
+        document.getElementById('deliveryPrevious').disabled = page === 1;
+        document.getElementById('deliveryNext').disabled = page === pages;
     };
-    [search, globalSearch].forEach(input => input.addEventListener('input', filter));
-    [student, type, status].forEach(select => select.addEventListener('change', filter));
+    const filter = () => {
+        const query = (search?.value || globalSearch?.value || '').toLowerCase();
+        filteredRows = rows.filter(row => (!query || row.dataset.search.includes(query))
+            && (!(student?.value) || row.dataset.stage === student.value)
+            && (!(type?.value) || row.dataset.type === type.value)
+            && (!(status?.value) || row.dataset.status === status.value));
+        page = 1;
+        render();
+    };
+    [search, globalSearch].filter(Boolean).forEach(input => input.addEventListener('input', filter));
+    [student, type, status].filter(Boolean).forEach(select => select.addEventListener('change', filter));
+    document.getElementById('deliveryPrevious').onclick = () => { if (page > 1) { page--; render(); } };
+    document.getElementById('deliveryNext').onclick = () => { if (page < Math.max(1, Math.ceil(filteredRows.length / pageSize))) { page++; render(); } };
 
     const modal = document.getElementById('deliveryCommentModal');
-    rows.forEach(row => row.querySelector('.delivery-comment').addEventListener('click', () => {
+    rows.forEach(row => row.querySelector('.delivery-comment')?.addEventListener('click', () => {
         document.getElementById('commentDeliveryId').value = row.dataset.id;
         document.getElementById('commentDeliveryTitle').textContent = row.dataset.title;
         document.getElementById('commentDeliveryText').value = row.dataset.comment || '';
         modal.classList.add('open');
     }));
     document.querySelectorAll('[data-close-comment]').forEach(button => button.addEventListener('click', () => modal.classList.remove('open')));
-    modal.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('open'); });
+    modal?.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('open'); });
 
-    document.getElementById('exportDeliveries').addEventListener('click', () => {
+    const detailModal = document.getElementById('deliveryDetailModal');
+    rows.forEach(row => row.querySelectorAll('.delivery-view').forEach(button => button.addEventListener('click', () => {
+        const id = row.dataset.id;
+        const preview = '/documents/livrables/' + id + '/preview';
+        document.getElementById('deliveryDetailTitle').textContent = row.dataset.title;
+        document.getElementById('deliveryDetailOwner').textContent = row.dataset.owner;
+        document.getElementById('deliveryDetailReference').textContent = row.dataset.reference;
+        document.getElementById('deliveryDetailDate').textContent = row.dataset.date;
+        document.getElementById('deliveryDetailStatus').textContent = row.dataset.status.replaceAll('_', ' ');
+        document.getElementById('deliveryPreviewFrame').src = preview;
+        document.getElementById('deliveryOpenLarge').href = preview;
+        document.getElementById('deliveryDownload').href = '/documents/livrables/' + id;
+        document.getElementById('deliveryCorrection').href = '/encadreur/livrables/rejeter/' + id;
+        detailModal.classList.add('open');
+    })));
+    const closeDetail = () => {
+        detailModal?.classList.remove('open');
+        document.getElementById('deliveryPreviewFrame').src = 'about:blank';
+    };
+    document.querySelectorAll('[data-close-delivery-detail]').forEach(button => button.addEventListener('click', closeDetail));
+    detailModal?.addEventListener('click', event => { if (event.target === detailModal) closeDetail(); });
+
+    document.getElementById('exportDeliveries')?.addEventListener('click', () => {
         const lines = [];
         lines.push(['Stagiaire','Type','Document','Date','Référence','Statut']);
         rows.filter(row => row.style.display !== 'none').forEach(row => lines.push([...row.cells].slice(0, 6).map(cell => cell.innerText.replace(/\s+/g, ' ').trim())));
@@ -161,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         URL.revokeObjectURL(link.href);
     });
+    render();
 });
 </script>
 <script th:src="@{/js/encadreur-topbar.js}"></script></body>

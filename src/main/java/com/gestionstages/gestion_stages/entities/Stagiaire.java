@@ -35,6 +35,21 @@ public class Stagiaire {
     @Column(length = 150)
     private String specialite;
 
+    @Column(name = "notifications_email")
+    private Boolean notificationsEmail = true;
+
+    @Column(name = "notifications_systeme")
+    private Boolean notificationsSysteme = true;
+
+    @Column(name = "rappel_taches")
+    private Boolean rappelTaches = true;
+
+    @Column(name = "mode_sombre")
+    private Boolean modeSombre = false;
+
+    @Column(length = 5)
+    private String langue = "fr";
+
     public enum StatutStagiaire {
         actif, termine, abandonne
     }
@@ -111,5 +126,45 @@ public class Stagiaire {
 
     public void setSpecialite(String specialite) {
         this.specialite = specialite;
+    }
+
+    public Boolean getNotificationsEmail() {
+        return notificationsEmail == null ? Boolean.TRUE : notificationsEmail;
+    }
+
+    public void setNotificationsEmail(Boolean notificationsEmail) {
+        this.notificationsEmail = notificationsEmail;
+    }
+
+    public Boolean getNotificationsSysteme() {
+        return notificationsSysteme == null ? Boolean.TRUE : notificationsSysteme;
+    }
+
+    public void setNotificationsSysteme(Boolean notificationsSysteme) {
+        this.notificationsSysteme = notificationsSysteme;
+    }
+
+    public Boolean getRappelTaches() {
+        return rappelTaches == null ? Boolean.TRUE : rappelTaches;
+    }
+
+    public void setRappelTaches(Boolean rappelTaches) {
+        this.rappelTaches = rappelTaches;
+    }
+
+    public Boolean getModeSombre() {
+        return modeSombre == null ? Boolean.FALSE : modeSombre;
+    }
+
+    public void setModeSombre(Boolean modeSombre) {
+        this.modeSombre = modeSombre;
+    }
+
+    public String getLangue() {
+        return langue == null || langue.isBlank() ? "fr" : langue;
+    }
+
+    public void setLangue(String langue) {
+        this.langue = "en".equalsIgnoreCase(langue) ? "en" : "fr";
     }
 }

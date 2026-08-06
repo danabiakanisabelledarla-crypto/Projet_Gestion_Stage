@@ -35,7 +35,6 @@
             <div class="coach-profile-actions">
                 <button class="coach-btn" data-edit-profile type="button"><i class="fa-solid fa-pen"></i> Modifier le profil</button>
                 <a class="coach-btn secondary" th:href="@{/profil/changer-mot-de-passe}"><i class="fa-solid fa-key"></i> Mot de passe</a>
-                <button class="coach-btn secondary" onclick="window.print()" type="button"><i class="fa-solid fa-file-pdf"></i> Imprimer</button>
             </div>
         </section>
 
@@ -63,17 +62,6 @@
                 </article>
 
                 <article class="coach-card">
-                    <div class="coach-card-head"><div><h2>Expérience d’encadrement</h2><p>Synthèse issue des dossiers suivis</p></div></div>
-                    <div class="coach-data-list">
-                        <div class="coach-data-row"><span>Stagiaires affectés</span><strong th:text="${stagiairesEncadres}">0</strong></div>
-                        <div class="coach-data-row"><span>Évaluations continues</span><strong th:text="${evaluations.?[typeEvaluation.name() == 'continue_'].size()}">0</strong></div>
-                        <div class="coach-data-row"><span>Évaluations finales</span><strong th:text="${evaluations.?[typeEvaluation.name() == 'finale'].size()}">0</strong></div>
-                        <div class="coach-data-row"><span>Domaine d’expertise</span><strong th:text="${encadreur.specialite != null ? encadreur.specialite : 'À compléter'}">Spécialité</strong></div>
-                        <div class="coach-data-row"><span>Fonction actuelle</span><strong th:text="${encadreur.fonction != null ? encadreur.fonction : 'Encadreur'}">Fonction</strong></div>
-                    </div>
-                </article>
-
-                <article class="coach-card">
                     <div class="coach-card-head"><div><h2>Sécurité du compte</h2><p>État de la session et accès</p></div></div>
                     <div class="coach-data-list">
                         <div class="coach-data-row"><span>Session actuelle</span><strong class="coach-badge green">Active</strong></div>
@@ -95,26 +83,16 @@
                 </article>
 
                 <article class="coach-card">
-                    <div class="coach-card-head"><div><h2>Activité récente</h2><p>Dernières actions de supervision</p></div></div>
-                    <div class="coach-timeline">
-                        <div class="coach-timeline-item" th:each="livrable, stat : ${livrables}" th:if="${stat.index < 2 && livrable.statut.name() == 'valide'}"><span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span><div class="coach-timeline-content"><strong>Livrable validé</strong><span th:text="${livrable.titre}">Livrable</span><small class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy')}">Date</small></div></div>
-                        <div class="coach-timeline-item" th:each="evaluation, stat : ${evaluations}" th:if="${stat.index < 2}"><span class="coach-timeline-icon"><i class="fa-solid fa-star"></i></span><div class="coach-timeline-content"><strong>Évaluation ajoutée</strong><span th:text="${evaluation.stage.stagiaire.utilisateur.prenom + ' ' + evaluation.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small class="coach-mono" th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy')}">Date</small></div></div>
-                        <div class="coach-empty" th:if="${#lists.isEmpty(livrables) && #lists.isEmpty(evaluations)}">Aucune activité récente.</div>
-                    </div>
-                </article>
-
-                <article class="coach-card">
                     <div class="coach-card-head"><div><h2>Compétences</h2><p>Domaines associés à votre activité</p></div></div>
                     <div class="coach-skill-list"><span class="coach-badge">Encadrement</span><span class="coach-badge purple">Gestion de projet</span><span class="coach-badge green">Évaluation</span><span class="coach-badge orange">Communication</span><span class="coach-badge">Formation</span><span class="coach-badge purple" th:if="${encadreur.specialite != null}" th:text="${encadreur.specialite}">Spécialité</span></div>
                 </article>
 
                 <article class="coach-card">
-                    <div class="coach-card-head"><div><h2>Préférences</h2><p>Réglages enregistrés sur cet appareil</p></div></div>
-                    <div class="coach-switch-row"><span>Notifications email</span><label class="coach-switch"><input data-preference="email" type="checkbox" checked><span></span></label></div>
-                    <div class="coach-switch-row"><span>Notifications système</span><label class="coach-switch"><input data-preference="system" type="checkbox" checked><span></span></label></div>
+                    <div class="coach-card-head"><div><h2>Préférences</h2><p>Réglages de votre espace Encadreur</p></div></div>
                     <div class="coach-switch-row"><span>Alertes de livrables</span><label class="coach-switch"><input data-preference="deliveries" type="checkbox" checked><span></span></label></div>
                     <div class="coach-switch-row"><span>Alertes d’évaluation</span><label class="coach-switch"><input data-preference="evaluations" type="checkbox" checked><span></span></label></div>
-                    <div class="coach-switch-row"><span>Alertes de planning</span><label class="coach-switch"><input data-preference="planning" type="checkbox" checked><span></span></label></div>
+                    <div class="coach-switch-row"><span>Notifications système</span><label class="coach-switch"><input data-preference="system" type="checkbox" checked><span></span></label></div>
+                    <div class="coach-switch-row"><span>Mode sombre</span><label class="coach-switch"><input data-preference="dark" type="checkbox"><span></span></label></div>
                 </article>
             </div>
         </section>
@@ -174,7 +152,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = 'coach-preference-' + input.dataset.preference;
         const stored = localStorage.getItem(key);
         if (stored !== null) input.checked = stored === 'true';
-        input.addEventListener('change', () => localStorage.setItem(key, String(input.checked)));
+        const appliquerPreference = () => {
+            localStorage.setItem(key, String(input.checked));
+            if (input.dataset.preference === 'dark') {
+                document.documentElement.classList.toggle('coach-dark-mode', input.checked);
+            }
+        };
+        if (input.dataset.preference === 'dark') {
+            document.documentElement.classList.toggle('coach-dark-mode', input.checked);
+        }
+        input.addEventListener('change', appliquerPreference);
     });
 });
 </script>

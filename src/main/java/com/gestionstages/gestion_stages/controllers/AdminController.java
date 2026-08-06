@@ -20,6 +20,7 @@ import com.gestionstages.gestion_stages.security.CustomUserDetails;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ public class AdminController {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final LivrableRepository livrableRepository;
+    private final ProjetRepository projetRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final com.gestionstages.gestion_stages.services.PermissionService permissionService;
@@ -62,7 +64,8 @@ public class AdminController {
                             MessageRepository messageRepository,
                             RoleRepository roleRepository,
                             PermissionRepository permissionRepository,
-                            LivrableRepository livrableRepository,
+                             LivrableRepository livrableRepository,
+                             ProjetRepository projetRepository,
                             PasswordEncoder passwordEncoder,
                             EmailService emailService,
                             com.gestionstages.gestion_stages.services.PermissionService permissionService,
@@ -82,6 +85,7 @@ public class AdminController {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.livrableRepository = livrableRepository;
+        this.projetRepository = projetRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.permissionService = permissionService;
@@ -512,6 +516,7 @@ public class AdminController {
         model.addAttribute("stagiaires", tousStagiaires);
         model.addAttribute("services", tousServices);
         model.addAttribute("encadreurs", tousEncadreurs);
+        model.addAttribute("projets", projetRepository.findAll());
         model.addAttribute("stagesParStagiaire", stagesParStagiaire);
         model.addAttribute("datesParStagiaire", datesParStagiaire);
 
@@ -749,9 +754,56 @@ public class AdminController {
                     ? Utilisateur.StatutUtilisateur.actif
                     : Utilisateur.StatutUtilisateur.inactif);
             utilisateurRepository.save(utilisateur);
+            emailService.envoyerStatutCompte(
+                    utilisateur.getEmail(),
+                    utilisateur.getPrenom() + " " + utilisateur.getNom(),
+                    !actif);
         });
         redirectAttributes.addFlashAttribute("succes",
                 actif ? "Le compte du stagiaire a été débloqué." : "Le compte du stagiaire a été bloqué.");
+        return "redirect:/admin/stagiaires";
+    }
+
+    @PostMapping("/stagiaires/{id}/affecter")
+    public String affecterStagiaire(@PathVariable Integer id,
+                                    @RequestParam Integer encadreurId,
+                                    @RequestParam Integer serviceId,
+                                    @RequestParam(required = false) Integer projetId,
+                                    @RequestParam String dateDebut,
+                                    @RequestParam String dateFin,
+                                    RedirectAttributes redirectAttributes) {
+        Optional<Stagiaire> stagiaireOpt = stagiaireRepository.findById(id);
+        Optional<Encadreur> encadreurOpt = encadreurRepository.findById(encadreurId);
+        Optional<ServiceEntreprise> serviceOpt = serviceRepository.findById(serviceId);
+        if (stagiaireOpt.isEmpty() || encadreurOpt.isEmpty() || serviceOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "L'affectation est incomplète.");
+            return "redirect:/admin/stagiaires";
+        }
+        LocalDate debut = LocalDate.parse(dateDebut);
+        LocalDate fin = LocalDate.parse(dateFin);
+        if (!fin.isAfter(debut)) {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "La date de fin doit être postérieure à la date de début.");
+            return "redirect:/admin/stagiaires";
+        }
+        Stage stage = stageRepository.findByStagiaireId(id).orElseGet(Stage::new);
+        stage.setStagiaire(stagiaireOpt.get());
+        stage.setEncadreur(encadreurOpt.get());
+        stage.setService(serviceOpt.get());
+        stage.setProjet(projetId == null ? null : projetRepository.findById(projetId).orElse(null));
+        stage.setDateDebut(debut);
+        stage.setDateFin(fin);
+        stage.setDuree(ChronoUnit.DAYS.between(debut, fin) + " jours");
+        stage.setStatut(Stage.StatutStage.en_cours);
+        if (stage.getNumeroStage() == null || stage.getNumeroStage().isBlank()) {
+            stage.setNumeroStage("STG-ADM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+        stageRepository.save(stage);
+        Stagiaire stagiaire = stagiaireOpt.get();
+        stagiaire.setStatut(Stagiaire.StatutStagiaire.actif);
+        stagiaireRepository.save(stagiaire);
+        redirectAttributes.addFlashAttribute("succes",
+                "Le stagiaire a été affecté avec succès.");
         return "redirect:/admin/stagiaires";
     }
 

@@ -40,7 +40,13 @@
             <div class="intern-card-header"><div><h2 class="intern-card-title">Progression globale du stage</h2><p class="intern-card-subtitle">Évolution de la progression</p></div><select class="intern-select" id="objectivePeriod" style="width:auto"><option value="7" th:selected="${periodeObjectifs == 7}">7 derniers jours</option><option value="30" th:selected="${periodeObjectifs == 30}">30 derniers jours</option></select></div>
             <div class="intern-grid two" style="margin:0;align-items:center">
                 <div class="intern-donut-wrap"><div class="intern-donut" th:style="'--value:' + ${progressionPeriode}"></div><div class="intern-donut-label"><strong th:text="${progressionPeriode + '%'}">68%</strong><span>Progression sur la période</span></div></div>
-                <div class="intern-chart-box"><span class="intern-chart-bar" style="height:25%"></span><span class="intern-chart-bar" style="height:33%"></span><span class="intern-chart-bar" style="height:41%"></span><span class="intern-chart-bar" style="height:48%"></span><span class="intern-chart-bar" style="height:55%"></span><span class="intern-chart-bar" style="height:61%"></span><span class="intern-chart-bar" th:style="'height:' + ${progressionMoyenne} + '%'"></span></div>
+                <div class="intern-chart-box">
+                    <span class="intern-chart-bar"
+                          th:each="objectif : ${activitesObjectifs}"
+                          th:style="'height:max(6px,' + ${objectif.progression} + '%)'"
+                          th:title="${objectif.libelle + ' : ' + objectif.progression + '%'}"></span>
+                    <span class="intern-chart-bar" th:if="${#lists.isEmpty(activitesObjectifs)}" style="height:6px"></span>
+                </div>
             </div>
         </article>
         <aside class="intern-grid" style="margin:0">
@@ -75,7 +81,7 @@
                         <input type="hidden" name="id" th:value="${objectif.id}">
                         <select name="statut" class="intern-select intern-status-select"
                                 th:classappend="${objectif.statut.name() == 'atteint'} ? ' status-green' : (${objectif.statut.name() == 'en_cours'} ? ' status-orange' : ' status-purple')"
-                                onchange="this.form.submit()" aria-label="Changer le statut de l’objectif">
+                                onchange="this.form.requestSubmit()" aria-label="Changer le statut de l’objectif">
                             <option value="non_commence" th:selected="${objectif.statut.name() == 'non_commence'}">À venir</option>
                             <option value="en_cours" th:selected="${objectif.statut.name() == 'en_cours'}">En cours</option>
                             <option value="atteint" th:selected="${objectif.statut.name() == 'atteint'}">Terminé</option>
