@@ -39,12 +39,31 @@
             </div>
         </div>
         <div class="backup-heading-actions">
-            <button type="button" class="backup-btn secondary" onclick="actionSecurite('Journal de sécurité exporté.')">
+            <a class="backup-btn secondary" th:href="@{/admin/securite/exporter}">
                 <i class="fa-solid fa-file-export"></i> Exporter le journal
-            </button>
-            <button type="button" class="backup-btn primary" onclick="actionSecurite('Scan de sécurité lancé.')">
-                <i class="fa-solid fa-shield-virus"></i> Scanner le système
-            </button>
+            </a>
+            <form th:action="@{/admin/securite/scanner}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="backup-btn primary">
+                    <i class="fa-solid fa-shield-virus"></i> Scanner le système
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <section class="backup-card" th:if="${scanReport != null}" style="margin-bottom:20px;">
+        <header class="backup-card-header">
+            <div>
+                <strong th:text="${'Rapport de sécurité : ' + scanReport.score + '/100'}">Rapport</strong>
+                <p th:text="${scanReport.checkedUsers + ' comptes, ' + scanReport.checkedDocuments + ' documents et ' + scanReport.activeSessions + ' sessions vérifiés'}"></p>
+            </div>
+        </header>
+        <div style="padding:16px;display:grid;gap:10px;">
+            <div th:each="finding : ${scanReport.findings}" class="backup-policy-item"
+                 th:classappend="${finding.level == 'critical' || finding.level == 'high' ? 'danger' : 'ok'}">
+                <i th:class="${finding.level == 'ok' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation'}"></i>
+                <span><strong th:text="${finding.title}">Contrôle</strong><br><small th:text="${finding.details}">Détails</small></span>
+            </div>
         </div>
     </section>
 
@@ -235,9 +254,14 @@
                                 <td><span th:text="${l.date}">17/07</span> <span th:text="${l.time}">09:30</span></td>
                                 <td>
                                     <div class="backup-row-actions">
-                                        <button type="button" class="backup-btn small green" onclick="actionSecurite('Compte déverrouillé.')"><i class="fa-solid fa-lock-open"></i></button>
-                                        <button type="button" class="backup-btn small" onclick="actionSecurite('Mot de passe réinitialisé.')"><i class="fa-solid fa-key"></i></button>
-                                        <button type="button" class="backup-btn small danger" onclick="actionSecurite('Compte désactivé.')"><i class="fa-solid fa-ban"></i></button>
+                                        <form th:action="@{/admin/securite/comptes/{id}/deverrouiller(id=${l.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                            <button type="submit" class="backup-btn small green" title="Déverrouiller"><i class="fa-solid fa-lock-open"></i></button>
+                                        </form>
+                                        <form th:action="@{/admin/securite/comptes/{id}/reinitialiser(id=${l.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                            <button type="submit" class="backup-btn small" title="Réinitialiser le mot de passe"><i class="fa-solid fa-key"></i></button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -278,7 +302,10 @@
                         <small th:text="${s.appareil}">Chrome · Windows</small>
                         <span class="backup-session-meta" th:text="${'IP: ' + s.ip + ' · ' + s.lastActivity}">IP: 192.168.1.1 · Il y a 2 min</span>
                     </div>
-                    <button type="button" class="backup-btn small danger" onclick="actionSecurite('Session fermée.')"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    <form th:action="@{/admin/securite/sessions/{id}/fermer(id=${s.sessionId})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="backup-btn small danger" title="Fermer la session"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    </form>
                 </div>
             </article>
 
@@ -306,8 +333,16 @@
                 <div class="backup-storage-progress"><span th:style="'width:' + ${twoFactorPct} + '%'"></span></div>
                 <small class="backup-storage-note" th:text="${twoFactorPct + '% des utilisateurs ont activé la 2FA'}">67% des utilisateurs ont activé la 2FA</small>
                 <div style="padding:12px 16px 16px;display:flex;gap:8px;flex-wrap:wrap;">
-                    <button type="button" class="backup-btn small green" onclick="actionSecurite('2FA activée pour tous les utilisateurs.')"><i class="fa-solid fa-toggle-on"></i> Activer 2FA</button>
-                    <button type="button" class="backup-btn small" onclick="actionSecurite('Codes 2FA réinitialisés.')"><i class="fa-solid fa-arrows-rotate"></i> Réinitialiser</button>
+                    <form th:action="@{/admin/securite/2fa/exiger}" method="post"
+                          onsubmit="return confirm('Exiger la 2FA pour tous les comptes à leur prochaine connexion ?')">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="backup-btn small green"><i class="fa-solid fa-toggle-on"></i> Exiger la 2FA</button>
+                    </form>
+                    <form th:action="@{/admin/securite/2fa/reinitialiser-mon-compte}" method="post"
+                          onsubmit="return confirm('Réinitialiser uniquement la 2FA de votre compte administrateur ?')">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="backup-btn small"><i class="fa-solid fa-arrows-rotate"></i> Réinitialiser ma 2FA</button>
+                    </form>
                 </div>
             </article>
 

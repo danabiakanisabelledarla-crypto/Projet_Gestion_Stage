@@ -5,11 +5,16 @@ import com.gestionstages.gestion_stages.entities.*;
 import com.gestionstages.gestion_stages.repositories.*;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 import com.gestionstages.gestion_stages.services.ActivityLogService;
+import com.gestionstages.gestion_stages.services.ApplicationSettingService;
+import com.gestionstages.gestion_stages.services.BackupService;
+import com.gestionstages.gestion_stages.services.SecurityScanService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +24,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +53,11 @@ public class AdminManagementController {
     private final ActivityLogService activityLogService;
     private final EmailService emailService;
     private final AdminPreferenceRepository adminPreferenceRepository;
+    private final SessionRegistry sessionRegistry;
+    private final ApplicationSettingService applicationSettingService;
+    private final JdbcTemplate jdbcTemplate;
+    private final BackupService backupService;
+    private final SecurityScanService securityScanService;
 
     public AdminManagementController(UtilisateurRepository utilisateurRepository,
                                      RoleRepository roleRepository,
@@ -57,7 +71,12 @@ public class AdminManagementController {
                                      PasswordEncoder passwordEncoder,
                                      ActivityLogService activityLogService,
                                      EmailService emailService,
-                                     AdminPreferenceRepository adminPreferenceRepository) {
+                                     AdminPreferenceRepository adminPreferenceRepository,
+                                     SessionRegistry sessionRegistry,
+                                     ApplicationSettingService applicationSettingService,
+                                     JdbcTemplate jdbcTemplate,
+                                     BackupService backupService,
+                                     SecurityScanService securityScanService) {
         this.utilisateurRepository = utilisateurRepository;
         this.roleRepository = roleRepository;
         this.serviceRepository = serviceRepository;
@@ -71,6 +90,11 @@ public class AdminManagementController {
         this.activityLogService = activityLogService;
         this.emailService = emailService;
         this.adminPreferenceRepository = adminPreferenceRepository;
+        this.sessionRegistry = sessionRegistry;
+        this.applicationSettingService = applicationSettingService;
+        this.jdbcTemplate = jdbcTemplate;
+        this.backupService = backupService;
+        this.securityScanService = securityScanService;
     }
 
     private String adminName(CustomUserDetails user) {
@@ -92,17 +116,26 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
         })
         .collect(java.util.stream.Collectors.toList());
     List<ServiceEntreprise> tousServices = serviceRepository.findAll();
+    Set<Integer> utilisateursConnectes = sessionRegistry.getAllPrincipals().stream()
+        .filter(CustomUserDetails.class::isInstance)
+        .map(CustomUserDetails.class::cast)
+        .filter(details -> !sessionRegistry.getAllSessions(details, false).isEmpty())
+        .map(details -> details.getUtilisateur().getId())
+        .collect(java.util.stream.Collectors.toSet());
 
     model.addAttribute("utilisateurs", tousUtilisateurs);
     model.addAttribute("roles", roleRepository.findAll().stream()
         .filter(r -> "ENCADREUR".equals(r.getLibelle()) || "RESPONSABLE_STAGE".equals(r.getLibelle()))
         .collect(java.util.stream.Collectors.toList()));
     model.addAttribute("services", tousServices);
+    model.addAttribute("utilisateursConnectes", utilisateursConnectes);
 
     long totalUsers = tousUtilisateurs.size();
     long totalResp = tousUtilisateurs.stream().filter(u -> "RESPONSABLE_STAGE".equals(u.getRole().getLibelle())).count();
     long totalEncadreurs = tousUtilisateurs.stream().filter(u -> "ENCADREUR".equals(u.getRole().getLibelle())).count();
-    long totalInactifs = tousUtilisateurs.stream().filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif).count();
+    long totalInactifs = tousUtilisateurs.stream()
+        .filter(u -> !utilisateursConnectes.contains(u.getId()))
+        .count();
 
     model.addAttribute("totalUsers", totalUsers);
     model.addAttribute("totalAdmin", 0L);
@@ -124,8 +157,12 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
         m.put("role", u.getRole().getLibelle());
         m.put("roleLibelle", u.getRole().getLibelle());
         m.put("fonction", u.getRole().getDescription());
-        m.put("statutCls", u.getStatut().name());
-        m.put("statutLabel", u.getStatut() == Utilisateur.StatutUtilisateur.actif ? "Actif" : "Inactif");
+        boolean connecte = utilisateursConnectes.contains(u.getId());
+        m.put("statutCls", connecte ? "actif" : "inactif");
+        m.put("statutLabel", connecte ? "Actif" : "Inactif");
+        m.put("derniereConnexion", u.getDerniereConnexion() == null
+                ? "Jamais"
+                : u.getDerniereConnexion().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         m.put("dateCreation", u.getDateCreation() != null ? sdf.format(java.sql.Timestamp.valueOf(u.getDateCreation())) : "—");
         m.put("service", "—");
         m.put("stagiairesCount", 0);
@@ -300,6 +337,66 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
     public String supprimerService(@PathVariable Integer id) {
         serviceRepository.deleteById(id);
         return "redirect:/admin/services?succes=Service supprime.";
+    }
+
+    @GetMapping("/services/exporter")
+    public ResponseEntity<byte[]> exporterServices() {
+        List<ServiceEntreprise> services = serviceRepository.findAll();
+        List<Stage> stages = stageRepository.findAll();
+        StringBuilder xml = new StringBuilder("""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <?mso-application progid="Excel.Sheet"?>
+                <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+                  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+                  <Worksheet ss:Name="Services"><Table>
+                """);
+        xml.append(excelRow("Service", "Responsable", "Encadreurs", "Stagiaires", "Capacite"));
+        for (ServiceEntreprise service : services) {
+            List<Stage> stagesService = stages.stream()
+                    .filter(stage -> stage.getService() != null
+                            && service.getId().equals(stage.getService().getId()))
+                    .toList();
+            List<Encadreur> encadreurs = stagesService.stream()
+                    .map(Stage::getEncadreur)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.collectingAndThen(
+                            java.util.stream.Collectors.toMap(
+                                    Encadreur::getId, e -> e, (a, b) -> a,
+                                    java.util.LinkedHashMap::new),
+                            map -> new ArrayList<>(map.values())));
+            String responsable = encadreurs.isEmpty() ? "Non attribue"
+                    : encadreurs.get(0).getUtilisateur().getPrenom() + " "
+                    + encadreurs.get(0).getUtilisateur().getNom();
+            String nomsEncadreurs = encadreurs.stream()
+                    .map(e -> e.getUtilisateur().getPrenom() + " "
+                            + e.getUtilisateur().getNom())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            int capacite = Math.max(10, stagesService.size() + 5);
+            xml.append(excelRow(service.getNom(), responsable, nomsEncadreurs,
+                    String.valueOf(stagesService.size()), String.valueOf(capacite)));
+        }
+        xml.append("</Table></Worksheet></Workbook>");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"services-" + java.time.LocalDate.now() + ".xls\"")
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(xml.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String excelRow(String... values) {
+        StringBuilder row = new StringBuilder("<Row>");
+        for (String value : values) {
+            row.append("<Cell><Data ss:Type=\"String\">")
+                    .append(escapeXml(value))
+                    .append("</Data></Cell>");
+        }
+        return row.append("</Row>").toString();
+    }
+
+    private String escapeXml(String value) {
+        return value == null ? "" : value.replace("&", "&amp;")
+                .replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&apos;");
     }
 
     // ===== DOCUMENTS =====
@@ -641,6 +738,41 @@ public String documents(Model model, @RequestParam(required = false) String succ
         return "admin/journal";
     }
 
+    @PostMapping("/journal/ajouter")
+    public String ajouterEntreeJournal(@RequestParam String action,
+                                       @RequestParam String details,
+                                       @AuthenticationPrincipal CustomUserDetails user,
+                                       RedirectAttributes ra) {
+        activityLogService.log(action.trim(), details.trim(), adminName(user));
+        ra.addAttribute("succes", "Entree ajoutee au journal.");
+        return "redirect:/admin/journal";
+    }
+
+    @PostMapping("/journal/supprimer/{id}")
+    public String supprimerEntreeJournal(@PathVariable Integer id,
+                                         RedirectAttributes ra) {
+        activityLogRepository.deleteById(id);
+        ra.addAttribute("succes", "Entree supprimee.");
+        return "redirect:/admin/journal";
+    }
+
+    @GetMapping("/journal/exporter")
+    public ResponseEntity<byte[]> exporterJournal() {
+        StringBuilder csv = new StringBuilder("\uFEFFDate;Utilisateur;Action;Details\n");
+        activityLogRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(ActivityLog::getDateActivite).reversed())
+                .forEach(log -> csv.append(celluleCsv(
+                                log.getDateActivite() == null ? "" : log.getDateActivite().toString()))
+                        .append(';').append(celluleCsv(log.getUtilisateurNom()))
+                        .append(';').append(celluleCsv(log.getAction()))
+                        .append(';').append(celluleCsv(log.getDetails())).append('\n'));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"journal-" + java.time.LocalDate.now() + ".csv\"")
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
     // ===== PARAMETRES =====
     @GetMapping({"/parametres", "/parametre"})
     public String parametres(Model model,
@@ -651,6 +783,22 @@ public String documents(Model model, @RequestParam(required = false) String succ
                 .findByUtilisateurId(user.getUtilisateur().getId())
                 .orElseGet(() -> adminPreferenceRepository.save(new AdminPreference(user.getUtilisateur())));
         model.addAttribute("preferences", preferences);
+        model.addAttribute("settings", applicationSettingService.getAll());
+        Path dataPath = Paths.get("data").toAbsolutePath().normalize();
+        try {
+            long total = Files.getFileStore(dataPath).getTotalSpace();
+            long used = total - Files.getFileStore(dataPath).getUsableSpace();
+            model.addAttribute("diskUsed", formatBytes(used));
+            model.addAttribute("diskTotal", formatBytes(total));
+            model.addAttribute("diskPercent", total == 0 ? 0 : Math.min(100, used * 100 / total));
+        } catch (Exception exception) {
+            model.addAttribute("diskUsed", "Indisponible");
+            model.addAttribute("diskTotal", "Indisponible");
+            model.addAttribute("diskPercent", 0);
+        }
+        model.addAttribute("javaVersion", System.getProperty("java.version"));
+        model.addAttribute("databaseProduct", "H2 " + jdbcTemplate.queryForObject(
+                "SELECT H2VERSION()", String.class));
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/parametres";
     }
@@ -715,6 +863,7 @@ public String documents(Model model, @RequestParam(required = false) String succ
                                    @RequestParam(defaultValue = "false") boolean preferenceRappel,
                                    @RequestParam(defaultValue = "false") boolean preferenceSombre,
                                    @RequestParam(defaultValue = "fr") String preferenceLangue,
+                                   @RequestParam Map<String, String> formValues,
                                    RedirectAttributes ra) {
         AdminPreference preferences = adminPreferenceRepository
                 .findByUtilisateurId(user.getUtilisateur().getId())
@@ -725,8 +874,90 @@ public String documents(Model model, @RequestParam(required = false) String succ
         preferences.setModeSombre(preferenceSombre);
         preferences.setLangue("en".equalsIgnoreCase(preferenceLangue) ? "en" : "fr");
         adminPreferenceRepository.save(preferences);
+        Map<String, String> settings = new HashMap<>();
+        for (String key : List.of("platformName", "companyName", "contactEmail", "phone",
+                "address", "timezone", "academicYear", "startDate", "maxDuration",
+                "language", "maxFileSize", "storage", "dateFormat")) {
+            if (formValues.containsKey(key)) {
+                settings.put(key, formValues.get(key));
+            }
+        }
+        settings.put("emailNotifications",
+                String.valueOf(formValues.containsKey("emailNotifications")));
+        settings.put("appNotifications",
+                String.valueOf(formValues.containsKey("appNotifications")));
+        settings.put("maintenanceMode",
+                String.valueOf(formValues.containsKey("maintenanceMode")));
+        applicationSettingService.save(settings);
+        activityLogService.log("Parametres globaux modifies",
+                settings.keySet().toString(), adminName(user));
         ra.addAttribute("succes", "Préférences enregistrées.");
         return "redirect:/admin/parametres";
+    }
+
+    @PostMapping("/parametres/reinitialiser")
+    public String reinitialiserParametres(@AuthenticationPrincipal CustomUserDetails user,
+                                          RedirectAttributes ra) {
+        applicationSettingService.reset();
+        activityLogService.log("Parametres reinitialises",
+                "Valeurs globales restaurees", adminName(user));
+        ra.addAttribute("succes", "Parametres globaux reinitialises.");
+        return "redirect:/admin/parametres";
+    }
+
+    @PostMapping("/parametres/maintenance/{action}")
+    public String maintenance(@PathVariable String action,
+                              @AuthenticationPrincipal CustomUserDetails user,
+                              RedirectAttributes ra) {
+        String message;
+        try {
+            switch (action) {
+                case "cache" -> {
+                    Path temp = Paths.get(System.getProperty("java.io.tmpdir"), "gestion-stages");
+                    if (Files.exists(temp)) {
+                        try (var paths = Files.walk(temp)) {
+                            paths.sorted(java.util.Comparator.reverseOrder())
+                                    .filter(path -> !path.equals(temp))
+                                    .forEach(path -> {
+                                        try {
+                                            Files.deleteIfExists(path);
+                                        } catch (Exception ignored) {
+                                        }
+                                    });
+                        }
+                    }
+                    message = "Cache temporaire vide.";
+                }
+                case "database" -> {
+                    jdbcTemplate.execute("ANALYZE");
+                    jdbcTemplate.execute("CHECKPOINT");
+                    message = "Statistiques et fichiers de la base optimises.";
+                }
+                case "files" -> {
+                    long manquants = documentRepository.findAll().stream()
+                            .filter(document -> document.getCheminFichier() == null
+                                    || !Files.exists(Paths.get(document.getCheminFichier())))
+                            .count();
+                    message = manquants == 0
+                            ? "Verification terminee : tous les fichiers references existent."
+                            : "Verification terminee : " + manquants + " fichier(s) manquant(s).";
+                }
+                default -> throw new IllegalArgumentException("Action inconnue");
+            }
+            activityLogService.log("Maintenance " + action, message, adminName(user));
+            ra.addAttribute("succes", message);
+        } catch (Exception exception) {
+            ra.addAttribute("succes", "Operation de maintenance impossible : "
+                    + exception.getMessage());
+        }
+        return "redirect:/admin/parametres";
+    }
+
+    private String formatBytes(long bytes) {
+        if (bytes < 1024L * 1024L * 1024L) {
+            return String.format("%.1f Mo", bytes / (1024d * 1024d));
+        }
+        return String.format("%.1f Go", bytes / (1024d * 1024d * 1024d));
     }
 
     // ===== RAPPORTS =====
@@ -915,6 +1146,53 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("chartManualPoints", buildPoints(chartManualValues));
         model.addAttribute("chartRestorePoints", buildPoints(chartRestoreValues));
 
+        try {
+            List<Path> backups = backupService.list();
+            List<Map<String, Object>> fileHistory = backups.stream().map(path -> {
+                Map<String, Object> row = new HashMap<>();
+                try {
+                    LocalDateTime date = LocalDateTime.ofInstant(
+                            Files.getLastModifiedTime(path).toInstant(),
+                            java.time.ZoneId.systemDefault());
+                    row.put("date", date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    row.put("time", date.format(DateTimeFormatter.ofPattern("HH:mm")));
+                    row.put("size", formatBytes(Files.size(path)));
+                } catch (Exception exception) {
+                    row.put("date", "—");
+                    row.put("time", "—");
+                    row.put("size", "—");
+                }
+                row.put("fileName", path.getFileName().toString());
+                row.put("typeCls", "manuel");
+                row.put("typeLabel", "Manuelle");
+                row.put("destination", "Serveur local");
+                row.put("statutCls", "reussie");
+                row.put("statutLabel", "Réussie");
+                return row;
+            }).toList();
+            model.addAttribute("backupHistory", fileHistory);
+            model.addAttribute("totalBackups", backups.size());
+            if (!backups.isEmpty()) {
+                LocalDateTime last = LocalDateTime.ofInstant(
+                        Files.getLastModifiedTime(backups.get(0)).toInstant(),
+                        java.time.ZoneId.systemDefault());
+                model.addAttribute("lastBackupDate",
+                        last.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                model.addAttribute("lastBackupTime",
+                        last.format(DateTimeFormatter.ofPattern("HH:mm")));
+                long totalSize = backups.stream().mapToLong(path -> {
+                    try {
+                        return Files.size(path);
+                    } catch (Exception exception) {
+                        return 0;
+                    }
+                }).sum();
+                model.addAttribute("totalBackupSize", formatBytes(totalSize));
+            }
+        } catch (Exception exception) {
+            model.addAttribute("backupHistory", List.of());
+        }
+
         return "admin/sauvegarde";
     }
 
@@ -929,9 +1207,69 @@ public String documents(Model model, @RequestParam(required = false) String succ
     }
 
     @PostMapping("/sauvegarde")
-    public String lancerSauvegarde(@AuthenticationPrincipal CustomUserDetails user, RedirectAttributes ra) {
-        activityLogService.log("Sauvegarde lancee", "Export des donnees", adminName(user));
-        ra.addAttribute("succes", "Sauvegarde effectuee avec succes.");
+    public String lancerSauvegarde(@RequestParam(required = false) String name,
+                                   @AuthenticationPrincipal CustomUserDetails user,
+                                   RedirectAttributes ra) {
+        try {
+            Path backup = backupService.create(name);
+            activityLogService.log("Sauvegarde creee",
+                    backup.getFileName().toString(), adminName(user));
+            ra.addAttribute("succes", "Sauvegarde creee avec succes.");
+        } catch (Exception exception) {
+            activityLogService.log("Echec sauvegarde", exception.getMessage(), adminName(user));
+            ra.addAttribute("succes", "Echec de la sauvegarde : " + exception.getMessage());
+        }
+        return "redirect:/admin/sauvegarde";
+    }
+
+    @GetMapping("/sauvegarde/telecharger/{fileName:.+}")
+    public ResponseEntity<byte[]> telechargerSauvegarde(@PathVariable String fileName) throws Exception {
+        Path file = backupService.get(fileName);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + file.getFileName() + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(Files.readAllBytes(file));
+    }
+
+    @PostMapping("/sauvegarde/supprimer/{fileName:.+}")
+    public String supprimerSauvegarde(@PathVariable String fileName,
+                                      @AuthenticationPrincipal CustomUserDetails user,
+                                      RedirectAttributes ra) {
+        try {
+            backupService.delete(fileName);
+            activityLogService.log("Sauvegarde supprimee", fileName, adminName(user));
+            ra.addAttribute("succes", "Sauvegarde supprimee.");
+        } catch (Exception exception) {
+            ra.addAttribute("succes", "Suppression impossible : " + exception.getMessage());
+        }
+        return "redirect:/admin/sauvegarde";
+    }
+
+    @PostMapping("/sauvegarde/restaurer/{fileName:.+}")
+    public String restaurerSauvegarde(@PathVariable String fileName,
+                                      @RequestParam String confirmation,
+                                      @AuthenticationPrincipal CustomUserDetails user,
+                                      RedirectAttributes ra) {
+        if (!"RESTAURER".equals(confirmation)) {
+            ra.addAttribute("succes",
+                    "Restauration annulee : confirmation RESTAURER requise.");
+            return "redirect:/admin/sauvegarde";
+        }
+        try {
+            BackupService.RestoreResult result = backupService.restore(fileName);
+            activityLogService.log("Sauvegarde restauree",
+                    result.restoredBackup().getFileName()
+                            + " | Copie de securite: "
+                            + result.safetyBackup().getFileName(),
+                    adminName(user));
+            ra.addAttribute("succes",
+                    "Restauration terminee. Une copie de securite a ete conservee.");
+        } catch (Exception exception) {
+            ra.addAttribute("succes",
+                    "Restauration impossible; retour arriere tente : "
+                            + exception.getMessage());
+        }
         return "redirect:/admin/sauvegarde";
     }
 
@@ -968,7 +1306,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
 
         model.addAttribute("successfulLogins", securityLogCount);
         model.addAttribute("failedLogins", lockedAccounts > 0 ? lockedAccounts * 2 : 0);
-        model.addAttribute("activeSessions", Math.max(1, totalUsers > 2 ? (int)(totalUsers * 0.6) : 1));
+        long activeSessionCount = sessionRegistry.getAllPrincipals().stream()
+                .mapToLong(principal -> sessionRegistry.getAllSessions(principal, false).size())
+                .sum();
+        model.addAttribute("activeSessions", activeSessionCount);
         model.addAttribute("totalAlerts", totalAlerts);
         model.addAttribute("lockedAccounts", lockedAccounts);
         model.addAttribute("securityScore", securityScore);
@@ -1091,19 +1432,35 @@ public String documents(Model model, @RequestParam(required = false) String succ
             }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("suspiciousActivities", suspicious);
 
-        // Active sessions (simulé)
-        List<Map<String,Object>> sessionsList = List.of(
-            Map.of("initiale","AD","nom","Administrateur","appareil","Chrome 120 · Windows 11","ip","192.168.1.100","lastActivity","Il y a 2 min"),
-            Map.of("initiale","JD","nom","Jean Dupont","appareil","Firefox 118 · macOS 14","ip","192.168.1.101","lastActivity","Il y a 15 min"),
-            Map.of("initiale","MM","nom","Marie Martin","appareil","Safari 17 · iOS 18","ip","10.0.0.25","lastActivity","Il y a 1h")
-        );
+        List<Map<String,Object>> sessionsList = sessionRegistry.getAllPrincipals().stream()
+                .filter(CustomUserDetails.class::isInstance)
+                .map(CustomUserDetails.class::cast)
+                .flatMap(details -> sessionRegistry.getAllSessions(details, false).stream()
+                        .map(session -> {
+                            Utilisateur utilisateur = details.getUtilisateur();
+                            Map<String, Object> item = new HashMap<>();
+                            item.put("sessionId", session.getSessionId());
+                            item.put("initiale", utilisateur.getPrenom().substring(0, 1).toUpperCase()
+                                    + utilisateur.getNom().substring(0, 1).toUpperCase());
+                            item.put("nom", utilisateur.getPrenom() + " " + utilisateur.getNom());
+                            item.put("appareil", utilisateur.getEmail());
+                            item.put("ip", "Session web");
+                            long minutes = Math.max(0, java.time.Duration.between(
+                                    session.getLastRequest().toInstant(),
+                                    java.time.Instant.now()).toMinutes());
+                            item.put("lastActivity", minutes == 0
+                                    ? "A l'instant" : "Il y a " + minutes + " min");
+                            return item;
+                        }))
+                .toList();
         model.addAttribute("activeSessionsList", sessionsList);
 
         // Comptes verrouillés (utilisateurs inactifs)
         List<Map<String,Object>> lockedList = allUsers.stream()
             .filter(u -> u.getStatut() == Utilisateur.StatutUtilisateur.inactif)
-            .map(u -> {
-                Map<String,Object> m = new HashMap<>();
+             .map(u -> {
+                 Map<String,Object> m = new HashMap<>();
+                 m.put("id", u.getId());
                 m.put("initiale", u.getPrenom().substring(0,1).toUpperCase() + u.getNom().substring(0,1).toUpperCase());
                 m.put("nom", u.getPrenom() + " " + u.getNom());
                 m.put("attempts", 5);
@@ -1113,12 +1470,116 @@ public String documents(Model model, @RequestParam(required = false) String succ
             }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("lockedAccountsList", lockedList);
 
-        // 2FA stats (simulé)
-        model.addAttribute("twoFactorEnabled", Math.min(totalUsers, 24));
-        model.addAttribute("twoFactorDisabled", totalUsers > 24 ? totalUsers - 24 : 0);
-        model.addAttribute("twoFactorPct", Math.min(100, (totalUsers > 0 ? 24 * 100 / (int)totalUsers : 67)));
+        long twoFactorEnabled = allUsers.stream()
+                .filter(Utilisateur::isTwoFactorEnabled)
+                .count();
+        model.addAttribute("twoFactorEnabled", twoFactorEnabled);
+        model.addAttribute("twoFactorDisabled", totalUsers - twoFactorEnabled);
+        model.addAttribute("twoFactorPct",
+                totalUsers == 0 ? 0 : twoFactorEnabled * 100 / totalUsers);
+        model.addAttribute("scanReport", securityScanService.scan());
 
         return "admin/securite";
+    }
+
+    @PostMapping("/securite/comptes/{id}/deverrouiller")
+    public String deverrouillerCompte(@PathVariable Integer id,
+                                      @AuthenticationPrincipal CustomUserDetails user,
+                                      RedirectAttributes ra) {
+        utilisateurRepository.findById(id).ifPresent(utilisateur -> {
+            utilisateur.setStatut(Utilisateur.StatutUtilisateur.actif);
+            utilisateurRepository.save(utilisateur);
+            activityLogService.log("Compte deverrouille", utilisateur.getEmail(), adminName(user));
+        });
+        ra.addAttribute("succes", "Compte deverrouille.");
+        return "redirect:/admin/securite";
+    }
+
+    @PostMapping("/securite/comptes/{id}/reinitialiser")
+    public String reinitialiserCompteSecurite(@PathVariable Integer id,
+                                               @AuthenticationPrincipal CustomUserDetails user,
+                                               RedirectAttributes ra) {
+        utilisateurRepository.findById(id).ifPresent(utilisateur -> {
+            utilisateur.setMotDePasse(passwordEncoder.encode("dta2026"));
+            utilisateurRepository.save(utilisateur);
+            activityLogService.log("Mot de passe reinitialise",
+                    utilisateur.getEmail(), adminName(user));
+        });
+        ra.addAttribute("succes", "Mot de passe reinitialise a dta2026.");
+        return "redirect:/admin/securite";
+    }
+
+    @PostMapping("/securite/sessions/{sessionId}/fermer")
+    public String fermerSession(@PathVariable String sessionId,
+                                @AuthenticationPrincipal CustomUserDetails user,
+                                RedirectAttributes ra) {
+        var information = sessionRegistry.getSessionInformation(sessionId);
+        if (information != null) {
+            information.expireNow();
+            activityLogService.log("Session fermee", sessionId, adminName(user));
+        }
+        ra.addAttribute("succes", "Session fermee.");
+        return "redirect:/admin/securite";
+    }
+
+    @GetMapping("/securite/exporter")
+    public ResponseEntity<byte[]> exporterSecurite() {
+        StringBuilder csv = new StringBuilder("\uFEFFDate;Utilisateur;Action;Details\n");
+        activityLogRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(ActivityLog::getDateActivite).reversed())
+                .forEach(log -> csv.append(celluleCsv(
+                                log.getDateActivite() == null ? "" : log.getDateActivite().toString()))
+                        .append(';').append(celluleCsv(log.getUtilisateurNom()))
+                        .append(';').append(celluleCsv(log.getAction()))
+                        .append(';').append(celluleCsv(log.getDetails())).append('\n'));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"securite-" + java.time.LocalDate.now() + ".csv\"")
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @PostMapping("/securite/scanner")
+    public String scannerSecurite(@AuthenticationPrincipal CustomUserDetails user,
+                                  RedirectAttributes ra) {
+        SecurityScanService.Report report = securityScanService.scan();
+        activityLogService.log("Scan de securite",
+                "Score " + report.score() + "/100, "
+                        + report.findings().size() + " constat(s)",
+                adminName(user));
+        ra.addAttribute("succes",
+                "Scan termine : score " + report.score() + "/100.");
+        return "redirect:/admin/securite";
+    }
+
+    @PostMapping("/securite/2fa/exiger")
+    public String exigerDeuxFacteurs(@AuthenticationPrincipal CustomUserDetails user,
+                                     RedirectAttributes ra) {
+        List<Utilisateur> utilisateurs = utilisateurRepository.findAll();
+        utilisateurs.forEach(utilisateur -> utilisateur.setTwoFactorRequired(true));
+        utilisateurRepository.saveAll(utilisateurs);
+        activityLogService.log("2FA exigee",
+                utilisateurs.size() + " compte(s)", adminName(user));
+        ra.addAttribute("succes",
+                "La double authentification sera configuree a la prochaine connexion.");
+        return "redirect:/admin/securite";
+    }
+
+    @PostMapping("/securite/2fa/reinitialiser-mon-compte")
+    public String reinitialiserMaDeuxFacteurs(
+            @AuthenticationPrincipal CustomUserDetails user,
+            RedirectAttributes ra) {
+        Utilisateur utilisateur = utilisateurRepository
+                .findById(user.getUtilisateur().getId()).orElseThrow();
+        utilisateur.setTwoFactorEnabled(false);
+        utilisateur.setTwoFactorRequired(true);
+        utilisateur.setTwoFactorSecret(null);
+        utilisateurRepository.save(utilisateur);
+        activityLogService.log("Secret 2FA reinitialise",
+                utilisateur.getEmail(), adminName(user));
+        ra.addAttribute("succes",
+                "Votre 2FA devra etre reconfiguree a votre prochaine connexion.");
+        return "redirect:/admin/securite";
     }
 
     private String buildChartPoints(List<Integer> values) {

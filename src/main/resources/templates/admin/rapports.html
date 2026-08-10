@@ -98,12 +98,12 @@
         <div class="backup-card-header">
             <span class="backup-card-title"><i class="fa-solid fa-file-export" style="color:#2563EB;margin-right:8px;"></i>Documents exportés</span>
             <div class="backup-card-actions">
-                <select class="backup-filter-select">
-                    <option>Tous les types</option>
-                    <option>Rapports finaux</option>
-                    <option>Rapports hebdomadaires</option>
-                    <option>Attestations</option>
-                    <option>Fiches de note</option>
+                <select class="backup-filter-select" id="reportTypeFilter">
+                    <option value="">Tous les types</option>
+                    <option value="rapport_final">Rapports finaux</option>
+                    <option value="rapport_hebdomadaire">Rapports hebdomadaires</option>
+                    <option value="attestation">Attestations</option>
+                    <option value="fiche_note">Fiches de note</option>
                 </select>
             </div>
         </div>
@@ -120,7 +120,7 @@
                 </tr>
             </thead>
             <tbody>
-<tr class="report-row" th:each="d : ${documentsExportes}">
+<tr class="report-row" th:each="d : ${documentsExportes}" th:data-type="${d.typeDocument}">
                     <td>
                         <div class="backup-doc-cell">
                             <i class="fa-solid fa-file-pdf" style="color:#EF4444;font-size:20px;"></i>

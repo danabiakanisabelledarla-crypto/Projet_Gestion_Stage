@@ -278,3 +278,18 @@
     background: #fff;
     box-shadow: 0 25px 70px rgba(15, 23, 42, .25);
 }
+
+.backup-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.backup-main-column,
+.backup-main-column .backup-card,
+.backup-table-wrap {
+    width: 100%;
+    max-width: none;
+}
+
+.backup-main-column .backup-table {
+    min-width: 980px;
+}

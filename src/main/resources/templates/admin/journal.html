@@ -31,9 +31,9 @@
             </div>
         </div>
         <div class="backup-heading-right">
-            <button class="backup-btn secondary"><i class="fa-solid fa-download"></i> Exporter <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
-            <button class="backup-btn secondary"><i class="fa-solid fa-print"></i> Imprimer</button>
-            <button class="backup-btn primary"><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
+            <a class="backup-btn secondary" th:href="@{/admin/journal/exporter}"><i class="fa-solid fa-download"></i> Exporter</a>
+            <button type="button" class="backup-btn secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimer</button>
+            <button type="button" class="backup-btn primary" onclick="document.getElementById('journalEntryModal').classList.add('open')"><i class="fa-solid fa-plus"></i> Nouvelle entrée</button>
         </div>
     </div>
 
@@ -113,13 +113,10 @@
             <!-- FILTER BAR -->
             <div class="backup-table-tools">
                 <div class="backup-table-tools-left">
-                    <select class="backup-table-select">
+                    <select class="backup-table-select" id="journalUserFilter">
                         <option value="">Tous les utilisateurs</option>
                     </select>
-                    <select class="backup-table-select">
-                        <option value="">Tous les services</option>
-                    </select>
-                    <select class="backup-table-select">
+                    <select class="backup-table-select" id="journalTypeFilter">
                         <option value="">Type d'activité</option>
                         <option>Journal</option>
                         <option>Commentaire</option>
@@ -156,7 +153,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="journal-entry-row" th:each="a : ${activites}">
+                        <tr class="journal-entry-row" th:each="a : ${activites}"
+                            th:attr="data-user=${a.utilisateur},data-type=${a.typeLabel}">
                             <td>
                                 <div class="journal-date-cell">
                                     <span class="jdate" th:text="${a.dateFormatted}">15/07/2026</span>
@@ -193,9 +191,14 @@
                                 <span th:unless="${a.attachmentsCount > 0}" style="color:#94A3B8;font-size:12px;">—</span>
                             </td>
                             <td>
-                                <button class="backup-action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                                <button class="backup-action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                                <button class="backup-action-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <button type="button" class="backup-action-btn" title="Voir"
+                                        th:attr="data-details=${a.description}"
+                                        onclick="alert(this.dataset.details)"><i class="fa-solid fa-eye"></i></button>
+                                <form th:action="@{/admin/journal/supprimer/{id}(id=${a.id})}" method="post" style="display:inline"
+                                      onsubmit="return confirm('Supprimer cette entrée du journal ?')">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="backup-action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(activites)}">
@@ -285,6 +288,18 @@
         </div>
     </div>
 </main>
+<div class="document-upload-modal" id="journalEntryModal">
+    <form class="document-upload-panel" th:action="@{/admin/journal/ajouter}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <h2>Nouvelle entrée</h2>
+        <div class="form-group"><label>Action</label><input type="text" name="action" required maxlength="200"></div>
+        <div class="form-group"><label>Détails</label><textarea name="details" required rows="5"></textarea></div>
+        <div class="backup-heading-right">
+            <button type="button" class="backup-btn secondary" onclick="document.getElementById('journalEntryModal').classList.remove('open')">Annuler</button>
+            <button type="submit" class="backup-btn primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
 <script>
 (() => {
     const rows = [...document.querySelectorAll('.journal-entry-row')];

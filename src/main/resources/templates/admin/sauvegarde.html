@@ -249,9 +249,19 @@
                             <td>
                                 <div class="backup-row-actions">
                                     <button type="button" title="Prévisualiser" onclick="actionSauvegarde('Prévisualisation ouverte.')"><i class="fa-regular fa-eye"></i></button>
-                                    <button type="button" title="Télécharger" onclick="actionSauvegarde('Téléchargement de la sauvegarde démarré.')"><i class="fa-solid fa-download"></i></button>
-                                    <button type="button" title="Restaurer" onclick="restaurerSauvegarde()"><i class="fa-solid fa-rotate-left"></i></button>
-                                    <button type="button" class="danger" title="Supprimer" onclick="supprimerSauvegarde(this)"><i class="fa-regular fa-trash-can"></i></button>
+                                    <a th:href="@{/admin/sauvegarde/telecharger/{file}(file=${backup.fileName})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                                    <form th:action="@{/admin/sauvegarde/restaurer/{file}(file=${backup.fileName})}" method="post"
+                                          style="display:inline"
+                                          onsubmit="const value=prompt('Tapez RESTAURER pour confirmer. Une copie de sécurité sera créée avant l’opération.'); if(value!=='RESTAURER') return false; this.querySelector('[name=confirmation]').value=value;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="confirmation">
+                                        <button type="submit" title="Restaurer"><i class="fa-solid fa-rotate-left"></i></button>
+                                    </form>
+                                    <form th:action="@{/admin/sauvegarde/supprimer/{file}(file=${backup.fileName})}" method="post"
+                                          style="display:inline" onsubmit="return confirm('Supprimer cette sauvegarde ?')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <button type="submit" class="danger" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

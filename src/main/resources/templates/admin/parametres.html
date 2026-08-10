@@ -69,35 +69,35 @@
                             <span>Nom de la plateforme</span>
                             <div class="settings-input">
                                 <i class="fa-solid fa-window-maximize"></i>
-                                <input type="text" name="platformName" value="Gestion des Stages">
+                                <input type="text" name="platformName" th:value="${settings.platformName}">
                             </div>
                         </label>
                         <label class="settings-field">
                             <span>Nom de l'entreprise</span>
                             <div class="settings-input">
                                 <i class="fa-solid fa-building"></i>
-                                <input type="text" name="companyName" value="Digital Transformation Alliance">
+                                <input type="text" name="companyName" th:value="${settings.companyName}">
                             </div>
                         </label>
                         <label class="settings-field">
                             <span>Email de contact</span>
                             <div class="settings-input">
                                 <i class="fa-regular fa-envelope"></i>
-                                <input type="email" name="contactEmail" value="contact@dta-alliance.com">
+                                <input type="email" name="contactEmail" th:value="${settings.contactEmail}">
                             </div>
                         </label>
                         <label class="settings-field">
                             <span>Téléphone</span>
                             <div class="settings-input">
                                 <i class="fa-solid fa-phone"></i>
-                                <input type="tel" name="phone" value="+237 6XX XXX XXX">
+                                <input type="tel" name="phone" th:value="${settings.phone}">
                             </div>
                         </label>
                         <label class="settings-field field-wide">
                             <span>Adresse</span>
                             <div class="settings-input">
                                 <i class="fa-solid fa-location-dot"></i>
-                                <input type="text" name="address" value="Yaoundé, Cameroun">
+                                <input type="text" name="address" th:value="${settings.address}">
                             </div>
                         </label>
                         <label class="settings-field">
@@ -105,9 +105,9 @@
                             <div class="settings-select">
                                 <i class="fa-regular fa-clock"></i>
                                 <select name="timezone">
-                                    <option selected>Afrique/Douala (GMT+1)</option>
-                                    <option>Afrique/Abidjan (GMT)</option>
-                                    <option>Europe/Paris (GMT+2)</option>
+                                    <option value="Africa/Douala" th:selected="${settings.timezone == 'Africa/Douala'}">Afrique/Douala (GMT+1)</option>
+                                    <option value="Africa/Abidjan" th:selected="${settings.timezone == 'Africa/Abidjan'}">Afrique/Abidjan (GMT)</option>
+                                    <option value="Europe/Paris" th:selected="${settings.timezone == 'Europe/Paris'}">Europe/Paris</option>
                                 </select>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </div>
@@ -133,8 +133,8 @@
                             <div class="settings-select">
                                 <i class="fa-solid fa-graduation-cap"></i>
                                 <select name="academicYear">
-                                    <option selected>2026 - 2027</option>
-                                    <option>2025 - 2026</option>
+                                    <option th:selected="${settings.academicYear == '2026 - 2027'}">2026 - 2027</option>
+                                    <option th:selected="${settings.academicYear == '2025 - 2026'}">2025 - 2026</option>
                                 </select>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </div>
@@ -143,7 +143,7 @@
                             <span>Date de début</span>
                             <div class="settings-input">
                                 <i class="fa-regular fa-calendar"></i>
-                                <input type="date" name="startDate" value="2026-09-01">
+                                <input type="date" name="startDate" th:value="${settings.startDate}">
                             </div>
                         </label>
                         <label class="settings-field">
@@ -151,9 +151,9 @@
                             <div class="settings-select">
                                 <i class="fa-regular fa-hourglass-half"></i>
                                 <select name="maxDuration">
-                                    <option>3 mois</option>
-                                    <option selected>6 mois</option>
-                                    <option>12 mois</option>
+                                    <option value="3" th:selected="${settings.maxDuration == '3'}">3 mois</option>
+                                    <option value="6" th:selected="${settings.maxDuration == '6'}">6 mois</option>
+                                    <option value="12" th:selected="${settings.maxDuration == '12'}">12 mois</option>
                                 </select>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </div>
@@ -163,8 +163,8 @@
                             <div class="settings-select">
                                 <i class="fa-solid fa-language"></i>
                                 <select name="language">
-                                    <option selected>Français</option>
-                                    <option>English</option>
+                                    <option value="fr" th:selected="${settings.language == 'fr'}">Français</option>
+                                    <option value="en" th:selected="${settings.language == 'en'}">English</option>
                                 </select>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </div>
@@ -178,7 +178,7 @@
                                 <strong>Notifications par email</strong>
                                 <small>Envoyer les alertes et rappels importants par email.</small>
                             </span>
-                            <input type="checkbox" name="emailNotifications" checked>
+                            <input type="checkbox" name="emailNotifications" value="true" th:checked="${settings.emailNotifications == 'true'}">
                             <span class="settings-toggle"></span>
                         </label>
                         <label class="settings-switch-row">
@@ -187,7 +187,7 @@
                                 <strong>Notifications dans l'application</strong>
                                 <small>Afficher les notifications dans le centre d'administration.</small>
                             </span>
-                            <input type="checkbox" name="appNotifications" checked>
+                            <input type="checkbox" name="appNotifications" value="true" th:checked="${settings.appNotifications == 'true'}">
                             <span class="settings-toggle"></span>
                         </label>
                     </div>
@@ -335,17 +335,17 @@
                         <div><span>Version de l'application</span><strong>v1.0.0</strong></div>
                         <div><span>Environnement</span><strong class="status-production"><i></i> Production</strong></div>
                         <div><span>Serveur Web</span><strong>Apache Tomcat 11</strong></div>
-                        <div><span>Version Java</span><strong>Java 26</strong></div>
-                        <div><span>Base de données</span><strong>H2 / MySQL 8.0</strong></div>
+                        <div><span>Version Java</span><strong th:text="${'Java ' + javaVersion}">Java</strong></div>
+                        <div><span>Base de données</span><strong th:text="${databaseProduct}">H2</strong></div>
                     </div>
 
                     <div class="settings-usage">
                         <div>
                             <span>Espace disque utilisé</span>
-                            <strong>120 Go / 250 Go</strong>
+                            <strong th:text="${diskUsed + ' / ' + diskTotal}">Espace disque</strong>
                         </div>
-                        <div class="settings-progress"><span style="width:48%"></span></div>
-                        <small>48 % de l'espace total utilisé</small>
+                        <div class="settings-progress"><span th:style="${'width:' + diskPercent + '%'}"></span></div>
+                        <small th:text="${diskPercent + ' % de l’espace total utilisé'}">Utilisation</small>
                     </div>
                 </article>
 
@@ -364,21 +364,21 @@
                         <div>
                             <span class="maintenance-icon blue"><i class="fa-solid fa-broom"></i></span>
                             <span><strong>Vider le cache</strong><small>Supprime les données temporaires.</small></span>
-                            <button type="button" title="Vider le cache" onclick="executerMaintenance('Cache vidé avec succès.')">
+                            <button type="submit" title="Vider le cache" formmethod="post" formaction="/admin/parametres/maintenance/cache">
                                 <i class="fa-solid fa-play"></i>
                             </button>
                         </div>
                         <div>
                             <span class="maintenance-icon green"><i class="fa-solid fa-database"></i></span>
                             <span><strong>Optimiser la base</strong><small>Optimise les tables et les index.</small></span>
-                            <button type="button" title="Optimiser la base de données" onclick="executerMaintenance('Optimisation terminée.')">
+                            <button type="submit" title="Optimiser la base de données" formmethod="post" formaction="/admin/parametres/maintenance/database">
                                 <i class="fa-solid fa-play"></i>
                             </button>
                         </div>
                         <div>
                             <span class="maintenance-icon orange"><i class="fa-solid fa-file-shield"></i></span>
                             <span><strong>Vérifier les fichiers</strong><small>Contrôle l'intégrité des fichiers.</small></span>
-                            <button type="button" title="Vérifier les fichiers" onclick="executerMaintenance('Vérification terminée : aucune anomalie.')">
+                            <button type="submit" title="Vérifier les fichiers" formmethod="post" formaction="/admin/parametres/maintenance/files">
                                 <i class="fa-solid fa-play"></i>
                             </button>
                         </div>
@@ -402,7 +402,7 @@
                             <strong>Mode maintenance</strong>
                             <small>Bloque temporairement l'accès public.</small>
                         </span>
-                        <input type="checkbox" name="maintenanceMode">
+                        <input type="checkbox" name="maintenanceMode" value="true" th:checked="${settings.maintenanceMode == 'true'}">
                         <span class="settings-toggle"></span>
                     </label>
 
@@ -412,7 +412,8 @@
                             <strong>Réinitialiser les paramètres</strong>
                             <p>Restaure les valeurs de configuration par défaut.</p>
                         </div>
-                        <button type="button" onclick="reinitialiserParametres()">Réinitialiser</button>
+                        <button type="submit" formmethod="post" formaction="/admin/parametres/reinitialiser"
+                                onclick="return confirm('Restaurer tous les paramètres globaux par défaut ?')">Réinitialiser</button>
                     </div>
                 </article>
             </aside>

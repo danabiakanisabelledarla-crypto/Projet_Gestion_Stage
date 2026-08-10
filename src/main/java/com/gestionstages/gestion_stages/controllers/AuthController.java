@@ -7,7 +7,9 @@ import com.gestionstages.gestion_stages.repositories.PasswordResetTokenRepositor
 import com.gestionstages.gestion_stages.repositories.UtilisateurRepository;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
 import com.gestionstages.gestion_stages.services.ActivityLogService;
+import com.gestionstages.gestion_stages.services.TotpService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -30,17 +32,20 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final ActivityLogService activityLogService;
+    private final TotpService totpService;
 
     public AuthController(UtilisateurRepository utilisateurRepository,
                           PasswordResetTokenRepository resetTokenRepository,
                           PasswordEncoder passwordEncoder,
                           EmailService emailService,
-                          ActivityLogService activityLogService) {
+                          ActivityLogService activityLogService,
+                          TotpService totpService) {
         this.utilisateurRepository = utilisateurRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.activityLogService = activityLogService;
+        this.totpService = totpService;
     }
 
     @GetMapping("/login")
@@ -116,17 +121,28 @@ public class AuthController {
     @GetMapping("/redirection")
     public String redirigerSelonRole(@AuthenticationPrincipal CustomUserDetails userDetails,
                                      HttpServletRequest request) {
+        Utilisateur utilisateurCourant = utilisateurRepository
+                .findById(userDetails.getUtilisateur().getId())
+                .orElse(userDetails.getUtilisateur());
+        if ((utilisateurCourant.isTwoFactorRequired() || utilisateurCourant.isTwoFactorEnabled())
+                && !Boolean.TRUE.equals(request.getSession().getAttribute("twoFactorVerified"))) {
+            return utilisateurCourant.isTwoFactorEnabled()
+                    ? "redirect:/2fa/verification"
+                    : "redirect:/2fa/configuration";
+        }
         if (request.getSession().getAttribute("connexionJournalisee") == null) {
+            utilisateurCourant.setDerniereConnexion(java.time.LocalDateTime.now());
+            utilisateurRepository.save(utilisateurCourant);
             String userAgent = request.getHeader("User-Agent");
             String appareil = userAgent == null || userAgent.isBlank()
                     ? "Navigateur non identifie"
                     : userAgent.substring(0, Math.min(userAgent.length(), 180));
             activityLogService.log("Connexion",
                     "Adresse IP: " + request.getRemoteAddr() + " | Appareil: " + appareil,
-                    userDetails.getUtilisateur().getEmail());
+                    utilisateurCourant.getEmail());
             request.getSession().setAttribute("connexionJournalisee", Boolean.TRUE);
         }
-        String libelleRole = userDetails.getUtilisateur().getRole().getLibelle();
+        String libelleRole = utilisateurCourant.getRole().getLibelle();
         String espace = switch (libelleRole) {
             case "ADMINISTRATEUR", "RESPONSABLE_STAGE", "ENCADREUR", "STAGIAIRE" -> libelleRole;
             default -> userDetails.getUtilisateur().getRole().getEspaceEffectif();
@@ -144,6 +160,78 @@ public class AuthController {
             default:
                 return "redirect:/login?error=true";
         }
+    }
+
+    @GetMapping("/2fa/configuration")
+    public String afficherConfigurationDeuxFacteurs(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            Model model) {
+        Utilisateur utilisateur = utilisateurRepository
+                .findById(userDetails.getUtilisateur().getId()).orElseThrow();
+        if (utilisateur.isTwoFactorEnabled()) {
+            return "redirect:/2fa/verification";
+        }
+        if (utilisateur.getTwoFactorSecret() == null
+                || utilisateur.getTwoFactorSecret().isBlank()) {
+            utilisateur.setTwoFactorSecret(totpService.generateSecret());
+            utilisateurRepository.save(utilisateur);
+        }
+        model.addAttribute("secret", utilisateur.getTwoFactorSecret());
+        model.addAttribute("provisioningUri", totpService.provisioningUri(
+                utilisateur.getTwoFactorSecret(), utilisateur.getEmail(), "Gestion des Stages"));
+        model.addAttribute("email", utilisateur.getEmail());
+        return "auth/configuration-2fa";
+    }
+
+    @PostMapping("/2fa/configuration")
+    public String confirmerConfigurationDeuxFacteurs(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String code,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        Utilisateur utilisateur = utilisateurRepository
+                .findById(userDetails.getUtilisateur().getId()).orElseThrow();
+        if (!totpService.verify(utilisateur.getTwoFactorSecret(), code.trim())) {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "Le code est invalide ou expire. Verifiez l'heure de votre telephone.");
+            return "redirect:/2fa/configuration";
+        }
+        utilisateur.setTwoFactorEnabled(true);
+        utilisateur.setTwoFactorRequired(true);
+        utilisateurRepository.save(utilisateur);
+        session.setAttribute("twoFactorVerified", Boolean.TRUE);
+        activityLogService.log("2FA activee", utilisateur.getEmail(), utilisateur.getEmail());
+        return "redirect:/redirection";
+    }
+
+    @GetMapping("/2fa/verification")
+    public String afficherVerificationDeuxFacteurs(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Utilisateur utilisateur = utilisateurRepository
+                .findById(userDetails.getUtilisateur().getId()).orElseThrow();
+        if (!utilisateur.isTwoFactorEnabled()) {
+            return "redirect:/2fa/configuration";
+        }
+        return "auth/verification-2fa";
+    }
+
+    @PostMapping("/2fa/verification")
+    public String verifierDeuxFacteurs(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String code,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        Utilisateur utilisateur = utilisateurRepository
+                .findById(userDetails.getUtilisateur().getId()).orElseThrow();
+        if (!totpService.verify(utilisateur.getTwoFactorSecret(), code.trim())) {
+            redirectAttributes.addFlashAttribute("erreur",
+                    "Code de verification invalide ou expire.");
+            return "redirect:/2fa/verification";
+        }
+        session.setAttribute("twoFactorVerified", Boolean.TRUE);
+        activityLogService.log("Verification 2FA reussie",
+                utilisateur.getEmail(), utilisateur.getEmail());
+        return "redirect:/redirection";
     }
     @GetMapping("/")
     public String afficherAccueil() {

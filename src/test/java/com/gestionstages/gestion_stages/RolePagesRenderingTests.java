@@ -183,7 +183,7 @@ class RolePagesRenderingTests {
         mockMvc.perform(post("/stagiaire/journal/ajouter")
                         .session(session)
                         .with(csrf())
-                        .param("dateActivite", "2026-08-06")
+                        .param("dateActivite", java.time.LocalDate.now().toString())
                         .param("travauxRealises", journalText)
                         .param("duree", "6")
                         .param("difficultes", "")

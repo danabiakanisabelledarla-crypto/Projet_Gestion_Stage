@@ -154,10 +154,6 @@
                             <option>Stagiaire</option>
                         </select>
                         <select class="filter-select">
-                            <option>Tous les services</option>
-                            <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.nom}">Service</option>
-                        </select>
-                        <select class="filter-select">
                             <option>Tous les statuts</option>
                             <option value="actif">Actif</option>
                             <option value="inactif">Inactif</option>
@@ -187,7 +183,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="u : ${utilisateurs}" th:data-role="${u.role.libelle}" th:data-statut="${u.statut.name()}" onclick="selectUser(this, ${u.id})">
+                            <tr th:each="u : ${utilisateurs}" th:data-role="${u.role.libelle}"
+                                th:data-statut="${utilisateursConnectes.contains(u.id) ? 'actif' : 'inactif'}"
+                                onclick="selectUser(this, ${u.id})">
                                 <td>
                                     <div class="backup-name-cell">
                                         <div class="backup-user-avatar" th:text="${#strings.substring(u.prenom,0,1).toUpperCase() + #strings.substring(u.nom,0,1).toUpperCase()}">AB</div>
@@ -203,10 +201,11 @@
                                 </td>
                                 <td style="color:#64748B;" th:text="${u.email}">email</td>
                                 <td>
-                                    <span th:class="'backup-status ' + ${u.statut.name()}"
-                                          th:text="${u.statut.name() == 'actif' ? 'Actif' : 'Inactif'}">Statut</span>
+                                    <span th:class="'backup-status ' + ${utilisateursConnectes.contains(u.id) ? 'actif' : 'inactif'}"
+                                          th:text="${utilisateursConnectes.contains(u.id) ? 'Actif' : 'Inactif'}">Statut</span>
                                 </td>
-                                <td style="color:#94A3B8; font-size:12px;">—</td>
+                                <td style="color:#64748B; font-size:12px;"
+                                    th:text="${u.derniereConnexion != null ? #temporals.format(u.derniereConnexion, 'dd/MM/yyyy HH:mm') : 'Jamais'}">Jamais</td>
                                 <td>
                                     <div class="action-btns">
                                         <button class="backup-btn small" th:onclick="'event.stopPropagation(); selectUser(this, ' + ${u.id} + ')'" title="Voir"><i class="fa-solid fa-eye"></i></button>

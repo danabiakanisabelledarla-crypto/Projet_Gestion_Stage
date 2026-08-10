@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurer la double authentification</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+<main class="login-container" style="display:grid;place-items:center;min-height:100vh;">
+    <section class="right-panel" style="width:min(560px,100%);">
+        <div class="right-inner">
+            <div class="right-header">
+                <h2>Configurer la double authentification</h2>
+                <p>Ajoutez ce compte dans Microsoft Authenticator, Google Authenticator ou une application TOTP compatible.</p>
+            </div>
+            <div th:if="${erreur}" class="message-erreur" th:text="${erreur}"></div>
+            <div class="carte-securite" style="display:block;">
+                <p><strong>Compte :</strong> <span th:text="${email}"></span></p>
+                <p><strong>Clé manuelle :</strong></p>
+                <code th:text="${secret}" style="display:block;padding:12px;background:#f1f5f9;overflow-wrap:anywhere;"></code>
+                <p><a th:href="${provisioningUri}">Ouvrir dans l’application d’authentification</a></p>
+            </div>
+            <form th:action="@{/2fa/configuration}" method="post" class="login-form">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="champ-groupe">
+                    <input class="champ-input" name="code" inputmode="numeric" pattern="[0-9]{6}"
+                           maxlength="6" placeholder="Code à 6 chiffres" required autofocus>
+                </div>
+                <button type="submit" class="btn-connexion">Activer et continuer</button>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

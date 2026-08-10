@@ -138,7 +138,6 @@
         </div>
         <div class="action-bar-right">
             <select class="document-filter-select" id="filterOwner"><option value="">Tous les propriétaires</option></select>
-            <select class="document-filter-select" id="filterVersion"><option value="">Toutes les versions</option></select>
             <select class="document-filter-select" id="filterStatus"><option value="">Tous les statuts</option></select>
             <button class="backup-btn secondary" type="button" onclick="filterTable()"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
@@ -148,18 +147,6 @@
 
         <div class="backup-main-column">
             <article class="backup-card">
-                <!-- TABS -->
-                <div class="tabs-bar">
-                    <div class="tabs">
-                        <button class="tab actif" data-filtre="toutes" onclick="filterTabs('toutes')">Tous <span class="tab-badge" th:text="${totalDocs}">0</span></button>
-                        <button class="tab" data-filtre="rapport_final" onclick="filterTabs('rapport_final')">Rapports <span class="tab-badge" th:text="${totalRapports}">0</span></button>
-                        <button class="tab" data-filtre="livrable" onclick="filterTabs('livrable')">Livrables <span class="tab-badge">0</span></button>
-                        <button class="tab" data-filtre="attestation" onclick="filterTabs('attestation')">Attestations <span class="tab-badge" th:text="${totalAttestations}">0</span></button>
-                        <button class="tab" data-filtre="fiche_note" onclick="filterTabs('fiche_note')">Fiches <span class="tab-badge" th:text="${totalFichesNotes}">0</span></button>
-                        <button class="tab" data-filtre="archive" onclick="filterTabs('archive')">Archives <span class="tab-badge" th:text="${totalArchives}">0</span></button>
-                    </div>
-                </div>
-
                 <!-- TABLE -->
                 <div class="backup-table-wrap">
                     <table class="backup-table">

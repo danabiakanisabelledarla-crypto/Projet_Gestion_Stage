@@ -50,6 +50,18 @@ public class Utilisateur {
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    @Column(name = "derniere_connexion")
+    private LocalDateTime derniereConnexion;
+
+    @Column(name = "two_factor_required", nullable = false, columnDefinition = "boolean default false")
+    private boolean twoFactorRequired;
+
+    @Column(name = "two_factor_enabled", nullable = false, columnDefinition = "boolean default false")
+    private boolean twoFactorEnabled;
+
+    @Column(name = "two_factor_secret", length = 64)
+    private String twoFactorSecret;
+
     // Enum interne pour le statut
     public enum StatutUtilisateur {
         actif, inactif
@@ -138,6 +150,38 @@ public class Utilisateur {
 
     public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
+    }
+
+    public LocalDateTime getDerniereConnexion() {
+        return derniereConnexion;
+    }
+
+    public void setDerniereConnexion(LocalDateTime derniereConnexion) {
+        this.derniereConnexion = derniereConnexion;
+    }
+
+    public boolean isTwoFactorRequired() {
+        return twoFactorRequired;
+    }
+
+    public void setTwoFactorRequired(boolean twoFactorRequired) {
+        this.twoFactorRequired = twoFactorRequired;
+    }
+
+    public boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public void setTwoFactorEnabled(boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
+    }
+
+    public String getTwoFactorSecret() {
+        return twoFactorSecret;
+    }
+
+    public void setTwoFactorSecret(String twoFactorSecret) {
+        this.twoFactorSecret = twoFactorSecret;
     }
 
     public String getAdresse() {

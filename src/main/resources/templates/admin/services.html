@@ -112,9 +112,9 @@
                     <button type="button" class="svc-btn backup-btn" onclick="ouvrirModal('modalAjout')">
                         <i class="fa-solid fa-plus"></i> Ajouter un service
                     </button>
-                    <button type="button" class="svc-btn svc-btn-secondary" onclick="exporterServices()">
+                    <a class="svc-btn svc-btn-secondary" th:href="@{/admin/services/exporter}">
                         <i class="fa-solid fa-file-export"></i> Exporter
-                    </button>
+                    </a>
                 </div>
                 <label class="svc-table-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
