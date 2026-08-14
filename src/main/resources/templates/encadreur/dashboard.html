@@ -51,7 +51,7 @@
         </section>
 
         <section class="coach-grid-50">
-            <article class="coach-card"><div class="coach-card-head"><div><h2>Progression des stagiaires</h2><p>Moyenne calculée à partir des tâches terminées</p></div></div><div class="coach-progress-row" style="padding:42px 12px"><div class="coach-progress"><span th:style="'width:'+${progressionMoyenne}+'%'"></span></div><b th:text="${progressionMoyenne+'%'}">0%</b></div></article>
+            <article class="coach-card"><div class="coach-card-head"><div><h2>Progression des stagiaires</h2><p>Moyenne calculée à partir des objectifs atteints</p></div></div><div class="coach-progress-row" style="padding:42px 12px"><div class="coach-progress"><span th:style="'width:'+${progressionMoyenne}+'%'"></span></div><b th:text="${progressionMoyenne+'%'}">0%</b></div></article>
             <article class="coach-card"><div class="coach-card-head"><div><h2>Répartition des tâches</h2><p>État d'avancement global</p></div></div><div class="coach-donut-wrap"><div style="position:relative"><div class="coach-donut"></div><div class="coach-donut-label" style="inset:0;display:grid;place-items:center"><div><strong th:text="${#lists.size(taches)}">0</strong><span>Tâches</span></div></div></div><div class="coach-legend"><div><span><i style="background:#22c55e"></i>Terminées</span><strong th:text="${tachesTerminees}">0</strong></div><div><span><i style="background:#f59e0b"></i>En cours</span><strong th:text="${tachesEnCours}">0</strong></div><div><span><i style="background:#ef4444"></i>En retard</span><strong th:text="${tachesRetard}">0</strong></div></div></div></article>
         </section>
 
@@ -60,15 +60,8 @@
             <article class="coach-card"><div class="coach-card-head"><div><h2>Activités récentes</h2><p>État actuel du suivi</p></div></div><div class="coach-timeline"><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-file-arrow-up"></i></span><div class="coach-timeline-content"><strong th:text="${livrablesAttente+' livrable(s) à contrôler'}">Livrables</strong><span>Documents déposés en attente de décision</span></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-bullseye"></i></span><div class="coach-timeline-content"><strong th:text="${objectifsActifs+' objectif(s) actif(s)'}">Objectifs</strong><span>Progression calculée depuis les données stagiaires</span></div></div><div class="coach-timeline-item"><span class="coach-timeline-icon"><i class="fa-solid fa-check"></i></span><div class="coach-timeline-content"><strong th:text="${tachesTerminees+' tâche(s) terminée(s)'}">Tâches</strong><span th:text="${tachesRetard+' tâche(s) en retard'}">Retards</span></div></div></div></article>
         </section>
 
-        <section class="coach-grid-50">
+        <section>
             <article class="coach-card"><div class="coach-card-head"><div><h2>Calendrier</h2><p>Réunions et échéances enregistrées</p></div><a class="coach-btn secondary compact" th:href="@{/encadreur/planning}">Ouvrir</a></div><div class="coach-timeline"><div class="coach-timeline-item" th:each="event,stat : ${evenements}" th:if="${stat.index < 5}"><span class="coach-timeline-icon"><i class="fa-regular fa-calendar"></i></span><div class="coach-timeline-content"><strong th:text="${event.motif}">Événement</strong><span th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(event.date,'dd/MM/yyyy')}">Date</small></div></div><div class="coach-empty" th:if="${evenements.isEmpty()}">Aucun événement à venir.</div></div></article>
-            <article class="coach-card">
-                <div class="coach-card-head"><div><h2>Prochaines échéances</h2><p>Les rendez-vous à surveiller</p></div></div>
-                <div class="coach-timeline">
-                    <div class="coach-timeline-item" th:each="event,stat : ${evenements}" th:if="${stat.index < 5}"><span class="coach-timeline-icon"><i class="fa-regular fa-calendar"></i></span><div class="coach-timeline-content"><strong th:text="${event.motif}">Événement</strong><span th:text="${event.stage.stagiaire.utilisateur.prenom+' '+event.stage.stagiaire.utilisateur.nom}">Stagiaire</span><small th:text="${#temporals.format(event.date,'dd/MM/yyyy')+(event.heure != null ? ' · '+event.heure : '')}">Date</small></div></div>
-                    <div class="coach-empty" th:if="${evenements.isEmpty()}">Aucune échéance planifiée.</div>
-                </div>
-            </article>
         </section>
     </main>
 </div>

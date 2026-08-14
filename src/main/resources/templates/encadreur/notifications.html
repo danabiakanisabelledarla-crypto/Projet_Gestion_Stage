@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Notifications - Encadreur</title>
+    <link rel="stylesheet" th:href="@{/css/workspace-header.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+<div class="coach-main">
+    <div th:replace="~{fragments/header-encadreur :: header}"></div>
+    <main class="coach-page">
+        <section class="coach-heading">
+            <div><span class="coach-eyebrow">Espace encadreur</span><h1>Notifications</h1>
+                <p>Consultez les dernières informations liées à vos stagiaires.</p></div>
+        </section>
+        <section class="coach-card">
+            <div th:if="${#lists.isEmpty(notifications)}" class="coach-empty">Aucune notification.</div>
+            <article th:each="notification : ${notifications}" class="coach-notification-item">
+                <i class="fa-regular fa-bell"></i>
+                <div><strong th:text="${notification.objet}">Notification</strong>
+                    <p th:text="${notification.message}">Message</p>
+                    <small th:text="${#temporals.format(notification.dateEnvoi,'dd/MM/yyyy HH:mm')}">Date</small>
+                </div>
+            </article>
+        </section>
+    </main>
+</div>
+</body>
+</html>

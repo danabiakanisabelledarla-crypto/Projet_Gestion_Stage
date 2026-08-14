@@ -1163,6 +1163,28 @@ public String marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetail
     return "redirect:/stagiaire/dashboard";
 }
 
+@GetMapping("/notifications/api")
+@ResponseBody
+public List<Map<String, Object>> notificationsApi(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    return notificationRepository
+            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail())
+            .stream()
+            .map(notification -> Map.<String, Object>of(
+                    "objet", notification.getObjet(),
+                    "message", notification.getMessage(),
+                    "date", notification.getDateEnvoi(),
+                    "statut", notification.getStatut()))
+            .toList();
+}
+
+@GetMapping("/notifications")
+public String notificationsPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    model.addAttribute("activePage", "notifications");
+    model.addAttribute("notifications", notificationRepository
+            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
+    return "stagiaire/notifications";
+}
+
 @GetMapping("/preferences")
 @ResponseBody
 public Map<String, Object> preferences(@AuthenticationPrincipal CustomUserDetails userDetails) {

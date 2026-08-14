@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const profileTrigger = header.querySelector('[data-profile-trigger]');
         const profilePanel = header.querySelector('[data-profile-panel]');
         const search = header.querySelector('.intern-search input');
+        const notificationTrigger = header.querySelector('.workspace-notification-trigger');
+        const notificationPanel = header.querySelector('[data-notification-panel]');
+        const notificationList = header.querySelector('[data-notification-list]');
+        const notificationCount = header.querySelector('[data-notification-count]');
 
         profileTrigger?.addEventListener('click', event => {
             event.stopPropagation();
@@ -39,6 +43,72 @@ document.addEventListener('DOMContentLoaded', () => {
                     Boolean(query) && !normalize(item.textContent).includes(query)
                 );
             });
+        });
+
+        const escapeHtml = value => {
+            const node = document.createElement('div');
+            node.textContent = value || '';
+            return node.innerHTML;
+        };
+        const formatNotificationDate = value => {
+            if (!value) return '';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? '' :
+                new Intl.DateTimeFormat('fr-FR', {dateStyle: 'short', timeStyle: 'short'}).format(date);
+        };
+        const renderNotifications = notifications => {
+            if (!notificationList) return;
+            notificationList.innerHTML = notifications.length
+                ? notifications.map(item => `<article class="workspace-notification-item">
+                    <strong>${escapeHtml(item.objet)}</strong>
+                    <span>${escapeHtml(item.message)}</span>
+                    <small>${formatNotificationDate(item.date)}</small>
+                </article>`).join('')
+                : '<p class="workspace-notification-empty">Aucune notification.</p>';
+        };
+        const markNotificationsRead = async () => {
+            const url = notificationTrigger?.dataset.notificationRead;
+            if (!url) return;
+            try {
+                const headers = {'X-Requested-With': 'XMLHttpRequest'};
+                const csrfHeader = notificationTrigger.dataset.csrfHeader;
+                const csrfToken = notificationTrigger.dataset.csrfToken;
+                if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers
+                });
+                if (response.ok && notificationCount) {
+                    notificationCount.textContent = '0';
+                    notificationCount.classList.add('is-empty');
+                }
+            } catch (error) {
+                // Le menu reste utilisable même si le marquage est indisponible.
+            }
+        };
+        notificationTrigger?.addEventListener('click', async event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const open = notificationPanel?.hidden !== false;
+            if (!notificationPanel) return;
+            notificationPanel.hidden = !open;
+            notificationTrigger.setAttribute('aria-expanded', String(open));
+            if (!open) return;
+            const apiUrl = notificationTrigger.dataset.notificationApi;
+            try {
+                const response = await fetch(apiUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                if (!response.ok) throw new Error('notifications');
+                renderNotifications(await response.json());
+                await markNotificationsRead();
+            } catch (error) {
+                if (notificationList) notificationList.innerHTML = '<p class="workspace-notification-empty">Notifications indisponibles.</p>';
+            }
+        });
+        document.addEventListener('click', event => {
+            if (!event.target.closest('.workspace-notification-panel, .workspace-notification-trigger')) {
+                if (notificationPanel) notificationPanel.hidden = true;
+                notificationTrigger?.setAttribute('aria-expanded', 'false');
+            }
         });
 
         document.addEventListener('keydown', event => {

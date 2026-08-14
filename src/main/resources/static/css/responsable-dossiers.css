@@ -553,3 +553,82 @@
 .badge-priorite.eleve { background: #FEE2E2; color: #EF4444; }
 .badge-priorite.moyenne { background: #FEF3C7; color: #D97706; }
 .badge-priorite.faible { background: #DCFCE7; color: #16A34A; }
+.rp-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.rp-folder-table {
+    min-width: 940px;
+}
+
+.rp-responsable-documents {
+    margin-top: 20px;
+}
+
+.rp-document-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.rp-document-tile,
+.rp-document-list article {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.rp-document-tile > i,
+.rp-document-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.rp-document-tile div:not(.rp-actions),
+.rp-document-list article > div:not(.rp-actions) {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.rp-document-tile span,
+.rp-document-list article span {
+    overflow: hidden;
+    color: #64748b;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rp-document-tile small,
+.rp-document-list small {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.rp-document-list {
+    display: grid;
+    gap: 9px;
+}
+
+#folderMeta {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+@media (max-width: 640px) {
+    .rp-document-grid {
+        grid-template-columns: 1fr;
+    }
+}

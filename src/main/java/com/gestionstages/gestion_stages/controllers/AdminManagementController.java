@@ -529,6 +529,30 @@ public String documents(Model model, @RequestParam(required = false) String succ
         return "admin/notifications";
     }
 
+    @GetMapping("/notifications/api")
+    @ResponseBody
+    public List<Map<String, Object>> notificationsApi() {
+        return notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+                .limit(8)
+                .map(notification -> Map.<String, Object>of(
+                        "objet", notification.getObjet(),
+                        "message", notification.getMessage(),
+                        "date", notification.getDateEnvoi(),
+                        "statut", notification.getStatut()))
+                .toList();
+    }
+
+    @PostMapping("/notifications/lire")
+    @ResponseBody
+    public Map<String, Object> marquerNotificationsLues() {
+        List<Notification> notifications = notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+                .filter(notification -> !"lue".equalsIgnoreCase(notification.getStatut()))
+                .toList();
+        notifications.forEach(notification -> notification.setStatut("lue"));
+        notificationRepository.saveAll(notifications);
+        return Map.of("success", true, "count", 0);
+    }
+
     @PostMapping("/notifications/envoyer")
     public String envoyerNotification(@RequestParam String objet, @RequestParam String message,
                                          @RequestParam String modeEnvoi,

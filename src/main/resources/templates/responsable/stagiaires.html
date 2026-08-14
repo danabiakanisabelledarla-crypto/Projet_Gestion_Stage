@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Stagiaires - Responsable</title>
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-stagiaires.css(v=6)}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
 <main class="contenu-principal responsable-main">
     <div th:replace="~{fragments/header-responsable :: header}"></div>
-    <div class="rp-page">
+    <div class="rp-page rp-intern-page">
         <header class="rp-heading">
             <div class="rp-heading-main">
                 <div class="rp-heading-icon"><i class="fa-solid fa-user-graduate"></i></div>
                 <div>
                     <div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Stagiaires</div>
                     <h1>Gestion des stagiaires</h1>
-                    <p>Suivez tous les comptes stagiaires acceptés, leurs affectations et leur progression.</p>
+                    <p>Suivez les comptes stagiaires acceptés, leurs affectations et leur progression.</p>
                 </div>
             </div>
             <div class="rp-actions">
@@ -29,7 +32,7 @@
         </header>
 
         <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
-        <div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
+        <div class="rp-flash rp-flash-error" th:if="${erreur}" th:text="${erreur}"></div>
 
         <section class="rp-kpis">
             <article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-users"></i></div><div class="rp-kpi-value" th:text="${totalStagiaires}">0</div><div class="rp-kpi-label">Total stagiaires</div></article>
@@ -38,11 +41,11 @@
             <article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-circle-check"></i></div><div class="rp-kpi-value" th:text="${clotures}">0</div><div class="rp-kpi-label">Stages clôturés</div></article>
         </section>
 
-        <section class="rp-grid-70 rp-interns-wide">
-            <article class="rp-card">
+        <section class="rp-interns-wide">
+            <article class="rp-card rp-intern-list-card">
                 <div class="rp-card-head">
                     <div><h2>Liste des stagiaires</h2><p>Comptes créés après acceptation d'une candidature</p></div>
-                    <span class="rp-badge blue" th:text="${totalStagiaires+' stagiaire(s)'}">0 stagiaire</span>
+                    <span class="rp-badge blue" id="internDynamicCount" th:text="${totalStagiaires+' stagiaire(s)'}">0 stagiaire</span>
                 </div>
                 <div class="rp-filters rp-filter-toolbar">
                     <input id="internSearch" class="rp-input" placeholder="Rechercher un nom, email ou matricule">
@@ -58,11 +61,13 @@
                 </div>
 
                 <div class="rp-table-wrap">
-                    <table class="rp-table">
+                    <table class="rp-table rp-intern-table">
                         <thead><tr><th>Stagiaire</th><th>Matricule</th><th>Service</th><th>Encadreur</th><th>Début</th><th>Fin</th><th>Progression</th><th>Statut</th><th>Actions</th></tr></thead>
                         <tbody>
                         <tr class="intern-row" th:each="stagiaire:${stagiaires}"
                             th:with="stage=${stageParStagiaire[stagiaire.id]}"
+                            th:data-stagiaire-id="${stagiaire.id}"
+                            th:data-stage-id="${stage != null ? stage.id : ''}"
                             th:data-search="${#strings.toLowerCase(stagiaire.utilisateur.prenom+' '+stagiaire.utilisateur.nom+' '+stagiaire.utilisateur.email+' '+stagiaire.matricule)}"
                             th:data-service="${stage != null ? stage.service.nom : 'Non affecté'}"
                             th:data-coach="${stage != null ? stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom : 'Non affecté'}"
@@ -76,48 +81,84 @@
                             th:data-objectives="${stage != null ? objectifsAtteints[stage.id] : 0}"
                             th:data-tasks="${stage != null ? tachesTerminees[stage.id] : 0}"
                             th:data-deliverables="${stage != null ? livrablesDeposes[stage.id] : 0}">
-                            <td><div class="rp-person"><div class="rp-avatar" th:text="${#strings.substring(stagiaire.utilisateur.prenom,0,1)+#strings.substring(stagiaire.utilisateur.nom,0,1)}">JD</div><div><strong th:text="${stagiaire.utilisateur.prenom+' '+stagiaire.utilisateur.nom}">Nom</strong><span th:text="${stagiaire.utilisateur.email}">Email</span></div></div></td>
-                            <td th:text="${stagiaire.matricule}">MAT</td>
+                            <td><button type="button" class="rp-person rp-person-button intern-detail"><span class="rp-avatar" th:text="${#strings.substring(stagiaire.utilisateur.prenom,0,1)+#strings.substring(stagiaire.utilisateur.nom,0,1)}">JD</span><span><strong th:text="${stagiaire.utilisateur.prenom+' '+stagiaire.utilisateur.nom}">Nom</strong><small th:text="${stagiaire.utilisateur.email}">Email</small></span></button></td>
+                            <td class="rp-mono" th:text="${stagiaire.matricule}">MAT</td>
                             <td th:text="${stage != null ? stage.service.nom : 'Non affecté'}">Service</td>
                             <td th:text="${stage != null ? stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom : 'Non affecté'}">Encadreur</td>
-                            <td th:text="${stage != null ? #temporals.format(stage.dateDebut,'dd/MM/yyyy') : '—'}">Date</td>
-                            <td th:text="${stage != null ? #temporals.format(stage.dateFin,'dd/MM/yyyy') : '—'}">Date</td>
-                            <td><div style="display:flex;gap:7px;align-items:center"><div class="rp-progress"><span th:style="'width:'+${stagiaire.progression ?: 0}+'%'"></span></div><b th:text="${(stagiaire.progression ?: 0)+'%'}">0%</b></div></td>
-                            <td><span class="rp-badge"
-                                      th:classappend="${stage == null ? ' orange' : (stage.statut.name()=='en_cours' ? ' green' : (stage.statut.name()=='termine' ? ' blue' : ' orange'))}"
-                                      th:text="${stage == null ? 'En attente d’affectation' : #strings.replace(stage.statut.name(),'_',' ')}">Statut</span></td>
-                            <td><div class="rp-actions"><button type="button" class="rp-icon-btn intern-detail" title="Voir les détails"><i class="fa-regular fa-eye"></i></button><a class="rp-icon-btn" th:if="${stage != null}" th:href="@{/responsable/dossiers}" title="Dossier"><i class="fa-regular fa-folder-open"></i></a></div></td>
+                            <td class="rp-mono" th:text="${stage != null ? #temporals.format(stage.dateDebut,'dd/MM/yyyy') : '—'}">Date</td>
+                            <td class="rp-mono" th:text="${stage != null ? #temporals.format(stage.dateFin,'dd/MM/yyyy') : '—'}">Date</td>
+                            <td><div class="rp-progress-cell"><div class="rp-progress"><span th:style="'width:'+${stagiaire.progression ?: 0}+'%'"></span></div><b class="rp-mono" th:text="${(stagiaire.progression ?: 0)+'%'}">0%</b></div></td>
+                            <td><span class="rp-badge" th:classappend="${stage == null ? ' orange' : (stage.statut.name()=='en_cours' ? ' green' : (stage.statut.name()=='termine' ? ' blue' : ' orange'))}" th:text="${stage == null ? 'En attente d’affectation' : (stage.statut.name()=='en_cours' ? 'En cours' : (stage.statut.name()=='termine' ? 'Clôturé' : 'Suspendu'))}">Statut</span></td>
+                            <td>
+                                <div class="rp-row-actions">
+                                    <button type="button" class="rp-secondary intern-detail"><i class="fa-regular fa-eye"></i> Voir détails</button>
+                                    <div class="rp-visual-dropdown">
+                                        <button type="button" class="rp-primary visualization-toggle" th:disabled="${stage == null}" aria-expanded="false"><i class="fa-regular fa-eye"></i> Visualiser <i class="fa-solid fa-chevron-down"></i></button>
+                                        <div class="rp-visual-menu" hidden>
+                                            <button type="button" class="show-tasks"><i class="fa-solid fa-clipboard-list"></i> Visualiser les tâches</button>
+                                            <button type="button" class="show-objectives"><i class="fa-solid fa-bullseye"></i> Visualiser les objectifs</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
-                    <div class="rp-empty" th:if="${#lists.isEmpty(stagiaires)}">Aucun compte stagiaire accepté.</div>
+                    <div class="rp-empty" id="internEmpty" hidden>Aucun stagiaire ne correspond aux critères.</div>
                 </div>
-                <div class="rp-pagination"><span th:text="${stagiaires.size()+' résultat(s)'}">0 résultat</span></div>
+                <div class="rp-pagination"><span id="internResultCount">0 résultat</span><div class="rp-pages" id="internPages"></div></div>
             </article>
 
-            <aside class="rp-card rp-context-panel" id="internDetailPanel" hidden>
-                <div class="rp-card-head"><div><h2>Détails du stagiaire</h2><p>Vue synthétique du parcours</p></div><button class="rp-icon-btn" id="closeInternDetails" type="button" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button></div>
-                <div class="rp-detail-profile"><div class="rp-avatar" id="detailAvatar">?</div><h3 id="detailName">Sélectionnez un stagiaire</h3><p id="detailEmail">Les informations apparaîtront ici</p></div>
-                <div class="rp-data">
-                    <div class="rp-data-row"><span>Matricule</span><strong id="detailMatricule">—</strong></div>
-                    <div class="rp-data-row"><span>Service</span><strong id="detailService">—</strong></div>
-                    <div class="rp-data-row"><span>Encadreur</span><strong id="detailCoach">—</strong></div>
-                    <div class="rp-data-row"><span>Sujet du stage</span><strong id="detailSubject">—</strong></div>
-                    <div class="rp-data-row"><span>Période</span><strong id="detailPeriod">—</strong></div>
-                    <div class="rp-data-row"><span>Progression globale</span><strong id="detailProgress">0%</strong></div>
-                    <div class="rp-data-row"><span>Objectifs atteints</span><strong id="detailObjectives">0</strong></div>
-                    <div class="rp-data-row"><span>Tâches terminées</span><strong id="detailTasks">0</strong></div>
-                    <div class="rp-data-row"><span>Livrables déposés</span><strong id="detailDeliverables">0</strong></div>
+            <article class="rp-card rp-visualization-card" id="internVisualization" hidden>
+                <div class="rp-card-head">
+                    <div><div class="rp-visual-title-line"><h2 id="visualizationTitle">Suivi</h2><span class="rp-badge blue">Lecture seule</span></div><p id="visualizationSubtitle">Consultez les informations sans les modifier.</p></div>
+                    <button class="rp-secondary" id="closeVisualization" type="button"><i class="fa-solid fa-xmark"></i> Fermer</button>
                 </div>
-            </aside>
+                <div id="visualizationContent"></div>
+                <form class="rp-comment-form" id="visualizationCommentForm">
+                    <input type="hidden" id="visualizationStagiaireId">
+                    <input type="hidden" id="visualizationType">
+                    <label for="visualizationComment">Commentaire</label>
+                    <textarea id="visualizationComment" class="rp-input rp-textarea" required></textarea>
+                    <div class="rp-comment-actions"><span class="rp-comment-feedback" id="commentFeedback"></span><button class="rp-primary" type="submit"><i class="fa-regular fa-paper-plane"></i> Envoyer le commentaire</button></div>
+                </form>
+            </article>
         </section>
     </div>
 </main>
 
-<div class="rp-modal" id="assignmentModal">
+<div class="rp-modal" id="internDetailModal" aria-hidden="true">
+    <div class="rp-modal-panel rp-modal-wide">
+        <div class="rp-modal-head"><div><h2>Détails du stagiaire</h2><p>Vue synthétique du parcours</p></div><button class="rp-icon-btn" type="button" data-close-modal="internDetailModal"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="rp-detail-profile"><div class="rp-avatar" id="detailAvatar">?</div><h3 id="detailName">Stagiaire</h3><p id="detailEmail">—</p></div>
+        <div class="rp-data rp-detail-grid">
+            <div class="rp-data-row"><span>Matricule</span><strong id="detailMatricule">—</strong></div>
+            <div class="rp-data-row"><span>Service</span><strong id="detailService">—</strong></div>
+            <div class="rp-data-row"><span>Encadreur</span><strong id="detailCoach">—</strong></div>
+            <div class="rp-data-row"><span>Sujet du stage</span><strong id="detailSubject">—</strong></div>
+            <div class="rp-data-row"><span>Période</span><strong id="detailPeriod">—</strong></div>
+            <div class="rp-data-row"><span>Progression globale</span><strong id="detailProgress">0%</strong></div>
+            <div class="rp-data-row"><span>Objectifs atteints</span><strong id="detailObjectives">0</strong></div>
+            <div class="rp-data-row"><span>Tâches terminées</span><strong id="detailTasks">0</strong></div>
+            <div class="rp-data-row"><span>Livrables déposés</span><strong id="detailDeliverables">0</strong></div>
+        </div>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="internDetailModal">Fermer</button></div>
+    </div>
+</div>
+
+<div class="rp-modal" id="readonlyItemModal" aria-hidden="true">
+    <div class="rp-modal-panel rp-modal-wide">
+        <div class="rp-modal-head"><div><div class="rp-visual-title-line"><h2 id="itemModalTitle">Détails</h2><span class="rp-badge blue">Lecture seule</span></div><p id="itemModalSubtitle">Informations complètes</p></div><button class="rp-icon-btn" type="button" data-close-modal="readonlyItemModal"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="rp-data rp-detail-grid" id="itemModalData"></div>
+        <section class="rp-readonly-comments"><h3>Commentaires</h3><div id="itemModalComments"></div></section>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="readonlyItemModal">Fermer</button></div>
+    </div>
+</div>
+
+<div class="rp-modal" id="assignmentModal" aria-hidden="true">
     <form class="rp-modal-panel" id="assignmentForm" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="rp-modal-head"><h2>Affecter un stagiaire</h2><button class="rp-icon-btn" type="button" data-close><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="rp-modal-head"><h2>Affecter un stagiaire</h2><button class="rp-icon-btn" type="button" data-close-modal="assignmentModal"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="rp-form-grid">
             <div class="rp-field full"><label>Stagiaire</label><select id="assignmentIntern" class="rp-select" required><option value="">Sélectionner</option><option th:each="s:${stagiaires}" th:value="${s.id}" th:text="${s.utilisateur.prenom+' '+s.utilisateur.nom+' · '+s.matricule}"></option></select></div>
             <div class="rp-field"><label>Encadreur</label><select class="rp-select" name="encadreurId" required><option value="">Choisir</option><option th:each="e:${encadreurs}" th:value="${e.id}" th:text="${e.utilisateur.prenom+' '+e.utilisateur.nom}"></option></select></div>
@@ -126,54 +167,198 @@
             <div class="rp-field"><label>Date de début</label><input class="rp-input" type="date" name="dateDebut" required></div>
             <div class="rp-field"><label>Date de fin</label><input class="rp-input" type="date" name="dateFin" required></div>
         </div>
-        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close>Annuler</button><button class="rp-primary" type="submit">Affecter</button></div>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="assignmentModal">Annuler</button><button class="rp-primary" type="submit">Affecter</button></div>
     </form>
 </div>
 
+<div class="rp-visual-sources" hidden>
+    <section class="task-source" th:each="stage:${stages}" th:data-stage-id="${stage.id}">
+        <div class="rp-trello-board">
+            <div class="rp-trello-column" th:each="column:${T(com.gestionstages.gestion_stages.entities.Tache.StatutTache).values()}" th:with="columnLabel=${column.name()=='a_faire'?'À faire':(column.name()=='en_cours'?'En cours':(column.name()=='en_revue'?'En revue':(column.name()=='terminee'?'Terminées':'En retard')))}">
+                <header><span th:text="${columnLabel}">Colonne</span><b class="rp-column-count">0</b></header>
+                <div class="rp-trello-stack">
+                    <button class="rp-task-card readonly-item" type="button" th:each="tache:${tachesParStage[stage.id]}" th:if="${tache.statut == column}"
+                            th:data-kind="task" th:data-title="${tache.titre}" th:data-description="${tache.description ?: 'Aucune description'}"
+                            th:data-intern="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}"
+                            th:data-coach="${stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom}"
+                            th:data-priority="${tache.priorite}" th:data-created="${#temporals.format(tache.dateCreation,'dd/MM/yyyy HH:mm')}"
+                            th:data-deadline="${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}" th:data-progress="${progressionParTache[tache.id]}"
+                            th:data-status="${columnLabel}" th:data-attachments="${piecesJointesParTache[tache.id]}">
+                        <strong th:text="${tache.titre}">Tâche</strong><p th:text="${tache.description ?: 'Aucune description'}">Description</p>
+                        <span class="rp-priority" th:classappend="${tache.priorite}" th:text="${#strings.capitalize(tache.priorite)}">Priorité</span>
+                        <div class="rp-progress-cell"><div class="rp-progress"><span th:style="'width:'+${progressionParTache[tache.id]}+'%'"></span></div><b th:text="${progressionParTache[tache.id]+'%'}">0%</b></div>
+                        <footer><span><i class="fa-regular fa-calendar"></i> <em th:text="${#temporals.format(tache.dateLimite,'dd/MM/yyyy')}">Date</em></span><span><i class="fa-solid fa-paperclip"></i> <em th:text="${piecesJointesParTache[tache.id]}">0</em></span><span><i class="fa-regular fa-comment"></i> <em th:text="${commentairesTachesParStage[stage.id].size()}">0</em></span></footer>
+                    </button>
+                    <div class="rp-column-empty">Aucune tâche</div>
+                </div>
+            </div>
+        </div>
+        <div class="rp-source-comments">
+            <article th:each="comment:${commentairesTachesParStage[stage.id]}"><strong th:text="${comment.auteurNom}">Responsable</strong><span th:text="${#temporals.format(comment.dateEnvoi,'dd/MM/yyyy HH:mm')}">Date</span><p th:text="${#strings.contains(comment.message,'Commentaire :') ? #strings.substringAfter(comment.message,'Commentaire :') : comment.message}">Commentaire</p></article>
+        </div>
+    </section>
+    <section class="objective-source" th:each="stage:${stages}" th:data-stage-id="${stage.id}">
+        <div class="rp-table-wrap"><table class="rp-table rp-objective-table"><thead><tr><th>Objectif</th><th>Encadreur</th><th>Priorité</th><th>Date limite</th><th>Progression</th><th>Statut</th></tr></thead><tbody>
+        <tr class="readonly-item" tabindex="0" th:each="objectif:${objectifsParStage[stage.id]}"
+            th:data-kind="objective" th:data-title="${objectif.libelle}" th:data-description="${objectif.description ?: 'Aucune description'}"
+            th:data-intern="${stage.stagiaire.utilisateur.prenom+' '+stage.stagiaire.utilisateur.nom}"
+            th:data-coach="${stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom}"
+            th:data-priority="${objectif.priorite.name()}" th:data-created="${#temporals.format(objectif.dateCreation,'dd/MM/yyyy HH:mm')}"
+            th:data-deadline="${objectif.dateLimite != null ? #temporals.format(objectif.dateLimite,'dd/MM/yyyy') : 'Non définie'}"
+            th:data-progress="${objectif.progression}" th:data-status="${objectif.statut.name()=='atteint'?'Atteint':(objectif.statut.name()=='en_cours'?'En cours':'Non commencé')}">
+            <td><strong th:text="${objectif.libelle}">Objectif</strong></td><td th:text="${stage.encadreur.utilisateur.prenom+' '+stage.encadreur.utilisateur.nom}">Encadreur</td>
+            <td><span class="rp-priority" th:classappend="${objectif.priorite.name()}" th:text="${#strings.capitalize(objectif.priorite.name())}">Priorité</span></td>
+            <td class="rp-mono" th:text="${objectif.dateLimite != null ? #temporals.format(objectif.dateLimite,'dd/MM/yyyy') : '—'}">Date</td>
+            <td><div class="rp-progress-cell"><div class="rp-progress"><span th:style="'width:'+${objectif.progression}+'%'"></span></div><b th:text="${objectif.progression+'%'}">0%</b></div></td>
+            <td><span class="rp-badge" th:classappend="${objectif.statut.name()=='atteint'?' green':(objectif.statut.name()=='en_cours'?' blue':' orange')}" th:text="${objectif.statut.name()=='atteint'?'Atteint':(objectif.statut.name()=='en_cours'?'En cours':'Non commencé')}">Statut</span></td>
+        </tr></tbody></table><div class="rp-empty" th:if="${#lists.isEmpty(objectifsParStage[stage.id])}">Aucun objectif enregistré.</div></div>
+        <div class="rp-source-comments">
+            <article th:each="comment:${commentairesObjectifsParStage[stage.id]}"><strong th:text="${comment.auteurNom}">Responsable</strong><span th:text="${#temporals.format(comment.dateEnvoi,'dd/MM/yyyy HH:mm')}">Date</span><p th:text="${#strings.contains(comment.message,'Commentaire :') ? #strings.substringAfter(comment.message,'Commentaire :') : comment.message}">Commentaire</p></article>
+        </div>
+    </section>
+</div>
+
 <script>
-const rows=[...document.querySelectorAll('.intern-row')];
-const search=document.getElementById('internSearch');
-const service=document.getElementById('serviceFilter');
-const coach=document.getElementById('coachFilter');
-const status=document.getElementById('statusFilter');
-const detailPanel=document.getElementById('internDetailPanel');
-const filterToggle=document.getElementById('internFilterToggle');
-const filterPanel=document.getElementById('internFilterPanel');
-function filterInterns(){
-    rows.forEach(row=>{
-        const visible=(!search?.value||row.dataset.search.includes(search.value.toLowerCase()))
-            &&(!service?.value||row.dataset.service===service.value)
-            &&(!coach?.value||row.dataset.coach===coach.value)
-            &&(!status?.value||row.dataset.status===status.value);
-        row.hidden=!visible;
+(() => {
+    const rows = [...document.querySelectorAll('.intern-row')];
+    const search = document.getElementById('internSearch');
+    const service = document.getElementById('serviceFilter');
+    const coach = document.getElementById('coachFilter');
+    const status = document.getElementById('statusFilter');
+    const filterToggle = document.getElementById('internFilterToggle');
+    const filterPanel = document.getElementById('internFilterPanel');
+    const resultCount = document.getElementById('internResultCount');
+    const dynamicCount = document.getElementById('internDynamicCount');
+    const pages = document.getElementById('internPages');
+    const visualization = document.getElementById('internVisualization');
+    const pageSize = 6;
+    let filteredRows = rows;
+    let currentPage = 1;
+
+    document.querySelectorAll('.rp-trello-column').forEach(column => {
+        const taskCount = column.querySelectorAll('.rp-task-card').length;
+        column.querySelector('.rp-column-count').textContent = String(taskCount);
+        column.querySelector('.rp-column-empty').hidden = taskCount !== 0;
     });
-}
-[search,service,coach,status].filter(Boolean).forEach(control=>control.addEventListener(control.tagName==='INPUT'?'input':'change',filterInterns));
-filterToggle?.addEventListener('click',()=>{filterPanel.hidden=!filterPanel.hidden;filterToggle.setAttribute('aria-expanded',String(!filterPanel.hidden));});
-document.getElementById('resetInternFilters')?.addEventListener('click',()=>{service.value='';coach.value='';status.value='';filterInterns();});
-document.addEventListener('click',event=>{if(filterPanel&&!filterPanel.hidden&&!event.target.closest('.rp-filter-menu')){filterPanel.hidden=true;filterToggle?.setAttribute('aria-expanded','false');}});
-rows.forEach(row=>row.querySelector('.intern-detail')?.addEventListener('click',()=>{
-    detailPanel.hidden=false;
-    document.getElementById('detailAvatar').textContent=row.dataset.name.split(' ').map(value=>value[0]).join('').slice(0,2);
-    document.getElementById('detailName').textContent=row.dataset.name;
-    document.getElementById('detailEmail').textContent=row.dataset.email;
-    document.getElementById('detailMatricule').textContent=row.dataset.matricule;
-    document.getElementById('detailService').textContent=row.dataset.service;
-    document.getElementById('detailCoach').textContent=row.dataset.coach;
-    ['Subject','Period','Objectives','Tasks','Deliverables'].forEach(key=>document.getElementById('detail'+key).textContent=row.dataset[key.toLowerCase()]||'0');
-    document.getElementById('detailProgress').textContent=(row.dataset.progress||0)+'%';
-    detailPanel.scrollIntoView({behavior:'smooth',block:'nearest'});
-}));
-document.getElementById('closeInternDetails')?.addEventListener('click',()=>detailPanel.hidden=true);
-const modal=document.getElementById('assignmentModal');
-const intern=document.getElementById('assignmentIntern');
-const form=document.getElementById('assignmentForm');
-document.getElementById('openAssignment')?.addEventListener('click',()=>modal.classList.add('open'));
-document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>modal.classList.remove('open')));
-form?.addEventListener('submit',event=>{
-    if(!intern.value){event.preventDefault();return;}
-    form.action='/responsable/stagiaires/affecter/'+intern.value;
-});
+
+    const openModal = modal => { modal?.classList.add('open'); modal?.setAttribute('aria-hidden', 'false'); };
+    const closeModal = modal => { modal?.classList.remove('open'); modal?.setAttribute('aria-hidden', 'true'); };
+    document.querySelectorAll('[data-close-modal]').forEach(button => button.addEventListener('click', () => closeModal(document.getElementById(button.dataset.closeModal))));
+    document.querySelectorAll('.rp-modal').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal); }));
+
+    const pageButton = (label, page, disabled = false, active = false) => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.textContent = label; button.disabled = disabled; button.classList.toggle('active', active);
+        button.addEventListener('click', () => { currentPage = page; renderRows(); });
+        return button;
+    };
+    const renderRows = () => {
+        const count = filteredRows.length;
+        const pageCount = Math.max(1, Math.ceil(count / pageSize));
+        currentPage = Math.min(currentPage, pageCount);
+        rows.forEach(row => row.hidden = true);
+        filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(row => row.hidden = false);
+        resultCount.textContent = `${count} résultat(s)`;
+        dynamicCount.textContent = `${count} stagiaire(s)`;
+        document.getElementById('internEmpty').hidden = count !== 0;
+        pages.replaceChildren();
+        pages.append(pageButton('‹', currentPage - 1, currentPage === 1));
+        for (let page = 1; page <= pageCount; page++) pages.append(pageButton(String(page), page, false, page === currentPage));
+        pages.append(pageButton('›', currentPage + 1, currentPage === pageCount));
+    };
+    const applyFilters = () => {
+        filteredRows = rows.filter(row => (!search.value || row.dataset.search.includes(search.value.toLowerCase()))
+            && (!service.value || row.dataset.service === service.value)
+            && (!coach.value || row.dataset.coach === coach.value)
+            && (!status.value || row.dataset.status === status.value));
+        currentPage = 1; renderRows();
+    };
+    [search, service, coach, status].forEach(control => control?.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', applyFilters));
+    filterToggle?.addEventListener('click', () => { filterPanel.hidden = !filterPanel.hidden; filterToggle.setAttribute('aria-expanded', String(!filterPanel.hidden)); });
+    document.getElementById('resetInternFilters')?.addEventListener('click', () => { service.value = ''; coach.value = ''; status.value = ''; applyFilters(); });
+    document.addEventListener('click', event => {
+        if (filterPanel && !filterPanel.hidden && !event.target.closest('.rp-filter-menu')) { filterPanel.hidden = true; filterToggle.setAttribute('aria-expanded', 'false'); }
+        if (!event.target.closest('.rp-visual-dropdown')) document.querySelectorAll('.rp-visual-menu').forEach(menu => menu.hidden = true);
+    });
+
+    const initials = value => value.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+    rows.forEach(row => {
+        row.querySelectorAll('.intern-detail').forEach(button => button.addEventListener('click', () => {
+            document.getElementById('detailAvatar').textContent = initials(row.dataset.name);
+            document.getElementById('detailName').textContent = row.dataset.name;
+            document.getElementById('detailEmail').textContent = row.dataset.email;
+            ['Matricule','Service','Coach','Subject','Period','Objectives','Tasks','Deliverables'].forEach(key => document.getElementById('detail' + key).textContent = row.dataset[key.toLowerCase()] || '0');
+            document.getElementById('detailProgress').textContent = `${row.dataset.progress || 0}%`;
+            openModal(document.getElementById('internDetailModal'));
+        }));
+        const toggle = row.querySelector('.visualization-toggle');
+        toggle?.addEventListener('click', event => {
+            event.stopPropagation();
+            const menu = toggle.nextElementSibling;
+            document.querySelectorAll('.rp-visual-menu').forEach(other => { if (other !== menu) other.hidden = true; });
+            menu.hidden = !menu.hidden; toggle.setAttribute('aria-expanded', String(!menu.hidden));
+        });
+        row.querySelector('.show-tasks')?.addEventListener('click', () => showVisualization(row, 'taches'));
+        row.querySelector('.show-objectives')?.addEventListener('click', () => showVisualization(row, 'objectifs'));
+    });
+
+    const wireReadonlyItems = container => container.querySelectorAll('.readonly-item').forEach(item => {
+        const open = () => {
+            const task = item.dataset.kind === 'task';
+            document.getElementById('itemModalTitle').textContent = item.dataset.title;
+            document.getElementById('itemModalSubtitle').textContent = task ? 'Détails complets de la tâche' : 'Détails complets de l’objectif';
+            const pair = (label, value) => Array.of(label, value);
+            const values = task
+                ? Array.of(pair('Titre',item.dataset.title),pair('Description',item.dataset.description),pair('Stagiaire',item.dataset.intern),pair('Encadreur',item.dataset.coach),pair('Assignée par',item.dataset.coach),pair('Priorité',item.dataset.priority),pair('Date de création',item.dataset.created),pair('Date limite',item.dataset.deadline),pair('Progression',item.dataset.progress+'%'),pair('Statut',item.dataset.status),pair('Pièces jointes',item.dataset.attachments),pair('Historique','Aucune modification disponible'))
+                : Array.of(pair('Objectif',item.dataset.title),pair('Description',item.dataset.description),pair('Stagiaire',item.dataset.intern),pair('Encadreur',item.dataset.coach),pair('Date de création',item.dataset.created),pair('Date limite',item.dataset.deadline),pair('Priorité',item.dataset.priority),pair('Progression',item.dataset.progress+'%'),pair('Statut',item.dataset.status));
+            const data = document.getElementById('itemModalData'); data.replaceChildren();
+            values.forEach(([label,value]) => { const row = document.createElement('div'); row.className = 'rp-data-row'; const span = document.createElement('span'); span.textContent = label; const strong = document.createElement('strong'); strong.textContent = value || '—'; row.append(span,strong); data.append(row); });
+            const comments = container.querySelector('.rp-source-comments');
+            document.getElementById('itemModalComments').replaceChildren(comments ? comments.cloneNode(true) : document.createTextNode('Aucun commentaire.'));
+            openModal(document.getElementById('readonlyItemModal'));
+        };
+        item.addEventListener('click', open);
+        item.addEventListener('keydown', event => { if (event.key === 'Enter') open(); });
+    });
+    function showVisualization(row, type) {
+        const sourceSelector = type === 'taches' ? '.task-source' : '.objective-source';
+        const source = document.querySelector(`${sourceSelector}[data-stage-id="${row.dataset.stageId}"]`);
+        document.getElementById('visualizationTitle').textContent = `${type === 'taches' ? 'Tâches' : 'Objectifs'} de ${row.dataset.name}`;
+        document.getElementById('visualizationSubtitle').textContent = type === 'taches' ? 'Tableau de suivi des tâches du stagiaire' : 'Liste des objectifs et de leur progression';
+        document.getElementById('visualizationContent').replaceChildren(source ? source.cloneNode(true) : document.createTextNode('Aucune donnée disponible.'));
+        document.getElementById('visualizationStagiaireId').value = row.dataset.stagiaireId;
+        document.getElementById('visualizationType').value = type;
+        document.getElementById('visualizationComment').placeholder = `Écrire un commentaire concernant les ${type} de ce stagiaire...`;
+        document.getElementById('visualizationComment').value = '';
+        document.getElementById('commentFeedback').textContent = '';
+        visualization.hidden = false;
+        wireReadonlyItems(document.getElementById('visualizationContent'));
+        visualization.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    document.getElementById('closeVisualization')?.addEventListener('click', () => { visualization.hidden = true; document.querySelector('.rp-intern-list-card').scrollIntoView({behavior:'smooth'}); });
+    document.getElementById('visualizationCommentForm')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        const stagiaireId = document.getElementById('visualizationStagiaireId').value;
+        const type = document.getElementById('visualizationType').value;
+        const commentaire = document.getElementById('visualizationComment').value.trim();
+        if (!commentaire) return;
+        const body = new URLSearchParams({type, commentaire});
+        const headers = {'Content-Type':'application/x-www-form-urlencoded'};
+        headers[document.querySelector('meta[name="_csrf_header"]').content] = document.querySelector('meta[name="_csrf"]').content;
+        const response = await fetch(`/responsable/stagiaires/${stagiaireId}/commentaires`, {method:'POST', headers, body});
+        const feedback = document.getElementById('commentFeedback');
+        if (!response.ok) { feedback.textContent = 'Impossible d’envoyer le commentaire.'; feedback.className = 'rp-comment-feedback error'; return; }
+        feedback.textContent = '✓ Commentaire envoyé'; feedback.className = 'rp-comment-feedback success';
+        document.getElementById('visualizationComment').value = '';
+    });
+
+    const assignmentModal = document.getElementById('assignmentModal');
+    const assignmentIntern = document.getElementById('assignmentIntern');
+    const assignmentForm = document.getElementById('assignmentForm');
+    document.getElementById('openAssignment')?.addEventListener('click', () => openModal(assignmentModal));
+    assignmentForm?.addEventListener('submit', event => { if (!assignmentIntern.value) { event.preventDefault(); return; } assignmentForm.action = `/responsable/stagiaires/affecter/${assignmentIntern.value}`; });
+    renderRows();
+})();
 </script>
 </body>
 </html>

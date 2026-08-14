@@ -585,3 +585,325 @@
 .table-stagiaires thead th:nth-child(8) { width: 100px; } /* Fin */
 .table-stagiaires thead th:nth-child(9) { width: 140px; } /* Progression */
 .table-stagiaires thead th:nth-child(10) { width: 80px; } /* Actions */
+/* Responsable interns workspace */
+.rp-interns-wide,
+.rp-intern-list-card {
+    width: 100%;
+    min-width: 0;
+}
+
+.rp-intern-page {
+    background: #f8fafc;
+}
+
+.rp-flash-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.rp-person-button {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.rp-person-button small {
+    display: block;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.rp-intern-table {
+    min-width: 1180px;
+}
+
+.rp-mono,
+.rp-progress-cell b {
+    font-family: "JetBrains Mono", Consolas, monospace;
+}
+
+.rp-progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 118px;
+}
+
+.rp-progress-cell .rp-progress {
+    flex: 1;
+}
+
+.rp-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.rp-visual-dropdown {
+    position: relative;
+}
+
+.rp-visual-menu {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 7px);
+    right: 0;
+    min-width: 225px;
+    padding: 6px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
+}
+
+.rp-visual-menu button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 9px;
+    padding: 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #334155;
+    text-align: left;
+    cursor: pointer;
+}
+
+.rp-visual-menu button:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.rp-visualization-card {
+    margin-top: 20px;
+    border-color: #dbeafe;
+    box-shadow: 0 12px 30px rgba(37, 99, 235, .08);
+}
+
+.rp-visual-title-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rp-trello-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(250px, 1fr));
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 2px 14px;
+}
+
+.rp-trello-column {
+    min-height: 270px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.rp-trello-column > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    color: #334155;
+    font-weight: 800;
+}
+
+.rp-trello-column > header b {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e2e8f0;
+    font-size: 11px;
+}
+
+.rp-trello-stack {
+    display: grid;
+    gap: 10px;
+}
+
+.rp-task-card {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #0f172a;
+    text-align: left;
+    box-shadow: 0 3px 9px rgba(15, 23, 42, .05);
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+
+.rp-task-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .1);
+    transform: translateY(-1px);
+}
+
+.rp-task-card > strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.rp-task-card > p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.rp-task-card footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.rp-task-card footer em {
+    font-style: normal;
+}
+
+.rp-priority {
+    display: inline-flex;
+    padding: 4px 7px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+.rp-priority.haute {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.rp-priority.basse {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.rp-column-empty {
+    padding: 24px 10px;
+    color: #94a3b8;
+    text-align: center;
+    font-size: 11px;
+}
+
+.rp-objective-table tbody tr {
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.rp-objective-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.rp-comment-form {
+    display: grid;
+    gap: 9px;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.rp-comment-form label {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.rp-comment-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rp-comment-feedback {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.rp-comment-feedback.success {
+    color: #059669;
+}
+
+.rp-comment-feedback.error {
+    color: #dc2626;
+}
+
+.rp-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 20px;
+}
+
+.rp-readonly-comments {
+    margin-top: 20px;
+}
+
+.rp-readonly-comments h3 {
+    margin-bottom: 10px;
+}
+
+.rp-source-comments {
+    display: grid;
+    gap: 8px;
+}
+
+.rp-source-comments article {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.rp-source-comments article span {
+    float: right;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.rp-source-comments article p {
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 860px) {
+    .rp-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rp-comment-actions,
+    .rp-row-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .rp-visual-menu {
+        right: auto;
+        left: 0;
+    }
+}

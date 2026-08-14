@@ -51,6 +51,7 @@ public class EncadreurController {
     private final MessageRepository messageRepository;
     private final NotificationRepository notificationRepository;
     private final DocumentRepository documentRepository;
+    private final ObjectifCommentaireRepository objectifCommentaireRepository;
     private final com.gestionstages.gestion_stages.services.MessagingService messagingService;
 
     public EncadreurController(EncadreurRepository encadreurRepository,
@@ -66,10 +67,11 @@ public class EncadreurController {
                            EvenementPersonnelRepository evenementPersonnelRepository,
                            JournalBordRepository journalBordRepository,
                            ConversationRepository conversationRepository,
-                           MessageRepository messageRepository,
-                           NotificationRepository notificationRepository,
-                           DocumentRepository documentRepository,
-                           com.gestionstages.gestion_stages.services.MessagingService messagingService) {
+                            MessageRepository messageRepository,
+                            NotificationRepository notificationRepository,
+                            DocumentRepository documentRepository,
+                            ObjectifCommentaireRepository objectifCommentaireRepository,
+                            com.gestionstages.gestion_stages.services.MessagingService messagingService) {
             this.encadreurRepository = encadreurRepository;
             this.stageRepository = stageRepository;
             this.tacheRepository = tacheRepository;
@@ -86,6 +88,7 @@ public class EncadreurController {
             this.messageRepository = messageRepository;
             this.notificationRepository = notificationRepository;
             this.documentRepository = documentRepository;
+            this.objectifCommentaireRepository = objectifCommentaireRepository;
             this.messagingService = messagingService;
 }
 
@@ -106,7 +109,7 @@ public class EncadreurController {
         List<Notification> notifications = notificationRepository
                 .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(utilisateur.getEmail());
         long notificationsNonLues = notificationRepository
-                .countByDestinataireEmailAndStatut(utilisateur.getEmail(), "envoyee");
+                .countByDestinataireEmailAndStatutNot(utilisateur.getEmail(), "lue");
         long messages = conversationRepository.findByParticipantIdOrderByDernierMessageDesc(utilisateur.getId()).stream()
                 .mapToLong(conversation -> conversationRepository.countNonLuByConversation(conversation.getId(), utilisateur.getId()))
                 .sum();
@@ -213,6 +216,10 @@ public class EncadreurController {
                 data.put("nombreTaches", taches.size());
                 data.put("nombreLivrables", livrables.size());
                 data.put("derniereActivite", journaux.isEmpty() ? null : journaux.get(0).getDateActivite());
+                List<Document> documentsCandidature = stagiaire.getDemandeStage() == null
+                        ? List.of()
+                        : documentRepository.findByDemandeStageId(stagiaire.getDemandeStage().getId());
+                data.put("documentsCandidature", documentsCandidature);
                 
                 // Calculer la progression
                 if (stage.getDateDebut() != null && stage.getDateFin() != null) {
@@ -290,9 +297,11 @@ public class EncadreurController {
                 || (t.getDateLimite().isBefore(LocalDate.now()) && t.getStatut() != Tache.StatutTache.terminee)).count();
         int progressionMoyenne = stages.isEmpty() ? 0 : (int) Math.round(stages.stream()
                 .mapToDouble(stage -> {
-                    List<Tache> stageTaches = tacheRepository.findByStageId(stage.getId());
-                    long terminees = stageTaches.stream().filter(t -> t.getStatut() == Tache.StatutTache.terminee).count();
-                    return stageTaches.isEmpty() ? 0 : terminees * 100.0 / stageTaches.size();
+                    List<Objectif> stageObjectifs = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+                    long atteints = stageObjectifs.stream()
+                            .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint)
+                            .count();
+                    return stageObjectifs.isEmpty() ? 0 : atteints * 100.0 / stageObjectifs.size();
                 }).average().orElse(0));
 
         model.addAttribute("stages", stages);
@@ -323,10 +332,51 @@ public class EncadreurController {
                                   Model model) {
         ajouterIdentite(model, userDetails, "taches");
         List<Stage> mesStages = getStages(userDetails);
-        List<Tache> toutesLesTaches = tachesDesStages(mesStages);
+        List<Tache> toutesLesTaches = tachesDesStages(mesStages).stream()
+                .sorted(Comparator.comparing(Tache::getDateCreation).reversed())
+                .toList();
+        Map<Integer, List<Tache>> tachesParStage = new LinkedHashMap<>();
+        Map<Integer, Integer> progressionParStage = new LinkedHashMap<>();
+        Map<Integer, Integer> progressionParTache = new HashMap<>();
+        Map<Integer, String> statutAfficheParTache = new HashMap<>();
+        Map<Integer, Integer> piecesJointesParTache = new HashMap<>();
+        Map<Integer, List<Notification>> commentairesParStage = new HashMap<>();
+        String auteurNom = userDetails.getUtilisateur().getPrenom() + " "
+                + userDetails.getUtilisateur().getNom();
+
+        for (Stage stage : mesStages) {
+            List<Tache> tachesStage = toutesLesTaches.stream()
+                    .filter(tache -> tache.getStage().getId().equals(stage.getId()))
+                    .toList();
+            tachesParStage.put(stage.getId(), tachesStage);
+            progressionParStage.put(stage.getId(), tachesStage.isEmpty() ? 0
+                    : (int) Math.round(tachesStage.stream()
+                    .mapToInt(this::progressionTache)
+                    .average()
+                    .orElse(0)));
+            String email = stage.getStagiaire().getUtilisateur().getEmail();
+            commentairesParStage.put(stage.getId(), notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+                    .filter(notification -> email.equalsIgnoreCase(
+                            notification.getDestinataireEmail() == null ? "" : notification.getDestinataireEmail()))
+                    .filter(notification -> "Commentaire sur les tâches".equals(notification.getObjet()))
+                    .filter(notification -> auteurNom.equals(notification.getAuteurNom()))
+                    .sorted(Comparator.comparing(Notification::getDateEnvoi))
+                    .toList());
+        }
+        for (Tache tache : toutesLesTaches) {
+            progressionParTache.put(tache.getId(), progressionTache(tache));
+            statutAfficheParTache.put(tache.getId(), statutAffiche(tache));
+            piecesJointesParTache.put(tache.getId(), livrableRepository.findByTacheId(tache.getId()).size());
+        }
 
         model.addAttribute("mesStages", mesStages);
         model.addAttribute("toutesLesTaches", toutesLesTaches);
+        model.addAttribute("tachesParStage", tachesParStage);
+        model.addAttribute("progressionParStage", progressionParStage);
+        model.addAttribute("progressionParTache", progressionParTache);
+        model.addAttribute("statutAfficheParTache", statutAfficheParTache);
+        model.addAttribute("piecesJointesParTache", piecesJointesParTache);
+        model.addAttribute("commentairesParStage", commentairesParStage);
         model.addAttribute("tachesTotales", toutesLesTaches.size());
         model.addAttribute("tachesTerminees", toutesLesTaches.stream().filter(t -> t.getStatut() == Tache.StatutTache.terminee).count());
         model.addAttribute("tachesEnCours", toutesLesTaches.stream().filter(t -> t.getStatut() == Tache.StatutTache.en_cours).count());
@@ -336,6 +386,24 @@ public class EncadreurController {
         model.addAttribute("tauxExecution", toutesLesTaches.isEmpty() ? 0
                 : toutesLesTaches.stream().filter(t -> t.getStatut() == Tache.StatutTache.terminee).count() * 100 / toutesLesTaches.size());
         return "encadreur/taches";
+    }
+
+    private int progressionTache(Tache tache) {
+        return switch (tache.getStatut()) {
+            case terminee -> 100;
+            case en_revue -> 80;
+            case en_cours -> 55;
+            case en_retard -> 15;
+            case a_faire -> 0;
+        };
+    }
+
+    private String statutAffiche(Tache tache) {
+        if (tache.getStatut() != Tache.StatutTache.terminee
+                && tache.getDateLimite().isBefore(LocalDate.now())) {
+            return "en_retard";
+        }
+        return tache.getStatut().name();
     }
 
     @PostMapping("/taches/creer")
@@ -357,8 +425,8 @@ public class EncadreurController {
 
     @PostMapping("/taches/statut")
     public String modifierStatutTache(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                      @RequestParam Integer id,
-                                      @RequestParam Tache.StatutTache statut) {
+                                       @RequestParam Integer id,
+                                       @RequestParam Tache.StatutTache statut) {
         tacheRepository.findById(id)
                 .filter(tache -> stageAppartient(userDetails, tache.getStage()))
                 .ifPresent(tache -> {
@@ -366,6 +434,63 @@ public class EncadreurController {
                     tacheRepository.save(tache);
                 });
         return "redirect:/encadreur/taches";
+    }
+
+    @PostMapping("/taches/modifier")
+    public String modifierTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam Integer id,
+                                @RequestParam Integer stageId,
+                                @RequestParam String titre,
+                                @RequestParam(required = false) String description,
+                                @RequestParam String dateLimite,
+                                @RequestParam(defaultValue = "moyenne") String priorite) {
+        Optional<Stage> stage = stageRepository.findById(stageId)
+                .filter(item -> stageAppartient(userDetails, item));
+        if (stage.isPresent()) {
+            tacheRepository.findById(id)
+                    .filter(tache -> stageAppartient(userDetails, tache.getStage()))
+                    .ifPresent(tache -> {
+                        tache.setStage(stage.get());
+                        tache.setTitre(titre.trim());
+                        tache.setDescription(description == null ? "" : description.trim());
+                        tache.setDateLimite(LocalDate.parse(dateLimite));
+                        tache.setPriorite(priorite);
+                        tacheRepository.save(tache);
+                    });
+        }
+        return "redirect:/encadreur/taches?succes=modifiee";
+    }
+
+    @PostMapping("/taches/supprimer/{id}")
+    public String supprimerTache(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                 @PathVariable Integer id) {
+        tacheRepository.findById(id)
+                .filter(tache -> stageAppartient(userDetails, tache.getStage()))
+                .ifPresent(tacheRepository::delete);
+        return "redirect:/encadreur/taches?succes=supprimee";
+    }
+
+    @PostMapping("/taches/commenter")
+    public String commenterTachesStagiaire(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                           @RequestParam Integer stageId,
+                                           @RequestParam String commentaire) {
+        stageRepository.findById(stageId)
+                .filter(stage -> stageAppartient(userDetails, stage))
+                .filter(stage -> commentaire != null && !commentaire.trim().isEmpty())
+                .ifPresent(stage -> {
+                    Utilisateur stagiaire = stage.getStagiaire().getUtilisateur();
+                    String auteur = userDetails.getUtilisateur().getPrenom() + " "
+                            + userDetails.getUtilisateur().getNom();
+                    Notification notification = new Notification(
+                            "Commentaire sur les tâches",
+                            commentaire.trim(),
+                            "STAGIAIRE",
+                            "normale",
+                            auteur);
+                    notification.setDestinataireEmail(stagiaire.getEmail());
+                    notificationRepository.save(notification);
+                });
+        return "redirect:/encadreur/taches?succes=commentaire&stageId=" + stageId;
     }
     @GetMapping("/evaluations")
 public String afficherEvaluations(@AuthenticationPrincipal CustomUserDetails userDetails,
@@ -539,17 +664,51 @@ public String creerEvaluation(@AuthenticationPrincipal CustomUserDetails userDet
 }
 @GetMapping("/objectifs")
 public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                Model model,
-                                @RequestParam(required = false) String succes) {
+                                 Model model,
+                                 @RequestParam(required = false) String succes) {
     ajouterIdentite(model, userDetails, "objectifs");
     List<Stage> mesStages = getStages(userDetails);
-    List<Objectif> objectifs = objectifsDesStages(mesStages);
-    List<Tache> taches = tachesDesStages(mesStages);
-    objectifs.forEach(this::synchroniserStatutObjectif);
+    List<Objectif> tousObjectifs = objectifsDesStages(mesStages).stream()
+            .sorted(Comparator.comparing(
+                    Objectif::getDateCreation,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .toList();
+    tousObjectifs.forEach(this::synchroniserStatutObjectif);
+    List<Objectif> objectifs = tousObjectifs.stream()
+            .filter(objectif -> objectif.getOrigine() != Objectif.OrigineObjectif.stagiaire)
+            .toList();
+    List<Objectif> objectifsStagiaires = tousObjectifs.stream()
+            .filter(objectif -> objectif.getOrigine() == Objectif.OrigineObjectif.stagiaire)
+            .toList();
+    Map<Integer, List<Objectif>> objectifsParStage = new LinkedHashMap<>();
+    Map<Integer, Integer> progressionParStage = new LinkedHashMap<>();
+    Map<Integer, String> statutAfficheParObjectif = new HashMap<>();
+    Map<Integer, List<ObjectifCommentaire>> commentairesParObjectif = new HashMap<>();
+
+    for (Stage stage : mesStages) {
+        List<Objectif> objectifsStage = objectifsStagiaires.stream()
+                .filter(objectif -> objectif.getStage().getId().equals(stage.getId()))
+                .toList();
+        objectifsParStage.put(stage.getId(), objectifsStage);
+        progressionParStage.put(stage.getId(), objectifsStage.isEmpty() ? 0
+                : (int) Math.round(objectifsStage.stream()
+                .mapToInt(objectif -> objectif.getProgression() == null ? 0 : objectif.getProgression())
+                .average()
+                .orElse(0)));
+    }
+    for (Objectif objectif : tousObjectifs) {
+        statutAfficheParObjectif.put(objectif.getId(), statutObjectifAffiche(objectif));
+        commentairesParObjectif.put(objectif.getId(),
+                objectifCommentaireRepository.findByObjectifIdOrderByDateCommentaireAsc(objectif.getId()));
+    }
 
     model.addAttribute("mesStages", mesStages);
     model.addAttribute("objectifs", objectifs);
-    model.addAttribute("tachesObjectifs", taches);
+    model.addAttribute("tousObjectifs", tousObjectifs);
+    model.addAttribute("objectifsParStage", objectifsParStage);
+    model.addAttribute("progressionParStage", progressionParStage);
+    model.addAttribute("statutAfficheParObjectif", statutAfficheParObjectif);
+    model.addAttribute("commentairesParObjectif", commentairesParObjectif);
     model.addAttribute("objectifsTotaux", objectifs.size());
     model.addAttribute("objectifsAtteints", objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.atteint).count());
     model.addAttribute("objectifsEnCours", objectifs.stream().filter(o -> o.getStatut() == Objectif.StatutObjectif.en_cours).count());
@@ -561,6 +720,15 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
     if (succes != null) model.addAttribute("succes", succes);
 
     return "encadreur/objectifs";
+}
+
+private String statutObjectifAffiche(Objectif objectif) {
+    if (objectif.getStatut() != Objectif.StatutObjectif.atteint
+            && objectif.getDateLimite() != null
+            && objectif.getDateLimite().isBefore(LocalDate.now())) {
+        return "en_retard";
+    }
+    return objectif.getStatut().name();
 }
 
 @PostMapping("/objectifs/creer")
@@ -576,13 +744,80 @@ public String afficherObjectifs(@AuthenticationPrincipal CustomUserDetails userD
         objectif.setPriorite(priorite);
         objectif.setProgression(0);
         objectif.setStatut(Objectif.StatutObjectif.non_commence);
+        objectif.setOrigine(Objectif.OrigineObjectif.encadreur);
+        objectif.setDateCreation(LocalDateTime.now());
         if (dateLimite != null && !dateLimite.isBlank()) {
             objectif.setDateLimite(LocalDate.parse(dateLimite));
         }
         objectifRepository.save(objectif);
+        Utilisateur stagiaire = stage.getStagiaire().getUtilisateur();
+        Notification notification = new Notification(
+                "Nouvel objectif attribué",
+                "Votre encadreur vous a attribué un nouvel objectif : « " + objectif.getLibelle() + " ».",
+                "STAGIAIRE",
+                "normale",
+                userDetails.getUtilisateur().getPrenom() + " " + userDetails.getUtilisateur().getNom());
+        notification.setDestinataireEmail(stagiaire.getEmail());
+        notificationRepository.save(notification);
     });
 
-    return "redirect:/encadreur/objectifs?succes=true";
+    return "redirect:/encadreur/objectifs?succes=creation";
+}
+
+@PostMapping("/objectifs/modifier")
+public String modifierObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               @RequestParam Integer id,
+                               @RequestParam Integer stageId,
+                               @RequestParam String libelle,
+                               @RequestParam(required = false) String description,
+                               @RequestParam Objectif.Priorite priorite,
+                               @RequestParam(required = false) String dateLimite) {
+    Optional<Stage> stage = stageRepository.findById(stageId)
+            .filter(item -> stageAppartient(userDetails, item));
+    if (stage.isPresent()) {
+        objectifRepository.findById(id)
+                .filter(objectif -> stageAppartient(userDetails, objectif.getStage()))
+                .ifPresent(objectif -> {
+                    objectif.setStage(stage.get());
+                    objectif.setLibelle(libelle.trim());
+                    objectif.setDescription(description == null ? "" : description.trim());
+                    objectif.setPriorite(priorite);
+                    objectif.setDateLimite(dateLimite == null || dateLimite.isBlank()
+                            ? null : LocalDate.parse(dateLimite));
+                    objectifRepository.save(objectif);
+                });
+    }
+    return "redirect:/encadreur/objectifs?succes=modification";
+}
+
+@PostMapping("/objectifs/commenter")
+public String commenterObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                @RequestParam Integer objectifId,
+                                @RequestParam String commentaire) {
+    objectifRepository.findById(objectifId)
+            .filter(objectif -> stageAppartient(userDetails, objectif.getStage()))
+            .filter(objectif -> commentaire != null && !commentaire.trim().isEmpty())
+            .ifPresent(objectif -> {
+                Encadreur encadreur = getEncadreur(userDetails);
+                objectifCommentaireRepository.save(
+                        new ObjectifCommentaire(objectif, encadreur, commentaire.trim()));
+                Utilisateur stagiaire = objectif.getStage().getStagiaire().getUtilisateur();
+                String auteur = userDetails.getUtilisateur().getPrenom() + " "
+                        + userDetails.getUtilisateur().getNom();
+                Notification notification = new Notification(
+                        "Nouveau commentaire sur votre objectif",
+                        auteur + " a ajouté un commentaire sur votre objectif « "
+                                + objectif.getLibelle() + " ».",
+                        "STAGIAIRE",
+                        "normale",
+                        auteur);
+                notification.setDestinataireEmail(stagiaire.getEmail());
+                notificationRepository.save(notification);
+            });
+    return objectifRepository.findById(objectifId)
+            .map(objectif -> "redirect:/encadreur/objectifs?succes=commentaire&stageId="
+                    + objectif.getStage().getId() + "&objectifId=" + objectifId)
+            .orElse("redirect:/encadreur/objectifs?succes=commentaire");
 }
 
 @PostMapping("/objectifs/taches/commenter")
@@ -631,6 +866,15 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
                         return stageLivrable != null && stageLivrable.getId().equals(stage.getId());
                     }).count(),
             (a, b) -> a, LinkedHashMap::new));
+    Map<Integer, List<Livrable>> listeLivrablesParStage = new LinkedHashMap<>();
+    for (Stage stage : mesStages) {
+        listeLivrablesParStage.put(stage.getId(), livrables.stream()
+                .filter(livrable -> {
+                    Stage stageLivrable = stagesLivrables.get(livrable.getId());
+                    return stageLivrable != null && stageLivrable.getId().equals(stage.getId());
+                })
+                .toList());
+    }
     model.addAttribute("livrables", livrables);
     model.addAttribute("mesStages", mesStages);
     model.addAttribute("stagesLivrables", stagesLivrables);
@@ -641,6 +885,7 @@ public String afficherLivrables(@AuthenticationPrincipal CustomUserDetails userD
     model.addAttribute("tauxValidation", livrables.isEmpty() ? 0 : Math.round(valides * 100.0 / livrables.size()));
     model.addAttribute("livrablesParCategorie", livrablesParCategorie);
     model.addAttribute("livrablesParStage", livrablesParStage);
+    model.addAttribute("listeLivrablesParStage", listeLivrablesParStage);
     return "encadreur/livrables";
 }
 
@@ -848,6 +1093,24 @@ public List<Map<String, Object>> notifications(@AuthenticationPrincipal CustomUs
                 return item;
             })
             .toList();
+}
+
+@GetMapping("/notifications/page")
+public String notificationsPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    ajouterIdentite(model, userDetails, "notifications");
+    model.addAttribute("notifications", notificationRepository
+            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
+    return "encadreur/notifications";
+}
+
+@PostMapping("/notifications/lire")
+@ResponseBody
+public Map<String, Object> marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    List<Notification> notifications = notificationRepository
+            .findByDestinataireEmailAndStatutNot(userDetails.getUtilisateur().getEmail(), "lue");
+    notifications.forEach(notification -> notification.setStatut("lue"));
+    notificationRepository.saveAll(notifications);
+    return Map.of("success", true, "count", 0);
 }
 
 private byte[] genererPdfSimple(List<String> lignes) {

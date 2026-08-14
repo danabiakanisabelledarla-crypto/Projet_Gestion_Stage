@@ -14,7 +14,14 @@
                        (roleCode == 'RESPONSABLE_STAGE' ? '/responsable/profil' :
                        (roleCode == 'ENCADREUR' ? '/encadreur/profil' : '/stagiaire/profil'))},
                    notificationUrl=${roleCode == 'ADMINISTRATEUR' ? '/admin/notifications' :
-                       (roleCode == 'RESPONSABLE_STAGE' ? '/responsable/notifications' : dashboardUrl)},
+                       (roleCode == 'RESPONSABLE_STAGE' ? '/responsable/notifications' :
+                       (roleCode == 'ENCADREUR' ? '/encadreur/notifications/page' : '/stagiaire/notifications'))},
+                   notificationApiUrl=${roleCode == 'ADMINISTRATEUR' ? '/admin/notifications/api' :
+                       (roleCode == 'RESPONSABLE_STAGE' ? '/responsable/notifications/api' :
+                       (roleCode == 'ENCADREUR' ? '/encadreur/notifications' : '/stagiaire/notifications/api'))},
+                   notificationReadUrl=${roleCode == 'ADMINISTRATEUR' ? '/admin/notifications/lire' :
+                       (roleCode == 'RESPONSABLE_STAGE' ? '/responsable/notifications/lire' :
+                       (roleCode == 'ENCADREUR' ? '/encadreur/notifications/lire' : '/stagiaire/notifications/lire'))},
                    roleLabel=${roleCode == 'ADMINISTRATEUR' ? 'Administrateur' :
                        (roleCode == 'RESPONSABLE_STAGE' ? 'Responsable' :
                        (roleCode == 'ENCADREUR' ? 'Encadreur' : 'Stagiaire'))}">
@@ -43,11 +50,18 @@
                 <span>FR</span>
             </button>
 
-            <a th:href="${notificationUrl}" class="intern-icon-button" title="Notifications"
-               aria-label="Notifications">
+            <a th:href="${notificationUrl}" class="intern-icon-button workspace-notification-trigger"
+               th:attr="data-notification-api=${notificationApiUrl},data-notification-read=${notificationReadUrl},data-csrf-token=${_csrf.token},data-csrf-header=${_csrf.headerName}"
+               title="Notifications" aria-label="Notifications" aria-expanded="false">
                 <i class="fa-regular fa-bell"></i>
-                <span class="intern-badge" th:text="${notificationsCount ?: 0}">0</span>
+                <span class="intern-badge" data-notification-count
+                      th:text="${notificationsCount ?: 0}"
+                      th:classappend="${(notificationsCount ?: 0) == 0 ? ' is-empty' : ''}">0</span>
             </a>
+            <div class="workspace-notification-panel" data-notification-panel hidden>
+                <div class="workspace-notification-head"><strong>Notifications</strong><a th:href="${notificationUrl}">Tout voir</a></div>
+                <div class="workspace-notification-list" data-notification-list><p>Chargement...</p></div>
+            </div>
 
             <a th:href="${messagesUrl}" class="intern-icon-button" title="Messages" aria-label="Messages">
                 <i class="fa-regular fa-envelope"></i>

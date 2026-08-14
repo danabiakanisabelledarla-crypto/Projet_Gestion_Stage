@@ -20,7 +20,8 @@ public class AdminModelAdvice {
     @ModelAttribute("notificationsCount")
     public long getNotificationsCount(HttpServletRequest request) {
         if (request.getRequestURI().startsWith("/admin/")) {
-            return notificationRepository.count();
+            return notificationRepository.countByDestinataireTypeAndStatutNot("ADMINISTRATEUR", "lue")
+                    + notificationRepository.countByDestinataireTypeAndStatutNot("Tous les administrateurs", "lue");
         }
         return 0;
     }

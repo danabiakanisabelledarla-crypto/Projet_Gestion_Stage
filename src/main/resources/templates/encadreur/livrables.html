@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
     <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
+    <style>
+        .owner-document-list{display:grid;gap:10px;margin-top:16px}
+        .owner-document-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border:1px solid var(--coach-border);border-radius:8px;background:#f8fafc}
+        .owner-document-icon{display:grid;width:36px;height:36px;place-items:center;border-radius:8px;background:#eef2ff;color:var(--coach-blue)}
+        .owner-document-copy{min-width:0}.owner-document-copy strong,.owner-document-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .owner-document-copy strong{font-size:10px}.owner-document-copy small{margin-top:4px;color:var(--coach-muted);font-size:8px}
+        .owner-document-actions{display:flex;align-items:center;gap:5px}
+        @media(max-width:640px){.owner-document-item{grid-template-columns:34px minmax(0,1fr)}.owner-document-actions{grid-column:1/-1;justify-content:flex-end}}
+    </style>
 </head>
 <body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
@@ -54,21 +63,17 @@
                     <table class="coach-table" id="deliveriesTable">
                         <thead><tr><th>Propriétaire</th><th>Documents</th><th>Référence</th><th>Date dépôt</th><th>Actions</th></tr></thead>
                         <tbody>
-                        <tr class="delivery-row" th:each="livrable : ${livrables}"
-                            th:with="stage=${stagesLivrables[livrable.id]}, utilisateur=${stage != null ? stage.stagiaire.utilisateur : null}"
-                            th:attr="data-search=${#strings.toLowerCase((utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : '') + ' ' + livrable.titre + ' ' + livrable.fichier)},data-stage=${stage != null ? stage.id : ''},data-type=${#strings.toLowerCase(livrable.categorie != null ? livrable.categorie : 'autre')},data-status=${livrable.statut.name()},data-id=${livrable.id},data-title=${livrable.titre},data-comment=${livrable.commentaireEncadreur},data-owner=${utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : 'Stagiaire non associé'},data-reference=${'LIV-' + #numbers.formatInteger(livrable.id, 4)},data-date=${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">
-                            <td><div class="coach-person"><span class="coach-avatar" th:text="${utilisateur != null ? #strings.substring(utilisateur.prenom,0,1) + #strings.substring(utilisateur.nom,0,1) : '--'}">ST</span><div><strong th:text="${utilisateur != null ? utilisateur.prenom + ' ' + utilisateur.nom : 'Stagiaire non associé'}">Stagiaire</strong><small th:text="${stage != null && stage.service != null ? stage.service.nom : 'Service non renseigné'}">Service</small></div></div></td>
-                            <td><button class="coach-btn secondary compact delivery-view" type="button"><i class="fa-regular fa-folder-open"></i> Documents</button></td>
-                            <td class="coach-mono" th:text="${'LIV-' + #numbers.formatInteger(livrable.id, 4)}">LIV-0001</td>
-                            <td class="coach-mono" th:text="${#temporals.format(livrable.dateDepot, 'dd/MM/yyyy HH:mm')}">29/07/2026</td>
-                            <td><div class="coach-actions">
-                                <button class="coach-action delivery-view" type="button" title="Voir détail"><i class="fa-regular fa-eye"></i></button>
-                                <button class="coach-action delivery-comment" type="button" title="Commenter"><i class="fa-regular fa-comment"></i></button>
-                                <a class="coach-action" th:if="${livrable.statut.name() != 'valide'}" th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}" title="Valider"><i class="fa-solid fa-check"></i></a>
-                                <a class="coach-action" th:if="${livrable.statut.name() != 'correction_demandee'}" th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}" title="Demander une correction"><i class="fa-solid fa-pen"></i></a>
-                            </div></td>
+                        <tr class="delivery-row" th:each="stage : ${mesStages}"
+                            th:if="${!#lists.isEmpty(listeLivrablesParStage[stage.id])}"
+                            th:with="documents=${listeLivrablesParStage[stage.id]}, utilisateur=${stage.stagiaire.utilisateur}, dernier=${documents[0]}"
+                            th:attr="data-search=${#strings.toLowerCase(utilisateur.prenom + ' ' + utilisateur.nom + ' ' + stage.stagiaire.matricule)},data-stage=${stage.id},data-owner=${utilisateur.prenom + ' ' + utilisateur.nom}">
+                            <td><div class="coach-person"><span class="coach-avatar" th:text="${#strings.substring(utilisateur.prenom,0,1) + #strings.substring(utilisateur.nom,0,1)}">ST</span><div><strong th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Stagiaire</strong><small th:text="${stage.service != null ? stage.service.nom : 'Service non renseigné'}">Service</small></div></div></td>
+                            <td><button class="coach-btn secondary compact owner-documents-open" type="button"><i class="fa-regular fa-folder-open"></i> <span th:text="${#lists.size(documents) + ' document(s)'}">Documents</span></button></td>
+                            <td class="coach-mono" th:text="${'DOS-' + #numbers.formatInteger(stage.id, 4)}">DOS-0001</td>
+                            <td class="coach-mono" th:text="${#temporals.format(dernier.dateDepot, 'dd/MM/yyyy HH:mm')}">29/07/2026</td>
+                            <td><button class="coach-action owner-documents-open" type="button" title="Voir détail"><i class="fa-regular fa-eye"></i></button></td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(livrables)}"><td colspan="5" class="coach-empty"><i class="fa-regular fa-folder-open"></i><br><br>Aucun livrable déposé pour le moment.</td></tr>
+                        <tr th:if="${#lists.isEmpty(livrables)}"><td colspan="5" class="coach-empty"><i class="fa-regular fa-folder-open"></i><br><br>Aucun document déposé pour le moment.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -100,6 +105,41 @@
         <section class="coach-grid-50">
         </section>
     </main>
+</div>
+
+<div class="coach-modal" id="ownerDocumentsModal">
+    <article class="coach-modal-panel">
+        <div class="coach-card-head">
+            <div><h2>Documents du stagiaire</h2><p id="ownerDocumentsName">Propriétaire</p></div>
+            <button class="coach-action" data-close-owner-documents type="button"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="owner-document-list" id="ownerDocumentsList"></div>
+        <div class="coach-modal-actions">
+            <button class="coach-btn secondary" data-close-owner-documents type="button">Fermer</button>
+        </div>
+    </article>
+</div>
+
+<div hidden>
+    <section class="owner-documents-source" th:each="stage : ${mesStages}"
+             th:id="${'ownerDocumentsSource-' + stage.id}">
+        <article class="owner-document-item" th:each="livrable : ${listeLivrablesParStage[stage.id]}"
+                 th:attr="data-id=${livrable.id},data-title=${livrable.titre},data-comment=${livrable.commentaireEncadreur},data-owner=${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom},data-reference=${'LIV-' + #numbers.formatInteger(livrable.id,4)},data-date=${#temporals.format(livrable.dateDepot,'dd/MM/yyyy HH:mm')},data-status=${livrable.statut.name()},data-type=${#strings.toLowerCase(livrable.categorie != null ? livrable.categorie : 'autre')}">
+            <span class="owner-document-icon"><i class="fa-regular fa-file-lines"></i></span>
+            <div class="owner-document-copy">
+                <strong th:text="${livrable.titre}">Document</strong>
+                <small th:text="${(livrable.categorie != null ? livrable.categorie : 'Autre') + ' · ' + #temporals.format(livrable.dateDepot,'dd/MM/yyyy HH:mm')}">Type · date</small>
+            </div>
+            <div class="owner-document-actions">
+                <button class="coach-action delivery-item-view" type="button" title="Voir détail"><i class="fa-regular fa-eye"></i></button>
+                <button class="coach-action delivery-item-comment" type="button" title="Commenter"><i class="fa-regular fa-comment"></i></button>
+                <a class="coach-action" th:href="@{/documents/livrables/{id}(id=${livrable.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+                <a class="coach-action" th:if="${livrable.statut.name() != 'valide'}" th:href="@{/encadreur/livrables/valider/{id}(id=${livrable.id})}" title="Valider"><i class="fa-solid fa-check"></i></a>
+                <a class="coach-action" th:if="${livrable.statut.name() != 'correction_demandee'}" th:href="@{/encadreur/livrables/rejeter/{id}(id=${livrable.id})}" title="Demander une correction"><i class="fa-solid fa-pen"></i></a>
+            </div>
+        </article>
+        <div class="coach-empty" th:if="${#lists.isEmpty(listeLivrablesParStage[stage.id])}">Aucun document disponible.</div>
+    </section>
 </div>
 
 <div class="coach-modal" id="deliveryDetailModal">
@@ -166,10 +206,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const filter = () => {
         const query = (search?.value || globalSearch?.value || '').toLowerCase();
-        filteredRows = rows.filter(row => (!query || row.dataset.search.includes(query))
-            && (!(student?.value) || row.dataset.stage === student.value)
-            && (!(type?.value) || row.dataset.type === type.value)
-            && (!(status?.value) || row.dataset.status === status.value));
+        filteredRows = rows.filter(row => {
+            const documents = [...(document.getElementById('ownerDocumentsSource-' + row.dataset.stage)?.querySelectorAll('.owner-document-item') || [])];
+            const documentMatch = documents.some(item =>
+                (!(type?.value) || item.dataset.type === type.value)
+                && (!(status?.value) || item.dataset.status === status.value)
+                && (!query || (item.dataset.title || '').toLowerCase().includes(query))
+            );
+            const ownerMatch = !query || row.dataset.search.includes(query);
+            return (!(student?.value) || row.dataset.stage === student.value)
+                && (ownerMatch || documentMatch)
+                && (!(type?.value) && !(status?.value) || documentMatch);
+        });
         page = 1;
         render();
     };
@@ -179,30 +227,50 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('deliveryNext').onclick = () => { if (page < Math.max(1, Math.ceil(filteredRows.length / pageSize))) { page++; render(); } };
 
     const modal = document.getElementById('deliveryCommentModal');
-    rows.forEach(row => row.querySelector('.delivery-comment')?.addEventListener('click', () => {
-        document.getElementById('commentDeliveryId').value = row.dataset.id;
-        document.getElementById('commentDeliveryTitle').textContent = row.dataset.title;
-        document.getElementById('commentDeliveryText').value = row.dataset.comment || '';
+    const ownerModal = document.getElementById('ownerDocumentsModal');
+    const ownerList = document.getElementById('ownerDocumentsList');
+    const detailModal = document.getElementById('deliveryDetailModal');
+    const closeOwnerDocuments = () => ownerModal?.classList.remove('open');
+    rows.forEach(row => row.querySelectorAll('.owner-documents-open').forEach(button => button.addEventListener('click', () => {
+        const source = document.getElementById('ownerDocumentsSource-' + row.dataset.stage);
+        ownerList.replaceChildren(...[...(source?.children || [])].map(item => item.cloneNode(true)));
+        document.getElementById('ownerDocumentsName').textContent = row.dataset.owner;
+        ownerModal.classList.add('open');
+    })));
+    document.querySelectorAll('[data-close-owner-documents]').forEach(button => button.addEventListener('click', closeOwnerDocuments));
+    ownerModal?.addEventListener('click', event => { if (event.target === ownerModal) closeOwnerDocuments(); });
+
+    const openComment = item => {
+        document.getElementById('commentDeliveryId').value = item.dataset.id;
+        document.getElementById('commentDeliveryTitle').textContent = item.dataset.title;
+        document.getElementById('commentDeliveryText').value = item.dataset.comment || '';
+        closeOwnerDocuments();
         modal.classList.add('open');
-    }));
+    };
     document.querySelectorAll('[data-close-comment]').forEach(button => button.addEventListener('click', () => modal.classList.remove('open')));
     modal?.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('open'); });
 
-    const detailModal = document.getElementById('deliveryDetailModal');
-    rows.forEach(row => row.querySelectorAll('.delivery-view').forEach(button => button.addEventListener('click', () => {
-        const id = row.dataset.id;
+    const openDetail = item => {
+        const id = item.dataset.id;
         const preview = '/documents/livrables/' + id + '/preview';
-        document.getElementById('deliveryDetailTitle').textContent = row.dataset.title;
-        document.getElementById('deliveryDetailOwner').textContent = row.dataset.owner;
-        document.getElementById('deliveryDetailReference').textContent = row.dataset.reference;
-        document.getElementById('deliveryDetailDate').textContent = row.dataset.date;
-        document.getElementById('deliveryDetailStatus').textContent = row.dataset.status.replaceAll('_', ' ');
+        document.getElementById('deliveryDetailTitle').textContent = item.dataset.title;
+        document.getElementById('deliveryDetailOwner').textContent = item.dataset.owner;
+        document.getElementById('deliveryDetailReference').textContent = item.dataset.reference;
+        document.getElementById('deliveryDetailDate').textContent = item.dataset.date;
+        document.getElementById('deliveryDetailStatus').textContent = item.dataset.status.replaceAll('_', ' ');
         document.getElementById('deliveryPreviewFrame').src = preview;
         document.getElementById('deliveryOpenLarge').href = preview;
         document.getElementById('deliveryDownload').href = '/documents/livrables/' + id;
         document.getElementById('deliveryCorrection').href = '/encadreur/livrables/rejeter/' + id;
+        closeOwnerDocuments();
         detailModal.classList.add('open');
-    })));
+    };
+    ownerList?.addEventListener('click', event => {
+        const item = event.target.closest('.owner-document-item');
+        if (!item) return;
+        if (event.target.closest('.delivery-item-view')) openDetail(item);
+        if (event.target.closest('.delivery-item-comment')) openComment(item);
+    });
     const closeDetail = () => {
         detailModal?.classList.remove('open');
         document.getElementById('deliveryPreviewFrame').src = 'about:blank';

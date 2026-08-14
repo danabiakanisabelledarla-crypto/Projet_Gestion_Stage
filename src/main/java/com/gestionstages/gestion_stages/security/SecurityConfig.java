@@ -55,7 +55,7 @@ public class SecurityConfig {
                     .access(espaceEtPermission("ENCADREUR", null))
                 .requestMatchers("/encadreur/planning/**")
                     .access(espaceEtUnePermission("ENCADREUR", "CONSULTER_PLANNING", "GERER_PLANNING"))
-                .requestMatchers("/encadreur/messagerie/**", "/encadreur/notifications")
+                .requestMatchers("/encadreur/messagerie/**", "/encadreur/notifications/**")
                     .access(espaceEtUnePermission("ENCADREUR", "ENVOYER_NOTIFICATIONS", "GERER_NOTIFICATIONS"))
                 .requestMatchers("/encadreur/**").denyAll()
 

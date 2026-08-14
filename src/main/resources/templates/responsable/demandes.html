@@ -22,7 +22,7 @@
                     <p>Consultez, analysez et traitez les demandes de stage reçues.</p>
                 </div>
             </div>
-            <button class="rp-secondary" type="button"><i class="fa-solid fa-file-export"></i> Exporter</button>
+            <a class="rp-secondary" th:href="@{/responsable/demandes/export}"><i class="fa-solid fa-file-excel"></i> Exporter</a>
         </header>
 
         <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
@@ -89,7 +89,7 @@
                     </table>
                     <div class="rp-empty" th:if="${#lists.isEmpty(demandes)}">Aucune demande enregistrée.</div>
                 </div>
-                <div class="rp-pagination"><span th:text="${totalDemandes+' résultat(s)'}">0 résultat</span><div class="rp-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div>
+                <div class="rp-pagination"><span id="requestResultCount">0 résultat</span><div class="rp-pages" id="requestPages"></div></div>
             </article>
         </section>
     </div>
@@ -136,6 +136,10 @@
             <button class="rp-secondary" type="button" data-close-modal="requestModal">Fermer</button>
             <button id="openRejectModal" class="rp-danger" type="button"><i class="fa-solid fa-xmark"></i> Refuser</button>
             <button id="openAcceptModal" class="rp-primary" type="button"><i class="fa-solid fa-check"></i> Accepter</button>
+        </div>
+        <div class="rp-modal-actions" id="requestFinalStatus" hidden>
+            <button class="rp-secondary" type="button" data-close-modal="requestModal">Fermer</button>
+            <span id="requestFinalBadge" class="rp-badge"></span>
         </div>
     </div>
 </div>
@@ -199,6 +203,11 @@
     const requestModal = document.getElementById('requestModal');
     const acceptModal = document.getElementById('acceptModal');
     const rejectModal = document.getElementById('rejectModal');
+    const resultCount = document.getElementById('requestResultCount');
+    const pages = document.getElementById('requestPages');
+    const pageSize = 8;
+    let currentPage = 1;
+    let filteredRows = rows;
     let selectedRow = null;
 
     const openModal = modal => {
@@ -220,13 +229,39 @@
         });
     });
 
-    const filterRows = () => {
-        rows.forEach(row => {
-            row.hidden = !(
-                (!search.value || row.dataset.search.includes(search.value.toLowerCase())) &&
-                (!status.value || row.dataset.status === status.value)
-            );
+    const pageButton = (label, page, disabled = false, active = false) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.disabled = disabled;
+        button.classList.toggle('active', active);
+        button.addEventListener('click', () => {
+            currentPage = page;
+            renderRows();
         });
+        return button;
+    };
+    const renderRows = () => {
+        const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+        currentPage = Math.min(currentPage, pageCount);
+        rows.forEach(row => row.hidden = true);
+        filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+            .forEach(row => row.hidden = false);
+        resultCount.textContent = `${filteredRows.length} résultat(s)`;
+        pages.replaceChildren();
+        pages.append(pageButton('‹', currentPage - 1, currentPage === 1));
+        for (let page = 1; page <= pageCount; page++) {
+            pages.append(pageButton(String(page), page, false, page === currentPage));
+        }
+        pages.append(pageButton('›', currentPage + 1, currentPage === pageCount));
+    };
+    const filterRows = () => {
+        filteredRows = rows.filter(row =>
+            (!search.value || row.dataset.search.includes(search.value.toLowerCase())) &&
+            (!status.value || row.dataset.status === status.value)
+        );
+        currentPage = 1;
+        renderRows();
     };
     [search, status].filter(Boolean).forEach(control => {
         control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', filterRows);
@@ -264,6 +299,11 @@
             document.getElementById('requestDocumentPreview').hidden = true;
             document.getElementById('previewDocumentFrame').src = 'about:blank';
             document.getElementById('requestDecisionActions').hidden = row.dataset.status !== 'en_attente';
+            const finalStatus = document.getElementById('requestFinalStatus');
+            finalStatus.hidden = row.dataset.status === 'en_attente';
+            const finalBadge = document.getElementById('requestFinalBadge');
+            finalBadge.textContent = row.dataset.status === 'acceptee' ? 'Acceptée' : 'Refusée';
+            finalBadge.className = 'rp-badge ' + (row.dataset.status === 'acceptee' ? 'green' : 'red');
             openModal(requestModal);
         });
     });
@@ -307,6 +347,7 @@
     document.getElementById('rejectionReason').addEventListener('input', event => {
         document.getElementById('reasonLength').textContent = event.target.value.trim().length;
     });
+    renderRows();
 })();
 </script>
 </body>

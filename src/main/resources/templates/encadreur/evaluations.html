@@ -31,12 +31,9 @@
 
         <section class="coach-grid-70">
             <article class="coach-card">
-                <div class="coach-card-head"><div><h2>Liste des évaluations</h2><p>Résultats enregistrés pour vos stagiaires</p></div><button class="coach-btn secondary compact" id="exportEvaluations" type="button"><i class="fa-solid fa-file-export"></i> Exporter</button></div>
+                <div class="coach-card-head"><div><h2>Liste des évaluations</h2><p>Résultats enregistrés pour vos stagiaires</p></div></div>
                 <div class="coach-toolbar">
                     <label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="evaluationSearch" type="search" placeholder="Stagiaire ou critère..."></label>
-                    <select id="evaluationStudent" class="coach-select"><option value="">Tous les stagiaires</option><option th:each="stage : ${mesStages}" th:value="${stage.id}" th:text="${stage.stagiaire.utilisateur.prenom + ' ' + stage.stagiaire.utilisateur.nom}">Stagiaire</option></select>
-                    <select id="evaluationService" class="coach-select"><option value="">Tous les services</option><option th:each="stage : ${mesStages}" th:if="${stage.service != null}" th:value="${#strings.toLowerCase(stage.service.nom)}" th:text="${stage.service.nom}">Service</option></select>
-                    <select id="evaluationPeriod" class="coach-select"><option value="">Toutes les périodes</option><option value="month">Ce mois</option><option value="year">Cette année</option></select>
                     <select id="evaluationStatus" class="coach-select"><option value="">Tous les statuts</option><option value="validee">Validée</option><option value="revoir">À revoir</option></select>
                 </div>
                 <div class="coach-table-wrap">
@@ -159,9 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = [...document.querySelectorAll('.evaluation-row')];
     const search = document.getElementById('evaluationSearch');
     const globalSearch = document.getElementById('globalEvaluationSearch');
-    const student = document.getElementById('evaluationStudent');
-    const service = document.getElementById('evaluationService');
-    const period = document.getElementById('evaluationPeriod');
     const status = document.getElementById('evaluationStatus');
     const count = document.getElementById('evaluationCount');
     const evaluationPrevious = document.getElementById('evaluationPrevious');
@@ -169,37 +163,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const evaluationPageNumbers = document.getElementById('evaluationPageNumbers');
     const evaluationPageSize = 10;
     let evaluationCurrentPage = 1;
-    const now = new Date();
+    let filteredRows = [...rows];
     const filter = () => {
         const query = (search?.value || globalSearch?.value || '').toLowerCase();
-        let visible = 0;
-        rows.forEach(row => {
-            const date = new Date(row.dataset.date + 'T00:00:00');
-            const periodValue = period?.value || '';
-            const periodMatches = !periodValue || (periodValue === 'month' && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) || (periodValue === 'year' && date.getFullYear() === now.getFullYear());
-            const show = (!query || (row.dataset.search || '').includes(query))
-                && (!(student?.value) || row.dataset.stage === student.value)
-                && (!(service?.value) || row.dataset.service === service.value)
-                && (!(status?.value) || row.dataset.status === status.value)
-                && periodMatches;
-            row.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
+        filteredRows = rows.filter(row =>
+            (!query || (row.dataset.search || '').includes(query))
+            && (!(status?.value) || row.dataset.status === status.value)
+        );
         evaluationCurrentPage = 1;
         updateEvaluationPagination();
     };
     [search, globalSearch].filter(Boolean).forEach(input => input.addEventListener('input', filter));
-    [student, service, period, status].filter(Boolean).forEach(select => select.addEventListener('change', filter));
+    [status].filter(Boolean).forEach(select => select.addEventListener('change', filter));
 
     function updateEvaluationPagination() {
-        const visibleRows = rows.filter(row => row.style.display !== 'none');
-        const total = visibleRows.length;
+        const total = filteredRows.length;
         const totalPages = Math.max(1, Math.ceil(total / evaluationPageSize));
         evaluationCurrentPage = Math.min(evaluationCurrentPage, totalPages);
         const start = (evaluationCurrentPage - 1) * evaluationPageSize;
-        visibleRows.forEach((row, index) => {
-            row.style.display = index >= start && index < start + evaluationPageSize ? '' : 'none';
-        });
+        rows.forEach(row => row.hidden = true);
+        filteredRows.slice(start, start + evaluationPageSize).forEach(row => row.hidden = false);
         if (count) {
             count.textContent = total === 0 ? 'Aucune évaluation affichée.' : total + ' évaluation(s) affichée(s)';
         }
@@ -229,8 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     evaluationNext?.addEventListener('click', () => {
-        const total = rows.filter(row => row.style.display !== 'none').length;
-        const totalPages = Math.max(1, Math.ceil(total / evaluationPageSize));
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / evaluationPageSize));
         if (evaluationCurrentPage < totalPages) {
             evaluationCurrentPage += 1;
             updateEvaluationPagination();
@@ -276,17 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-close-detail]').forEach(button =>
         button.addEventListener('click', () => detail?.classList.remove('open')));
 
-    document.getElementById('exportEvaluations')?.addEventListener('click', () => {
-        const lines = [];
-        lines.push(['Stagiaire','Service','Note','Critère principal','Date','Statut']);
-        rows.filter(row => row.style.display !== 'none').forEach(row => lines.push([...row.cells].slice(0, 6).map(cell => cell.innerText.replace(/\s+/g, ' ').trim())));
-        const csv = lines.map(line => line.map(value => '"' + value.replace(/"/g, '""') + '"').join(';')).join('\n');
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'}));
-        link.download = 'evaluations-encadreur.csv';
-        link.click();
-        URL.revokeObjectURL(link.href);
-    });
 });
 </script>
 <script th:src="@{/js/encadreur-topbar.js}"></script></body>

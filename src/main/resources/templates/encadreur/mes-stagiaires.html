@@ -5,6 +5,12 @@
     <title>Mes stagiaires - Encadreur</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
+    <style>
+        .candidate-documents{margin-top:18px;text-align:left}.candidate-documents h4{margin:0 0 10px;font-size:12px}
+        .candidate-document-list{display:grid;gap:8px}.candidate-document{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--coach-border);border-radius:8px;background:#f8fafc}
+        .candidate-document>i{color:var(--coach-blue)}.candidate-document div{min-width:0;flex:1}.candidate-document strong,.candidate-document small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .candidate-document strong{font-size:10px}.candidate-document small{margin-top:3px;color:var(--coach-muted);font-size:8px}.candidate-document-actions{display:flex;gap:5px}
+    </style>
 </head>
 <body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
@@ -27,7 +33,7 @@
                 <div class="coach-card-head"><div><h2>Liste des stagiaires</h2><p>Sélectionnez une ligne pour afficher son profil</p></div></div>
                 <div class="coach-toolbar"><label class="coach-search"><i class="fa-solid fa-magnifying-glass"></i><input id="studentSearch" type="search" placeholder="Nom, matricule, sujet..."></label><select id="serviceFilter" class="coach-select"><option value="">Tous les services</option><option th:each="item : ${stagiaires}" th:value="${item.stage.service != null ? item.stage.service.nom : ''}" th:text="${item.stage.service != null ? item.stage.service.nom : 'Non renseigné'}">Service</option></select><select id="statusFilter" class="coach-select"><option value="">Tous les statuts</option><option value="en_cours">En cours</option><option value="suspendu">En attente</option><option value="termine">Terminé</option></select></div>
                 <div class="coach-table-wrap"><table class="coach-table"><thead><tr><th>Stagiaire</th><th>Service</th><th>Sujet</th><th>Début</th><th>Fin</th><th>Progression</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
-                <tr class="student-row" th:each="item : ${stagiaires}" th:attr="data-name=${#strings.toLowerCase(item.utilisateur.prenom+' '+item.utilisateur.nom+' '+item.matricule)},data-service=${item.stage.service != null ? item.stage.service.nom : ''},data-status=${item.stage.statut.name()},data-fullname=${item.utilisateur.prenom+' '+item.utilisateur.nom},data-initials=${#strings.substring(item.utilisateur.prenom,0,1)+#strings.substring(item.utilisateur.nom,0,1)},data-subject=${item.stage.projet != null ? item.stage.projet.titre : 'Sujet à définir'},data-period=${#temporals.format(item.stage.dateDebut,'dd/MM/yyyy')+' - '+#temporals.format(item.stage.dateFin,'dd/MM/yyyy')},data-progress=${item.progression},data-objectives=${item.nombreObjectifs},data-tasks=${item.nombreTaches},data-deliverables=${item.nombreLivrables},data-activity=${item.derniereActivite != null ? #temporals.format(item.derniereActivite,'dd/MM/yyyy') : 'Aucune'},data-statuslabel=${item.stage.statut.name() == 'termine' ? 'Terminé' : (item.stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')}">
+                <tr class="student-row" th:each="item : ${stagiaires}" th:attr="data-name=${#strings.toLowerCase(item.utilisateur.prenom+' '+item.utilisateur.nom+' '+item.matricule)},data-service=${item.stage.service != null ? item.stage.service.nom : ''},data-status=${item.stage.statut.name()},data-fullname=${item.utilisateur.prenom+' '+item.utilisateur.nom},data-initials=${#strings.substring(item.utilisateur.prenom,0,1)+#strings.substring(item.utilisateur.nom,0,1)},data-subject=${item.stage.projet != null ? item.stage.projet.titre : 'Sujet à définir'},data-period=${#temporals.format(item.stage.dateDebut,'dd/MM/yyyy')+' - '+#temporals.format(item.stage.dateFin,'dd/MM/yyyy')},data-progress=${item.progression},data-objectives=${item.nombreObjectifs},data-tasks=${item.nombreTaches},data-deliverables=${item.nombreLivrables},data-activity=${item.derniereActivite != null ? #temporals.format(item.derniereActivite,'dd/MM/yyyy') : 'Aucune'},data-statuslabel=${item.stage.statut.name() == 'termine' ? 'Terminé' : (item.stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')},data-student-id=${item.id}">
                     <td><div class="coach-person"><span class="coach-avatar" th:text="${#strings.substring(item.utilisateur.prenom,0,1)+#strings.substring(item.utilisateur.nom,0,1)}">AB</span><div><strong th:text="${item.utilisateur.prenom+' '+item.utilisateur.nom}">Nom</strong><small th:text="${item.matricule}">Matricule</small></div></div></td><td th:text="${item.stage.service != null ? item.stage.service.nom : '—'}">Service</td><td th:text="${item.stage.projet != null ? item.stage.projet.titre : 'Sujet à définir'}">Sujet</td><td th:text="${#temporals.format(item.stage.dateDebut,'dd/MM/yyyy')}">Date</td><td th:text="${#temporals.format(item.stage.dateFin,'dd/MM/yyyy')}">Date</td><td><div class="coach-progress-row"><div class="coach-progress"><span th:style="'width:'+${item.progression}+'%'"></span></div><b th:text="${item.progression+'%'}">0%</b></div></td><td><span class="coach-badge" th:classappend="${item.stage.statut.name() == 'termine'} ? ' green' : (${item.stage.statut.name() == 'suspendu'} ? ' orange' : '')" th:text="${item.stage.statut.name() == 'termine' ? 'Terminé' : (item.stage.statut.name() == 'suspendu' ? 'En attente' : 'En cours')}">En cours</span></td><td><div class="coach-actions"><button type="button" class="coach-action select-student" title="Voir"><i class="fa-regular fa-eye"></i></button><a class="coach-action" th:href="@{/encadreur/evaluations}" title="Évaluer"><i class="fa-solid fa-star"></i></a><a class="coach-action" th:href="@{/encadreur/livrables}" title="Dossier"><i class="fa-regular fa-folder-open"></i></a></div></td>
                 </tr><tr th:if="${stagiaires.isEmpty()}"><td colspan="8" class="coach-empty">Aucun stagiaire assigné.</td></tr></tbody></table></div>
                 <div class="coach-pagination"><span id="studentPaginationInfo">0 résultat</span><div class="coach-pages"><button type="button" id="studentPrevious">‹</button><span id="studentPageNumbers"></span><button type="button" id="studentNext">›</button></div></div>
@@ -53,12 +59,32 @@
             <div class="coach-data-row"><span>Dernière activité</span><strong id="profileActivity">Aucune</strong></div>
             <div class="coach-data-row"><span>Statut</span><strong id="profileStatus">—</strong></div>
         </div>
+        <section class="candidate-documents">
+            <h4>Dossier de candidature</h4>
+            <div class="candidate-document-list" id="profileCandidateDocuments"></div>
+        </section>
         <div class="coach-modal-actions">
             <button type="button" class="coach-btn secondary" id="cancelStudentDetail">Fermer</button>
             <a class="coach-btn secondary" th:href="@{/encadreur/livrables}"><i class="fa-solid fa-folder-open"></i> Voir livrables</a>
             <a class="coach-btn" th:href="@{/encadreur/evaluations}"><i class="fa-solid fa-star"></i> Évaluer</a>
         </div>
     </article>
+</div>
+<div hidden>
+    <div class="candidate-document-source" th:each="item : ${stagiaires}" th:id="${'candidateDocuments-' + item.id}">
+        <article class="candidate-document" th:each="document : ${item.documentsCandidature}">
+            <i class="fa-regular fa-file-lines"></i>
+            <div>
+                <strong th:text="${document.typeDocument}">Document</strong>
+                <small th:text="${document.nomFichier}">fichier.pdf</small>
+            </div>
+            <span class="candidate-document-actions">
+                <a class="coach-action" th:href="@{/documents/{id}/preview(id=${document.id})}" target="_blank" title="Voir le document"><i class="fa-regular fa-eye"></i></a>
+                <a class="coach-action" th:href="@{/documents/{id}(id=${document.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a>
+            </span>
+        </article>
+        <div class="coach-empty" th:if="${#lists.isEmpty(item.documentsCandidature)}">Aucun document de candidature disponible.</div>
+    </div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
@@ -81,7 +107,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const close=()=>modal?.classList.remove('open');
  document.getElementById('closeStudentDetail').onclick=close;document.getElementById('cancelStudentDetail').onclick=close;
  modal?.addEventListener('click',event=>{if(event.target===modal)close()});
- rows.forEach(row=>row.querySelector('.select-student')?.addEventListener('click',()=>{const d=row.dataset;document.getElementById('profileInitials').textContent=d.initials;document.getElementById('profileName').textContent=d.fullname;document.getElementById('profileSubject').textContent=d.subject;document.getElementById('profilePeriod').textContent=d.period;document.getElementById('profileProgress').textContent=d.progress+'%';document.getElementById('profileProgressBar').style.width=d.progress+'%';document.getElementById('profileObjectives').textContent=d.objectives;document.getElementById('profileTasks').textContent=d.tasks;document.getElementById('profileDeliverables').textContent=d.deliverables;document.getElementById('profileActivity').textContent=d.activity;document.getElementById('profileStatus').textContent=d.statuslabel;modal?.classList.add('open')}));
+ rows.forEach(row=>row.querySelector('.select-student')?.addEventListener('click',()=>{const d=row.dataset;document.getElementById('profileInitials').textContent=d.initials;document.getElementById('profileName').textContent=d.fullname;document.getElementById('profileSubject').textContent=d.subject;document.getElementById('profilePeriod').textContent=d.period;document.getElementById('profileProgress').textContent=d.progress+'%';document.getElementById('profileProgressBar').style.width=d.progress+'%';document.getElementById('profileObjectives').textContent=d.objectives;document.getElementById('profileTasks').textContent=d.tasks;document.getElementById('profileDeliverables').textContent=d.deliverables;document.getElementById('profileActivity').textContent=d.activity;document.getElementById('profileStatus').textContent=d.statuslabel;const documents=document.getElementById('profileCandidateDocuments'),source=document.getElementById('candidateDocuments-'+d.studentId);documents.replaceChildren(...[...(source?.children||[])].map(item=>item.cloneNode(true)));modal?.classList.add('open')}));
  render();
 });
 </script>

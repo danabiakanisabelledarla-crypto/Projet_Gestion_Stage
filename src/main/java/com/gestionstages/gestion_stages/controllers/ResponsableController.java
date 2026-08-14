@@ -444,6 +444,37 @@ public void ajouterDonneesCommunes(Model model, Authentication authentication) {
         return "redirect:/responsable/demandes";
     }
 
+    @GetMapping("/demandes/export")
+    public ResponseEntity<byte[]> exporterDemandesExcel() {
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\"?>")
+                .append("<?mso-application progid=\"Excel.Sheet\"?>")
+                .append("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" ")
+                .append("xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">")
+                .append("<Worksheet ss:Name=\"Demandes\"><Table>");
+        ajouterLigneExcel(xml, List.of(
+                "Candidat", "Matricule", "Email", "Établissement", "Filière",
+                "Niveau", "Période souhaitée", "Date de dépôt", "Statut"));
+        demandeStageRepository.findAll().forEach(demande -> ajouterLigneExcel(xml, List.of(
+                demande.getPrenom() + " " + demande.getNom(),
+                "DEM-" + String.format("%05d", demande.getId()),
+                demande.getEmail() == null ? "" : demande.getEmail(),
+                demande.getEcole(),
+                demande.getFiliere(),
+                demande.getNiveau(),
+                demande.getDureeSouhaitee(),
+                demande.getDateDemande() == null ? "" : demande.getDateDemande().toLocalDate().toString(),
+                demande.getStatut().name().replace('_', ' '))));
+        xml.append("</Table></Worksheet></Workbook>");
+        byte[] contenu = xml.toString().getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"demandes-" + LocalDate.now() + ".xls\"")
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentLength(contenu.length)
+                .body(contenu);
+    }
+
     @GetMapping("/demandes/attente/{id}")
     public String mettreEnAttente(@PathVariable Integer id) {
         demandeStageRepository.findById(id).ifPresent(demande -> {
@@ -680,14 +711,51 @@ public String afficherSuivi(Model model) {
 }
 
 @GetMapping("/notifications")
-public String afficherNotifications(Model model) {
-    List<Notification> notifications = notificationRepository.findAllByOrderByDateEnvoiDesc();
+public String afficherNotifications(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+    String email = userDetails.getUtilisateur().getEmail();
+    List<Notification> notifications = notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+            .filter(notification -> email.equalsIgnoreCase(notification.getDestinataireEmail())
+                    || "Tous les responsables".equalsIgnoreCase(notification.getDestinataireType())
+                    || "RESPONSABLE".equalsIgnoreCase(notification.getDestinataireType()))
+            .toList();
     model.addAttribute("activePage", "notifications");
     model.addAttribute("notifications", notifications);
-    model.addAttribute("notificationsCount", notificationRepository
-            .countByDestinataireTypeAndStatut("RESPONSABLE", "non_lue"));
-    model.addAttribute("messagesCount", notificationRepository.countByDestinataireType("RESPONSABLE"));
+    model.addAttribute("notificationsCount", notifications.stream()
+            .filter(notification -> !"lue".equalsIgnoreCase(notification.getStatut())).count());
+    model.addAttribute("messagesCount", notifications.size());
     return "responsable/notifications";
+}
+
+@GetMapping("/notifications/api")
+@ResponseBody
+public List<Map<String, Object>> notificationsApi(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    String email = userDetails.getUtilisateur().getEmail();
+    return notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+            .filter(notification -> email.equalsIgnoreCase(notification.getDestinataireEmail())
+                    || "Tous les responsables".equalsIgnoreCase(notification.getDestinataireType())
+                    || "RESPONSABLE".equalsIgnoreCase(notification.getDestinataireType()))
+            .limit(8)
+            .map(notification -> Map.<String, Object>of(
+                    "objet", notification.getObjet(),
+                    "message", notification.getMessage(),
+                    "date", notification.getDateEnvoi(),
+                    "statut", notification.getStatut()))
+            .toList();
+}
+
+@PostMapping("/notifications/lire")
+@ResponseBody
+public Map<String, Object> marquerNotificationsLues(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    String email = userDetails.getUtilisateur().getEmail();
+    List<Notification> notifications = notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+            .filter(notification -> email.equalsIgnoreCase(notification.getDestinataireEmail())
+                    || "Tous les responsables".equalsIgnoreCase(notification.getDestinataireType())
+                    || "RESPONSABLE".equalsIgnoreCase(notification.getDestinataireType()))
+            .filter(notification -> !"lue".equalsIgnoreCase(notification.getStatut()))
+            .toList();
+    notifications.forEach(notification -> notification.setStatut("lue"));
+    notificationRepository.saveAll(notifications);
+    return Map.of("success", true, "count", 0);
 }
 
        @GetMapping("/stagiaires")
@@ -736,16 +804,47 @@ public String afficherNotifications(Model model) {
         Map<Integer, Long> objectifsAtteints = new HashMap<>();
         Map<Integer, Long> tachesTerminees = new HashMap<>();
         Map<Integer, Long> livrablesDeposes = new HashMap<>();
+        Map<Integer, List<Tache>> tachesParStage = new HashMap<>();
+        Map<Integer, List<Objectif>> objectifsParStage = new HashMap<>();
+        Map<Integer, Integer> progressionParTache = new HashMap<>();
+        Map<Integer, Integer> piecesJointesParTache = new HashMap<>();
+        Map<Integer, List<Notification>> commentairesTachesParStage = new HashMap<>();
+        Map<Integer, List<Notification>> commentairesObjectifsParStage = new HashMap<>();
         stages.forEach(stage -> {
-            objectifsAtteints.put(stage.getId(), objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId()).stream()
+            List<Objectif> objectifsStage = objectifRepository.findByStageIdOrderByOrdreAsc(stage.getId());
+            List<Tache> tachesStage = tacheRepository.findByStageId(stage.getId());
+            objectifsParStage.put(stage.getId(), objectifsStage);
+            tachesParStage.put(stage.getId(), tachesStage);
+            objectifsAtteints.put(stage.getId(), objectifsStage.stream()
                     .filter(objectif -> objectif.getStatut() == Objectif.StatutObjectif.atteint).count());
-            tachesTerminees.put(stage.getId(), tacheRepository.findByStageId(stage.getId()).stream()
+            tachesTerminees.put(stage.getId(), tachesStage.stream()
                     .filter(tache -> tache.getStatut() == Tache.StatutTache.terminee).count());
             livrablesDeposes.put(stage.getId(), (long) livrableRepository.findByStageId(stage.getId()).size());
+            tachesStage.forEach(tache -> {
+                progressionParTache.put(tache.getId(), progressionTacheResponsable(tache));
+                piecesJointesParTache.put(tache.getId(), livrableRepository.findByTacheId(tache.getId()).size());
+            });
+            String email = stage.getStagiaire().getUtilisateur().getEmail();
+            List<Notification> commentaires = notificationRepository.findAllByOrderByDateEnvoiDesc().stream()
+                    .filter(notification -> email.equalsIgnoreCase(
+                            notification.getDestinataireEmail() == null ? "" : notification.getDestinataireEmail()))
+                    .toList();
+            commentairesTachesParStage.put(stage.getId(), commentaires.stream()
+                    .filter(notification -> "Nouveau commentaire sur vos tâches".equals(notification.getObjet()))
+                    .sorted(Comparator.comparing(Notification::getDateEnvoi)).toList());
+            commentairesObjectifsParStage.put(stage.getId(), commentaires.stream()
+                    .filter(notification -> "Nouveau commentaire sur vos objectifs".equals(notification.getObjet()))
+                    .sorted(Comparator.comparing(Notification::getDateEnvoi)).toList());
         });
         model.addAttribute("objectifsAtteints", objectifsAtteints);
         model.addAttribute("tachesTerminees", tachesTerminees);
         model.addAttribute("livrablesDeposes", livrablesDeposes);
+        model.addAttribute("tachesParStage", tachesParStage);
+        model.addAttribute("objectifsParStage", objectifsParStage);
+        model.addAttribute("progressionParTache", progressionParTache);
+        model.addAttribute("piecesJointesParTache", piecesJointesParTache);
+        model.addAttribute("commentairesTachesParStage", commentairesTachesParStage);
+        model.addAttribute("commentairesObjectifsParStage", commentairesObjectifsParStage);
         model.addAttribute("totalStagiaires", totalStagiaires);
         model.addAttribute("enCours", enCours);
         model.addAttribute("clotures", clotures);
@@ -819,6 +918,57 @@ public String afficherNotifications(Model model) {
         return "responsable/stagiaires";
 
     }
+
+private int progressionTacheResponsable(Tache tache) {
+    return switch (tache.getStatut()) {
+        case terminee -> 100;
+        case en_revue -> 80;
+        case en_cours -> 55;
+        case en_retard -> 15;
+        case a_faire -> 0;
+    };
+}
+
+@PostMapping("/stagiaires/{stagiaireId}/commentaires")
+@ResponseBody
+public ResponseEntity<Map<String, Object>> commenterSuiviStagiaire(
+        @PathVariable Integer stagiaireId,
+        @RequestParam String type,
+        @RequestParam String commentaire,
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+    String messageSaisi = commentaire == null ? "" : commentaire.trim();
+    if (messageSaisi.isEmpty() || (!"taches".equals(type) && !"objectifs".equals(type))) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "succes", false,
+                "message", "Le commentaire est obligatoire."));
+    }
+    Optional<Stagiaire> stagiaireOpt = stagiaireRepository.findById(stagiaireId);
+    if (stagiaireOpt.isEmpty()) {
+        return ResponseEntity.notFound().build();
+    }
+    Stagiaire stagiaire = stagiaireOpt.get();
+    boolean taches = "taches".equals(type);
+    String objet = taches
+            ? "Nouveau commentaire sur vos tâches"
+            : "Nouveau commentaire sur vos objectifs";
+    String notificationMessage = taches
+            ? "Le Responsable a ajouté un commentaire concernant vos tâches."
+            : "Le Responsable a ajouté un commentaire concernant vos objectifs.";
+    Notification notification = new Notification(
+            objet,
+            notificationMessage + "\n\nCommentaire : " + messageSaisi,
+            "STAGIAIRE",
+            "normale",
+            userDetails.getUtilisateur().getPrenom() + " " + userDetails.getUtilisateur().getNom());
+    notification.setDestinataireEmail(stagiaire.getUtilisateur().getEmail());
+    notification.setStatut("non_lue");
+    notificationRepository.save(notification);
+    return ResponseEntity.ok(Map.of(
+            "succes", true,
+            "message", "Commentaire envoyé",
+            "auteur", notification.getAuteurNom(),
+            "commentaire", messageSaisi));
+}
 
 @GetMapping("/stagiaires/export")
 public ResponseEntity<byte[]> exporterStagiairesExcel() {
@@ -928,13 +1078,29 @@ public String afficherDossiers(Model model) {
     List<Document> documents = documentRepository.findAll();
     List<Stage> stages = stageRepository.findAll();
     List<YearMonth> sixMois = sixDerniersMois();
-    Map<Integer, Long> documentsParStage = stages.stream().collect(Collectors.toMap(
-            Stage::getId, stage -> (long) documentRepository.findByStageId(stage.getId()).size()));
+    Map<Integer, List<Document>> listeDocumentsParStage = new HashMap<>();
+    stages.forEach(stage -> {
+        List<Document> dossier = new ArrayList<>(documentRepository.findByStageId(stage.getId()));
+        if (stage.getStagiaire() != null && stage.getStagiaire().getDemandeStage() != null) {
+            documentRepository.findByDemandeStageId(stage.getStagiaire().getDemandeStage().getId())
+                    .stream()
+                    .filter(document -> dossier.stream().noneMatch(existant -> existant.getId().equals(document.getId())))
+                    .forEach(dossier::add);
+        }
+        dossier.sort(Comparator.comparing(Document::getDateDepot).reversed());
+        listeDocumentsParStage.put(stage.getId(), dossier);
+    });
+    Map<Integer, Long> documentsParStage = listeDocumentsParStage.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, entry -> (long) entry.getValue().size()));
     long complets = documentsParStage.values().stream().filter(total -> total >= 5).count();
     model.addAttribute("activePage", "dossiers");
     model.addAttribute("documents", documents);
     model.addAttribute("stages", stages);
     model.addAttribute("documentsParStage", documentsParStage);
+    model.addAttribute("listeDocumentsParStage", listeDocumentsParStage);
+    model.addAttribute("documentsResponsable", documents.stream()
+            .filter(document -> document.getStage() == null && document.getDemandeStage() == null)
+            .sorted(Comparator.comparing(Document::getDateDepot).reversed()).toList());
     model.addAttribute("dossiersTotaux", stages.size());
     model.addAttribute("dossiersComplets", complets);
     model.addAttribute("dossiersIncomplets", Math.max(0, stages.size() - complets));
@@ -952,13 +1118,26 @@ public String afficherDossiers(Model model) {
 }
 
 @PostMapping("/dossiers/importer")
-public String importerDocumentExterne(@RequestParam Integer stageId,
+public String importerDocumentExterne(@RequestParam String cibleSelection,
+                                      @RequestParam(required = false) Integer stageId,
                                       @RequestParam String typeDocument,
                                       @RequestParam MultipartFile fichier,
                                       RedirectAttributes redirectAttributes) {
-    Optional<Stage> stageOpt = stageRepository.findById(stageId);
-    if (stageOpt.isEmpty()) {
-        redirectAttributes.addFlashAttribute("erreur", "Le dossier sélectionné est introuvable.");
+    List<Stage> stagesCibles;
+    if ("tous".equals(cibleSelection)) {
+        stagesCibles = stageRepository.findAll();
+    } else if ("responsable".equals(cibleSelection)) {
+        stagesCibles = List.of();
+    } else {
+        Optional<Stage> stageOpt = stageId == null ? Optional.empty() : stageRepository.findById(stageId);
+        if (stageOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Le dossier sélectionné est introuvable.");
+            return "redirect:/responsable/dossiers";
+        }
+        stagesCibles = List.of(stageOpt.get());
+    }
+    if ("tous".equals(cibleSelection) && stagesCibles.isEmpty()) {
+        redirectAttributes.addFlashAttribute("erreur", "Aucun stagiaire ne peut recevoir ce document.");
         return "redirect:/responsable/dossiers";
     }
     if (fichier == null || fichier.isEmpty()) {
@@ -970,16 +1149,22 @@ public String importerDocumentExterne(@RequestParam Integer stageId,
         Files.createDirectories(dossier);
         String original = Paths.get(fichier.getOriginalFilename() == null
                 ? "document" : fichier.getOriginalFilename()).getFileName().toString();
-        Path cible = dossier.resolve(UUID.randomUUID() + "_" + original).normalize();
-        if (!cible.startsWith(dossier)) throw new IllegalArgumentException("Chemin de fichier invalide.");
-        Files.copy(fichier.getInputStream(), cible, StandardCopyOption.REPLACE_EXISTING);
+        Path cheminCible = dossier.resolve(UUID.randomUUID() + "_" + original).normalize();
+        if (!cheminCible.startsWith(dossier)) throw new IllegalArgumentException("Chemin de fichier invalide.");
+        Files.copy(fichier.getInputStream(), cheminCible, StandardCopyOption.REPLACE_EXISTING);
 
-        Document document = new Document(original, typeDocument.trim(), cible.toString());
-        document.setStage(stageOpt.get());
-        document.setTailleOctets(fichier.getSize());
-        document.setStatut("disponible");
-        documentRepository.save(document);
-        redirectAttributes.addFlashAttribute("succes", "Le document externe a été importé.");
+        if ("responsable".equals(cibleSelection)) {
+            documentRepository.save(creerDocumentResponsable(
+                    original, typeDocument, cheminCible, fichier.getSize(), null));
+        } else {
+            for (Stage stage : stagesCibles) {
+                documentRepository.save(creerDocumentResponsable(
+                        original, typeDocument, cheminCible, fichier.getSize(), stage));
+            }
+        }
+        redirectAttributes.addFlashAttribute("succes", "Le document a été ajouté à "
+                + ("tous".equals(cibleSelection) ? "tous les dossiers stagiaires."
+                : ("responsable".equals(cibleSelection) ? "l’espace du Responsable." : "ce dossier stagiaire.")));
     } catch (Exception exception) {
         redirectAttributes.addFlashAttribute("erreur",
                 "L'import du document a échoué : " + exception.getMessage());
@@ -987,12 +1172,22 @@ public String importerDocumentExterne(@RequestParam Integer stageId,
     return "redirect:/responsable/dossiers";
 }
 
+private Document creerDocumentResponsable(String original, String typeDocument, Path chemin,
+                                           long taille, Stage stage) {
+    Document document = new Document(original, typeDocument.trim(), chemin.toString());
+    document.setStage(stage);
+    document.setTailleOctets(taille);
+    document.setStatut("disponible");
+    document.setDescriptionModifications("[RESPONSABLE] Document ajouté par le Responsable.");
+    return document;
+}
+
 @GetMapping("/dossiers/documents/{id}")
 public String consulterDocumentDossier(@PathVariable Integer id,
                                        Model model,
                                        RedirectAttributes redirectAttributes) {
     Optional<Document> document = documentRepository.findById(id);
-    if (document.isEmpty() || document.get().getStage() == null) {
+    if (document.isEmpty()) {
         redirectAttributes.addFlashAttribute("erreur", "Le document demandé est introuvable.");
         return "redirect:/responsable/dossiers";
     }

@@ -245,6 +245,7 @@
     function initializeDocumentFilters() {
         const fill = (id, values) => {
             const select = document.getElementById(id);
+            if (!select) return;
             [...new Set(values.filter(Boolean))].sort().forEach(value => {
                 const option = document.createElement('option');
                 option.value = value;
@@ -422,7 +423,7 @@
     function filterTable() {
         const q = document.getElementById('searchDoc').value.toLowerCase();
         const owner = document.getElementById('filterOwner').value;
-        const version = document.getElementById('filterVersion').value;
+        const version = document.getElementById('filterVersion')?.value || '';
         const status = document.getElementById('filterStatus').value;
         const filtered = ownerGroups.map(group => ({
             ...group,

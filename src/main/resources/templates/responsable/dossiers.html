@@ -1,35 +1,138 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dossiers - Responsable</title><link rel="stylesheet" th:href="@{/css/admin-layout.css}"><link rel="stylesheet" th:href="@{/css/responsable-premium.css}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
-<body><div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div><main class="contenu-principal responsable-main"><div th:replace="~{fragments/header-responsable :: header}"></div><div class="rp-page">
-<header class="rp-heading"><div class="rp-heading-main"><div class="rp-heading-icon"><i class="fa-regular fa-folder-open"></i></div><div><div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Dossiers</div><h1>Gestion des dossiers</h1><p>Consultez, vérifiez, organisez et archivez les dossiers des stagiaires.</p></div></div><button id="openDocumentImport" class="rp-secondary" type="button"><i class="fa-solid fa-file-arrow-up"></i>Importer un document</button></header>
-<div class="rp-flash" th:if="${succes}" th:text="${succes}"></div><div class="rp-flash" th:if="${erreur}" th:text="${erreur}" style="background:#fee2e2;color:#991b1b"></div>
-<section class="rp-kpis">
-<article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-folder-tree"></i></div><div class="rp-kpi-value" th:text="${dossiersTotaux}">0</div><div class="rp-kpi-label">Dossiers totaux</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-folder-closed"></i></div><div class="rp-kpi-value" th:text="${dossiersComplets}">0</div><div class="rp-kpi-label">Dossiers complets</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-orange"><i class="fa-solid fa-file-circle-xmark"></i></div><div class="rp-kpi-value" th:text="${dossiersIncomplets}">0</div><div class="rp-kpi-label">Documents manquants</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-regular fa-hourglass-half"></i></div><div class="rp-kpi-value" th:text="${documentsEnAttente}">0</div><div class="rp-kpi-label">En validation</div></article><article class="rp-kpi"><div class="rp-kpi-icon rp-violet"><i class="fa-solid fa-box-archive"></i></div><div class="rp-kpi-value" th:text="${dossiersArchives}">0</div><div class="rp-kpi-label">Archivés</div></article>
-</section>
-<section>
-<article class="rp-card"><div class="rp-card-head"><div><h2>Liste des dossiers</h2><p>État des pièces obligatoires par stagiaire</p></div><span class="rp-badge blue" th:text="${dossiersTotaux+' dossier(s)'}">0 dossier</span></div><div class="rp-filters rp-filter-toolbar"><input id="folderSearch" class="rp-input" placeholder="Rechercher un stagiaire"><div class="rp-filter-menu"><button id="folderFilterToggle" class="rp-secondary" type="button" aria-expanded="false"><i class="fa-solid fa-sliders"></i>Filtres</button><div class="rp-filter-panel" id="folderFilterPanel" hidden><label>Service<select id="folderService" class="rp-select"><option value="">Tous les services</option><option th:each="s:${stages}" th:value="${s.service.nom}" th:text="${s.service.nom}"></option></select></label><label>Encadreur<select id="folderCoach" class="rp-select"><option value="">Tous les encadreurs</option><option th:each="s:${stages}" th:value="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}" th:text="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}"></option></select></label><label>Statut<select id="folderStatus" class="rp-select"><option value="">Tous les statuts</option><option value="complet">Complet</option><option value="incomplet">Incomplet</option><option value="archive">Archivé</option></select></label><button id="resetFolderFilters" class="rp-filter-reset" type="button">Réinitialiser</button></div></div></div>
-<div class="rp-table-wrap"><table class="rp-table"><thead><tr><th>Stagiaire</th><th>Service</th><th>Encadreur</th><th>Documents obligatoires</th><th>Dernier dépôt</th><th>Statut</th><th>Actions</th></tr></thead><tbody><tr class="folder-row" th:each="s:${stages}" th:with="count=${documentsParStage[s.id]}, state=${count >= 5 ? 'complet' : 'incomplet'}" th:data-search="${#strings.toLowerCase(s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom)}" th:data-service="${s.service.nom}" th:data-coach="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}" th:data-status="${state}" th:data-name="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom}" th:data-subject="${s.projet != null ? s.projet.titre : 'Sujet à définir'}" th:data-count="${count}" th:data-stage-id="${s.id}">
-<td><div class="rp-person"><div class="rp-avatar" th:text="${#strings.substring(s.stagiaire.utilisateur.prenom,0,1)+#strings.substring(s.stagiaire.utilisateur.nom,0,1)}">JD</div><div><strong th:text="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom}">Nom</strong><span th:text="${s.stagiaire.matricule}">Matricule</span></div></div></td><td th:text="${s.service.nom}">Service</td><td th:text="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}">Encadreur</td><td><div class="rp-folder-dropdown"><button class="rp-secondary folder-doc-toggle" type="button" aria-expanded="false"><i class="fa-regular fa-folder-open"></i> Dossiers</button><div class="rp-folder-menu" hidden><div class="rp-folder-menu-item" th:each="d:${documents}" th:if="${d.stage != null and d.stage.id == s.id}"><span><strong th:text="${d.typeDocument}">Document</strong><small th:text="${d.nomFichier}">fichier.pdf</small></span><span class="rp-actions"><a class="rp-icon-btn" target="_blank" title="Prévisualiser" th:href="@{/documents/{id}/preview(id=${d.id})}"><i class="fa-regular fa-eye"></i></a><a class="rp-icon-btn" title="Télécharger" th:href="@{/documents/{id}(id=${d.id})}"><i class="fa-solid fa-download"></i></a></span></div><div class="rp-empty" th:if="${count == 0}">Aucun document.</div></div></div></td><td th:text="${count > 0 ? 'Dépôt disponible' : 'Aucun dépôt'}">Dépôt</td><td><span class="rp-badge" th:classappend="${state=='complet'?' green':' orange'}" th:text="${#strings.capitalize(state)}">Incomplet</span></td><td><button class="rp-secondary show-folder" type="button"><i class="fa-regular fa-eye"></i> Voir détails</button></td></tr></tbody></table><div class="rp-empty" th:if="${#lists.isEmpty(stages)}">Aucun dossier disponible.</div></div><div class="rp-pagination"><span th:text="${dossiersTotaux+' résultat(s)'}">0 résultat</span><div class="rp-pages"><button>‹</button><button class="active">1</button><button>›</button></div></div></article>
-</section>
-<section class="rp-grid-50"><article class="rp-card"><div class="rp-card-head"><div><h2>Évolution des dépôts de documents</h2><p>Six derniers mois, données réelles</p></div></div><div class="rp-chart"><canvas id="documentsLine" th:data-labels="${dossiersMoisLabelsJson}" th:data-values="${documentsMoisJson}"></canvas></div></article><article class="rp-card"><div class="rp-card-head"><div><h2>Répartition des dossiers</h2><p>Complets, incomplets, en validation et archivés</p></div></div><div class="rp-chart"><canvas id="foldersDonut" th:data-complete="${dossiersComplets}" th:data-incomplete="${dossiersIncomplets}" th:data-archived="${dossiersArchives}" th:data-waiting="${documentsEnAttente}"></canvas></div></article></section>
-<article class="rp-card"><div class="rp-card-head"><div><h2>Activités récentes</h2><p>Historique documentaire</p></div></div><div class="rp-timeline"><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Documents synchronisés</strong><span>Les dossiers affichent les dépôts enregistrés dans la base</span></div><div class="rp-timeline-item"><i class="rp-timeline-dot"></i><strong>Statuts actualisés</strong><span>Les validations sont visibles dans les détails des dossiers</span></div></div></article>
-</div></main>
-<div class="rp-modal" id="folderModal"><div class="rp-modal-panel"><div class="rp-modal-head"><div><h2 id="folderName">Détails du dossier</h2><p id="folderMeta" style="margin:4px 0 0;color:#64748b;font-size:12px"></p></div><button type="button" class="rp-icon-btn close-folder" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button></div><div class="rp-data"><div class="rp-data-row"><span>Sujet du stage</span><strong id="folderSubject">—</strong></div><div class="rp-data-row"><span>Documents présents</span><strong id="folderCount">0/7</strong></div></div><div id="folderDocuments"></div></div></div>
-<div class="rp-modal" id="documentImportModal"><form class="rp-modal-panel" method="post" enctype="multipart/form-data" th:action="@{/responsable/dossiers/importer}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><div class="rp-modal-head"><div><h2>Importer un document externe</h2><p>Ajoutez le document au dossier du stagiaire concerné.</p></div><button type="button" class="rp-icon-btn close-import" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button></div><div class="rp-form-grid"><div class="rp-field full"><label>Dossier du stagiaire</label><select class="rp-select" name="stageId" required><option value="">Sélectionner un stagiaire</option><option th:each="s:${stages}" th:value="${s.id}" th:text="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom+' - '+s.stagiaire.matricule}"></option></select></div><div class="rp-field full"><label>Type de document</label><select class="rp-select" name="typeDocument" required><option value="">Sélectionner</option><option>Rapport hebdomadaire</option><option>Rapport final</option><option>Fiche de notes</option><option>Attestation de stage</option><option>Document administratif</option><option>Autre</option></select></div><div class="rp-field full"><label>Fichier</label><input class="rp-input" type="file" name="fichier" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required></div></div><div class="rp-modal-actions"><button class="rp-secondary close-import" type="button">Annuler</button><button class="rp-primary" type="submit"><i class="fa-solid fa-file-arrow-up"></i>Importer</button></div></form></div>
-<div hidden><div class="folder-documents" th:each="s:${stages}" th:data-stage-id="${s.id}"><div class="rp-data"><div class="rp-data-row" th:each="d:${documents}" th:if="${d.stage != null and d.stage.id == s.id}"><span><i class="fa-regular fa-file-lines"></i> <b th:text="${d.typeDocument}">Document</b><br><small th:text="${d.nomFichier}">fichier.pdf</small></span><strong><a class="rp-secondary" th:href="@{/responsable/dossiers/documents/{id}(id=${d.id})}"><i class="fa-regular fa-eye"></i> Consulter</a></strong></div><div class="rp-empty" th:if="${documentsParStage[s.id] == 0}">Aucun document déposé pour ce dossier.</div></div></div></div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Dossiers - Responsable</title>
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-premium.css}">
+    <link rel="stylesheet" th:href="@{/css/responsable-dossiers.css(v=5)}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+<main class="contenu-principal responsable-main">
+    <div th:replace="~{fragments/header-responsable :: header}"></div>
+    <div class="rp-page">
+        <header class="rp-heading">
+            <div class="rp-heading-main"><div class="rp-heading-icon"><i class="fa-regular fa-folder-open"></i></div><div><div class="rp-breadcrumb">Accueil &gt; Responsable &gt; Dossiers</div><h1>Gestion des documents</h1><p>Consultez les documents des stagiaires, des encadreurs et du Responsable.</p></div></div>
+            <button id="openDocumentImport" class="rp-primary" type="button"><i class="fa-solid fa-file-circle-plus"></i> Ajouter un document</button>
+        </header>
+        <div class="rp-flash" th:if="${succes}" th:text="${succes}"></div>
+        <div class="rp-flash rp-error" th:if="${erreur}" th:text="${erreur}"></div>
+
+        <section class="rp-kpis">
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-blue"><i class="fa-solid fa-folder-tree"></i></div><div class="rp-kpi-value" th:text="${dossiersTotaux}">0</div><div class="rp-kpi-label">Dossiers stagiaires</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-green"><i class="fa-solid fa-folder-closed"></i></div><div class="rp-kpi-value" th:text="${dossiersComplets}">0</div><div class="rp-kpi-label">Dossiers complets</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-orange"><i class="fa-solid fa-file-circle-xmark"></i></div><div class="rp-kpi-value" th:text="${dossiersIncomplets}">0</div><div class="rp-kpi-label">Dossiers incomplets</div></article>
+            <article class="rp-kpi"><div class="rp-kpi-icon rp-cyan"><i class="fa-regular fa-hourglass-half"></i></div><div class="rp-kpi-value" th:text="${documentsEnAttente}">0</div><div class="rp-kpi-label">En validation</div></article>
+        </section>
+
+        <article class="rp-card">
+            <div class="rp-card-head"><div><h2>Dossiers des stagiaires</h2><p>Documents de candidature et documents déposés pendant le stage</p></div><span class="rp-badge blue" id="folderDynamicCount">0 dossier</span></div>
+            <div class="rp-filters rp-filter-toolbar">
+                <input id="folderSearch" class="rp-input" placeholder="Rechercher un stagiaire, matricule ou document">
+                <div class="rp-filter-menu">
+                    <button id="folderFilterToggle" class="rp-secondary" type="button" aria-expanded="false"><i class="fa-solid fa-sliders"></i> Filtres</button>
+                    <div class="rp-filter-panel" id="folderFilterPanel" hidden>
+                        <label>Service<select id="folderService" class="rp-select"><option value="">Tous les services</option><option th:each="s:${stages}" th:value="${s.service.nom}" th:text="${s.service.nom}"></option></select></label>
+                        <label>Encadreur<select id="folderCoach" class="rp-select"><option value="">Tous les encadreurs</option><option th:each="s:${stages}" th:value="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}" th:text="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}"></option></select></label>
+                        <button id="resetFolderFilters" class="rp-filter-reset" type="button">Réinitialiser</button>
+                    </div>
+                </div>
+            </div>
+            <div class="rp-table-wrap">
+                <table class="rp-table rp-folder-table">
+                    <thead><tr><th>Stagiaire</th><th>Service</th><th>Encadreur</th><th>Candidature</th><th>Stage</th><th>Total</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    <tr class="folder-row" th:each="s:${stages}"
+                        th:with="docs=${listeDocumentsParStage[s.id]}, candidature=${docs.?[demandeStage != null].size()}, stageDocs=${docs.?[stage != null].size()}"
+                        th:data-search="${#strings.toLowerCase(s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom+' '+s.stagiaire.matricule+' '+#strings.listJoin(docs.![nomFichier],' '))}"
+                        th:data-service="${s.service.nom}" th:data-coach="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}"
+                        th:data-name="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom}"
+                        th:data-meta="${s.stagiaire.matricule+' · '+s.service.nom+' · '+s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}"
+                        th:data-stage-id="${s.id}">
+                        <td><div class="rp-person"><div class="rp-avatar" th:text="${#strings.substring(s.stagiaire.utilisateur.prenom,0,1)+#strings.substring(s.stagiaire.utilisateur.nom,0,1)}">JD</div><div><strong th:text="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom}">Nom</strong><span th:text="${s.stagiaire.matricule}">Matricule</span></div></div></td>
+                        <td th:text="${s.service.nom}">Service</td>
+                        <td th:text="${s.encadreur.utilisateur.prenom+' '+s.encadreur.utilisateur.nom}">Encadreur</td>
+                        <td><span class="rp-badge blue" th:text="${candidature+' document(s)'}">0</span></td>
+                        <td><span class="rp-badge green" th:text="${stageDocs+' document(s)'}">0</span></td>
+                        <td><strong th:text="${docs.size()}">0</strong></td>
+                        <td><button class="rp-secondary show-folder" type="button"><i class="fa-regular fa-eye"></i> Consulter</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="rp-empty" id="folderEmpty" hidden>Aucun dossier ne correspond aux critères.</div>
+            </div>
+            <div class="rp-pagination"><span id="folderResultCount">0 résultat</span><div class="rp-pages" id="folderPages"></div></div>
+        </article>
+
+        <article class="rp-card rp-responsable-documents">
+            <div class="rp-card-head"><div><h2>Documents du Responsable</h2><p>Documents ajoutés à l’espace documentaire du Responsable</p></div><span class="rp-badge violet" th:text="${documentsResponsable.size()+' document(s)'}">0 document</span></div>
+            <div class="rp-document-grid">
+                <article class="rp-document-tile" th:each="document:${documentsResponsable}">
+                    <i class="fa-regular fa-file-lines"></i><div><strong th:text="${document.typeDocument}">Document</strong><span th:text="${document.nomFichier}">fichier.pdf</span><small th:text="${#temporals.format(document.dateDepot,'dd/MM/yyyy HH:mm')}">Date</small></div>
+                    <div class="rp-actions"><a class="rp-icon-btn" target="_blank" th:href="@{/documents/{id}/preview(id=${document.id})}" title="Prévisualiser"><i class="fa-regular fa-eye"></i></a><a class="rp-icon-btn" th:href="@{/documents/{id}(id=${document.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a></div>
+                </article>
+                <div class="rp-empty" th:if="${#lists.isEmpty(documentsResponsable)}">Aucun document propre au Responsable.</div>
+            </div>
+        </article>
+    </div>
+</main>
+
+<div class="rp-modal" id="folderModal" aria-hidden="true">
+    <div class="rp-modal-panel rp-modal-wide"><div class="rp-modal-head"><div><h2 id="folderName">Détails du dossier</h2><p id="folderMeta"></p></div><button type="button" class="rp-icon-btn" data-close-modal="folderModal"><i class="fa-solid fa-xmark"></i></button></div><div id="folderDocuments"></div><div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="folderModal">Fermer</button></div></div>
+</div>
+
+<div class="rp-modal" id="documentImportModal" aria-hidden="true">
+    <form class="rp-modal-panel" method="post" enctype="multipart/form-data" th:action="@{/responsable/dossiers/importer}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="rp-modal-head"><div><h2>Ajouter un document</h2><p>Choisissez le ou les destinataires du document.</p></div><button type="button" class="rp-icon-btn" data-close-modal="documentImportModal"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="rp-form-grid">
+            <div class="rp-field full"><label>Destination</label><select class="rp-select" name="cibleSelection" id="documentTarget" required><option value="stagiaire">Un stagiaire</option><option value="tous">Tous les stagiaires</option><option value="responsable">Responsable</option></select></div>
+            <div class="rp-field full" id="stageTargetField"><label>Stagiaire</label><select class="rp-select" name="stageId" id="stageTarget"><option value="">Sélectionner un stagiaire</option><option th:each="s:${stages}" th:value="${s.id}" th:text="${s.stagiaire.utilisateur.prenom+' '+s.stagiaire.utilisateur.nom+' - '+s.stagiaire.matricule}"></option></select></div>
+            <div class="rp-field full"><label>Type de document</label><select class="rp-select" name="typeDocument" required><option value="">Sélectionner</option><option>Rapport hebdomadaire</option><option>Rapport final</option><option>Fiche de notes</option><option>Attestation de stage</option><option>Document administratif</option><option>Autre</option></select></div>
+            <div class="rp-field full"><label>Fichier</label><input class="rp-input" type="file" name="fichier" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required></div>
+        </div>
+        <div class="rp-modal-actions"><button class="rp-secondary" type="button" data-close-modal="documentImportModal">Annuler</button><button class="rp-primary" type="submit"><i class="fa-solid fa-file-arrow-up"></i> Ajouter</button></div>
+    </form>
+</div>
+
+<div hidden>
+    <section class="folder-documents" th:each="s:${stages}" th:data-stage-id="${s.id}">
+        <div class="rp-document-list">
+            <article th:each="d:${listeDocumentsParStage[s.id]}">
+                <span class="rp-document-icon"><i class="fa-regular fa-file-lines"></i></span>
+                <div><strong th:text="${d.typeDocument}">Document</strong><span th:text="${d.nomFichier}">fichier.pdf</span><small><b th:text="${d.demandeStage != null ? 'Candidature' : (#strings.startsWith(d.descriptionModifications ?: '','[RESPONSABLE]') ? 'Responsable' : 'Stage / Encadreur')}">Origine</b> · <span th:text="${#temporals.format(d.dateDepot,'dd/MM/yyyy HH:mm')}">Date</span></small></div>
+                <div class="rp-actions"><a class="rp-icon-btn" target="_blank" th:href="@{/documents/{id}/preview(id=${d.id})}" title="Prévisualiser"><i class="fa-regular fa-eye"></i></a><a class="rp-icon-btn" th:href="@{/documents/{id}(id=${d.id})}" title="Télécharger"><i class="fa-solid fa-download"></i></a></div>
+            </article>
+            <div class="rp-empty" th:if="${#lists.isEmpty(listeDocumentsParStage[s.id])}">Aucun document dans ce dossier.</div>
+        </div>
+    </section>
+</div>
+
 <script>
-const rows=[...document.querySelectorAll('.folder-row')],search=document.getElementById('folderSearch'),service=document.getElementById('folderService'),coach=document.getElementById('folderCoach'),status=document.getElementById('folderStatus'),folderModal=document.getElementById('folderModal'),filterToggle=document.getElementById('folderFilterToggle'),filterPanel=document.getElementById('folderFilterPanel'),importModal=document.getElementById('documentImportModal');
-function filter(){rows.forEach(r=>r.hidden=!((!search.value||r.dataset.search.includes(search.value.toLowerCase()))&&(!service.value||r.dataset.service===service.value)&&(!coach.value||r.dataset.coach===coach.value)&&(!status.value||r.dataset.status===status.value)))}
-[search,service,coach,status].filter(Boolean).forEach(x=>x.addEventListener(x.tagName==='INPUT'?'input':'change',filter));
-filterToggle.addEventListener('click',()=>{filterPanel.hidden=!filterPanel.hidden;filterToggle.setAttribute('aria-expanded',String(!filterPanel.hidden))});
-document.getElementById('resetFolderFilters').addEventListener('click',()=>{service.value='';coach.value='';status.value='';filter()});
-document.addEventListener('click',event=>{if(!filterPanel.hidden&&!event.target.closest('.rp-filter-menu')){filterPanel.hidden=true;filterToggle.setAttribute('aria-expanded','false')}});
-rows.forEach(r=>r.querySelector('.show-folder').onclick=()=>{document.getElementById('folderName').textContent=r.dataset.name;document.getElementById('folderMeta').textContent=r.dataset.service+' · '+r.dataset.coach;document.getElementById('folderSubject').textContent=r.dataset.subject;document.getElementById('folderCount').textContent=r.dataset.count+'/7';const source=document.querySelector(`.folder-documents[data-stage-id="${r.dataset.stageId}"]`);document.getElementById('folderDocuments').replaceChildren(source?source.cloneNode(true):document.createTextNode('Aucun document.'));folderModal.classList.add('open')});document.querySelectorAll('.close-folder').forEach(x=>x.onclick=()=>folderModal.classList.remove('open'));folderModal.onclick=e=>{if(e.target===folderModal)folderModal.classList.remove('open')};
-document.getElementById('openDocumentImport').addEventListener('click',()=>importModal.classList.add('open'));document.querySelectorAll('.close-import').forEach(x=>x.addEventListener('click',()=>importModal.classList.remove('open')));importModal.addEventListener('click',event=>{if(event.target===importModal)importModal.classList.remove('open')});
-const documentsLine=document.getElementById('documentsLine'),foldersDonut=document.getElementById('foldersDonut');
-document.querySelectorAll('.folder-doc-toggle').forEach(button=>button.addEventListener('click',event=>{event.stopPropagation();const menu=button.nextElementSibling;document.querySelectorAll('.rp-folder-menu').forEach(other=>{if(other!==menu)other.hidden=true});menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden))}));
-document.addEventListener('click',event=>{if(!event.target.closest('.rp-folder-dropdown'))document.querySelectorAll('.rp-folder-menu').forEach(menu=>menu.hidden=true)});
-new Chart(documentsLine,{type:'line',data:{labels:JSON.parse(documentsLine.dataset.labels),datasets:[{label:'Dépôts',data:JSON.parse(documentsLine.dataset.values),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}});
-new Chart(foldersDonut,{type:'doughnut',data:{labels:['Complets','Incomplets','En validation','Archivés'],datasets:[{data:[Number(foldersDonut.dataset.complete),Number(foldersDonut.dataset.incomplete),Number(foldersDonut.dataset.waiting),Number(foldersDonut.dataset.archived)],backgroundColor:['#22c55e','#f59e0b','#2563eb','#8b5cf6'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'}}}});
-</script></body></html>
+(() => {
+    const rows=[...document.querySelectorAll('.folder-row')], search=document.getElementById('folderSearch'), service=document.getElementById('folderService'), coach=document.getElementById('folderCoach');
+    const filterToggle=document.getElementById('folderFilterToggle'), filterPanel=document.getElementById('folderFilterPanel'), pages=document.getElementById('folderPages');
+    const resultCount=document.getElementById('folderResultCount'), dynamicCount=document.getElementById('folderDynamicCount'), pageSize=7;
+    let filteredRows=rows, currentPage=1;
+    const openModal=modal=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false')}, closeModal=modal=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+    document.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',()=>closeModal(document.getElementById(button.dataset.closeModal))));
+    document.querySelectorAll('.rp-modal').forEach(modal=>modal.addEventListener('click',event=>{if(event.target===modal)closeModal(modal)}));
+    const button=(label,page,disabled=false,active=false)=>{const value=document.createElement('button');value.type='button';value.textContent=label;value.disabled=disabled;value.classList.toggle('active',active);value.onclick=()=>{currentPage=page;render()};return value};
+    function render(){const count=filteredRows.length,pageCount=Math.max(1,Math.ceil(count/pageSize));currentPage=Math.min(currentPage,pageCount);rows.forEach(row=>row.hidden=true);filteredRows.slice((currentPage-1)*pageSize,currentPage*pageSize).forEach(row=>row.hidden=false);resultCount.textContent=`${count} résultat(s)`;dynamicCount.textContent=`${count} dossier(s)`;document.getElementById('folderEmpty').hidden=count!==0;pages.replaceChildren();pages.append(button('‹',currentPage-1,currentPage===1));for(let page=1;page<=pageCount;page++)pages.append(button(String(page),page,false,page===currentPage));pages.append(button('›',currentPage+1,currentPage===pageCount))}
+    function filter(){filteredRows=rows.filter(row=>(!search.value||row.dataset.search.includes(search.value.toLowerCase()))&&(!service.value||row.dataset.service===service.value)&&(!coach.value||row.dataset.coach===coach.value));currentPage=1;render()}
+    [search,service,coach].forEach(control=>control.addEventListener(control.tagName==='INPUT'?'input':'change',filter));
+    filterToggle.onclick=()=>{filterPanel.hidden=!filterPanel.hidden;filterToggle.setAttribute('aria-expanded',String(!filterPanel.hidden))};
+    document.getElementById('resetFolderFilters').onclick=()=>{service.value='';coach.value='';filter()};
+    document.addEventListener('click',event=>{if(!filterPanel.hidden&&!event.target.closest('.rp-filter-menu')){filterPanel.hidden=true;filterToggle.setAttribute('aria-expanded','false')}});
+    rows.forEach(row=>row.querySelector('.show-folder').onclick=()=>{document.getElementById('folderName').textContent=`Dossier de ${row.dataset.name}`;document.getElementById('folderMeta').textContent=row.dataset.meta;const source=document.querySelector(`.folder-documents[data-stage-id="${row.dataset.stageId}"]`);document.getElementById('folderDocuments').replaceChildren(source?source.cloneNode(true):document.createTextNode('Aucun document.'));openModal(document.getElementById('folderModal'))});
+    document.getElementById('openDocumentImport').onclick=()=>openModal(document.getElementById('documentImportModal'));
+    const target=document.getElementById('documentTarget'), field=document.getElementById('stageTargetField'), stage=document.getElementById('stageTarget');
+    target.onchange=()=>{const individual=target.value==='stagiaire';field.hidden=!individual;stage.required=individual;if(!individual)stage.value=''};target.dispatchEvent(new Event('change'));
+    render();
+})();
+</script>
+</body>
+</html>

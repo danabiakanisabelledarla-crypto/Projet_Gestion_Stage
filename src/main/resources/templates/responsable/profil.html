@@ -167,7 +167,7 @@
 
             <article class="rp-card">
                 <div class="rp-card-head"><div><h2>Préférences</h2><p>Personnalisez les alertes de votre espace</p></div></div>
-                <form th:action="@{/responsable/profil/preferences}" method="post">
+                <form id="preferencesForm" th:action="@{/responsable/profil/preferences}" method="post">
                     <div class="rp-preferences">
                         <label><span><i class="fa-regular fa-envelope"></i>Notifications email</span><input type="checkbox" name="notificationsEmail" value="true" th:checked="${preferences.notificationsEmail}"><i></i></label>
                         <label><span><i class="fa-regular fa-bell"></i>Notifications système</span><input type="checkbox" name="notificationsSysteme" value="true" th:checked="${preferences.notificationsSysteme}"><i></i></label>
@@ -176,7 +176,8 @@
                         <label><span><i class="fa-regular fa-file-lines"></i>Alertes de rapport</span><input type="checkbox" name="alertesRapport" value="true" th:checked="${preferences.alertesRapport}"><i></i></label>
                     </div>
                     <div class="rp-modal-actions">
-                        <button class="rp-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les préférences</button>
+                        <span id="preferencesState">Les modifications seront enregistrées sur votre compte.</span>
+                        <button class="rp-primary" id="savePreferences" type="submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les préférences</button>
                     </div>
                 </form>
             </article>
@@ -187,6 +188,18 @@
 const focusProfile=()=>document.getElementById('profileForm')?.scrollIntoView({behavior:'smooth',block:'start'});
 document.getElementById('focusProfile')?.addEventListener('click',focusProfile);
 document.getElementById('overviewEdit')?.addEventListener('click',focusProfile);
+const preferencesForm=document.getElementById('preferencesForm');
+const preferencesState=document.getElementById('preferencesState');
+preferencesForm?.querySelectorAll('input[type="checkbox"]').forEach(control=>control.addEventListener('change',()=>{
+    preferencesState.textContent='Modifications non enregistrées';
+    preferencesState.style.color='#d97706';
+    if(control.name==='modeSombre') document.body.classList.toggle('rp-dark-mode',control.checked);
+}));
+preferencesForm?.addEventListener('submit',()=>{
+    const button=document.getElementById('savePreferences');
+    button.disabled=true;
+    button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Enregistrement...';
+});
 const profileActivityChart=document.getElementById('profileActivityChart');
 if(profileActivityChart&&window.Chart){
     new Chart(profileActivityChart,{
