@@ -1099,7 +1099,7 @@ public List<Map<String, Object>> notifications(@AuthenticationPrincipal CustomUs
 public String notificationsPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     ajouterIdentite(model, userDetails, "notifications");
     model.addAttribute("notifications", notificationRepository
-            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
+            .findByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
     return "encadreur/notifications";
 }
 
