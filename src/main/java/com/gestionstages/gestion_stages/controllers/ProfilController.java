@@ -3,8 +3,15 @@ package com.gestionstages.gestion_stages.controllers;
 import com.gestionstages.gestion_stages.entities.Utilisateur;
 import com.gestionstages.gestion_stages.repositories.UtilisateurRepository;
 import com.gestionstages.gestion_stages.security.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +24,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/profil")
 public class ProfilController {
 
+    private static final java.util.regex.Pattern FORMAT_EMAIL =
+            java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]{2,}$");
+
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityContextRepository securityContextRepository =
+            new HttpSessionSecurityContextRepository();
 
     public ProfilController(UtilisateurRepository utilisateurRepository,
                             PasswordEncoder passwordEncoder) {
@@ -37,20 +49,50 @@ public class ProfilController {
 public String modifierProfil(@AuthenticationPrincipal CustomUserDetails userDetails,
                               @RequestParam String prenom,
                               @RequestParam String nom,
+                              @RequestParam String email,
                               @RequestParam(required = false) String telephone,
                               @RequestParam(required = false) String adresse,
+                              HttpServletRequest request,
+                              HttpServletResponse response,
                               Model model) {
     Utilisateur u = utilisateurRepository.findById(userDetails.getUtilisateur().getId())
             .orElseThrow();
+    String nouvelEmail = email == null ? "" : email.trim();
+    model.addAttribute("utilisateur", u);
+
+    if (!FORMAT_EMAIL.matcher(nouvelEmail).matches()) {
+        model.addAttribute("erreur", "Adresse email invalide.");
+        return "profil/index";
+    }
+    boolean emailModifie = !nouvelEmail.equalsIgnoreCase(u.getEmail());
+    if (emailModifie && utilisateurRepository.existsByEmail(nouvelEmail)) {
+        model.addAttribute("erreur", "Cette adresse email est déjà utilisée par un autre compte.");
+        return "profil/index";
+    }
+
     u.setPrenom(prenom);
     u.setNom(nom);
+    u.setEmail(nouvelEmail);
     u.setTelephone(telephone);
     u.setAdresse(adresse);
     utilisateurRepository.save(u);
-    model.addAttribute("utilisateur", u);
+    if (emailModifie) {
+        rafraichirSession(u, request, response);
+    }
     model.addAttribute("succes", "Profil mis à jour avec succès.");
     return "profil/index";
 }
+
+    private void rafraichirSession(Utilisateur utilisateur,
+                                   HttpServletRequest request,
+                                   HttpServletResponse response) {
+        CustomUserDetails principal = new CustomUserDetails(utilisateur);
+        SecurityContext contexte = SecurityContextHolder.createEmptyContext();
+        contexte.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
+                principal, principal.getPassword(), principal.getAuthorities()));
+        SecurityContextHolder.setContext(contexte);
+        securityContextRepository.saveContext(contexte, request, response);
+    }
 
     @GetMapping("/mot-de-passe")
     public String afficherMotDePasse(@AuthenticationPrincipal CustomUserDetails userDetails,

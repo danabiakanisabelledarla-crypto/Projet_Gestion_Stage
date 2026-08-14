@@ -22,6 +22,7 @@
     </div>
 
     <div th:if="${succes}" class="alert-success" th:text="${succes}"></div>
+    <div th:if="${erreur}" class="alert-erreur" th:text="${erreur}"></div>
 
     <div class="bloc-module">
         <div class="profil-header">
@@ -47,7 +48,7 @@
             </div>
             <div class="groupe-champ">
                 <label>Email</label>
-                <input type="email" th:value="${utilisateur.email}" disabled>
+                <input type="email" name="email" th:value="${utilisateur.email}" required>
             </div>
             <div class="groupe-champ">
                 <label>Téléphone</label>
