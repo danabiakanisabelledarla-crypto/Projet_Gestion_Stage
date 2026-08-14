@@ -1181,7 +1181,7 @@ public List<Map<String, Object>> notificationsApi(@AuthenticationPrincipal Custo
 public String notificationsPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
     model.addAttribute("activePage", "notifications");
     model.addAttribute("notifications", notificationRepository
-            .findTop8ByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
+            .findByDestinataireEmailOrderByDateEnvoiDesc(userDetails.getUtilisateur().getEmail()));
     return "stagiaire/notifications";
 }
 

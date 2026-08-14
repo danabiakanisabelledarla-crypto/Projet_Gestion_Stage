@@ -4,28 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Notifications - Encadreur</title>
-    <link rel="stylesheet" th:href="@{/css/workspace-header.css}">
-    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/encadreur-premium.css}">
 </head>
-<body>
+<body class="coach-portal">
 <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
 <div class="coach-main">
     <div th:replace="~{fragments/header-encadreur :: header}"></div>
     <main class="coach-page">
         <section class="coach-heading">
-            <div><span class="coach-eyebrow">Espace encadreur</span><h1>Notifications</h1>
-                <p>Consultez les dernières informations liées à vos stagiaires.</p></div>
-        </section>
-        <section class="coach-card">
-            <div th:if="${#lists.isEmpty(notifications)}" class="coach-empty">Aucune notification.</div>
-            <article th:each="notification : ${notifications}" class="coach-notification-item">
-                <i class="fa-regular fa-bell"></i>
-                <div><strong th:text="${notification.objet}">Notification</strong>
-                    <p th:text="${notification.message}">Message</p>
-                    <small th:text="${#temporals.format(notification.dateEnvoi,'dd/MM/yyyy HH:mm')}">Date</small>
+            <div class="coach-heading-main">
+                <span class="coach-heading-icon"><i class="fa-regular fa-bell"></i></span>
+                <div>
+                    <div class="coach-breadcrumb"><a th:href="@{/encadreur/dashboard}">Accueil</a> / Encadreur / Notifications</div>
+                    <h1>Notifications</h1>
+                    <p>Consultez les dernières informations liées à vos stagiaires.</p>
                 </div>
+            </div>
+        </section>
+
+        <section class="coach-kpis">
+            <article class="coach-kpi">
+                <span class="coach-kpi-icon"><i class="fa-solid fa-inbox"></i></span>
+                <strong th:text="${#lists.size(notifications)}">0</strong>
+                <span>Notifications reçues</span><small>Toutes périodes</small>
             </article>
+            <article class="coach-kpi">
+                <span class="coach-kpi-icon orange"><i class="fa-regular fa-envelope"></i></span>
+                <strong th:text="${#lists.size(notifications.?[statut != 'lue'])}">0</strong>
+                <span>Non lues</span><small>À consulter</small>
+            </article>
+            <article class="coach-kpi">
+                <span class="coach-kpi-icon red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <strong th:text="${#lists.size(notifications.?[priorite == 'haute' or priorite == 'urgente' or priorite == 'importante'])}">0</strong>
+                <span>Priorité haute</span><small>Traitement rapide</small>
+            </article>
+            <article class="coach-kpi">
+                <span class="coach-kpi-icon green"><i class="fa-solid fa-check"></i></span>
+                <strong th:text="${#lists.size(notifications.?[statut == 'lue'])}">0</strong>
+                <span>Lues</span><small>Déjà traitées</small>
+            </article>
+        </section>
+
+        <section class="coach-card">
+            <div class="coach-card-head">
+                <div>
+                    <h2>Activité récente</h2>
+                    <p>Notifications classées de la plus récente à la plus ancienne.</p>
+                </div>
+            </div>
+            <div class="coach-timeline">
+                <article class="coach-timeline-item" th:each="notification : ${notifications}">
+                    <span class="coach-timeline-icon"><i class="fa-regular fa-bell"></i></span>
+                    <div class="coach-timeline-content">
+                        <strong th:text="${notification.objet}">Notification</strong>
+                        <span th:text="${notification.message}">Message</span>
+                        <small th:text="${#temporals.format(notification.dateEnvoi,'dd/MM/yyyy HH:mm')
+                                + ' · ' + (notification.statut == 'lue' ? 'Lue' : 'Non lue')}">Date</small>
+                    </div>
+                </article>
+            </div>
+            <div th:if="${#lists.isEmpty(notifications)}" class="coach-empty">Aucune notification.</div>
         </section>
     </main>
 </div>

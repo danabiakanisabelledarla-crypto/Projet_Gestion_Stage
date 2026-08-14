@@ -996,8 +996,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
         List<String> typesAdministratifs = List.of(
                 "rapport_hebdomadaire", "rapport_final", "fiche_note", "attestation");
         model.addAttribute("documentsExportes", documentRepository.findAll().stream()
-                .filter(document -> typesAdministratifs.contains(document.getTypeDocument()))
-                .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
+                .filter(document -> document.getTypeDocument() != null
+                        && typesAdministratifs.contains(document.getTypeDocument().toLowerCase()))
+                .sorted(java.util.Comparator.comparing(Document::getDateDepot,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
                 .toList());
         return "admin/rapports";
     }
@@ -1007,8 +1009,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
         List<String> typesAdministratifs = List.of(
                 "rapport_hebdomadaire", "rapport_final", "fiche_note", "attestation");
         List<Document> documents = documentRepository.findAll().stream()
-                .filter(document -> typesAdministratifs.contains(document.getTypeDocument()))
-                .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
+                .filter(document -> document.getTypeDocument() != null
+                        && typesAdministratifs.contains(document.getTypeDocument().toLowerCase()))
+                .sorted(java.util.Comparator.comparing(Document::getDateDepot,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
                 .toList();
 
         StringBuilder csv = new StringBuilder("\uFEFF");

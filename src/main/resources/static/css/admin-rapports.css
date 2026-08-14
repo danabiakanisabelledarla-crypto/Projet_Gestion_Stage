@@ -61,7 +61,27 @@
 .rap-page-btn:hover { border-color: #2563EB; color: #2563EB; }
 .rap-page-btn.actif { background: #2563EB; color: white; border-color: #2563EB; }
 .reports-page .backup-card { display:block; padding:20px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; box-shadow:0 5px 18px rgba(15,23,42,.06); }
-.reports-page .backup-action-btn { display:inline-grid; place-items:center; text-decoration:none; }
+.reports-page .backup-card-title { font-size: 18px; font-weight: 700; color: #0f172a; display: inline-flex; align-items: center; }
+.reports-page .backup-card-actions { display: flex; gap: 10px; align-items: center; }
+.reports-page .backup-filter-select { height: 40px; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 0 14px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #475569; background: white; outline: none; transition: all 0.3s; }
+.reports-page .backup-filter-select:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.reports-page .backup-doc-cell { display: flex; align-items: center; gap: 10px; }
+.reports-page .backup-doc-name { font-weight: 600; color: #0f172a; font-size: 14px; }
+.reports-page .backup-format-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #FEF2F2; color: #DC2626; }
+.reports-page .backup-date-cell { color: #64748B; font-size: 13px; }
+.reports-page .backup-actions-cell { display: flex; gap: 6px; align-items: center; }
+.reports-page .backup-action-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: white; display: inline-grid; place-items: center; font-size: 13px; color: #64748B; cursor: pointer; text-decoration: none; transition: all 0.3s; }
+.reports-page .backup-action-btn:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+.reports-page .backup-action-btn.danger:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+.reports-page .backup-empty { text-align: center; padding: 40px 20px; color: #94A3B8; font-size: 14px; }
+.reports-page .backup-pagination { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #E2E8F0; flex-wrap: wrap; gap: 12px; }
+.reports-page .backup-pagination-info { font-size: 13px; color: #64748B; }
+.reports-page .backup-pagination-btns { display: flex; gap: 6px; align-items: center; }
+.reports-page .backup-pagination-btns span { display: flex; gap: 6px; }
+.reports-page .backup-page-btn { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid #E2E8F0; background: white; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-grid; place-items: center; transition: all 0.3s; }
+.reports-page .backup-page-btn:hover { border-color: #2563EB; color: #2563EB; }
+.reports-page .backup-page-btn.actif { background: #2563EB; color: white; border-color: #2563EB; }
+.reports-page .backup-page-btn:disabled { opacity: .5; cursor: not-allowed; }
 .report-preview-modal { position:fixed; inset:0; z-index:3000; display:none; place-items:center; padding:20px; background:rgba(15,23,42,.55); }
 .report-preview-modal.open { display:grid; }
 .report-preview-panel { width:min(1000px,95vw); height:min(820px,90vh); padding:16px; border-radius:10px; background:#fff; }
