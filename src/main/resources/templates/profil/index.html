@@ -10,10 +10,18 @@
 </head>
 <body>
 
-<div th:replace="~{fragments/sidebar-admin :: sidebar}" th:if="${utilisateur.role.libelle == 'ADMINISTRATEUR'}"></div>
-<div th:replace="~{fragments/sidebar-responsable :: sidebar}" th:if="${utilisateur.role.libelle == 'RESPONSABLE_STAGE'}"></div>
-<div th:replace="~{fragments/sidebar-encadreur :: sidebar}" th:if="${utilisateur.role.libelle == 'ENCADREUR'}"></div>
-<div th:replace="~{fragments/sidebar-stagiaire :: sidebar}" th:if="${utilisateur.role.libelle == 'STAGIAIRE'}"></div>
+<th:block th:if="${utilisateur.role.libelle == 'ADMINISTRATEUR'}">
+    <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
+</th:block>
+<th:block th:if="${utilisateur.role.libelle == 'RESPONSABLE_STAGE'}">
+    <div th:replace="~{fragments/sidebar-responsable :: sidebar}"></div>
+</th:block>
+<th:block th:if="${utilisateur.role.libelle == 'ENCADREUR'}">
+    <div th:replace="~{fragments/sidebar-encadreur :: sidebar}"></div>
+</th:block>
+<th:block th:if="${utilisateur.role.libelle == 'STAGIAIRE'}">
+    <div th:replace="~{fragments/sidebar-stagiaire :: sidebar}"></div>
+</th:block>
 
 <div class="contenu-principal">
     <div class="en-tete-page">
