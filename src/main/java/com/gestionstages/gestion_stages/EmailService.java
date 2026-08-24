@@ -3,15 +3,61 @@ package com.gestionstages.gestion_stages;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final String adresseExpediteur;
+    private final String urlPlateforme;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender,
+                        @Value("${spring.mail.username:}") String adresseExpediteur,
+                        @Value("${app.base-url:http://localhost:8080}") String urlPlateforme) {
         this.mailSender = mailSender;
+        this.adresseExpediteur = adresseExpediteur == null ? "" : adresseExpediteur.trim();
+        String url = urlPlateforme == null ? "" : urlPlateforme.trim();
+        this.urlPlateforme = (url.isBlank() ? "http://localhost:8080" : url).replaceAll("/+$", "");
+    }
+
+    private String expediteur() {
+        return adresseExpediteur.isBlank() ? "innotechlab26@gmail.com" : adresseExpediteur;
+    }
+
+    public boolean envoyerAccuseReceptionCandidature(String destinataire, String prenomNom) {
+        if (!destinataireValide(destinataire)) return false;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = creerMessageDeMarque(
+                    message,
+                    destinataire,
+                    "Nous avons bien reçu votre candidature");
+
+            String contenu = enteteEmail()
+                    + "<div style='padding:34px 36px;background:#ffffff;border:1px solid #e5e7eb;border-top:0'>"
+                    + "<h2 style='margin:0 0 20px;color:#172033;font-size:23px'>Candidature bien reçue</h2>"
+                    + "<p style='margin:0 0 14px;color:#374151;font-size:15px;line-height:1.75'>Bonjour <strong>"
+                    + echapperHtml(prenomNom) + "</strong>,</p>"
+                    + "<p style='margin:0 0 14px;color:#374151;font-size:15px;line-height:1.75'>"
+                    + "Nous avons bien reçu votre candidature à la suite de votre demande de stage. "
+                    + "Notre équipe va étudier votre dossier et vous informera de sa décision.</p>"
+                    + "<p style='margin:0;color:#374151;font-size:15px;line-height:1.75'>"
+                    + "Si vous ne recevez pas encore de réponse, vous pouvez consulter l'état de votre demande sur "
+                    + lienRouge(urlPlateforme + "/candidat/suivi", "la page de suivi de candidature") + ".</p>"
+                    + "</div>"
+                    + piedEmail();
+
+            helper.setText(contenu, true);
+            ajouterLogo(helper);
+            mailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            System.err.println(">>> Erreur envoi accusé de réception : " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean envoyerConfirmationAdmission(String destinataire,
@@ -21,20 +67,12 @@ public class EmailService {
         if (!destinataireValide(destinataire)) return false;
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessageHelper helper = creerMessageDeMarque(
+                    message,
+                    destinataire,
+                    "Votre demande de stage a été validée");
 
-            helper.setFrom("innotechlab26@gmail.com");
-            helper.setTo(destinataire);
-            helper.setSubject("Votre demande de stage a ete validee");
-
-            String contenu = "<div style='font-family: Arial, sans-serif; "
-                    + "max-width: 600px; margin: 0 auto; padding: 20px;'>"
-
-                + "<div style='background: #1a2236; padding: 25px; "
-                    + "border-radius: 10px 10px 0 0; text-align: center;'>"
-                + "<h1 style='color: white; font-size: 20px; margin: 0;'>"
-                    + "Plateforme de Gestion des Stages</h1>"
-                + "</div>"
+            String contenu = enteteEmail()
 
                 + "<div style='background: white; padding: 35px; "
                     + "border: 1px solid #e2e8f0; border-top: none;'>"
@@ -49,7 +87,7 @@ public class EmailService {
                 + "</div>"
 
                 + "<p style='color: #374151; font-size: 15px;'>Bonjour "
-                    + "<strong>" + prenomNom + "</strong>,</p>"
+                    + "<strong>" + echapperHtml(prenomNom) + "</strong>,</p>"
                 + "<p style='color: #374151; font-size: 14px; line-height: 1.7; "
                     + "margin-top: 12px;'>"
                     + "Nous avons le plaisir de vous informer que votre demande "
@@ -64,7 +102,7 @@ public class EmailService {
                 + "<span style='color: #64748b; font-size: 13px;'>Adresse email</span>"
                 + "<div style='color: #0f172a; font-weight: bold; "
                     + "font-size: 15px; margin-top: 4px;'>"
-                    + emailCompte + "</div>"
+                    + echapperHtml(emailCompte) + "</div>"
                 + "</div>"
                 + "<div>"
                 + "<span style='color: #64748b; font-size: 13px;'>Mot de passe</span>"
@@ -72,7 +110,7 @@ public class EmailService {
                     + "font-size: 15px; margin-top: 4px; "
                     + "background: #e0f2fe; padding: 8px 12px; "
                     + "border-radius: 6px; display: inline-block;'>"
-                    + motDePasse + "</div>"
+                    + echapperHtml(motDePasse) + "</div>"
                 + "</div>"
                 + "</div>"
 
@@ -81,26 +119,15 @@ public class EmailService {
                     + "Nous vous recommandons de changer votre mot de passe "
                     + "lors de votre premiere connexion.</p>"
 
-                + "<div style='margin-top: 25px; text-align: center;'>"
-                + "<a href='http://localhost:8080/login' "
-                    + "style='display: inline-block; padding: 14px 30px; "
-                    + "background: #2563eb; color: white; text-decoration: none; "
-                    + "border-radius: 8px; font-weight: bold; font-size: 15px;'>"
-                    + "Acceder a mon espace</a>"
-                + "</div>"
+                + "<p style='margin:24px 0 0;color:#374151;font-size:14px;line-height:1.7'>"
+                + "Pour vous connecter, utilisez "
+                + lienRouge(urlPlateforme + "/login", "ce lien vers la plateforme DTA Alliance") + ".</p>"
 
                 + "</div>"
-
-                + "<div style='background: #f8fafc; padding: 15px; "
-                    + "border-radius: 0 0 10px 10px; text-align: center; "
-                    + "border: 1px solid #e2e8f0; border-top: none;'>"
-                + "<p style='color: #94a3b8; font-size: 12px; margin: 0;'>"
-                    + "Plateforme de Gestion des Stages &copy; 2026</p>"
-                + "</div>"
-
-                + "</div>";
+                + piedEmail();
 
             helper.setText(contenu, true);
+            ajouterLogo(helper);
             mailSender.send(message);
             System.out.println(">>> Email envoye a : " + destinataire);
             return true;
@@ -117,29 +144,30 @@ public class EmailService {
         if (!destinataireValide(destinataire)) return false;
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessageHelper helper = creerMessageDeMarque(
+                    message,
+                    destinataire,
+                    "Réponse à votre demande de stage");
 
-            helper.setFrom("innotechlab26@gmail.com");
-            helper.setTo(destinataire);
-            helper.setSubject("Réponse à votre demande de stage");
-
-            String contenu = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>"
-                    + "<div style='background:#1a2236;padding:25px;border-radius:10px 10px 0 0;text-align:center'>"
-                    + "<h1 style='color:white;font-size:20px;margin:0'>Plateforme de Gestion des Stages</h1></div>"
+            String contenu = enteteEmail()
                     + "<div style='background:white;padding:35px;border:1px solid #e2e8f0;border-top:0'>"
                     + "<div style='background:#fef2f2;border:2px solid #fecaca;border-radius:10px;padding:20px;text-align:center;margin-bottom:25px'>"
                     + "<h2 style='color:#dc2626;font-size:21px;margin:0 0 8px'>RÉPONSE À VOTRE DEMANDE DE STAGE</h2>"
                     + "<p style='color:#b91c1c;margin:0'>Votre demande n'a pas été retenue</p></div>"
-                    + "<p style='color:#374151;font-size:15px'>Bonjour <strong>" + prenomNom + "</strong>,</p>"
+                    + "<p style='color:#374151;font-size:15px'>Bonjour <strong>" + echapperHtml(prenomNom) + "</strong>,</p>"
                     + "<p style='color:#374151;font-size:14px;line-height:1.7'>Après étude de votre dossier, nous sommes au regret de vous informer que votre demande de stage ne peut pas être acceptée.</p>"
                     + "<div style='background:#f8fafc;border-left:4px solid #ef4444;border-radius:8px;padding:18px;margin:22px 0'>"
                     + "<div style='color:#64748b;font-size:12px;font-weight:bold;text-transform:uppercase;margin-bottom:7px'>Motif</div>"
-                    + "<div style='color:#1f2937;font-size:14px;line-height:1.6'>" + motifRefus + "</div></div>"
+                    + "<div style='color:#1f2937;font-size:14px;line-height:1.6'>" + echapperHtml(motifRefus) + "</div></div>"
                     + "<p style='color:#374151;font-size:14px;line-height:1.7'>Nous vous remercions pour l'intérêt porté à notre structure et vous souhaitons une bonne continuation.</p>"
-                    + "</div><div style='background:#f8fafc;padding:15px;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 10px 10px;text-align:center'>"
-                    + "<p style='color:#94a3b8;font-size:12px;margin:0'>Plateforme de Gestion des Stages &copy; 2026</p></div></div>";
+                    + "<p style='margin:24px 0 0;color:#374151;font-size:14px;line-height:1.7'>"
+                    + "Vous pouvez revenir sur "
+                    + lienRouge(urlPlateforme + "/login", "la plateforme DTA Alliance") + ".</p>"
+                    + "</div>"
+                    + piedEmail();
 
             helper.setText(contenu, true);
+            ajouterLogo(helper);
             mailSender.send(message);
             System.out.println(">>> Email de refus envoyé à : " + destinataire);
             return true;
@@ -158,7 +186,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("innotechlab26@gmail.com");
+            helper.setFrom(expediteur());
             helper.setTo(destinataire);
             helper.setSubject("Mise à jour de votre rôle sur Gestion des Stages");
 
@@ -201,7 +229,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("innotechlab26@gmail.com");
+            helper.setFrom(expediteur());
             helper.setTo(destinataire);
             helper.setSubject(acceptee
                     ? "Votre demande de stage a été acceptée"
@@ -240,7 +268,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("innotechlab26@gmail.com");
+            helper.setFrom(expediteur());
             helper.setTo(destinataire);
             helper.setSubject("Réinitialisation de votre mot de passe DTA Alliance");
             String contenu = "<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:20px'>"
@@ -270,7 +298,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("innotechlab26@gmail.com");
+            helper.setFrom(expediteur());
             helper.setTo(destinataire);
             helper.setSubject(bloque
                     ? "Blocage de votre compte DTA Alliance"
@@ -297,6 +325,63 @@ public class EmailService {
             System.err.println(">>> Erreur envoi email de statut du compte : " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean envoyerNotificationSimple(String destinataire, String sujet, String messageTexte) {
+        if (!destinataireValide(destinataire)) return false;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(expediteur());
+            helper.setTo(destinataire);
+            helper.setSubject(sujet);
+            helper.setText("<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px'>"
+                    + "<h2 style='color:#1d4ed8'>Gestion des Stages</h2>"
+                    + "<p style='line-height:1.7;color:#334155'>"
+                    + echapperHtml(messageTexte).replace("\n", "<br>") + "</p></div>", true);
+            mailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            System.err.println(">>> Erreur email notification : " + e.getMessage());
+            return false;
+        }
+    }
+
+    private MimeMessageHelper creerMessageDeMarque(MimeMessage message,
+                                                    String destinataire,
+                                                    String sujet) throws Exception {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setFrom(expediteur());
+        helper.setTo(destinataire);
+        helper.setSubject(sujet);
+        return helper;
+    }
+
+    private String enteteEmail() {
+        return "<div style=\"font-family:'Segoe UI',Roboto,Arial,sans-serif;max-width:620px;margin:0 auto;padding:20px\">"
+                + "<div style='background:#071b4d;padding:22px 30px;border-radius:12px 12px 0 0;text-align:center'>"
+                + "<img src='cid:logoDta' alt='DTA Alliance' "
+                + "style='display:block;max-width:150px;max-height:70px;margin:0 auto 12px'>"
+                + "<div style='color:#ffffff;font-size:20px;font-weight:700'>DTA Alliance</div>"
+                + "<div style='color:#cbd5e1;font-size:13px;margin-top:4px'>"
+                + "Plateforme de Gestion des Stages</div></div>";
+    }
+
+    private String piedEmail() {
+        return "<div style='background:#f8fafc;padding:16px;border:1px solid #e2e8f0;border-top:0;"
+                + "border-radius:0 0 12px 12px;text-align:center'>"
+                + "<p style='color:#64748b;font-size:12px;margin:0'>"
+                + "© 2026 DTA Alliance — Plateforme de Gestion des Stages</p></div></div>";
+    }
+
+    private String lienRouge(String url, String libelle) {
+        return "<a href='" + echapperHtml(url)
+                + "' style='color:#dc2626;font-weight:700;text-decoration:underline'>"
+                + echapperHtml(libelle) + "</a>";
+    }
+
+    private void ajouterLogo(MimeMessageHelper helper) throws Exception {
+        helper.addInline("logoDta", new ClassPathResource("static/images/logo.png"), "image/png");
     }
 
     private String echapperHtml(String valeur) {

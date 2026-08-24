@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/admin-rapports.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="reports-page">
+<body class="reports-page" th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>
@@ -31,8 +31,11 @@
             </div>
         </div>
         <div class="backup-heading-right">
-            <a class="backup-btn primary" th:href="@{/admin/rapports/exporter}">
-                <i class="fa-solid fa-file-excel"></i> Exporter
+            <button class="backup-btn primary" type="button" onclick="document.getElementById('reportImportModal').classList.add('open')">
+                <i class="fa-solid fa-file-arrow-up"></i> Importer un document
+            </button>
+            <a class="backup-btn secondary" th:href="@{/admin/rapports/exporter}">
+                <i class="fa-solid fa-file-excel"></i> Télécharger la fiche
             </a>
         </div>
     </div>
@@ -162,7 +165,22 @@ document.querySelectorAll('.report-preview-trigger').forEach(button => {
         </div>
     </div>
 </main>
+<div class="report-preview-modal" id="reportImportModal">
+    <form class="report-preview-panel" th:action="@{/admin/rapports/importer}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="backup-card-header"><strong>Importer un document externe</strong><button type="button" class="backup-action-btn" onclick="document.getElementById('reportImportModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></div>
+        <label>Nom du document<input type="text" name="nomDocument" required></label>
+        <label>Pour<select name="stagiaireId" required><option value="">Sélectionner un stagiaire</option><option th:each="stagiaire : ${stagiaires}" th:value="${stagiaire.id}" th:text="${stagiaire.utilisateur.prenom + ' ' + stagiaire.utilisateur.nom}"></option></select></label>
+        <label>Type<select name="typeDocument" id="reportImportType" required><option value="attestation">Attestation</option><option value="fiche_note">Fiche de note</option><option value="rapport_final">Rapport final</option><option value="autre">Autre</option></select></label>
+        <label id="reportOtherType" hidden>Type personnalisé<input type="text" name="typeAutre"></label>
+        <label>Fichier<input type="file" name="fichier" required></label>
+        <div class="backup-heading-actions"><button type="button" class="backup-btn secondary" onclick="document.getElementById('reportImportModal').classList.remove('open')">Annuler</button><button class="backup-btn primary" type="submit">Importer</button></div>
+    </form>
+</div>
 <script>
+document.getElementById('reportImportType')?.addEventListener('change', event => {
+    document.getElementById('reportOtherType').hidden = event.target.value !== 'autre';
+});
 (() => {
     const rows = [...document.querySelectorAll('.report-row')];
     const pageSize = 10;

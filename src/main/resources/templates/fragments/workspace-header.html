@@ -28,12 +28,13 @@
     <link rel="stylesheet" th:href="@{/css/workspace-header.css}">
 
     <header class="intern-header workspace-header" data-workspace-header>
-        <a th:href="${dashboardUrl}" class="intern-brand" aria-label="DTA Alliance">
+        <a th:href="${dashboardUrl}" class="intern-brand"
+           th:attr="aria-label=${platformSettings.companyName}">
             <img class="intern-brand-logo" th:src="@{/images/logo.png}" src="/images/logo.png"
-                 alt="Logo DTA Alliance">
+                 th:alt="|Logo ${platformSettings.companyName}|">
             <span>
-                <strong>DTA Alliance</strong>
-                <small>Gestion des stages</small>
+                <strong th:text="${platformSettings.companyName}">DTA Alliance</strong>
+                <small th:text="${platformSettings.platformName}">Gestion des stages</small>
             </span>
         </a>
 

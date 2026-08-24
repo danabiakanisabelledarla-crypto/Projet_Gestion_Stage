@@ -9,8 +9,8 @@
     <div class="workspace-sidebar-overlay"></div>
     <aside class="barre-laterale portal-sidebar workspace-sidebar admin-workspace-sidebar">
         <a class="workspace-sidebar-brand" th:href="@{/admin/dashboard}">
-            <div class="workspace-sidebar-logo"><img th:src="@{/images/logo.png}" alt="DTA Alliance"></div>
-            <div><strong>DTA Stages</strong><span>Gestion des stages</span></div>
+            <div class="workspace-sidebar-logo"><img th:src="@{/images/logo.png}" th:alt="|Logo ${platformSettings.companyName}|"></div>
+            <div><strong th:text="${platformSettings.companyName}">DTA Alliance</strong><span th:text="${platformSettings.platformName}">Gestion des stages</span></div>
         </a>
 
         <div class="workspace-sidebar-role">

@@ -16,6 +16,10 @@ public class Utilisateur {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    private ServiceEntreprise service;
+
     @Column(nullable = false, length = 100)
     private String nom;
 
@@ -95,6 +99,9 @@ public class Utilisateur {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    public ServiceEntreprise getService() { return service; }
+    public void setService(ServiceEntreprise service) { this.service = service; }
 
     public String getNom() {
         return nom;

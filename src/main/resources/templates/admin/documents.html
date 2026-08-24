@@ -10,7 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/documents.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
@@ -210,6 +210,20 @@
     const csrfToken = /*[[${_csrf.token}]]*/ '';
 </script>
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const right = document.querySelector('.action-bar-right');
+        if (right) right.className = 'action-bar-left document-filters';
+        const status = document.getElementById('filterStatus');
+        if (status && !document.getElementById('filterService')) {
+            const service = document.createElement('select');
+            service.className = 'document-filter-select';
+            service.id = 'filterService';
+            service.innerHTML = '<option value="">Tous les services</option>';
+            [...new Set(ownerGroups.map(group => group.service).filter(Boolean))].sort()
+                .forEach(value => service.add(new Option(value, value)));
+            status.before(service);
+        }
+    });
     function getExtIcon(ext) {
         ext = ext.toLowerCase();
         if (ext === 'pdf') return { cls: 'pdf', icon: 'fa-solid fa-file-pdf' };
@@ -423,6 +437,7 @@
     function filterTable() {
         const q = document.getElementById('searchDoc').value.toLowerCase();
         const owner = document.getElementById('filterOwner').value;
+        const service = document.getElementById('filterService')?.value || '';
         const version = document.getElementById('filterVersion')?.value || '';
         const status = document.getElementById('filterStatus').value;
         const filtered = ownerGroups.map(group => ({
@@ -432,7 +447,8 @@
                 && (!version || (doc.version || '1.0') === version)
                 && (!status || (doc.statut || 'disponible') === status)
                 && (!q || `${group.owner} ${group.service} ${doc.nomFichier} ${doc.typeDocument}`.toLowerCase().includes(q)))
-        })).filter(group => (!owner || group.owner === owner) && group.docs.length);
+        })).filter(group => (!owner || group.owner === owner)
+            && (!service || group.service === service) && group.docs.length);
         documentCurrentPage = 1;
         renderDocumentOwners(filtered);
     }

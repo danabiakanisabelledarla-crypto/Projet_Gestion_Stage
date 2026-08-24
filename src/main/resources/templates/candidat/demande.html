@@ -40,6 +40,10 @@
             </div>
 
             <div id="applicationFormContent" th:hidden="${succes}">
+                <div class="application-alert error" th:if="${erreur}" role="alert">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span th:text="${erreur}"></span>
+                </div>
                 <ol class="application-stepper" aria-label="Étapes de la candidature">
                     <li class="step is-active" data-step-indicator="1">
                         <span class="step-icon"><i class="fa-regular fa-user"></i></span>
@@ -119,7 +123,7 @@
                             </label>
                             <label class="field">
                                 <span>Filière / Spécialité *</span>
-                                <span class="input-shell"><i class="fa-solid fa-graduation-cap"></i><select name="filiere" required><option value="">Sélectionner</option><option>Génie informatique</option><option>Réseaux &amp; Télécoms</option><option>Data Science / IA</option><option>Cybersécurité</option><option>Gestion des systèmes</option><option>Autre</option></select></span>
+                                <span class="input-shell"><i class="fa-solid fa-graduation-cap"></i><select name="filiere" id="filiereSelect" required><option value="">Sélectionner</option><option>Génie informatique</option><option>Réseaux &amp; Télécoms</option><option>Data Science / IA</option><option>Cybersécurité</option><option>Gestion des systèmes</option><option>Autre</option></select></span>
                                 <small>Sélectionnez votre filière.</small>
                             </label>
                             <label class="field">
@@ -134,12 +138,12 @@
                             </label>
                             <label class="field">
                                 <span>Durée du stage souhaitée *</span>
-                                <span class="input-shell"><i class="fa-regular fa-clock"></i><select name="dureeSouhaitee" required><option value="">Sélectionner</option><option>1 mois</option><option>2 mois</option><option>3 mois</option><option>4 mois</option><option>6 mois</option></select></span>
+                                <span class="input-shell"><i class="fa-regular fa-clock"></i><select name="dureeSouhaitee" id="dureeSelect" required><option value="">Sélectionner</option><option>1 mois</option><option>2 mois</option><option>3 mois</option><option>4 mois</option><option>6 mois</option><option>Autre</option></select></span>
                                 <small>Sélectionnez une durée.</small>
                             </label>
                             <label class="field full">
                                 <span>Domaine d'intérêt *</span>
-                                <span class="input-shell"><i class="fa-solid fa-briefcase"></i><select name="domaineInteret" required><option value="">Sélectionner</option><option>Développement logiciel</option><option>Infrastructure &amp; Cloud</option><option>Data &amp; Intelligence Artificielle</option><option>Cybersécurité</option><option>Gestion de projet</option><option>UX / Design</option></select></span>
+                                <span class="input-shell"><i class="fa-solid fa-briefcase"></i><select name="domaineInteret" id="domaineSelect" required><option value="">Sélectionner</option><option>Développement logiciel</option><option>Infrastructure &amp; Cloud</option><option>Data &amp; Intelligence Artificielle</option><option>Cybersécurité</option><option>Gestion de projet</option><option>UX / Design</option><option>Autre</option></select></span>
                                 <small>Sélectionnez un domaine.</small>
                             </label>
                             <label class="field full">
@@ -170,11 +174,6 @@
                                 <strong>Lettre de recommandation</strong><span>Déposer la lettre</span><small>PDF recommandé · max 5 Mo</small>
                             </label>
                             <label class="dropzone" data-dropzone>
-                                <input name="releveNotes" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
-                                <span class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
-                                <strong>Relevé de notes *</strong><span>Déposer le relevé</span><small>PDF ou image · max 5 Mo</small>
-                            </label>
-                            <label class="dropzone" data-dropzone>
                                 <input name="cni" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
                                 <span class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
                                 <strong>Pièce d'identité *</strong><span>CNI ou passeport</span><small>Image ou PDF · max 5 Mo</small>
@@ -183,7 +182,7 @@
                         <div id="fileError" class="file-error" hidden>Ajoutez tous les documents obligatoires et vérifiez qu'ils ne dépassent pas 5 Mo.</div>
                         <div class="documents-info">
                             <i class="fa-solid fa-paperclip"></i>
-                            <div><strong>Documents requis</strong><span><i class="fa-solid fa-circle-check"></i>CV à jour</span><span><i class="fa-solid fa-circle-check"></i>Relevé de notes de la dernière année</span><span><i class="fa-solid fa-circle-check"></i>Pièce d'identité valide</span></div>
+                            <div><strong>Documents requis</strong><span><i class="fa-solid fa-circle-check"></i>CV à jour</span><span><i class="fa-solid fa-circle-check"></i>Pièce d'identité valide</span></div>
                         </div>
                         <label class="terms"><input name="conditions" type="checkbox" required><span>J'accepte les <a th:href="@{/mentions-legales}">conditions d'utilisation</a> et la <a th:href="@{/confidentialite}">politique de confidentialité</a> de DTA Alliance.</span></label>
                         <div class="form-actions">
@@ -234,6 +233,36 @@
     const indicators = [...document.querySelectorAll('[data-step-indicator]')];
     const connectors = [...document.querySelectorAll('.step-connector')];
     let currentStep = 1;
+    const villeSelect = form.querySelector('select[name="ville"]');
+    const villeAutre = document.createElement('input');
+    villeAutre.type = 'text';
+    villeAutre.name = 'villeAutre';
+    villeAutre.placeholder = 'Précisez votre ville';
+    villeAutre.required = false;
+    villeAutre.hidden = true;
+    villeSelect?.closest('.field')?.appendChild(villeAutre);
+    villeSelect?.addEventListener('change', () => {
+        const autre = villeSelect.value === 'Autre';
+        villeAutre.hidden = !autre;
+        villeAutre.required = autre;
+        if (!autre) villeAutre.value = '';
+    });
+    function attachOther(selectId, name, placeholder) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const input = document.createElement('input');
+        input.type = 'text'; input.name = name; input.placeholder = placeholder;
+        input.hidden = true; input.required = false; input.className = 'other-value-input';
+        select.closest('.field').appendChild(input);
+        select.addEventListener('change', () => {
+            const other = select.value === 'Autre';
+            input.hidden = !other; input.required = other;
+            if (!other) input.value = '';
+        });
+    }
+    attachOther('filiereSelect', 'filiereAutre', 'Précisez votre filière / spécialité');
+    attachOther('dureeSelect', 'dureeAutre', 'Précisez la durée souhaitée');
+    attachOther('domaineSelect', 'domaineAutre', 'Précisez votre domaine d’intérêt');
 
     function displayStep(step) {
         currentStep = step;

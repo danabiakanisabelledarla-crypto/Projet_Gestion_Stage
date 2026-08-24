@@ -40,6 +40,32 @@
         </section>
 
         <div th:if="${stage != null}">
+            <section class="intern-card" style="margin-bottom:20px">
+                <div class="intern-card-header">
+                    <div>
+                        <h2 class="intern-card-title">Période de votre stage</h2>
+                        <p class="intern-card-subtitle">Dates officielles enregistrées lors de votre affectation</p>
+                    </div>
+                    <span class="intern-status status-green">
+                        <i class="fa-regular fa-calendar-check"></i> Stage planifié
+                    </span>
+                </div>
+                <div class="intern-data-list">
+                    <div class="intern-data-row">
+                        <span>Date de début</span>
+                        <strong th:text="${#temporals.format(stage.dateDebut, 'dd MMMM yyyy')}">01 juin 2026</strong>
+                    </div>
+                    <div class="intern-data-row">
+                        <span>Date de fin</span>
+                        <strong th:text="${#temporals.format(stage.dateFin, 'dd MMMM yyyy')}">31 août 2026</strong>
+                    </div>
+                    <div class="intern-data-row">
+                        <span>Durée prévue</span>
+                        <strong th:text="${stage.duree}">3 mois</strong>
+                    </div>
+                </div>
+            </section>
+
             <section class="intern-kpis five">
                 <article class="intern-kpi">
                     <span class="intern-kpi-icon tone-blue"><i class="fa-solid fa-hourglass-half"></i></span>

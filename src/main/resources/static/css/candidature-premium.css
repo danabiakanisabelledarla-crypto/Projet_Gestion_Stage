@@ -93,9 +93,23 @@
 .field input, .field select { height: 50px; padding: 0 16px 0 44px; }
 .field textarea { min-height: 122px; padding: 14px 16px; resize: none; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--app-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, .12); }
+.field .other-value-input { margin-top: 8px; padding-left: 16px; }
 .field small { display: none; color: #dc2626; font-size: 11px; }
 .field.has-error small { display: block; }
 .field.has-error input, .field.has-error select { border-color: #ef4444; }
+.application-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding: 13px 15px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #991b1b;
+    background: #fef2f2;
+    font-size: 14px;
+    font-weight: 600;
+}
 .form-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; }
 .form-actions.end { justify-content: flex-end; }
 .application-button {

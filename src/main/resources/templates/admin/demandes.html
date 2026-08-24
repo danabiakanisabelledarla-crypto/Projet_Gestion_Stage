@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/demandes.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
 
@@ -323,7 +323,7 @@ function ouvrirDetails(id) {
             </div>
             <div style="margin-top:12px;">
                 <div class="info-label">Motivation</div>
-                <div class="motivation-texte">${d.commentaire || 'Aucune motivation fournie.'}</div>
+                <div class="motivation-texte">${d.motivation || 'Aucune motivation fournie.'}</div>
             </div>
         </div>
 

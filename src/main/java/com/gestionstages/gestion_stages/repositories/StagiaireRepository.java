@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface StagiaireRepository extends JpaRepository<Stagiaire, Integer> {
 
     Optional<Stagiaire> findByUtilisateurId(Integer utilisateurId);
+    List<Stagiaire> findAllByUtilisateurEmailIgnoreCase(String email);
     Optional<Stagiaire> findByDemandeStageId(Integer demandeStageId);
     Optional<Stagiaire> findByMatricule(String matricule);
     List<Stagiaire> findByStatut(StatutStagiaire statut);

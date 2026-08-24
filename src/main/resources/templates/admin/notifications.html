@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/admin-portal.css}">
 </head>
-<body class="portal-body">
+<body class="portal-body" th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>

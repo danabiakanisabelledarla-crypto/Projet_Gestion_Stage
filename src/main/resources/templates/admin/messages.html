@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/sauvegarde.css}">
     <link rel="stylesheet" th:href="@{/css/messaging-unified.css}">
 </head>
-<body>
+<body th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 <main class="contenu-principal backup-page">
     <div th:replace="~{fragments/header-admin :: header}"></div>

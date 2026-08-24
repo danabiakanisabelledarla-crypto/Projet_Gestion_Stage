@@ -1,0 +1,294 @@
+ADMINISTRATEUR — PAGE /admin/parametres
+MAINTENANCE DU SYSTÈME
+
+Je veux rendre entièrement fonctionnelle la section « Maintenance du système » de la page :
+
+http://localhost:8080/admin/parametres
+
+IMPORTANT :
+- Ne fais pas seulement une modification visuelle du HTML/CSS.
+- Les boutons doivent réellement exécuter leurs opérations côté backend.
+- Utilise l'architecture existante de mon projet Spring Boot.
+- Respecte la base de données réellement utilisée par mon application, qui est H2.
+- Ne remplace pas H2 par MySQL.
+- Ne casse aucune fonctionnalité existante.
+- Réutilise les services, repositories, entités, chemins de fichiers et mécanismes déjà présents dans le projet lorsque cela est possible.
+- Toutes les opérations doivent être sécurisées et accessibles uniquement à l'administrateur.
+- Après chaque opération, afficher une notification claire de succès ou d'échec dans l'interface.
+- Les opérations doivent être réellement exécutées et leurs résultats doivent être cohérents avec l'état réel de l'application.
+
+============================================================
+1. VIDER LE CACHE
+============================================================
+
+Dans le setting-card :
+
+« Vider le cache
+Supprime les données temporaires. »
+
+Le bouton « Vider le cache » doit réellement fonctionner.
+
+Lorsqu'un administrateur clique dessus :
+
+1. Envoyer une requête au backend.
+2. Le backend exécute réellement l'opération de nettoyage du cache utilisé par l'application.
+3. Ne supprimer aucune donnée métier :
+   - utilisateurs
+   - stagiaires
+   - encadreurs
+   - responsables
+   - demandes
+   - documents
+   - rapports
+   - livrables
+   - objectifs
+   - tâches
+   - journal
+   - etc.
+
+Si aucun mécanisme de cache n'est actuellement utilisé dans le projet, ne simule pas une suppression de cache inexistante. Mets en place une gestion de cache cohérente avec Spring Boot ou adapte la fonctionnalité à ce qui existe réellement dans le projet.
+
+Après l'opération, afficher par exemple :
+
+« Cache vidé avec succès. »
+
+En cas d'erreur :
+
+« Impossible de vider le cache. »
+
+============================================================
+2. OPTIMISER LA BASE
+============================================================
+
+Dans le setting-card :
+
+« Optimiser la base
+Optimise les tables et les index. »
+
+Le bouton « Optimiser la base » doit fonctionner réellement avec la base H2 actuellement utilisée par l'application.
+
+IMPORTANT :
+- Ne mets pas de commandes MySQL.
+- Ne simule pas l'optimisation.
+- Utilise uniquement des opérations compatibles avec H2 et avec la configuration actuelle du projet.
+
+Lorsqu'un administrateur clique sur le bouton :
+
+1. Vérifier que la connexion à la base fonctionne.
+2. Effectuer les opérations de maintenance compatibles avec H2.
+3. Vérifier que les principales tables utilisées par l'application sont accessibles.
+4. Ne supprimer aucune donnée métier.
+5. Retourner au frontend le résultat de l'opération.
+
+Afficher ensuite une notification :
+
+« Maintenance de la base de données terminée avec succès. »
+
+En cas d'échec :
+
+« La maintenance de la base de données a échoué. »
+
+============================================================
+3. VÉRIFIER LES FICHIERS
+============================================================
+
+Dans le setting-card :
+
+« Vérifier les fichiers
+Contrôle l'intégrité des fichiers. »
+
+Cette fonctionnalité est particulièrement importante pour mon application car elle permet de gérer des documents déposés par les utilisateurs/stagiaires.
+
+Le système doit vérifier la cohérence entre :
+
+- les documents enregistrés dans la base de données
+- et les fichiers réellement présents dans le dossier de stockage de l'application, notamment le dossier :
+
+uploads/
+
+Lorsqu'un administrateur clique sur « Vérifier les fichiers » :
+
+1. Récupérer les documents enregistrés dans la base de données.
+2. Pour chaque document, récupérer son chemin ou nom de fichier réel.
+3. Vérifier si le fichier existe physiquement dans le dossier de stockage.
+4. Vérifier si le fichier est accessible.
+5. Identifier les fichiers manquants.
+6. Ne supprimer aucun document automatiquement.
+7. Retourner un rapport de vérification.
+
+Exemple de résultat :
+
+Documents vérifiés : 42
+Fichiers intègres : 40
+Fichiers introuvables : 2
+
+Si aucun problème :
+
+« Vérification terminée : tous les fichiers sont intègres. »
+
+Si des fichiers sont manquants :
+
+« Vérification terminée : 2 fichiers sont introuvables. »
+
+============================================================
+4. BACKEND
+============================================================
+
+Créer ou adapter proprement un service dédié, par exemple :
+
+MaintenanceService.java
+
+avec des méthodes correspondant aux trois opérations :
+
+- viderCache()
+- optimiserBase()
+- verifierFichiers()
+
+Créer ou adapter un contrôleur administratif dédié, par exemple :
+
+AdminMaintenanceController.java
+
+avec des endpoints REST sécurisés du type :
+
+POST /admin/parametres/maintenance/cache
+
+POST /admin/parametres/maintenance/database
+
+POST /admin/parametres/maintenance/files
+
+Utiliser les mécanismes de sécurité déjà présents dans l'application.
+
+Seul un utilisateur ayant le rôle ADMINISTRATEUR doit pouvoir exécuter ces opérations.
+
+============================================================
+5. FRONTEND
+============================================================
+
+Dans :
+
+/admin/parametres
+
+connecter les trois boutons aux endpoints backend.
+
+Utiliser le mécanisme frontend déjà présent dans mon projet.
+
+Ne pas recharger inutilement toute la page.
+
+Après chaque action :
+
+- afficher un état de chargement pendant l'opération ;
+- désactiver temporairement le bouton pour éviter plusieurs clics ;
+- afficher une notification de succès ou d'erreur ;
+- remettre le bouton dans son état normal après l'opération.
+
+Exemple :
+
+[Optimisation en cours...]
+
+puis :
+
+✅ Maintenance de la base de données terminée avec succès.
+
+============================================================
+6. RÉSULTATS ET STATISTIQUES
+============================================================
+
+Pour « Vérifier les fichiers », afficher les résultats réels de la vérification.
+
+Exemple :
+
+┌─────────────────────────────────────┐
+│ Vérification des fichiers           │
+│                                     │
+│ Documents vérifiés       42         │
+│ Fichiers intègres        40         │
+│ Fichiers introuvables     2         │
+│                                     │
+│ [Voir les détails]                  │
+└─────────────────────────────────────┘
+
+Si nécessaire, permettre à l'administrateur de voir la liste des fichiers problématiques.
+
+============================================================
+7. JOURNALISATION
+============================================================
+
+Chaque opération de maintenance importante doit être enregistrée dans l'historique/activité de l'administrateur si un système de journalisation existe déjà dans le projet.
+
+Exemples :
+
+« Administrateur a vidé le cache »
+« Administrateur a lancé une maintenance de la base »
+« Administrateur a effectué une vérification des fichiers »
+
+Enregistrer :
+
+- utilisateur ayant effectué l'action
+- date
+- heure
+- opération
+- résultat
+- éventuellement le nombre d'éléments concernés
+
+Réutiliser le système d'activité existant plutôt que créer un deuxième système parallèle.
+
+============================================================
+8. SÉCURITÉ
+============================================================
+
+Ces opérations sont sensibles.
+
+Vérifier côté serveur que seul l'administrateur peut les exécuter.
+
+Ne jamais se limiter à cacher les boutons côté frontend.
+
+Même si quelqu'un tente directement d'appeler :
+
+POST /admin/parametres/maintenance/cache
+
+ou :
+
+POST /admin/parametres/maintenance/database
+
+ou :
+
+POST /admin/parametres/maintenance/files
+
+sans être administrateur, le serveur doit refuser l'opération.
+
+============================================================
+9. COMPATIBILITÉ DOCKER
+============================================================
+
+Mon application fonctionne dans Docker.
+
+Les fonctionnalités de maintenance doivent donc fonctionner également lorsque l'application est lancée dans son conteneur Docker.
+
+Pour « Vérifier les fichiers », utiliser correctement le chemin du volume de fichiers déjà configuré dans Docker et ne pas utiliser un chemin Windows codé en dur.
+
+Respecter notamment le stockage déjà utilisé par l'application :
+
+/app/uploads
+
+et les autres volumes existants.
+
+============================================================
+10. VÉRIFICATION FINALE
+============================================================
+
+Après les modifications :
+
+1. Vérifier la compilation Spring Boot.
+2. Vérifier qu'il n'y a aucune erreur Java.
+3. Vérifier les endpoints.
+4. Vérifier la sécurité ADMINISTRATEUR.
+5. Vérifier les boutons depuis /admin/parametres.
+6. Vérifier les notifications.
+7. Vérifier que les données métier ne sont jamais supprimées.
+8. Vérifier le fonctionnement dans Docker.
+9. Vérifier qu'aucune fonctionnalité existante de /admin/parametres n'a été cassée.
+
+IMPORTANT :
+Ne crée pas de fausses données, de faux résultats ou de boutons qui affichent simplement « succès » sans effectuer réellement l'opération.
+
+Je veux une implémentation complète, cohérente avec l'architecture existante de mon projet et fonctionnelle de bout en bout.

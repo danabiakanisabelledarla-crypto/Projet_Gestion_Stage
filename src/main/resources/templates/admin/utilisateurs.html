@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/utilisateurs.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
@@ -268,6 +268,10 @@
             <div class="form-group"><label>Rôle</label><select name="roleLibelle" required>
                 <option th:each="r : ${roles}" th:value="${r.libelle}" th:text="${r.libelle}"></option>
             </select></div>
+            <div class="form-group"><label>Service</label><select name="serviceId">
+                <option value="">Aucun service</option>
+                <option th:each="service : ${services}" th:value="${service.id}" th:text="${service.nom}"></option>
+            </select></div>
             <div class="form-group"><label>Mot de passe</label><input type="password" name="motDePasse" required minlength="6"></div>
             <div class="modal-actions">
                 <button type="button" class="backup-btn secondary" onclick="closeModal('modal-add')">Annuler</button>
@@ -301,6 +305,13 @@
     const servicesList = /*[[${services}]]*/ [];
 </script>
 <script>
+    document.querySelectorAll('form[action*="/desactiver/"]').forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!window.confirm('Voulez-vous vraiment désactiver ce compte ?')) {
+                event.preventDefault();
+            }
+        });
+    });
     function selectUser(el, id) {
         document.querySelectorAll('.backup-table tbody tr').forEach(r => r.classList.remove('selected'));
         if (el.tagName === 'TR') el.classList.add('selected');
@@ -358,7 +369,7 @@
                     <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;">
                         <div style="font-size:20px;color:#8B5CF6;margin-bottom:4px;"><i class="fa-solid fa-percent"></i></div>
                         <div style="font-size:24px;font-weight:700;color:#0f172a;">${u.tauxEvaluation || 0}%</div>
-                        <div style="font-size:11px;color:#64748B;">Taux d'évaluation</div>
+                        <div style="font-size:11px;color:#64748B;">Taux de progression</div>
                     </div>
                 </div>
             </div>
@@ -366,7 +377,6 @@
             <div class="sous-carte">
                 <div class="sous-carte-titre" style="display:flex;justify-content:space-between;">
                     <span><i class="fa-solid fa-clock-rotate-left"></i> Activités récentes</span>
-                    <a href="#" style="font-size:12px;color:#2563EB;text-decoration:none;font-weight:500;">Voir tout</a>
                 </div>
                 ${u.activites && u.activites.length > 0 ? u.activites.map(a => `
                     <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F1F5F9;">
@@ -382,7 +392,6 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <button onclick="fermerModal();openEdit(${u.id})" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-pen"></i> Modifier le profil</button>
                     <button onclick="window.location.href='/admin/roles-permissions?utilisateurId=${u.id}'" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-user-shield"></i> Gérer les permissions</button>
-                    <button onclick="window.location.href='/admin/stagiaires?encadreurId=${u.id}'" style="padding:10px;border-radius:10px;border:1px solid #E2E8F0;background:white;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:#475569;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fa-solid fa-users"></i> Voir les stagiaires</button>
                 </div>
                 <button onclick="desactiverDepuisDetails(${u.id})" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #FECACA;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;">
                     <i class="fa-solid fa-user-slash"></i> Désactiver le compte

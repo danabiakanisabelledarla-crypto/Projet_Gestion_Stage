@@ -890,37 +890,6 @@ public String afficherObjectifsStagiaire(@AuthenticationPrincipal CustomUserDeta
     return "stagiaire/objectifs";
 }
 
-@PostMapping("/objectifs/creer")
-public String creerObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
-                            @RequestParam String libelle,
-                            @RequestParam(required = false) String description,
-                            @RequestParam(defaultValue = "moyenne") String priorite,
-                            @RequestParam(required = false) String dateLimite) {
-    Optional<Stage> stageOpt = getStage(userDetails);
-    if (stageOpt.isPresent()) {
-        Objectif obj = new Objectif();
-        obj.setStage(stageOpt.get());
-        obj.setLibelle(libelle);
-        obj.setDescription(description);
-        obj.setPriorite(Objectif.Priorite.valueOf(priorite));
-        if (dateLimite != null && !dateLimite.isEmpty())
-            obj.setDateLimite(LocalDate.parse(dateLimite));
-        int prochainOrdre = objectifRepository.findByStageIdOrderByOrdreAsc(stageOpt.get().getId())
-                .stream()
-                .mapToInt(Objectif::getOrdre)
-                .max()
-                .orElse(0) + 1;
-        obj.setOrdre(prochainOrdre);
-        obj.setProgression(0);
-        obj.setStatut(Objectif.StatutObjectif.non_commence);
-        obj.setOrigine(Objectif.OrigineObjectif.stagiaire);
-        obj.setDateCreation(LocalDateTime.now());
-        objectifRepository.save(obj);
-        recalculerProgression(stageOpt.get());
-    }
-    return "redirect:/stagiaire/objectifs";
-}
-
 @PostMapping("/objectifs/statut")
 public String changerStatutObjectif(@AuthenticationPrincipal CustomUserDetails userDetails,
                                      @RequestParam Integer id,

@@ -1,6 +1,7 @@
 package com.gestionstages.gestion_stages.entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,6 +24,18 @@ public class DemandeStage {
     @Column(nullable = false, length = 150)
     private String ecole;
 
+    @Column(length = 30)
+    private String telephone;
+
+    @Column(name = "date_naissance")
+    private LocalDate dateNaissance;
+
+    @Column(length = 100)
+    private String ville;
+
+    @Column(length = 30)
+    private String genre;
+
     @Column(nullable = false, length = 150)
     private String filiere;
 
@@ -31,6 +44,15 @@ public class DemandeStage {
 
     @Column(name = "duree_souhaitee", nullable = false, length = 50)
     private String dureeSouhaitee;
+
+    @Column(name = "annee_academique", length = 20)
+    private String anneeAcademique;
+
+    @Column(name = "domaine_interet", length = 150)
+    private String domaineInteret;
+
+    @Column(columnDefinition = "TEXT")
+    private String motivation;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -103,6 +125,15 @@ public class DemandeStage {
         this.ecole = ecole;
     }
 
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
+    public LocalDate getDateNaissance() { return dateNaissance; }
+    public void setDateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
+    public String getVille() { return ville; }
+    public void setVille(String ville) { this.ville = ville; }
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
+
     public String getFiliere() {
         return filiere;
     }
@@ -126,6 +157,13 @@ public class DemandeStage {
     public void setDureeSouhaitee(String dureeSouhaitee) {
         this.dureeSouhaitee = dureeSouhaitee;
     }
+
+    public String getAnneeAcademique() { return anneeAcademique; }
+    public void setAnneeAcademique(String anneeAcademique) { this.anneeAcademique = anneeAcademique; }
+    public String getDomaineInteret() { return domaineInteret; }
+    public void setDomaineInteret(String domaineInteret) { this.domaineInteret = domaineInteret; }
+    public String getMotivation() { return motivation; }
+    public void setMotivation(String motivation) { this.motivation = motivation; }
 
     public StatutDemande getStatut() {
         return statut;

@@ -323,3 +323,19 @@ body {
     font-size: 14px;
     text-decoration: none;
 }
+.other-value-input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 11px 13px;
+    border: 1px solid #dbe4f0;
+    border-radius: 9px;
+    color: #1e293b;
+    background: #fff;
+    font: inherit;
+}
+
+.other-value-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}

@@ -20,6 +20,7 @@ import com.gestionstages.gestion_stages.security.CustomUserDetails;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -114,7 +115,7 @@ public class AdminController {
         model.addAttribute("statActivites", totalLogs);
         model.addAttribute("totalConnexions", totalLogs);
 
-        // --- ACTIVITÉS RÉCENTES (depuis les logs) ---
+        // --- ACTIVITÃ‰S RÃ‰CENTES (depuis les logs) ---
         List<ActivityLog> recentLogs = activityLogRepository.findTop50ByOrderByDateActiviteDesc();
         List<Map<String, String>> activitesRecentes = recentLogs.stream().limit(5).map(a -> {
             Map<String, String> m = new HashMap<>();
@@ -137,28 +138,28 @@ public class AdminController {
             m.put("message", a.getAction() != null ? a.getAction() : "Action");
             if (a.getDateActivite() != null) {
                 long minutes = java.time.Duration.between(a.getDateActivite(), java.time.LocalDateTime.now()).toMinutes();
-                if (minutes < 1) m.put("temps", "À l'instant");
+                if (minutes < 1) m.put("temps", "Ã€ l'instant");
                 else if (minutes < 60) m.put("temps", "Il y a " + minutes + " min");
                 else if (minutes < 1440) m.put("temps", "Il y a " + (minutes / 60) + "h");
                 else m.put("temps", "Il y a " + (minutes / 1440) + " jours");
             } else {
-                m.put("temps", "—");
+                m.put("temps", "â€”");
             }
             return m;
         }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("activitesRecentes", activitesRecentes);
 
-        // --- STATUT SYSTÈME ---
+        // --- STATUT SYSTÃˆME ---
         List<Map<String, String>> statutSysteme = List.of(
-            Map.of("icone", "fa-solid fa-server", "nom", "Serveur", "statut", "Opérationnel", "couleur", "verte"),
-            Map.of("icone", "fa-solid fa-database", "nom", "Base de données", "statut", "À jour", "couleur", "verte"),
-            Map.of("icone", "fa-solid fa-hdd", "nom", "Stockage", "statut", totalDocs * 5 / 32 + "% utilisé", "couleur", "orange"),
+            Map.of("icone", "fa-solid fa-server", "nom", "Serveur", "statut", "OpÃ©rationnel", "couleur", "verte"),
+            Map.of("icone", "fa-solid fa-database", "nom", "Base de donnÃ©es", "statut", "Ã€ jour", "couleur", "verte"),
+            Map.of("icone", "fa-solid fa-hdd", "nom", "Stockage", "statut", totalDocs * 5 / 32 + "% utilisÃ©", "couleur", "orange"),
             Map.of("icone", "fa-solid fa-cloud-upload-alt", "nom", "Sauvegarde", "statut", "Aucun incident", "couleur", "verte"),
-            Map.of("icone", "fa-solid fa-shield-alt", "nom", "Sécurité", "statut", "Protégé", "couleur", "verte")
+            Map.of("icone", "fa-solid fa-shield-alt", "nom", "SÃ©curitÃ©", "statut", "ProtÃ©gÃ©", "couleur", "verte")
         );
         model.addAttribute("statutSysteme", statutSysteme);
 
-        // --- UTILISATEURS RÉCENTS (depuis la base) ---
+        // --- UTILISATEURS RÃ‰CENTS (depuis la base) ---
         List<Map<String, String>> utilisateursRecents = utilisateurRepository.findAll().stream()
             .sorted((a,b) -> b.getDateCreation().compareTo(a.getDateCreation()))
             .limit(3)
@@ -173,13 +174,13 @@ public class AdminController {
                     else if (minutes < 1440) m.put("temps", (minutes / 60) + "h");
                     else m.put("temps", (minutes / 1440) + "j");
                 } else {
-                    m.put("temps", "—");
+                    m.put("temps", "â€”");
                 }
                 return m;
             }).collect(java.util.stream.Collectors.toList());
         model.addAttribute("utilisateursRecents", utilisateursRecents);
 
-        // --- DONNÉES POUR LES GRAPHIQUES ---
+        // --- DONNÃ‰ES POUR LES GRAPHIQUES ---
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEEE");
         List<String> joursSemaine = List.of("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim");
         model.addAttribute("chartDays", joursSemaine);
@@ -204,7 +205,7 @@ public class AdminController {
         model.addAttribute("chartConnexionsPoints",
                 buildDashboardPoints(connexionsValues, 700, 190, 150));
 
-        // Répartition des utilisateurs
+        // RÃ©partition des utilisateurs
         long adminCount = utilisateurRepository.findByRole_Libelle("ADMINISTRATEUR").size();
         long respCount = utilisateurRepository.findByRole_Libelle("RESPONSABLE_STAGE").size();
         long encadCount = utilisateurRepository.findByRole_Libelle("ENCADREUR").size();
@@ -254,7 +255,7 @@ public class AdminController {
     }
 
     // ============================================
-    // VOS AUTRES MÉTHODES (inchangées)
+    // VOS AUTRES MÃ‰THODES (inchangÃ©es)
     // ============================================
     
     @GetMapping("/demandes")
@@ -278,7 +279,7 @@ public class AdminController {
                         && d.getDateDemande().getYear() == java.time.LocalDate.now().getYear())
                 .count();
 
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMMM yyyy 'à' HH'h'mm");
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMMM yyyy 'Ã ' HH'h'mm");
         List<Map<String, Object>> demandesJson = toutesLesDemandes.stream().map(d -> {
             Map<String, Object> m = new java.util.HashMap<>();
             m.put("id", d.getId());
@@ -291,21 +292,26 @@ public class AdminController {
             m.put("filiere", d.getFiliere());
             m.put("niveau", d.getNiveau());
             m.put("dureeSouhaitee", d.getDureeSouhaitee());
+            m.put("motivation", d.getMotivation());
+            m.put("dateNaissance", d.getDateNaissance());
+            m.put("telephone", d.getTelephone());
+            m.put("ville", d.getVille());
+            m.put("domaineInteret", d.getDomaineInteret());
             m.put("commentaire", d.getCommentaire());
             m.put("motifRefus", d.getMotifRefus());
-            m.put("dateDemande", d.getDateDemande() != null ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDemande())) : "—");
+            m.put("dateDemande", d.getDateDemande() != null ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDemande())) : "â€”");
             m.put("statutCls", d.getStatut().name());
             m.put("statutLabel", d.getStatut() == DemandeStage.StatutDemande.en_attente ? "En attente"
-                    : d.getStatut() == DemandeStage.StatutDemande.acceptee ? "Acceptée" : "Refusée");
+                    : d.getStatut() == DemandeStage.StatutDemande.acceptee ? "AcceptÃ©e" : "RefusÃ©e");
 
             List<Document> docs = documentRepository.findByDemandeStageId(d.getId());
             List<Map<String, String>> docsJson = docs.stream().map(doc -> {
                 Map<String, String> dm = new java.util.HashMap<>();
                 dm.put("id", doc.getId().toString());
                 dm.put("nom", doc.getNomFichier());
-                dm.put("taille", "—");
+                dm.put("taille", "â€”");
                 dm.put("dateDepot", doc.getDateDepot() != null
-                        ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf(doc.getDateDepot())) : "—");
+                        ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf(doc.getDateDepot())) : "â€”");
                 String ext = doc.getNomFichier() != null && doc.getNomFichier().contains(".")
                         ? doc.getNomFichier().substring(doc.getNomFichier().lastIndexOf(".")+1).toLowerCase() : "";
                 if (ext.equals("pdf")) { dm.put("cls", "pdf"); dm.put("icon", "fa-solid fa-file-pdf"); }
@@ -349,31 +355,54 @@ public class AdminController {
         DemandeStage demande = demandeOpt.get();
         String emailNormalise = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         if (emailNormalise.isBlank() || motDePasse == null || motDePasse.length() < 6) {
-            redirectAttributes.addFlashAttribute("erreur", "L'adresse email et un mot de passe d'au moins 6 caractères sont requis.");
+            redirectAttributes.addFlashAttribute("erreur", "L'adresse email et un mot de passe d'au moins 6 caractÃ¨res sont requis.");
             return "redirect:/admin/demandes";
         }
         if (stagiaireRepository.findByDemandeStageId(id).isPresent()) {
-            redirectAttributes.addFlashAttribute("erreur", "Un compte stagiaire existe déjà pour cette demande.");
+            redirectAttributes.addFlashAttribute("erreur", "Un compte stagiaire existe dÃ©jÃ  pour cette demande.");
             return "redirect:/admin/demandes";
         }
-        if (utilisateurRepository.existsByEmail(emailNormalise)) {
-            redirectAttributes.addFlashAttribute("erreur", "Cette adresse email est déjà utilisée.");
-            return "redirect:/admin/demandes";
-        }
-
         Role roleStagiaire = roleRepository.findByLibelle("STAGIAIRE")
-                .orElseThrow(() -> new IllegalStateException("Le rôle STAGIAIRE est introuvable."));
-        Utilisateur utilisateur = new Utilisateur(
+                .orElseThrow(() -> new IllegalStateException("Le rÃ´le STAGIAIRE est introuvable."));
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(emailNormalise).orElse(null);
+        if (utilisateur != null) {
+            Stagiaire compteExistant = stagiaireRepository.findByUtilisateurId(utilisateur.getId()).orElse(null);
+            Stage stageExistant = compteExistant == null ? null
+                    : stageRepository.findByStagiaireId(compteExistant.getId()).orElse(null);
+            if (stageExistant != null && (stageExistant.getDateFin() == null
+                    || !stageExistant.getDateFin().isBefore(LocalDate.now()))) {
+                redirectAttributes.addFlashAttribute("erreur",
+                        "Cette adresse possède déjà un stage en cours.");
+                return "redirect:/admin/demandes";
+            }
+        }
+        if (utilisateur == null) utilisateur = new Utilisateur(
                 roleStagiaire,
                 demande.getNom(),
                 demande.getPrenom(),
                 emailNormalise,
                 passwordEncoder.encode(motDePasse)
         );
+        else {
+            utilisateur.setRole(roleStagiaire);
+            utilisateur.setNom(demande.getNom());
+            utilisateur.setPrenom(demande.getPrenom());
+            utilisateur.setMotDePasse(passwordEncoder.encode(motDePasse));
+            utilisateur.setStatut(Utilisateur.StatutUtilisateur.actif);
+        }
         utilisateurRepository.save(utilisateur);
 
-        String matricule = genererMatriculeStagiaire();
-        stagiaireRepository.save(new Stagiaire(utilisateur, demande, matricule, LocalDate.now()));
+        Stagiaire ancienStagiaire = stagiaireRepository.findByUtilisateurId(utilisateur.getId()).orElse(null);
+        String matricule = ancienStagiaire == null ? genererMatriculeStagiaire() : ancienStagiaire.getMatricule();
+        if (ancienStagiaire == null) {
+            stagiaireRepository.save(new Stagiaire(utilisateur, demande, matricule, LocalDate.now()));
+        } else {
+            ancienStagiaire.setDemandeStage(demande);
+            ancienStagiaire.setDateAdmission(LocalDate.now());
+            ancienStagiaire.setStatut(Stagiaire.StatutStagiaire.actif);
+            ancienStagiaire.setProgression(0);
+            stagiaireRepository.save(ancienStagiaire);
+        }
     demande.setStatut(DemandeStage.StatutDemande.acceptee);
     demande.setMotifRefus(null);
     demande.setEmail(emailNormalise);
@@ -388,11 +417,11 @@ public class AdminController {
 
     if (emailEnvoye) {
         redirectAttributes.addFlashAttribute("succes",
-                "Demande acceptée, compte " + matricule + " créé et notification envoyée à " + emailNormalise + ".");
+                "Demande acceptÃ©e, compte " + matricule + " crÃ©Ã© et notification envoyÃ©e Ã  " + emailNormalise + ".");
     } else {
         redirectAttributes.addFlashAttribute("erreur",
-                "La demande et le compte ont été enregistrés, mais l'e-mail n'a pas pu être envoyé à "
-                        + emailNormalise + ". Vérifiez la configuration SMTP.");
+                "La demande et le compte ont Ã©tÃ© enregistrÃ©s, mais l'e-mail n'a pas pu Ãªtre envoyÃ© Ã  "
+                        + emailNormalise + ". VÃ©rifiez la configuration SMTP.");
     }
         return "redirect:/admin/demandes";
     }
@@ -407,7 +436,7 @@ public class AdminController {
             return "redirect:/admin/demandes";
         }
         if (motif == null || motif.trim().length() < 10) {
-            redirectAttributes.addFlashAttribute("erreur", "Veuillez préciser un motif de refus d'au moins 10 caractères.");
+            redirectAttributes.addFlashAttribute("erreur", "Veuillez prÃ©ciser un motif de refus d'au moins 10 caractÃ¨res.");
             return "redirect:/admin/demandes";
         }
 
@@ -424,11 +453,11 @@ public class AdminController {
 
     if (emailEnvoye) {
         redirectAttributes.addFlashAttribute("succes",
-                "Demande refusée et notification envoyée à " + destinataire + ".");
+                "Demande refusÃ©e et notification envoyÃ©e Ã  " + destinataire + ".");
     } else {
         redirectAttributes.addFlashAttribute("erreur",
-                "Le refus a été enregistré, mais l'e-mail n'a pas pu être envoyé à "
-                        + destinataire + ". Vérifiez la configuration SMTP.");
+                "Le refus a Ã©tÃ© enregistrÃ©, mais l'e-mail n'a pas pu Ãªtre envoyÃ© Ã  "
+                        + destinataire + ". VÃ©rifiez la configuration SMTP.");
     }
         return "redirect:/admin/demandes";
     }
@@ -436,7 +465,7 @@ public class AdminController {
     @GetMapping("/demandes/exporter")
     public ResponseEntity<byte[]> exporterDemandes() {
         StringBuilder csv = new StringBuilder("\uFEFF");
-        csv.append("ID;Nom;Prénom;Email;École;Filière;Niveau;Durée souhaitée;Date;Statut;Motif du refus\n");
+        csv.append("ID;Nom;PrÃ©nom;Email;Ã‰cole;FiliÃ¨re;Niveau;DurÃ©e souhaitÃ©e;Date;Statut;Motif du refus\n");
         for (DemandeStage demande : demandeStageRepository.findAll()) {
             csv.append(valeurCsv(demande.getId())).append(';')
                     .append(valeurCsv(demande.getNom())).append(';')
@@ -531,21 +560,21 @@ public class AdminController {
                     + s.getUtilisateur().getNom().substring(0,1).toUpperCase());
             m.put("nomComplet", s.getUtilisateur().getPrenom() + " " + s.getUtilisateur().getNom());
             m.put("email", s.getUtilisateur().getEmail());
-            m.put("telephone", s.getUtilisateur().getTelephone() != null ? s.getUtilisateur().getTelephone() : "—");
-            m.put("adresse", s.getUtilisateur().getAdresse() != null ? s.getUtilisateur().getAdresse() : "—");
+            m.put("telephone", s.getUtilisateur().getTelephone() != null ? s.getUtilisateur().getTelephone() : "â€”");
+            m.put("adresse", s.getUtilisateur().getAdresse() != null ? s.getUtilisateur().getAdresse() : "â€”");
             m.put("statutCls", s.getStatut().name());
             m.put("statutLabel", s.getStatut() == Stagiaire.StatutStagiaire.actif ? "Actif"
-                    : s.getStatut() == Stagiaire.StatutStagiaire.termine ? "Terminé" : "Abandonné");
-            m.put("dateAdmission", s.getDateAdmission() != null ? sdf.format(java.sql.Date.valueOf(s.getDateAdmission())) : "—");
+                    : s.getStatut() == Stagiaire.StatutStagiaire.termine ? "TerminÃ©" : "AbandonnÃ©");
+            m.put("dateAdmission", s.getDateAdmission() != null ? sdf.format(java.sql.Date.valueOf(s.getDateAdmission())) : "â€”");
 
             if (s.getDemandeStage() != null) {
-                m.put("universite", s.getDemandeStage().getEcole() != null ? s.getDemandeStage().getEcole() : "—");
-                m.put("filiere", s.getDemandeStage().getFiliere() != null ? s.getDemandeStage().getFiliere() : "—");
-                m.put("niveau", s.getDemandeStage().getNiveau() != null ? s.getDemandeStage().getNiveau() : "—");
+                m.put("universite", s.getDemandeStage().getEcole() != null ? s.getDemandeStage().getEcole() : "â€”");
+                m.put("filiere", s.getDemandeStage().getFiliere() != null ? s.getDemandeStage().getFiliere() : "â€”");
+                m.put("niveau", s.getDemandeStage().getNiveau() != null ? s.getDemandeStage().getNiveau() : "â€”");
             } else {
-                m.put("universite", "—");
-                m.put("filiere", "—");
-                m.put("niveau", "—");
+                m.put("universite", "â€”");
+                m.put("filiere", "â€”");
+                m.put("niveau", "â€”");
             }
 
             java.util.Optional<Stage> stageOpt = stageRepository.findByStagiaireId(s.getId());
@@ -553,16 +582,16 @@ public class AdminController {
             if (stageOpt.isPresent()) {
                 Stage st = stageStagiaire;
                 m.put("stageId", st.getId());
-                m.put("service", st.getService() != null ? st.getService().getNom() : "—");
+                m.put("service", st.getService() != null ? st.getService().getNom() : "â€”");
                 m.put("serviceId", st.getService() != null ? st.getService().getId().toString() : "");
                 m.put("encadreur", st.getEncadreur() != null
-                        ? st.getEncadreur().getUtilisateur().getPrenom() + " " + st.getEncadreur().getUtilisateur().getNom() : "—");
+                        ? st.getEncadreur().getUtilisateur().getPrenom() + " " + st.getEncadreur().getUtilisateur().getNom() : "â€”");
                 m.put("encadreurId", st.getEncadreur() != null ? st.getEncadreur().getId().toString() : "");
-                m.put("dateDebut", st.getDateDebut() != null ? sdf.format(java.sql.Date.valueOf(st.getDateDebut())) : "—");
-                m.put("dateFin", st.getDateFin() != null ? sdf.format(java.sql.Date.valueOf(st.getDateFin())) : "—");
+                m.put("dateDebut", st.getDateDebut() != null ? sdf.format(java.sql.Date.valueOf(st.getDateDebut())) : "â€”");
+                m.put("dateFin", st.getDateFin() != null ? sdf.format(java.sql.Date.valueOf(st.getDateFin())) : "â€”");
                 m.put("dateDebutIso", st.getDateDebut() != null ? st.getDateDebut().toString() : "");
                 m.put("dateFinIso", st.getDateFin() != null ? st.getDateFin().toString() : "");
-                m.put("duree", st.getDuree() != null ? st.getDuree() : "—");
+                m.put("duree", st.getDuree() != null ? st.getDuree() : "â€”");
 
                 if (st.getDateFin() != null) {
                     long joursRestants = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), st.getDateFin());
@@ -572,10 +601,10 @@ public class AdminController {
                     } else if (joursRestants == 0) {
                         m.put("dureeRestante", "Dernier jour");
                     } else {
-                        m.put("dureeRestante", "Terminé");
+                        m.put("dureeRestante", "TerminÃ©");
                     }
                 } else {
-                    m.put("dureeRestante", "—");
+                    m.put("dureeRestante", "â€”");
                 }
 
                 if (st.getDateDebut() != null && st.getDateFin() != null) {
@@ -588,16 +617,16 @@ public class AdminController {
                 }
             } else {
                 m.put("stageId", null);
-                m.put("service", "—");
+                m.put("service", "â€”");
                 m.put("serviceId", "");
-                m.put("encadreur", "—");
+                m.put("encadreur", "â€”");
                 m.put("encadreurId", "");
-                m.put("dateDebut", "—");
-                m.put("dateFin", "—");
+                m.put("dateDebut", "â€”");
+                m.put("dateFin", "â€”");
                 m.put("dateDebutIso", "");
                 m.put("dateFinIso", "");
-                m.put("duree", "—");
-                m.put("dureeRestante", "—");
+                m.put("duree", "â€”");
+                m.put("dureeRestante", "â€”");
                 m.put("progression", 0);
             }
 
@@ -610,10 +639,10 @@ public class AdminController {
                 dm.put("nom", doc.getNomFichier());
                 dm.put("taille", doc.getTailleOctets() != null
                         ? String.format(Locale.FRANCE, "%.1f Mo", doc.getTailleOctets() / 1048576.0)
-                        : "—");
+                        : "â€”");
                 dm.put("date", doc.getDateDepot() != null
                         ? doc.getDateDepot().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        : "—");
+                        : "â€”");
                 String ext = doc.getNomFichier() != null && doc.getNomFichier().contains(".")
                         ? doc.getNomFichier().substring(doc.getNomFichier().lastIndexOf(".")+1).toLowerCase() : "";
                 if (ext.equals("pdf")) { dm.put("cls", "pdf"); dm.put("icon", "fa-solid fa-file-pdf"); }
@@ -645,10 +674,10 @@ public class AdminController {
                 lm.put("fichier", livrable.getFichier());
                 lm.put("date", livrable.getDateDepot() != null
                         ? livrable.getDateDepot().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                        : "—");
+                        : "â€”");
                 lm.put("taille", livrable.getTailleOctets() != null
                         ? String.format(Locale.FRANCE, "%.1f Mo", livrable.getTailleOctets() / 1048576.0)
-                        : "—");
+                        : "â€”");
                 return lm;
             }).collect(Collectors.toList());
             m.put("livrables", livrablesJson);
@@ -663,7 +692,7 @@ public class AdminController {
                         tm.put("statut", tache.getStatut().name());
                         tm.put("dateLimite", tache.getDateLimite() != null
                                 ? tache.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                                : "—");
+                                : "â€”");
                         return tm;
                     }).collect(Collectors.toList());
             m.put("taches", tachesJson);
@@ -681,7 +710,7 @@ public class AdminController {
             return null;
         }
         java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("(\\d+)\\s*(jour|jours|semaine|semaines|mois|an|ans|année|années)",
+                .compile("(\\d+)\\s*(jour|jours|semaine|semaines|mois|an|ans|annÃ©e|annÃ©es)",
                         java.util.regex.Pattern.CASE_INSENSITIVE)
                 .matcher(duree.trim());
         if (!matcher.find()) {
@@ -718,7 +747,7 @@ public class AdminController {
         String emailNormalise = email.trim().toLowerCase(Locale.ROOT);
         Optional<Utilisateur> compteExistant = utilisateurRepository.findByEmail(emailNormalise);
         if (compteExistant.isPresent() && !compteExistant.get().getId().equals(utilisateur.getId())) {
-            redirectAttributes.addFlashAttribute("erreur", "Cette adresse email est déjà utilisée.");
+            redirectAttributes.addFlashAttribute("erreur", "Cette adresse email est dÃ©jÃ  utilisÃ©e.");
             return "redirect:/admin/stagiaires";
         }
         utilisateur.setPrenom(prenom.trim());
@@ -740,7 +769,7 @@ public class AdminController {
             stageRepository.save(stage);
         });
 
-        redirectAttributes.addFlashAttribute("succes", "La fiche du stagiaire a été mise à jour.");
+        redirectAttributes.addFlashAttribute("succes", "La fiche du stagiaire a Ã©tÃ© mise Ã  jour.");
         return "redirect:/admin/stagiaires";
     }
 
@@ -760,7 +789,7 @@ public class AdminController {
                     !actif);
         });
         redirectAttributes.addFlashAttribute("succes",
-                actif ? "Le compte du stagiaire a été débloqué." : "Le compte du stagiaire a été bloqué.");
+                actif ? "Le compte du stagiaire a Ã©tÃ© dÃ©bloquÃ©." : "Le compte du stagiaire a Ã©tÃ© bloquÃ©.");
         return "redirect:/admin/stagiaires";
     }
 
@@ -776,14 +805,14 @@ public class AdminController {
         Optional<Encadreur> encadreurOpt = encadreurRepository.findById(encadreurId);
         Optional<ServiceEntreprise> serviceOpt = serviceRepository.findById(serviceId);
         if (stagiaireOpt.isEmpty() || encadreurOpt.isEmpty() || serviceOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("erreur", "L'affectation est incomplète.");
+            redirectAttributes.addFlashAttribute("erreur", "L'affectation est incomplÃ¨te.");
             return "redirect:/admin/stagiaires";
         }
         LocalDate debut = LocalDate.parse(dateDebut);
         LocalDate fin = LocalDate.parse(dateFin);
         if (!fin.isAfter(debut)) {
             redirectAttributes.addFlashAttribute("erreur",
-                    "La date de fin doit être postérieure à la date de début.");
+                    "La date de fin doit Ãªtre postÃ©rieure Ã  la date de dÃ©but.");
             return "redirect:/admin/stagiaires";
         }
         Stage stage = stageRepository.findByStagiaireId(id).orElseGet(Stage::new);
@@ -802,8 +831,29 @@ public class AdminController {
         Stagiaire stagiaire = stagiaireOpt.get();
         stagiaire.setStatut(Stagiaire.StatutStagiaire.actif);
         stagiaireRepository.save(stagiaire);
+        LocalDateTime maintenant = LocalDateTime.now();
+        String date = maintenant.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String heure = maintenant.format(DateTimeFormatter.ofPattern("HH:mm"));
+        String nomStagiaire = stagiaire.getUtilisateur().getPrenom() + " " + stagiaire.getUtilisateur().getNom();
+        String nomEncadreur = encadreurOpt.get().getUtilisateur().getPrenom() + " "
+                + encadreurOpt.get().getUtilisateur().getNom();
+        Notification notifStagiaire = new Notification(
+                "Nouvelle affectation",
+                "Vous Ãªtes affectÃ© Ã  " + nomEncadreur + ", encadreur, le " + date + ", Ã  " + heure + ".",
+                "Personne prÃ©cise", "normale", "Administration");
+        notifStagiaire.setDestinataireEmail(stagiaire.getUtilisateur().getEmail());
+        Notification notifEncadreur = new Notification(
+                "Nouveau stagiaire affectÃ©",
+                "On vous a affectÃ© le stagiaire " + nomStagiaire + " le " + date + ", Ã  " + heure + ".",
+                "Personne prÃ©cise", "normale", "Administration");
+        notifEncadreur.setDestinataireEmail(encadreurOpt.get().getUtilisateur().getEmail());
+        notificationRepository.saveAll(List.of(notifStagiaire, notifEncadreur));
+        emailService.envoyerNotificationSimple(stagiaire.getUtilisateur().getEmail(),
+                "Nouvelle affectation de stage", notifStagiaire.getMessage());
+        emailService.envoyerNotificationSimple(encadreurOpt.get().getUtilisateur().getEmail(),
+                "Nouveau stagiaire affectÃ©", notifEncadreur.getMessage());
         redirectAttributes.addFlashAttribute("succes",
-                "Le stagiaire a été affecté avec succès.");
+                "Le stagiaire a Ã©tÃ© affectÃ© avec succÃ¨s.");
         return "redirect:/admin/stagiaires";
     }
 
@@ -933,11 +983,11 @@ public class AdminController {
                 .replaceAll("[^A-Z0-9]+", "_")
                 .replaceAll("^_+|_+$", "");
         if (roleLibelle.isBlank()) {
-            redirectAttributes.addFlashAttribute("erreur", "Le nom du rôle est obligatoire.");
+            redirectAttributes.addFlashAttribute("erreur", "Le nom du rÃ´le est obligatoire.");
             return "redirect:/admin/roles-permissions";
         }
         if (roleRepository.findByLibelle(roleLibelle).isPresent()) {
-            redirectAttributes.addFlashAttribute("erreur", "Ce rôle existe déjà.");
+            redirectAttributes.addFlashAttribute("erreur", "Ce rÃ´le existe dÃ©jÃ .");
             return "redirect:/admin/roles-permissions";
         }
         Role role = new Role(roleLibelle, description);
@@ -947,7 +997,7 @@ public class AdminController {
             role.setPermissions(new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
         }
         roleRepository.save(role);
-        redirectAttributes.addFlashAttribute("succes", "Le rôle " + roleLibelle + " a été créé.");
+        redirectAttributes.addFlashAttribute("succes", "Le rÃ´le " + roleLibelle + " a Ã©tÃ© crÃ©Ã©.");
         return "redirect:/admin/roles-permissions";
     }
 
@@ -958,7 +1008,7 @@ public class AdminController {
         Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findById(utilisateurId);
         Optional<Role> roleOpt = roleRepository.findById(roleId);
         if (utilisateurOpt.isEmpty() || roleOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("erreur", "Utilisateur ou rôle introuvable.");
+            redirectAttributes.addFlashAttribute("erreur", "Utilisateur ou rÃ´le introuvable.");
             return "redirect:/admin/roles-permissions";
         }
 
@@ -978,17 +1028,17 @@ public class AdminController {
         );
 
         String action = ancienRole != null && ancienRole.getId().equals(nouveauRole.getId())
-                ? "a été confirmé"
-                : "a été changé de " + (ancienRole == null ? "sans rôle" : ancienRole.getLibelle())
+                ? "a Ã©tÃ© confirmÃ©"
+                : "a Ã©tÃ© changÃ© de " + (ancienRole == null ? "sans rÃ´le" : ancienRole.getLibelle())
                         + " vers " + nouveauRole.getLibelle();
         if (emailEnvoye) {
             redirectAttributes.addFlashAttribute("succes",
-                    "Le rôle de " + utilisateur.getPrenom() + " " + utilisateur.getNom() + " " + action
-                            + ". Un e-mail récapitulatif a été envoyé.");
+                    "Le rÃ´le de " + utilisateur.getPrenom() + " " + utilisateur.getNom() + " " + action
+                            + ". Un e-mail rÃ©capitulatif a Ã©tÃ© envoyÃ©.");
         } else {
             redirectAttributes.addFlashAttribute("erreur",
-                    "Le rôle et les permissions ont bien été mis à jour, mais l'e-mail n'a pas pu être envoyé à "
-                            + utilisateur.getEmail() + ". Vérifiez la configuration SMTP.");
+                    "Le rÃ´le et les permissions ont bien Ã©tÃ© mis Ã  jour, mais l'e-mail n'a pas pu Ãªtre envoyÃ© Ã  "
+                            + utilisateur.getEmail() + ". VÃ©rifiez la configuration SMTP.");
         }
         return "redirect:/admin/roles-permissions";
     }
@@ -999,7 +1049,7 @@ public class AdminController {
                                            RedirectAttributes redirectAttributes) {
         Optional<Role> roleOpt = roleRepository.findById(roleId);
         if (roleOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("erreur", "Rôle introuvable.");
+            redirectAttributes.addFlashAttribute("erreur", "RÃ´le introuvable.");
             return "redirect:/admin/roles-permissions";
         }
         Role role = roleOpt.get();
@@ -1008,11 +1058,11 @@ public class AdminController {
                 : new LinkedHashSet<>(permissionRepository.findAllById(permissionIds)));
         roleRepository.save(role);
         
-        // Synchroniser avec les mappings pour éviter les duplications
+        // Synchroniser avec les mappings pour Ã©viter les duplications
         permissionService.synchroniserRoleAvecMappings(role);
         
         redirectAttributes.addFlashAttribute("succes",
-                "Les permissions du rôle " + role.getLibelle() + " ont été mises à jour.");
+                "Les permissions du rÃ´le " + role.getLibelle() + " ont Ã©tÃ© mises Ã  jour.");
         return "redirect:/admin/roles-permissions";
     }
 
@@ -1027,11 +1077,11 @@ public class AdminController {
         String code = normaliserCode(nom);
         if (permissionRepository.findByCode(code).isPresent()
                 || permissionRepository.existsByNomIgnoreCase(nom.trim())) {
-            redirectAttributes.addFlashAttribute("erreur", "Cette permission existe déjà.");
+            redirectAttributes.addFlashAttribute("erreur", "Cette permission existe dÃ©jÃ .");
             return "redirect:/admin/roles-permissions";
         }
         permissionRepository.save(new Permission(code, nom.trim(), description));
-        redirectAttributes.addFlashAttribute("succes", "La permission " + nom.trim() + " a été ajoutée.");
+        redirectAttributes.addFlashAttribute("succes", "La permission " + nom.trim() + " a Ã©tÃ© ajoutÃ©e.");
         return "redirect:/admin/roles-permissions";
     }
 
@@ -1051,7 +1101,7 @@ public class AdminController {
         });
         permissionRepository.delete(permission);
         redirectAttributes.addFlashAttribute("succes",
-                "La permission " + permission.getNom() + " a été supprimée.");
+                "La permission " + permission.getNom() + " a Ã©tÃ© supprimÃ©e.");
         return "redirect:/admin/roles-permissions";
     }
 
@@ -1068,7 +1118,7 @@ public class AdminController {
                 && encadreurRepository.findByUtilisateurId(utilisateur.getId()).isEmpty()) {
             encadreurRepository.save(new Encadreur(
                     utilisateur,
-                    "À renseigner",
+                    "Ã€ renseigner",
                     "Encadreur"
             ));
         }
@@ -1078,13 +1128,13 @@ public class AdminController {
             DemandeStage demande = new DemandeStage(
                     utilisateur.getNom(),
                     utilisateur.getPrenom(),
-                    "À renseigner",
-                    "À renseigner",
-                    "À renseigner",
-                    "À renseigner"
+                    "Ã€ renseigner",
+                    "Ã€ renseigner",
+                    "Ã€ renseigner",
+                    "Ã€ renseigner"
             );
             demande.setEmail(utilisateur.getEmail());
-            demande.setCommentaire("Profil créé lors d'un changement de rôle");
+            demande.setCommentaire("Profil crÃ©Ã© lors d'un changement de rÃ´le");
             demande.setStatut(DemandeStage.StatutDemande.acceptee);
             demandeStageRepository.save(demande);
 
@@ -1143,3 +1193,4 @@ private String extraireEmailCandidat(DemandeStage demande) {
         return "\"" + valeur.toString().replace("\"", "\"\"").replace("\r", " ").replace("\n", " ") + "\"";
     }
 }
+

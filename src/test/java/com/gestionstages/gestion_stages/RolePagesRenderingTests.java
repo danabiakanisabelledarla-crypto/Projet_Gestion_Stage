@@ -142,6 +142,12 @@ class RolePagesRenderingTests {
                     .andReturn().getResponse().getStatus();
             assertEquals(200, status, "Route Stagiaire en échec : " + route);
         }
+
+        mockMvc.perform(get("/stagiaire/planning").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Période de votre stage")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Date de début")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Date de fin")));
     }
 
     @Test
@@ -175,10 +181,9 @@ class RolePagesRenderingTests {
     }
 
     @Test
-    void stagiaireJournalAndObjectivesReflectNewDatabaseEntries() throws Exception {
+    void stagiaireJournalWorksAndObjectiveCreationIsForbidden() throws Exception {
         MockHttpSession session = login("stagiaire@gestion-stages.com", "stag1234");
         String journalText = "Synchronisation AJAX du journal";
-        String objectiveText = "Objectif dynamique jeudi";
 
         mockMvc.perform(post("/stagiaire/journal/ajouter")
                         .session(session)
@@ -198,15 +203,18 @@ class RolePagesRenderingTests {
         mockMvc.perform(post("/stagiaire/objectifs/creer")
                         .session(session)
                         .with(csrf())
-                        .param("libelle", objectiveText)
+                        .param("libelle", "Objectif interdit")
                         .param("description", "Objectif enregistré en base")
                         .param("priorite", "moyenne")
                         .param("dateLimite", "2026-08-20"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/stagiaire/objectifs").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(objectiveText)));
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Ajouter un objectif"))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Attribués par votre encadreur")));
     }
 
     private MockHttpSession login(String username, String password) throws Exception {

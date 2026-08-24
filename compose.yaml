@@ -1,4 +1,23 @@
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: dta-gestion-stages-db
+    environment:
+      MYSQL_DATABASE: "${DB_NAME:-gestion_stages}"
+      MYSQL_USER: "${DB_USERNAME:-gestion_stages}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-gestion_stages_2026}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-root_2026}"
+      TZ: "${TZ:-Africa/Douala}"
+    volumes:
+      - gestion-stages-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root_2026}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
   gestion-stages:
     build:
       context: .
@@ -11,12 +30,13 @@ services:
     environment:
       SERVER_ADDRESS: 0.0.0.0
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: "jdbc:h2:file:/app/data/gestion_stages;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
-      SPRING_DATASOURCE_USERNAME: "${DB_USERNAME:-sa}"
-      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-}"
+      APP_BASE_URL: "${APP_BASE_URL:-http://localhost:8080}"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${DB_NAME:-gestion_stages}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa/Douala"
+      SPRING_DATASOURCE_USERNAME: "${DB_USERNAME:-gestion_stages}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-gestion_stages_2026}"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "${JPA_SHOW_SQL:-false}"
-      SPRING_H2_CONSOLE_ENABLED: "${H2_CONSOLE_ENABLED:-false}"
+      SPRING_H2_CONSOLE_ENABLED: "false"
       SPRING_MAIL_HOST: "${MAIL_HOST:-smtp.gmail.com}"
       SPRING_MAIL_PORT: "${MAIL_PORT:-587}"
       SPRING_MAIL_USERNAME: "${MAIL_USERNAME:-}"
@@ -27,7 +47,12 @@ services:
       JAVA_OPTS: "${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8}"
       TZ: "${TZ:-Africa/Douala}"
     volumes:
-      - ./data:/app/data
       - ./uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 30s
+
+volumes:
+  gestion-stages-mysql:

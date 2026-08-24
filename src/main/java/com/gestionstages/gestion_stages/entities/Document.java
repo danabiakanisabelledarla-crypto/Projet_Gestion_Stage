@@ -31,6 +31,9 @@ public class Document {
     @Column(name = "date_depot", nullable = false, updatable = false)
     private LocalDateTime dateDepot = LocalDateTime.now();
 
+    @Column(name = "date_modification")
+    private LocalDateTime dateModification = LocalDateTime.now();
+
     @Column(length = 30)
     private String statut = "disponible";
 
@@ -109,6 +112,9 @@ public class Document {
     public void setDateDepot(LocalDateTime dateDepot) {
         this.dateDepot = dateDepot;
     }
+
+    public LocalDateTime getDateModification() { return dateModification; }
+    public void setDateModification(LocalDateTime dateModification) { this.dateModification = dateModification; }
 
     public String getStatut() {
         return statut;

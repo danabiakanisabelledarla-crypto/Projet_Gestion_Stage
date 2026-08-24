@@ -183,12 +183,20 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
     public String ajouterUtilisateur(@RequestParam String nom, @RequestParam String prenom,
                                       @RequestParam String email, @RequestParam String roleLibelle,
                                       @RequestParam String motDePasse,
+                                      @RequestParam(required = false) Integer serviceId,
                                       @AuthenticationPrincipal CustomUserDetails user) {
         if (utilisateurRepository.existsByEmail(email)) {
             return "redirect:/admin/utilisateurs?succes=Email deja utilise.";
         }
         Role role = roleRepository.findByLibelle(roleLibelle).orElseThrow();
-        utilisateurRepository.save(new Utilisateur(role, nom, prenom, email, passwordEncoder.encode(motDePasse)));
+        Utilisateur nouveau = new Utilisateur(role, nom.trim(), prenom.trim(),
+                email.trim().toLowerCase(), passwordEncoder.encode(motDePasse));
+        if (serviceId != null) serviceRepository.findById(serviceId).ifPresent(nouveau::setService);
+        utilisateurRepository.save(nouveau);
+        emailService.envoyerNotificationSimple(nouveau.getEmail(),
+                "Votre compte a été créé",
+                "Bonjour " + nouveau.getPrenom() + " " + nouveau.getNom()
+                        + ", vous venez d'être ajouté en tant que " + role.getLibelle() + ".");
         activityLogService.log("Utilisateur ajoute", email + " (" + roleLibelle + ")", adminName(user));
         return "redirect:/admin/utilisateurs?succes=Utilisateur ajoute avec succes.";
     }
@@ -301,6 +309,12 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
 
         model.addAttribute("activePage", "services");
         model.addAttribute("services", services);
+        model.addAttribute("utilisateursAffectables", utilisateurRepository.findAll().stream()
+                .filter(utilisateur -> utilisateur.getRole() != null
+                        && !"STAGIAIRE".equals(utilisateur.getRole().getLibelle()))
+                .sorted(java.util.Comparator.comparing(Utilisateur::getNom)
+                        .thenComparing(Utilisateur::getPrenom))
+                .toList());
         model.addAttribute("serviceRows", serviceRows);
         model.addAttribute("totalServices", serviceRepository.count());
         model.addAttribute("totalResponsables", utilisateurRepository.findAll().stream()
@@ -337,6 +351,32 @@ public String utilisateurs(Model model, @RequestParam(required = false) String s
     public String supprimerService(@PathVariable Integer id) {
         serviceRepository.deleteById(id);
         return "redirect:/admin/services?succes=Service supprime.";
+    }
+
+    @PostMapping("/services/{serviceId}/affecter-utilisateur")
+    public String affecterUtilisateurAuService(@PathVariable Integer serviceId,
+                                               @RequestParam Integer utilisateurId,
+                                               RedirectAttributes redirectAttributes) {
+        ServiceEntreprise service = serviceRepository.findById(serviceId).orElse(null);
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId).orElse(null);
+        if (service == null || utilisateur == null) {
+            redirectAttributes.addFlashAttribute("erreur", "Service ou utilisateur introuvable.");
+            return "redirect:/admin/services";
+        }
+        utilisateur.setService(service);
+        utilisateurRepository.save(utilisateur);
+        String texte = "Bienvenue dans votre espace. Vous venez d'être affecté au service "
+                + service.getNom() + ".";
+        Notification notification = new Notification(
+                "Affectation à un service", texte, "Personne précise", "normale", "Administration");
+        notification.setDestinataireEmail(utilisateur.getEmail());
+        notificationRepository.save(notification);
+        emailService.envoyerNotificationSimple(
+                utilisateur.getEmail(),
+                "Affectation au service " + service.getNom(),
+                "Bonjour " + utilisateur.getPrenom() + " " + utilisateur.getNom() + ", " + texte);
+        redirectAttributes.addFlashAttribute("succes", "Utilisateur affecté au service.");
+        return "redirect:/admin/services";
     }
 
     @GetMapping("/services/exporter")
@@ -436,6 +476,10 @@ public String documents(Model model, @RequestParam(required = false) String succ
                 ? String.format(java.util.Locale.FRANCE, "%.1f Mo", d.getTailleOctets() / 1048576.0)
                 : "—");
         m.put("dateDepot", d.getDateDepot() != null ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDepot())) : "—");
+        m.put("dateModification", d.getDateModification() != null
+                ? sdf.format(java.sql.Timestamp.valueOf(d.getDateModification()))
+                : (d.getDateDepot() != null
+                ? sdf.format(java.sql.Timestamp.valueOf(d.getDateDepot())) : "—"));
 
         String ext = d.getNomFichier() != null && d.getNomFichier().contains(".")
                 ? d.getNomFichier().substring(d.getNomFichier().lastIndexOf(".") + 1).toLowerCase() : "";
@@ -821,8 +865,15 @@ public String documents(Model model, @RequestParam(required = false) String succ
             model.addAttribute("diskPercent", 0);
         }
         model.addAttribute("javaVersion", System.getProperty("java.version"));
-        model.addAttribute("databaseProduct", "H2 " + jdbcTemplate.queryForObject(
-                "SELECT H2VERSION()", String.class));
+        String databaseProduct = "Indisponible";
+        try (java.sql.Connection connection = jdbcTemplate.getDataSource().getConnection()) {
+            java.sql.DatabaseMetaData metadata = connection.getMetaData();
+            databaseProduct = metadata.getDatabaseProductName() + " "
+                    + metadata.getDatabaseProductVersion();
+        } catch (Exception ignored) {
+            // La page reste accessible même si les métadonnées JDBC ne sont pas disponibles.
+        }
+        model.addAttribute("databaseProduct", databaseProduct);
         if (succes != null) model.addAttribute("succes", succes);
         return "admin/parametres";
     }
@@ -882,39 +933,42 @@ public String documents(Model model, @RequestParam(required = false) String succ
 
     @PostMapping({"/parametres", "/parametre"})
     public String sauverParametres(@AuthenticationPrincipal CustomUserDetails user,
-                                   @RequestParam(defaultValue = "false") boolean preferenceEmail,
-                                   @RequestParam(defaultValue = "false") boolean preferenceSysteme,
-                                   @RequestParam(defaultValue = "false") boolean preferenceRappel,
-                                   @RequestParam(defaultValue = "false") boolean preferenceSombre,
-                                   @RequestParam(defaultValue = "fr") String preferenceLangue,
+                                   @RequestParam(defaultValue = "all") String section,
                                    @RequestParam Map<String, String> formValues,
                                    RedirectAttributes ra) {
         AdminPreference preferences = adminPreferenceRepository
                 .findByUtilisateurId(user.getUtilisateur().getId())
                 .orElseGet(() -> new AdminPreference(user.getUtilisateur()));
-        preferences.setNotificationsEmail(preferenceEmail);
-        preferences.setNotificationsSysteme(preferenceSysteme);
-        preferences.setRappelTaches(preferenceRappel);
-        preferences.setModeSombre(preferenceSombre);
-        preferences.setLangue("en".equalsIgnoreCase(preferenceLangue) ? "en" : "fr");
-        adminPreferenceRepository.save(preferences);
         Map<String, String> settings = new HashMap<>();
-        for (String key : List.of("platformName", "companyName", "contactEmail", "phone",
-                "address", "timezone", "academicYear", "startDate", "maxDuration",
-                "language", "maxFileSize", "storage", "dateFormat")) {
+        List<String> keys = switch (section) {
+            case "general" -> List.of("platformName", "companyName", "contactEmail",
+                    "phone", "address", "timezone");
+            case "fonctionnement" -> List.of("academicYear", "startDate", "maxDuration", "language");
+            case "documents" -> List.of("maxFileSize", "storage", "dateFormat");
+            default -> List.of("platformName", "companyName", "contactEmail", "phone",
+                    "address", "timezone", "academicYear", "startDate", "maxDuration",
+                    "language", "maxFileSize", "storage", "dateFormat");
+        };
+        for (String key : keys) {
             if (formValues.containsKey(key)) {
                 settings.put(key, formValues.get(key));
             }
         }
-        settings.put("emailNotifications",
-                String.valueOf(formValues.containsKey("emailNotifications")));
-        settings.put("appNotifications",
-                String.valueOf(formValues.containsKey("appNotifications")));
-        settings.put("maintenanceMode",
-                String.valueOf(formValues.containsKey("maintenanceMode")));
+        if ("fonctionnement".equals(section) || "all".equals(section)) {
+            settings.put("emailNotifications",
+                    String.valueOf(formValues.containsKey("emailNotifications")));
+            settings.put("appNotifications",
+                    String.valueOf(formValues.containsKey("appNotifications")));
+            preferences.setModeSombre(formValues.containsKey("preferenceSombre"));
+            adminPreferenceRepository.save(preferences);
+        }
+        if ("all".equals(section)) {
+            settings.put("maintenanceMode",
+                    String.valueOf(formValues.containsKey("maintenanceMode")));
+        }
         applicationSettingService.save(settings);
         activityLogService.log("Parametres globaux modifies",
-                settings.keySet().toString(), adminName(user));
+                section + " : " + settings.keySet(), adminName(user));
         ra.addAttribute("succes", "Préférences enregistrées.");
         return "redirect:/admin/parametres";
     }
@@ -923,6 +977,15 @@ public String documents(Model model, @RequestParam(required = false) String succ
     public String reinitialiserParametres(@AuthenticationPrincipal CustomUserDetails user,
                                           RedirectAttributes ra) {
         applicationSettingService.reset();
+        AdminPreference preferences = adminPreferenceRepository
+                .findByUtilisateurId(user.getUtilisateur().getId())
+                .orElseGet(() -> new AdminPreference(user.getUtilisateur()));
+        preferences.setNotificationsEmail(true);
+        preferences.setNotificationsSysteme(true);
+        preferences.setRappelTaches(true);
+        preferences.setModeSombre(false);
+        preferences.setLangue("fr");
+        adminPreferenceRepository.save(preferences);
         activityLogService.log("Parametres reinitialises",
                 "Valeurs globales restaurees", adminName(user));
         ra.addAttribute("succes", "Parametres globaux reinitialises.");
@@ -953,9 +1016,25 @@ public String documents(Model model, @RequestParam(required = false) String succ
                     message = "Cache temporaire vide.";
                 }
                 case "database" -> {
-                    jdbcTemplate.execute("ANALYZE");
-                    jdbcTemplate.execute("CHECKPOINT");
-                    message = "Statistiques et fichiers de la base optimises.";
+                    String databaseName;
+                    try (java.sql.Connection connection = jdbcTemplate.getDataSource().getConnection()) {
+                        databaseName = connection.getMetaData().getDatabaseProductName()
+                                .toLowerCase(java.util.Locale.ROOT);
+                    }
+                    if (databaseName.contains("mysql")) {
+                        List<String> tables = jdbcTemplate.queryForList(
+                                "SELECT TABLE_NAME FROM information_schema.TABLES "
+                                        + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'",
+                                String.class);
+                        for (String table : tables) {
+                            jdbcTemplate.execute("ANALYZE TABLE `" + table.replace("`", "") + "`");
+                        }
+                    } else {
+                        jdbcTemplate.execute("ANALYZE");
+                    }
+                    jdbcTemplate.queryForObject("SELECT COUNT(*) FROM utilisateurs", Integer.class);
+                    jdbcTemplate.queryForObject("SELECT COUNT(*) FROM demandes_stage", Integer.class);
+                    message = "Maintenance de la base de donnees terminee avec succes.";
                 }
                 case "files" -> {
                     long manquants = documentRepository.findAll().stream()
@@ -969,9 +1048,9 @@ public String documents(Model model, @RequestParam(required = false) String succ
                 default -> throw new IllegalArgumentException("Action inconnue");
             }
             activityLogService.log("Maintenance " + action, message, adminName(user));
-            ra.addAttribute("succes", message);
+            ra.addFlashAttribute("succes", message);
         } catch (Exception exception) {
-            ra.addAttribute("succes", "Operation de maintenance impossible : "
+            ra.addFlashAttribute("erreur", "Operation de maintenance impossible : "
                     + exception.getMessage());
         }
         return "redirect:/admin/parametres";
@@ -992,6 +1071,7 @@ public String documents(Model model, @RequestParam(required = false) String succ
         model.addAttribute("totalStages", stageRepository.count());
         model.addAttribute("stagesTermines", stageRepository.findByStatut(Stage.StatutStage.termine).size());
         model.addAttribute("totalDocuments", documentRepository.count());
+        model.addAttribute("stagiaires", stagiaireRepository.findAll());
 
         List<String> typesAdministratifs = List.of(
                 "rapport_hebdomadaire", "rapport_final", "fiche_note", "attestation");
@@ -1000,6 +1080,49 @@ public String documents(Model model, @RequestParam(required = false) String succ
                 .sorted(java.util.Comparator.comparing(Document::getDateDepot).reversed())
                 .toList());
         return "admin/rapports";
+    }
+
+    @PostMapping("/rapports/importer")
+    public String importerRapport(@RequestParam String nomDocument,
+                                  @RequestParam Integer stagiaireId,
+                                  @RequestParam String typeDocument,
+                                  @RequestParam(required = false) String typeAutre,
+                                  @RequestParam MultipartFile fichier,
+                                  RedirectAttributes redirectAttributes) {
+        if (fichier == null || fichier.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erreur", "Sélectionnez un fichier à importer.");
+            return "redirect:/admin/rapports";
+        }
+        Stage stage = stageRepository.findByStagiaireId(stagiaireId).orElse(null);
+        if (stage == null) {
+            redirectAttributes.addFlashAttribute("erreur", "Aucun stage trouvé pour ce stagiaire.");
+            return "redirect:/admin/rapports";
+        }
+        try {
+            Path dossier = Paths.get("uploads", "documents").toAbsolutePath().normalize();
+            Files.createDirectories(dossier);
+            String original = Paths.get(fichier.getOriginalFilename() == null ? "document"
+                    : fichier.getOriginalFilename()).getFileName().toString();
+            String nomFinal = nomDocument == null || nomDocument.isBlank() ? original : nomDocument.trim();
+            if (original.contains(".") && !nomFinal.toLowerCase().endsWith(
+                    original.substring(original.lastIndexOf('.')).toLowerCase())) {
+                nomFinal += original.substring(original.lastIndexOf('.'));
+            }
+            Path cible = dossier.resolve(UUID.randomUUID() + "_" + nomFinal).normalize();
+            if (!cible.startsWith(dossier)) throw new IllegalArgumentException("Chemin invalide");
+            Files.copy(fichier.getInputStream(), cible, StandardCopyOption.REPLACE_EXISTING);
+            String typeFinal = "autre".equals(typeDocument) && typeAutre != null && !typeAutre.isBlank()
+                    ? typeAutre.trim().toLowerCase().replace(' ', '_') : typeDocument;
+            Document document = new Document(nomFinal, typeFinal, cible.toString());
+            document.setStage(stage);
+            document.setTailleOctets(fichier.getSize());
+            document.setDateModification(LocalDateTime.now());
+            documentRepository.save(document);
+            redirectAttributes.addFlashAttribute("succes", "Document importé et associé au stagiaire.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("erreur", "Import impossible : " + exception.getMessage());
+        }
+        return "redirect:/admin/rapports";
     }
 
     @GetMapping("/rapports/exporter")

@@ -22,9 +22,9 @@
                 <p>Suivez les objectifs définis par votre encadreur</p>
             </div>
         </div>
-        <button type="button" class="intern-button" data-open-objective>
-            <i class="fa-solid fa-plus"></i> Ajouter un objectif
-        </button>
+        <span class="intern-status status-blue">
+            <i class="fa-solid fa-user-check"></i> Attribués par votre encadreur
+        </span>
     </section>
 
     <section class="intern-kpis five">
@@ -104,48 +104,6 @@
 </main>
 </div>
 
-<div class="intern-modal" id="objectiveModal" role="dialog" aria-modal="true" aria-labelledby="objectiveModalTitle">
-    <form class="intern-modal-panel" th:action="@{/stagiaire/objectifs/creer}" method="post">
-        <div class="intern-card-header">
-            <div>
-                <h2 class="intern-card-title" id="objectiveModalTitle">Ajouter un objectif</h2>
-                <p class="intern-card-subtitle">Définissez le résultat à atteindre pendant votre stage</p>
-            </div>
-            <button type="button" class="intern-icon-button intern-icon-only" data-close-objective aria-label="Fermer">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="intern-form-grid">
-            <div class="intern-form-group full">
-                <label for="objectifLibelle">Titre de l’objectif</label>
-                <input class="intern-input" id="objectifLibelle" name="libelle" maxlength="200" required
-                       placeholder="Ex. Développer le tableau de bord stagiaire">
-            </div>
-            <div class="intern-form-group full">
-                <label for="objectifDescription">Description</label>
-                <textarea class="intern-textarea" id="objectifDescription" name="description"
-                          placeholder="Décrivez clairement le résultat attendu..."></textarea>
-            </div>
-            <div class="intern-form-group">
-                <label for="objectifPriorite">Priorité</label>
-                <select class="intern-select" id="objectifPriorite" name="priorite">
-                    <option value="basse">Faible</option>
-                    <option value="moyenne" selected>Moyenne</option>
-                    <option value="haute">Haute</option>
-                </select>
-            </div>
-            <div class="intern-form-group">
-                <label for="objectifDateLimite">Date d’échéance</label>
-                <input class="intern-input" id="objectifDateLimite" name="dateLimite" type="date">
-            </div>
-        </div>
-        <div class="intern-modal-actions">
-            <button type="button" class="intern-button secondary" data-close-objective>Annuler</button>
-            <button type="submit" class="intern-button"><i class="fa-solid fa-plus"></i> Ajouter l’objectif</button>
-        </div>
-    </form>
-</div>
 <script th:replace="~{fragments/header-stagiaire :: header-script}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -182,22 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cards.forEach(card => list.appendChild(card));
     });
 
-    const modal = document.getElementById('objectiveModal');
-    const openModal = () => {
-        if (!modal) return;
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        document.getElementById('objectifLibelle')?.focus();
-    };
-    const closeModal = () => {
-        if (!modal) return;
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-    };
-    document.querySelectorAll('[data-open-objective]').forEach(button => button.addEventListener('click', openModal));
-    document.querySelectorAll('[data-close-objective]').forEach(button => button.addEventListener('click', closeModal));
-    modal?.addEventListener('click', event => { if (event.target === modal) closeModal(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
 });
 </script>
 </body>

@@ -249,7 +249,16 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println(">>> Utilisateur cree : " + email + " / " + motDePasse);
             return u;
         }
-        return utilisateurRepository.findByEmail(email).orElse(null);
+        Utilisateur existant = utilisateurRepository.findByEmail(email).orElse(null);
+        if (existant != null && "admin@gestion-stages.com".equalsIgnoreCase(email)) {
+            Role role = roleRepository.findByLibelle(roleLibelle).orElseThrow();
+            existant.setRole(role);
+            existant.setMotDePasse(passwordEncoder.encode(motDePasse));
+            existant.setStatut(Utilisateur.StatutUtilisateur.actif);
+            utilisateurRepository.save(existant);
+            System.out.println(">>> Compte administrateur synchronise : " + email);
+        }
+        return existant;
     }
 
     private void creerServiceSiAbsent(String nom, String description) {

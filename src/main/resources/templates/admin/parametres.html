@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/admin-parametres.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body th:classappend="${preferences != null && preferences.modeSombre} ? ' admin-dark-mode' : ''">
+<body th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
 <main class="contenu-principal settings-page">
@@ -17,6 +17,13 @@
     <div class="settings-alert" th:if="${succes}">
         <i class="fa-solid fa-circle-check"></i>
         <span th:text="${succes}">Paramètres enregistrés.</span>
+        <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="settings-alert error" th:if="${erreur}">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span th:text="${erreur}">Une opération a échoué.</span>
         <button type="button" aria-label="Fermer" onclick="this.parentElement.remove()">
             <i class="fa-solid fa-xmark"></i>
         </button>
@@ -113,6 +120,10 @@
                             </div>
                         </label>
                     </div>
+                    <footer class="settings-card-footer">
+                        <span><i class="fa-solid fa-circle-info"></i> Les changements sont appliqués à la plateforme après enregistrement.</span>
+                        <button type="submit" name="section" value="general" class="settings-btn primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les paramètres généraux</button>
+                    </footer>
                 </article>
 
                 <article class="settings-card searchable-setting" data-search="fonctionnement année académique date début durée stage langue notifications email application">
@@ -190,60 +201,19 @@
                             <input type="checkbox" name="appNotifications" value="true" th:checked="${settings.appNotifications == 'true'}">
                             <span class="settings-toggle"></span>
                         </label>
-                    </div>
-                </article>
-
-                <article class="settings-card searchable-setting" data-search="préférences notifications email système rappel tâches mode sombre langue">
-                    <header class="settings-card-header">
-                        <div>
-                            <span class="settings-card-icon violet"><i class="fa-solid fa-sliders"></i></span>
-                            <div>
-                                <h2>Préférences</h2>
-                                <p>Personnalisez les alertes et l’affichage de votre espace.</p>
-                            </div>
-                        </div>
-                        <span class="settings-section-badge">Personnel</span>
-                    </header>
-                    <div class="settings-switch-list">
-                        <label class="settings-switch-row">
-                            <span class="settings-switch-icon email"><i class="fa-regular fa-envelope"></i></span>
-                            <span><strong>Notifications Email</strong><small>Recevoir les alertes importantes par e-mail.</small></span>
-                            <input type="checkbox" name="preferenceEmail" value="true" th:checked="${preferences.notificationsEmail}">
-                            <span class="settings-toggle"></span>
-                        </label>
-                        <label class="settings-switch-row">
-                            <span class="settings-switch-icon app"><i class="fa-regular fa-bell"></i></span>
-                            <span><strong>Notifications système</strong><small>Afficher les alertes dans l’espace Administrateur.</small></span>
-                            <input type="checkbox" name="preferenceSysteme" value="true" th:checked="${preferences.notificationsSysteme}">
-                            <span class="settings-toggle"></span>
-                        </label>
-                        <label class="settings-switch-row">
-                            <span class="settings-switch-icon app"><i class="fa-solid fa-list-check"></i></span>
-                            <span><strong>Rappel des tâches</strong><small>Recevoir les rappels liés aux actions en attente.</small></span>
-                            <input type="checkbox" name="preferenceRappel" value="true" th:checked="${preferences.rappelTaches}">
-                            <span class="settings-toggle"></span>
-                        </label>
                         <label class="settings-switch-row">
                             <span class="settings-switch-icon app"><i class="fa-solid fa-moon"></i></span>
-                            <span><strong>Mode sombre</strong><small>Appliquer un thème sombre à l’espace Administrateur.</small></span>
+                            <span>
+                                <strong>Mode sombre</strong>
+                                <small>Appliquer un thème sombre à l’espace Administrateur.</small>
+                            </span>
                             <input type="checkbox" name="preferenceSombre" value="true" th:checked="${preferences.modeSombre}">
                             <span class="settings-toggle"></span>
                         </label>
                     </div>
-                    <label class="settings-field">
-                        <span>Langue</span>
-                        <div class="settings-select">
-                            <i class="fa-solid fa-language"></i>
-                            <select name="preferenceLangue">
-                                <option value="fr" th:selected="${preferences.langue == 'fr'}">Français</option>
-                                <option value="en" th:selected="${preferences.langue == 'en'}">English</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down"></i>
-                        </div>
-                    </label>
                     <footer class="settings-card-footer">
-                        <span><i class="fa-solid fa-circle-info"></i> Ces préférences sont enregistrées dans votre compte.</span>
-                        <button type="submit" class="settings-btn primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                        <span><i class="fa-solid fa-circle-info"></i> Ces règles sont utilisées par les nouveaux dossiers et notifications.</span>
+                        <button type="submit" name="section" value="fonctionnement" class="settings-btn primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer le fonctionnement</button>
                     </footer>
                 </article>
 
@@ -312,7 +282,7 @@
 
                     <footer class="settings-card-footer">
                         <span><i class="fa-solid fa-circle-info"></i> Les modifications s'appliqueront aux nouveaux dépôts.</span>
-                        <button type="submit" class="settings-btn primary">
+                        <button type="submit" name="section" value="documents" class="settings-btn primary">
                             <i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications
                         </button>
                     </footer>
@@ -428,9 +398,13 @@
                 <p>Toutes les modifications validées sont enregistrées de manière sécurisée.</p>
             </div>
         </div>
-        <button type="button" class="settings-btn secondary" onclick="reinitialiserParametres()">
-            <i class="fa-solid fa-arrow-rotate-left"></i> Réinitialiser les paramètres
-        </button>
+        <form th:action="@{/admin/parametres/reinitialiser}" method="post"
+              onsubmit="return confirm('Réinitialiser définitivement tous les paramètres avec leurs valeurs par défaut ?')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="settings-btn secondary">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Réinitialiser les paramètres
+            </button>
+        </form>
     </section>
 
     <div class="settings-toast" id="settingsToast" role="status" aria-live="polite">
@@ -461,12 +435,6 @@
 
     function executerMaintenance(message) {
         afficherToast(message);
-    }
-
-    function reinitialiserParametres() {
-        if (!window.confirm('Réinitialiser tous les paramètres avec leurs valeurs par défaut ?')) return;
-        document.getElementById('settingsForm').reset();
-        afficherToast('Les valeurs par défaut ont été restaurées dans le formulaire.');
     }
 
     searchInput.addEventListener('input', filtrerParametres);

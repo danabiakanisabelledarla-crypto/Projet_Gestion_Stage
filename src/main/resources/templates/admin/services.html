@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/admin-services.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body class="services-page">
+<body class="services-page" th:classappend="${adminDarkMode} ? ' admin-dark-mode' : ''">
 <div th:replace="~{fragments/sidebar-admin :: sidebar}"></div>
 
 <main class="contenu-principal backup-page">
@@ -244,9 +244,10 @@
                                         onclick="event.stopPropagation(); ouvrirModificationDepuisLigne(this.closest('tr'))">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <a th:href="@{/admin/stagiaires}" title="Gérer les affectations" onclick="event.stopPropagation()">
+                                <button type="button" title="Gérer les affectations"
+                                        th:onclick="'event.stopPropagation(); ouvrirAffectationService(' + ${row.service.id} + ', &quot;' + ${#strings.escapeJavaScript(row.service.nom)} + '&quot;)'">
                                     <i class="fa-solid fa-user-plus"></i>
-                                </a>
+                                </button>
                                 <button type="button" title="Plus d'actions" onclick="event.stopPropagation(); toggleMenu(this)">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
@@ -379,8 +380,36 @@
     </div>
 </div>
 
+<div id="modalAffectationService" class="svc-modal" aria-hidden="true">
+    <div class="svc-modal-dialog" role="dialog" aria-modal="true">
+        <header>
+            <div><span><i class="fa-solid fa-user-plus"></i></span><h2>Affecter un utilisateur</h2></div>
+            <button type="button" aria-label="Fermer" onclick="fermerModal('modalAffectationService')"><i class="fa-solid fa-xmark"></i></button>
+        </header>
+        <form id="formAffectationService" method="post" class="svc-form"
+              onsubmit="return confirmerAffectationService()">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <p id="affectationServiceLabel"></p>
+            <label>Utilisateur
+                <select name="utilisateurId" id="affectationUtilisateur" required>
+                    <option value="">Sélectionner un utilisateur</option>
+                    <option th:each="utilisateur : ${utilisateursAffectables}"
+                            th:value="${utilisateur.id}"
+                            th:text="${utilisateur.prenom + ' ' + utilisateur.nom + ' - ' + utilisateur.role.libelle}">
+                    </option>
+                </select>
+            </label>
+            <footer>
+                <button type="button" class="svc-btn svc-btn-secondary" onclick="fermerModal('modalAffectationService')">Annuler</button>
+                <button type="submit" class="svc-btn backup-btn"><i class="fa-solid fa-user-check"></i> Affecter</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
 <script>
     let serviceSelectionne = null;
+    let nomServiceAffectation = '';
     let pageServicesCourante = 1;
     const servicesParPage = 10;
 
@@ -390,6 +419,22 @@
         modal.setAttribute('aria-hidden', 'false');
         const input = modal.querySelector('input');
         if (input) setTimeout(() => input.focus(), 100);
+    }
+
+    function ouvrirAffectationService(serviceId, serviceNom) {
+        nomServiceAffectation = serviceNom;
+        document.getElementById('formAffectationService').action =
+            '/admin/services/' + serviceId + '/affecter-utilisateur';
+        document.getElementById('affectationServiceLabel').textContent =
+            'Choisissez l’utilisateur à affecter au service ' + serviceNom + '.';
+        document.getElementById('affectationUtilisateur').value = '';
+        ouvrirModal('modalAffectationService');
+    }
+
+    function confirmerAffectationService() {
+        const select = document.getElementById('affectationUtilisateur');
+        const nom = select.options[select.selectedIndex]?.text || 'cet utilisateur';
+        return window.confirm('Voulez-vous affecter ' + nom + ' au service ' + nomServiceAffectation + ' ?');
     }
 
     function fermerModal(id) {
